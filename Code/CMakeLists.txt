@@ -45,6 +45,7 @@ ly_add_target(
         PUBLIC
             AZ::AzCore
             AZ::AzFramework
+            Gem::StartingPointInput.Static
 )
 
 # Here add FirstPersonController target, it depends on the Private Object library and Public API interface
@@ -111,6 +112,7 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
             PUBLIC
                 AZ::AzToolsFramework
                 $<TARGET_OBJECTS:Gem::FirstPersonController.Private.Object>
+                Gem::StartingPointInput.Static
     )
 
     ly_add_target(
