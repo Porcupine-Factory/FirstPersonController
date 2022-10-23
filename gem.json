@@ -1,0 +1,22 @@
+{
+    "gem_name": "FirstPersonController",
+    "display_name": "FirstPersonController",
+    "license": "License used i.e. Apache-2.0 or MIT",
+    "license_url": "Link to the license web site i.e. https://opensource.org/licenses/Apache-2.0",
+    "origin": "The name of the originator or creator",
+    "origin_url": "The website for this Gem",
+    "type": "Code",
+    "summary": "A short description of this Gem",
+    "canonical_tags": [
+        "Gem"
+    ],
+    "user_tags": [
+        "FirstPersonController"
+    ],
+    "icon_path": "preview.png",
+    "requirements": "Notice of any requirements for this Gem i.e. This requires X other gem",
+    "documentation_url": "Link to any documentation of your Gem",
+    "dependencies": [],
+    "repo_uri": "${RepoURI}",
+    "restricted": "FirstPersonController"
+}
