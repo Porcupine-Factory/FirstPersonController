@@ -2,20 +2,11 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
 #include <AzCore/Math/Vector3.h>
-#include <AzCore/std/string/string.h>
 #include <StartingPointInput/InputEventNotificationBus.h>
+#include <AzCore/std/containers/map.h>
 
 namespace FirstPersonController
 {
-    class FirstPersonInput
-    {
-    public:
-        float m_forwardAxis = 0;
-        float m_strafeAxis = 0;
-        float m_viewYaw = 0;
-        float m_viewPitch = 0;
-    };
-
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
@@ -32,22 +23,64 @@ namespace FirstPersonController
 
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;
+        void OnReleased(float value) override;
+        void OnHeld(float value) override;
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
     private:
+        AZ::Entity* m_activeCameraEntity = nullptr;
+        AZ::Entity* GetActiveCamera();
+
+        void ProcessInput();
+
+        void UpdateVelocity();
+        AZ::Vector3 m_velocity = AZ::Vector3::CreateZero();
+        float m_speed = 6.f;
+
+        void UpdateRotation();
+        // These default values work well
+        // assuming the event value multiplier is 1.0
+        float m_yaw_sensitivity = 0.005f;
+        float m_pitch_sensitivity = 0.005f;
+
+        // Event value multipliers
+        float m_forward_value = 0.f;
+        float m_back_value = 0.f;
+        float m_left_value = 0.f;
+        float m_right_value = 0.f;
+        float m_yaw_value = 0.f;
+        float m_pitch_value = 0.f;
+
+        // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
-        AZStd::string m_str_Forward;
+        AZStd::string m_str_forward;
         StartingPointInput::InputEventNotificationId m_MoveBackEventId;
-        AZStd::string m_str_Back;
+        AZStd::string m_str_back;
         StartingPointInput::InputEventNotificationId m_MoveLeftEventId;
-        AZStd::string m_str_Left;
+        AZStd::string m_str_left;
         StartingPointInput::InputEventNotificationId m_MoveRightEventId;
-        AZStd::string m_str_Right;
+        AZStd::string m_str_right;
         StartingPointInput::InputEventNotificationId m_RotateYawEventId;
-        AZStd::string m_str_Yaw;
+        AZStd::string m_str_yaw;
         StartingPointInput::InputEventNotificationId m_RotatePitchEventId;
-        AZStd::string m_str_Pitch;
+        AZStd::string m_str_pitch;
+
+        // list of action names
+        AZStd::vector<AZStd::string*> m_input_names = {
+            &m_str_forward, &m_str_back,
+            &m_str_left, &m_str_right,
+            &m_str_yaw, &m_str_pitch
+        };
+
+        // map of event IDs and event value multipliers
+        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_control_map = {
+            {&m_MoveForwardEventId, &m_forward_value},
+            {&m_MoveBackEventId, &m_back_value},
+            {&m_MoveLeftEventId, &m_left_value},
+            {&m_MoveRightEventId, &m_right_value},
+            {&m_RotateYawEventId, &m_yaw_value},
+            {&m_RotatePitchEventId, &m_pitch_value}};
     };
 }
