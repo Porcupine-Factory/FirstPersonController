@@ -173,13 +173,13 @@ namespace FirstPersonController
         m_activeCameraEntity = GetActiveCamera();
         t = m_activeCameraEntity->GetTransform();
 
-        const float rotate_yaw = -1 * m_pitch_value * m_pitch_sensitivity;
-        const float current_yaw = t->GetLocalRotation().GetX();
+        const float rotate_pitch = -1 * m_pitch_value * m_pitch_sensitivity;
+        const float current_pitch = t->GetLocalRotation().GetX();
 
         using namespace AZ::Constants;
-        if(abs(current_yaw) <= Pi/2 ||
-           current_yaw >= Pi/2 && rotate_yaw < 0 ||
-           current_yaw <= -Pi/2 && rotate_yaw > 0)
+        if(abs(current_pitch) <= Pi/2 ||
+           current_pitch >= Pi/2 && rotate_pitch < 0 ||
+           current_pitch <= -Pi/2 && rotate_pitch > 0)
         {
             t->RotateAroundLocalX(-1 * m_pitch_value * m_pitch_sensitivity);
         }
@@ -196,7 +196,7 @@ namespace FirstPersonController
         AZ::Vector3 move = AZ::Vector3::CreateZero();
 
         if(forwardBack && leftRight)
-            move = AZ::Vector3(leftRight/sqrt(2), forwardBack/sqrt(2), 0.f);
+            move = AZ::Vector3(leftRight/static_cast<float>(AZStd::sqrt(2)), forwardBack/static_cast<float>(AZStd::sqrt(2)), 0.f);
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
