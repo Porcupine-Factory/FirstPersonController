@@ -19,9 +19,11 @@ namespace FirstPersonController
               ->Field("Back Key", &FirstPersonControllerComponent::m_str_back)
               ->Field("Left Key", &FirstPersonControllerComponent::m_str_left)
               ->Field("Right Key", &FirstPersonControllerComponent::m_str_right)
+              ->Field("Sprint Key", &FirstPersonControllerComponent::m_str_sprint)
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
-              ->Field("Speed", &FirstPersonControllerComponent::m_speed)
+              ->Field("Speed Walking", &FirstPersonControllerComponent::m_speed)
+              ->Field("Sprint Speed", &FirstPersonControllerComponent::m_sprint_multiply)
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
               ->Version(1);
@@ -47,6 +49,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_str_right,
                         "Right Key", "Key for moving right")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_sprint,
+                        "Sprint Key", "Key for sprinting")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_pitch,
                         "Camera Yaw Rotate Input", "Camera yaw rotation control")
                     ->DataElement(nullptr,
@@ -54,7 +59,10 @@ namespace FirstPersonController
                         "Camera Pitch Rotate Input", "Camera pitch rotation control")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_speed,
-                        "Speed", "Speed of the character")
+                        "Speed Walking", "Speed of the character")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprint_multiply,
+                        "Sprint Speed Multiplier", "Speed multiple of walking speed")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_yaw_sensitivity,
                         "Yaw Sensitivity", "Camera left/right rotation sensitivity")
@@ -200,7 +208,10 @@ namespace FirstPersonController
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
-        m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
+        if(m_sprint_value && !m_back_value)
+            m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_sprint_multiply;
+        else
+            m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);

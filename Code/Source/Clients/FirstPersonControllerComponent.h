@@ -38,6 +38,7 @@ namespace FirstPersonController
         void UpdateVelocity();
         AZ::Vector3 m_velocity = AZ::Vector3::CreateZero();
         float m_speed = 6.f;
+        float m_sprint_multiply = 1.5f;
 
         void UpdateRotation();
         // These default values work well
@@ -52,6 +53,7 @@ namespace FirstPersonController
         float m_right_value = 0.f;
         float m_yaw_value = 0.f;
         float m_pitch_value = 0.f;
+        float m_sprint_value = 0.f;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
@@ -66,12 +68,15 @@ namespace FirstPersonController
         AZStd::string m_str_yaw;
         StartingPointInput::InputEventNotificationId m_RotatePitchEventId;
         AZStd::string m_str_pitch;
+        StartingPointInput::InputEventNotificationId m_SprintEventId;
+        AZStd::string m_str_sprint;
 
         // list of action names
         AZStd::vector<AZStd::string*> m_input_names = {
             &m_str_forward, &m_str_back,
             &m_str_left, &m_str_right,
-            &m_str_yaw, &m_str_pitch
+            &m_str_yaw, &m_str_pitch,
+            &m_str_sprint
         };
 
         // map of event IDs and event value multipliers
@@ -81,6 +86,7 @@ namespace FirstPersonController
             {&m_MoveLeftEventId, &m_left_value},
             {&m_MoveRightEventId, &m_right_value},
             {&m_RotateYawEventId, &m_yaw_value},
-            {&m_RotatePitchEventId, &m_pitch_value}};
+            {&m_RotatePitchEventId, &m_pitch_value},
+            {&m_SprintEventId, &m_sprint_value}};
     };
 }
