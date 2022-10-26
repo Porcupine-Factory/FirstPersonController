@@ -169,7 +169,7 @@ namespace FirstPersonController
     }
 
     //////////////////////////////////////////////////////////////////////////////
-    void FlyCameraInputCloneComponent::OnTick(float deltaTime, AZ::ScriptTimePoint /*time*/)
+    void FlyCameraInputCloneComponent::OnTick(float /*deltaTime*/, AZ::ScriptTimePoint /*time*/)
     {
         if (!m_isEnabled)
         {
