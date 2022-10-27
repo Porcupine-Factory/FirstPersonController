@@ -1,10 +1,12 @@
 #include <Clients/FirstPersonControllerComponent.h>
+
 #include <AzCore/Component/Entity.h>
 #include <AzCore/Component/TransformBus.h>
+#include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Serialization/EditContext.h>
+
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Components/CameraBus.h>
-#include <AzCore/Component/ComponentApplicationBus.h>
 
 namespace FirstPersonController
 {
@@ -204,7 +206,7 @@ namespace FirstPersonController
         AZ::Vector3 move = AZ::Vector3::CreateZero();
 
         if(forwardBack && leftRight)
-            move = AZ::Vector3(leftRight/static_cast<float>(AZStd::sqrt(2)), forwardBack/static_cast<float>(AZStd::sqrt(2)), 0.f);
+            move = AZ::Vector3(leftRight/Sqrt2, forwardBack/Sqrt2, 0.f);
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
@@ -214,7 +216,7 @@ namespace FirstPersonController
             m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
-            &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);
+            &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_velocity);
     }
 
     void FirstPersonControllerComponent::ProcessInput()

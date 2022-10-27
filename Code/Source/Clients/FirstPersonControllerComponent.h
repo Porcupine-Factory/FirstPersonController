@@ -2,11 +2,13 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
 #include <AzCore/Math/Vector3.h>
-#include <StartingPointInput/InputEventNotificationBus.h>
 #include <AzCore/std/containers/map.h>
+#include <StartingPointInput/InputEventNotificationBus.h>
 
 namespace FirstPersonController
 {
+    static constexpr float Sqrt2 = 1.4142135623730950488016887242097;
+
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
