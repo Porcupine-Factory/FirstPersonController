@@ -25,16 +25,16 @@ namespace FirstPersonController
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
               ->Field("Speed Walking", &FirstPersonControllerComponent::m_speed)
-              ->Field("Sprint Speed", &FirstPersonControllerComponent::m_sprint_multiply)
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
+              ->Field("Ramp Time", &FirstPersonControllerComponent::m_ramp_time)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
             {
                 using namespace AZ::Edit::Attributes;
                 ec->Class<FirstPersonControllerComponent>("First Person Controller",
-                    "[First person character cntroller]")
+                    "[First person character controller]")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person")
@@ -63,35 +63,32 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_speed,
                         "Speed Walking", "Speed of the character")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprint_multiply,
-                        "Sprint Speed Multiplier", "Speed multiple of walking speed")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_yaw_sensitivity,
                         "Yaw Sensitivity", "Camera left/right rotation sensitivity")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_pitch_sensitivity,
-                        "Pitch Sensitivity", "Camera up/down rotation sensitivity");
+                        "Pitch Sensitivity", "Camera up/down rotation sensitivity")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_ramp_time,
+                        "Ramp Time (sec)", "How long acceleration/deceleration takes");
             }
         }
     }
 
     void FirstPersonControllerComponent::Activate()
     {
-        if (m_control_map.size() != m_input_names.size())
+        if(m_control_map.size() != (sizeof(m_input_names) / sizeof(AZStd::string*)))
         {
             AZ_Printf("FirstPersonControllerComponent",
-                      "Number of input IDs not equal to number of input names!");
+                      "ERROR: Number of input IDs not equal to number of input names!");
         }
         else
         {
-            AZStd::map<StartingPointInput::InputEventNotificationId*, float*>::iterator it_event =
-                m_control_map.begin();
-            AZStd::vector<AZStd::string*>::iterator it_name =
-                m_input_names.begin();
-            for(; it_event != m_control_map.end(); ++it_event, ++it_name)
+            for(auto& it_event : m_control_map)
             {
-                *(it_event->first) = StartingPointInput::InputEventNotificationId((*it_name)->c_str());
-                InputEventNotificationBus::MultiHandler::BusConnect(*(it_event->first));
+                *(it_event.first) = StartingPointInput::InputEventNotificationId(
+                    (m_input_names[std::distance(m_control_map.begin(), m_control_map.find(it_event.first))])->c_str());
+                InputEventNotificationBus::MultiHandler::BusConnect(*(it_event.first));
             }
         }
         AZ::TickBus::Handler::BusConnect();
@@ -106,17 +103,16 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnPressed(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if (inputId == nullptr)
+        if(inputId == nullptr)
             return;
 
-        AZStd::map<StartingPointInput::InputEventNotificationId*, float*>::iterator it_event;
-        for(it_event = m_control_map.begin(); it_event != m_control_map.end(); ++it_event)
+        for(auto& it_event : m_control_map)
         {
-            if (*inputId == *(it_event->first))
+            if(*inputId == *(it_event.first))
             {
-                *(it_event->second) = value;
+                *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                //AZ_Printf("Pressed", it_event->first->ToString().c_str());
+                // AZ_Printf("Pressed", it_event.first->ToString().c_str());
             }
         }
     }
@@ -124,15 +120,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnReleased(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if (inputId == nullptr)
+        if(inputId == nullptr)
             return;
 
-        AZStd::map<StartingPointInput::InputEventNotificationId*, float*>::iterator it_event;
-        for(it_event = m_control_map.begin(); it_event != m_control_map.end(); ++it_event)
+        for(auto& it_event : m_control_map)
         {
-            if (*inputId == *(it_event->first))
+            if(*inputId == *(it_event.first))
             {
-                *(it_event->second) = value;
+                *(it_event.second) = value;
                 // print the local user ID and the action name CRC
                 // AZ_Printf("Released", it_event->first->ToString().c_str());
             }
@@ -142,24 +137,24 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnHeld(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if (inputId == nullptr)
+        if(inputId == nullptr)
         {
             return;
         }
 
-        if (*inputId == m_RotateYawEventId)
+        if(*inputId == m_RotateYawEventId)
         {
             m_yaw_value = value;
         }
-        else if (*inputId == m_RotatePitchEventId)
+        else if(*inputId == m_RotatePitchEventId)
         {
             m_pitch_value = value;
         }
     }
 
-    void FirstPersonControllerComponent::OnTick(float, AZ::ScriptTimePoint)
+    void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput();
+        ProcessInput(deltaTime);
     }
 
     AZ::Entity* FirstPersonControllerComponent::GetActiveCamera()
@@ -195,13 +190,78 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::UpdateVelocity()
+    void FirstPersonControllerComponent::LerpMovement(float deltaTime)
+    {
+        // The sprint value should never be 0
+        if(m_sprint_value == 0)
+            m_sprint_value = 1;
+        if(m_current_sprint_lerp_value == 0)
+            m_current_sprint_lerp_value = 1;
+        if(m_last_sprint_lerp_value == 0)
+            m_last_sprint_lerp_value = 1;
+
+        // Lerp movements
+        for(int i = 0; i < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++i)
+        {
+            using namespace lerp_access;
+
+            if(abs(*m_directions_lerp[i][value]) > abs(*m_directions_lerp[i][current_lerp_value]) &&
+               *m_directions_lerp[i][ramp_time] < m_ramp_time)
+            {
+                *m_directions_lerp[i][ramp_time] += deltaTime;
+            }
+            else if(abs(*m_directions_lerp[i][value]) < abs(*m_directions_lerp[i][current_lerp_value]) &&
+                    *m_directions_lerp[i][ramp_time] > 0)
+            {
+                *m_directions_lerp[i][ramp_time] -= deltaTime;
+            }
+            if(abs(*m_directions_lerp[i][current_lerp_value]) < abs(*m_directions_lerp[i][value]))
+            {
+                if(!*m_pressed[i])
+                {
+                    *m_pressed[i] = true;
+                    *m_directions_lerp[i][last_lerp_value] = *m_directions_lerp[i][current_lerp_value];
+                }
+                //AZ_Printf("", "SPEEDING UP");
+
+                *m_directions_lerp[i][current_lerp_value] = AZ::Lerp(*m_directions_lerp[i][last_lerp_value],
+                                                                     *m_directions_lerp[i][value],
+                                                                     (*m_directions_lerp[i][ramp_time] / m_ramp_time));
+                if(abs(*m_directions_lerp[i][current_lerp_value]) > abs(*m_directions_lerp[i][value]))
+                    *m_directions_lerp[i][current_lerp_value] = *m_directions_lerp[i][value];
+            }
+            else if(abs(*m_directions_lerp[i][current_lerp_value]) > abs(*m_directions_lerp[i][value]))
+            {
+                if(*m_pressed[i])
+                {
+                    *m_pressed[i] = false;
+                    *m_directions_lerp[i][last_lerp_value] = *m_directions_lerp[i][current_lerp_value];
+                }
+                //AZ_Printf("", "SLOWING DOWN");
+
+                *m_directions_lerp[i][current_lerp_value] = AZ::Lerp(*m_directions_lerp[i][value],
+                                                                     *m_directions_lerp[i][last_lerp_value],
+                                                                     (*m_directions_lerp[i][ramp_time] / m_ramp_time));
+                if((*m_directions_lerp[i][last_lerp_value] > *m_directions_lerp[i][value] &&
+                    *m_directions_lerp[i][current_lerp_value] < *m_directions_lerp[i][value]) ||
+                   (*m_directions_lerp[i][last_lerp_value] < *m_directions_lerp[i][value] &&
+                    *m_directions_lerp[i][current_lerp_value] > *m_directions_lerp[i][value]))
+                {
+                    *m_directions_lerp[i][current_lerp_value] = *m_directions_lerp[i][value];
+                }
+            }
+        }
+    }
+
+    void FirstPersonControllerComponent::UpdateVelocity(float deltaTime)
     {
         const float currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
 
-        const float forwardBack = m_forward_value + m_back_value;
-        const float leftRight = m_left_value + m_right_value;
+        LerpMovement(deltaTime);
+
+        float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
+        float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
 
         AZ::Vector3 move = AZ::Vector3::CreateZero();
 
@@ -210,18 +270,20 @@ namespace FirstPersonController
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
-        if(m_sprint_value && !m_back_value)
-            m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_sprint_multiply;
+        if(m_current_sprint_lerp_value > 1 && !m_back_value)
+            m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
         else
             m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
 
+        //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
+
         Physics::CharacterRequestBus::Event(GetEntityId(),
-            &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_velocity);
+            &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);
     }
 
-    void FirstPersonControllerComponent::ProcessInput()
+    void FirstPersonControllerComponent::ProcessInput(float deltaTime)
     {
         UpdateRotation();
-        UpdateVelocity();
+        UpdateVelocity(deltaTime);
     }
 }

@@ -9,6 +9,12 @@ namespace FirstPersonController
 {
     static constexpr float Sqrt2 = 1.4142135623730950488016887242097;
 
+    namespace lerp_access
+    {
+        enum directions {direction_forward, direction_back, direction_left, direction_right, direction_sprint};
+        enum values {value, ramp_time, current_lerp_value, last_lerp_value};
+    }
+
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
@@ -35,18 +41,48 @@ namespace FirstPersonController
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::Entity* GetActiveCamera();
 
-        void ProcessInput();
+        void ProcessInput(float deltaTime);
 
-        void UpdateVelocity();
+        void UpdateVelocity(float deltaTime);
+        void LerpMovement(float deltaTime);
         AZ::Vector3 m_velocity = AZ::Vector3::CreateZero();
         float m_speed = 6.f;
-        float m_sprint_multiply = 1.5f;
 
         void UpdateRotation();
         // These default values work well
         // assuming the event value multiplier is 1.0
         float m_yaw_sensitivity = 0.005f;
         float m_pitch_sensitivity = 0.005f;
+
+        // Acceleration lerp movement
+        float m_ramp_time = 1.0f;
+
+        float m_forward_ramp_time = 0.f;
+        float m_current_forward_lerp_value = 0.f;
+        float m_last_forward_lerp_value = 0.f;
+
+        float m_back_ramp_time = 0.f;
+        float m_current_back_lerp_value = 0.f;
+        float m_last_back_lerp_value = 0.f;
+
+        float m_left_ramp_time = 0.f;
+        float m_current_left_lerp_value = 0.f;
+        float m_last_left_lerp_value = 0.f;
+
+        float m_right_ramp_time = 0.f;
+        float m_current_right_lerp_value = 0.f;
+        float m_last_right_lerp_value = 0.f;
+
+        float m_sprint_ramp_time = 0.f;
+        float m_current_sprint_lerp_value = 1.f;
+        float m_last_sprint_lerp_value = 1.f;
+
+        // Track when the key is pressed / released
+        bool m_forward_pressed = false;
+        bool m_back_pressed = false;
+        bool m_left_pressed = false;
+        bool m_right_pressed = false;
+        bool m_sprint_pressed = false;
 
         // Event value multipliers
         float m_forward_value = 0.f;
@@ -55,7 +91,16 @@ namespace FirstPersonController
         float m_right_value = 0.f;
         float m_yaw_value = 0.f;
         float m_pitch_value = 0.f;
-        float m_sprint_value = 0.f;
+        float m_sprint_value = 1.f;
+
+        bool* m_pressed[5] = {&m_forward_pressed, &m_back_pressed, &m_left_pressed, &m_right_pressed, &m_sprint_pressed};
+
+        float* m_directions_lerp[5][4] = {
+            {&m_forward_value, &m_forward_ramp_time, &m_current_forward_lerp_value, &m_last_forward_lerp_value},
+            {&m_back_value, &m_back_ramp_time, &m_current_back_lerp_value, &m_last_back_lerp_value},
+            {&m_left_value, &m_left_ramp_time, &m_current_left_lerp_value, &m_last_left_lerp_value},
+            {&m_right_value, &m_right_ramp_time, &m_current_right_lerp_value, &m_last_right_lerp_value},
+            {&m_sprint_value, &m_sprint_ramp_time, &m_current_sprint_lerp_value, &m_last_sprint_lerp_value}};
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
@@ -74,7 +119,7 @@ namespace FirstPersonController
         AZStd::string m_str_sprint;
 
         // list of action names
-        AZStd::vector<AZStd::string*> m_input_names = {
+        AZStd::string* m_input_names[7] = {
             &m_str_forward, &m_str_back,
             &m_str_left, &m_str_right,
             &m_str_yaw, &m_str_pitch,
