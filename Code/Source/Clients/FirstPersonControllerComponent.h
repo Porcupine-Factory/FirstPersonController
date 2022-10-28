@@ -11,7 +11,6 @@ namespace FirstPersonController
 
     namespace lerp_access
     {
-        enum directions {direction_forward, direction_back, direction_left, direction_right, direction_sprint};
         enum values {value, ramp_time, current_lerp_value, last_lerp_value};
     }
 

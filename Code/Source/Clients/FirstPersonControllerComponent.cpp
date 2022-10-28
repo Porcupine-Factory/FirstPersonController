@@ -195,10 +195,6 @@ namespace FirstPersonController
         // The sprint value should never be 0
         if(m_sprint_value == 0)
             m_sprint_value = 1;
-        if(m_current_sprint_lerp_value == 0)
-            m_current_sprint_lerp_value = 1;
-        if(m_last_sprint_lerp_value == 0)
-            m_last_sprint_lerp_value = 1;
 
         // Lerp movements
         for(int i = 0; i < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++i)
