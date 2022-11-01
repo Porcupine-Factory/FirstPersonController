@@ -9,9 +9,9 @@ namespace FirstPersonController
 {
     static constexpr float Sqrt2 = 1.4142135623730950488016887242097;
 
-    namespace lerp_access
+    namespace LerpAccess
     {
-        enum values {value, ramp_time, current_lerp_value, last_lerp_value};
+        enum values {value, current_lerp_value, last_lerp_value, ramp_time, ramp_pressed_released_time};
     }
 
     class FirstPersonControllerComponent
@@ -56,25 +56,30 @@ namespace FirstPersonController
         // Acceleration lerp movement
         float m_ramp_time = 1.0f;
 
-        float m_forward_ramp_time = 0.f;
         float m_current_forward_lerp_value = 0.f;
         float m_last_forward_lerp_value = 0.f;
+        float m_forward_ramp_time = 0.f;
+        float m_forward_release_ramp_time = 0.f;
 
-        float m_back_ramp_time = 0.f;
         float m_current_back_lerp_value = 0.f;
         float m_last_back_lerp_value = 0.f;
+        float m_back_ramp_time = 0.f;
+        float m_back_release_ramp_time = 0.f;
 
-        float m_left_ramp_time = 0.f;
         float m_current_left_lerp_value = 0.f;
         float m_last_left_lerp_value = 0.f;
+        float m_left_ramp_time = 0.f;
+        float m_left_release_ramp_time = 0.f;
 
-        float m_right_ramp_time = 0.f;
         float m_current_right_lerp_value = 0.f;
         float m_last_right_lerp_value = 0.f;
+        float m_right_ramp_time = 0.f;
+        float m_right_release_ramp_time = 0.f;
 
-        float m_sprint_ramp_time = 0.f;
         float m_current_sprint_lerp_value = 1.f;
         float m_last_sprint_lerp_value = 1.f;
+        float m_sprint_ramp_time = 0.f;
+        float m_sprint_release_ramp_time = 0.f;
 
         // Track when the key is pressed / released
         bool m_forward_pressed = false;
@@ -94,12 +99,12 @@ namespace FirstPersonController
 
         bool* m_pressed[5] = {&m_forward_pressed, &m_back_pressed, &m_left_pressed, &m_right_pressed, &m_sprint_pressed};
 
-        float* m_directions_lerp[5][4] = {
-            {&m_forward_value, &m_forward_ramp_time, &m_current_forward_lerp_value, &m_last_forward_lerp_value},
-            {&m_back_value, &m_back_ramp_time, &m_current_back_lerp_value, &m_last_back_lerp_value},
-            {&m_left_value, &m_left_ramp_time, &m_current_left_lerp_value, &m_last_left_lerp_value},
-            {&m_right_value, &m_right_ramp_time, &m_current_right_lerp_value, &m_last_right_lerp_value},
-            {&m_sprint_value, &m_sprint_ramp_time, &m_current_sprint_lerp_value, &m_last_sprint_lerp_value}};
+        float* m_directions_lerp[5][5] = {
+            {&m_forward_value, &m_current_forward_lerp_value, &m_last_forward_lerp_value, &m_forward_ramp_time, &m_forward_release_ramp_time},
+            {&m_back_value, &m_current_back_lerp_value, &m_last_back_lerp_value, &m_back_ramp_time, &m_back_release_ramp_time},
+            {&m_left_value, &m_current_left_lerp_value, &m_last_left_lerp_value, &m_left_ramp_time, &m_left_release_ramp_time},
+            {&m_right_value, &m_current_right_lerp_value, &m_last_right_lerp_value, &m_right_ramp_time, &m_right_release_ramp_time},
+            {&m_sprint_value, &m_current_sprint_lerp_value, &m_last_sprint_lerp_value, &m_sprint_ramp_time, &m_sprint_release_ramp_time}};
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;

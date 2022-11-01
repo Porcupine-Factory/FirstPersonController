@@ -197,53 +197,58 @@ namespace FirstPersonController
             m_sprint_value = 1;
 
         // Lerp movements
-        for(int i = 0; i < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++i)
+        for(int dir = 0; dir < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++dir)
         {
-            using namespace lerp_access;
+            using namespace LerpAccess;
 
-            if(abs(*m_directions_lerp[i][value]) > abs(*m_directions_lerp[i][current_lerp_value]) &&
-               *m_directions_lerp[i][ramp_time] < m_ramp_time)
+            if(abs(*m_directions_lerp[dir][value]) > abs(*m_directions_lerp[dir][current_lerp_value]) &&
+               *m_directions_lerp[dir][ramp_time] < m_ramp_time)
             {
-                *m_directions_lerp[i][ramp_time] += deltaTime;
+                *m_directions_lerp[dir][ramp_time] += deltaTime;
             }
-            else if(abs(*m_directions_lerp[i][value]) < abs(*m_directions_lerp[i][current_lerp_value]) &&
-                    *m_directions_lerp[i][ramp_time] > 0)
+            else if(abs(*m_directions_lerp[dir][value]) < abs(*m_directions_lerp[dir][current_lerp_value]) &&
+                    *m_directions_lerp[dir][ramp_time] > 0.f)
             {
-                *m_directions_lerp[i][ramp_time] -= deltaTime;
+                *m_directions_lerp[dir][ramp_time] -= deltaTime;
             }
-            if(abs(*m_directions_lerp[i][current_lerp_value]) < abs(*m_directions_lerp[i][value]))
+
+            if(abs(*m_directions_lerp[dir][current_lerp_value]) < abs(*m_directions_lerp[dir][value]))
             {
-                if(!*m_pressed[i])
+                if(!*m_pressed[dir])
                 {
-                    *m_pressed[i] = true;
-                    *m_directions_lerp[i][last_lerp_value] = *m_directions_lerp[i][current_lerp_value];
+                    *m_pressed[dir] = true;
+                    *m_directions_lerp[dir][last_lerp_value] = *m_directions_lerp[dir][current_lerp_value];
+                    *m_directions_lerp[dir][ramp_pressed_released_time] = *m_directions_lerp[dir][ramp_time];
                 }
                 //AZ_Printf("", "SPEEDING UP");
 
-                *m_directions_lerp[i][current_lerp_value] = AZ::Lerp(*m_directions_lerp[i][last_lerp_value],
-                                                                     *m_directions_lerp[i][value],
-                                                                     (*m_directions_lerp[i][ramp_time] / m_ramp_time));
-                if(abs(*m_directions_lerp[i][current_lerp_value]) > abs(*m_directions_lerp[i][value]))
-                    *m_directions_lerp[i][current_lerp_value] = *m_directions_lerp[i][value];
+                *m_directions_lerp[dir][current_lerp_value] = AZ::Lerp(*m_directions_lerp[dir][last_lerp_value],
+                                                                       *m_directions_lerp[dir][value],
+                                                                       ((*m_directions_lerp[dir][ramp_time] - *m_directions_lerp[dir][ramp_pressed_released_time]) / (m_ramp_time - *m_directions_lerp[dir][ramp_pressed_released_time])));
+
+                if(abs(*m_directions_lerp[dir][current_lerp_value]) > abs(*m_directions_lerp[dir][value]))
+                    *m_directions_lerp[dir][current_lerp_value] = *m_directions_lerp[dir][value];
             }
-            else if(abs(*m_directions_lerp[i][current_lerp_value]) > abs(*m_directions_lerp[i][value]))
+            else if(abs(*m_directions_lerp[dir][current_lerp_value]) > abs(*m_directions_lerp[dir][value]))
             {
-                if(*m_pressed[i])
+                if(*m_pressed[dir])
                 {
-                    *m_pressed[i] = false;
-                    *m_directions_lerp[i][last_lerp_value] = *m_directions_lerp[i][current_lerp_value];
+                    *m_pressed[dir] = false;
+                    *m_directions_lerp[dir][last_lerp_value] = *m_directions_lerp[dir][current_lerp_value];
+                    *m_directions_lerp[dir][ramp_pressed_released_time] = *m_directions_lerp[dir][ramp_time];
                 }
                 //AZ_Printf("", "SLOWING DOWN");
 
-                *m_directions_lerp[i][current_lerp_value] = AZ::Lerp(*m_directions_lerp[i][value],
-                                                                     *m_directions_lerp[i][last_lerp_value],
-                                                                     (*m_directions_lerp[i][ramp_time] / m_ramp_time));
-                if((*m_directions_lerp[i][last_lerp_value] > *m_directions_lerp[i][value] &&
-                    *m_directions_lerp[i][current_lerp_value] < *m_directions_lerp[i][value]) ||
-                   (*m_directions_lerp[i][last_lerp_value] < *m_directions_lerp[i][value] &&
-                    *m_directions_lerp[i][current_lerp_value] > *m_directions_lerp[i][value]))
+                *m_directions_lerp[dir][current_lerp_value] = AZ::Lerp(*m_directions_lerp[dir][value],
+                                                                       *m_directions_lerp[dir][last_lerp_value],
+                                                                       (*m_directions_lerp[dir][ramp_time] / *m_directions_lerp[dir][ramp_pressed_released_time]));
+
+                if((*m_directions_lerp[dir][last_lerp_value] > *m_directions_lerp[dir][value] &&
+                    *m_directions_lerp[dir][current_lerp_value] < *m_directions_lerp[dir][value]) ||
+                   (*m_directions_lerp[dir][last_lerp_value] < *m_directions_lerp[dir][value] &&
+                    *m_directions_lerp[dir][current_lerp_value] > *m_directions_lerp[dir][value]))
                 {
-                    *m_directions_lerp[i][current_lerp_value] = *m_directions_lerp[i][value];
+                    *m_directions_lerp[dir][current_lerp_value] = *m_directions_lerp[dir][value];
                 }
             }
         }
