@@ -45,7 +45,7 @@ namespace FirstPersonController
         void UpdateVelocity(float deltaTime);
         void LerpMovement(float deltaTime);
         AZ::Vector3 m_velocity = AZ::Vector3::CreateZero();
-        float m_speed = 6.f;
+        float m_speed = 10.f;
 
         void UpdateRotation();
         // These default values work well
@@ -54,7 +54,7 @@ namespace FirstPersonController
         float m_pitch_sensitivity = 0.005f;
 
         // Acceleration lerp movement
-        float m_ramp_time = 1.0f;
+        float m_accel = 1.f;
 
         float m_current_forward_lerp_value = 0.f;
         float m_last_forward_lerp_value = 0.f;

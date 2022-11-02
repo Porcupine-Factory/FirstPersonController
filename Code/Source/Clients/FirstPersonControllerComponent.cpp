@@ -24,10 +24,10 @@ namespace FirstPersonController
               ->Field("Sprint Key", &FirstPersonControllerComponent::m_str_sprint)
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
-              ->Field("Speed Walking", &FirstPersonControllerComponent::m_speed)
+              ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
-              ->Field("Ramp Time", &FirstPersonControllerComponent::m_ramp_time)
+              ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -61,7 +61,7 @@ namespace FirstPersonController
                         "Camera Pitch Rotate Input", "Camera pitch rotation control")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_speed,
-                        "Speed Walking", "Speed of the character")
+                        "Top Walking Speed (m/s)", "Speed of the character")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_yaw_sensitivity,
                         "Yaw Sensitivity", "Camera left/right rotation sensitivity")
@@ -69,8 +69,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_pitch_sensitivity,
                         "Pitch Sensitivity", "Camera up/down rotation sensitivity")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_ramp_time,
-                        "Ramp Time (sec)", "How long acceleration/deceleration takes");
+                        &FirstPersonControllerComponent::m_accel,
+                        "Walking Acceleration (m/s²)", "Acceleration/deceleration");
             }
         }
     }
@@ -194,15 +194,18 @@ namespace FirstPersonController
     {
         // The sprint value should never be 0
         if(m_sprint_value == 0)
-            m_sprint_value = 1;
+            m_sprint_value = 1.f;
 
         // Lerp movements
         for(int dir = 0; dir < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++dir)
         {
             using namespace LerpAccess;
 
+            // Obtain the total ramp time based on the acceleration and top walk speed
+            float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
+
             if(abs(*m_directions_lerp[dir][value]) > abs(*m_directions_lerp[dir][current_lerp_value]) &&
-               *m_directions_lerp[dir][ramp_time] < m_ramp_time)
+               *m_directions_lerp[dir][ramp_time] < total_ramp_time)
             {
                 *m_directions_lerp[dir][ramp_time] += deltaTime;
             }
@@ -222,9 +225,11 @@ namespace FirstPersonController
                 }
                 //AZ_Printf("", "SPEEDING UP");
 
-                *m_directions_lerp[dir][current_lerp_value] = AZ::Lerp(*m_directions_lerp[dir][last_lerp_value],
-                                                                       *m_directions_lerp[dir][value],
-                                                                       ((*m_directions_lerp[dir][ramp_time] - *m_directions_lerp[dir][ramp_pressed_released_time]) / (m_ramp_time - *m_directions_lerp[dir][ramp_pressed_released_time])));
+                *m_directions_lerp[dir][current_lerp_value] =
+                    AZ::Lerp(*m_directions_lerp[dir][last_lerp_value],
+                             *m_directions_lerp[dir][value],
+                             ((*m_directions_lerp[dir][ramp_time] - *m_directions_lerp[dir][ramp_pressed_released_time])
+                              / (total_ramp_time - *m_directions_lerp[dir][ramp_pressed_released_time])));
 
                 if(abs(*m_directions_lerp[dir][current_lerp_value]) > abs(*m_directions_lerp[dir][value]))
                     *m_directions_lerp[dir][current_lerp_value] = *m_directions_lerp[dir][value];
@@ -239,9 +244,10 @@ namespace FirstPersonController
                 }
                 //AZ_Printf("", "SLOWING DOWN");
 
-                *m_directions_lerp[dir][current_lerp_value] = AZ::Lerp(*m_directions_lerp[dir][value],
-                                                                       *m_directions_lerp[dir][last_lerp_value],
-                                                                       (*m_directions_lerp[dir][ramp_time] / *m_directions_lerp[dir][ramp_pressed_released_time]));
+                *m_directions_lerp[dir][current_lerp_value] =
+                    AZ::Lerp(*m_directions_lerp[dir][value],
+                             *m_directions_lerp[dir][last_lerp_value],
+                             (*m_directions_lerp[dir][ramp_time] / *m_directions_lerp[dir][ramp_pressed_released_time]));
 
                 if((*m_directions_lerp[dir][last_lerp_value] > *m_directions_lerp[dir][value] &&
                     *m_directions_lerp[dir][current_lerp_value] < *m_directions_lerp[dir][value]) ||
@@ -261,17 +267,26 @@ namespace FirstPersonController
 
         LerpMovement(deltaTime);
 
-        float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
-        float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
+        const float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
+        const float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
+
+        // Decelerate the sprint modifier if there is no movement or if moving backwards
+        if(forwardBack <= 0.f && !leftRight)
+        {
+            m_sprint_value = m_current_sprint_lerp_value = m_last_sprint_lerp_value = 1.f;
+            m_sprint_ramp_time = m_sprint_release_ramp_time = 0.f;
+        }
 
         AZ::Vector3 move = AZ::Vector3::CreateZero();
 
         if(forwardBack && leftRight)
-            move = AZ::Vector3(leftRight/Sqrt2, forwardBack/Sqrt2, 0.f);
+            // Scale the rectangular movement to fit within the unit circle
+            move = AZ::Vector3(leftRight * sqrt(1 - 0.5*forwardBack*forwardBack),
+                               forwardBack * sqrt(1 - 0.5*leftRight*leftRight), 0.f);
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
-        if(m_current_sprint_lerp_value > 1 && !m_back_value)
+        if(m_current_sprint_lerp_value != 1 && !m_back_value)
             m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
         else
             m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
