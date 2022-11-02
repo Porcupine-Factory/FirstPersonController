@@ -281,8 +281,8 @@ namespace FirstPersonController
 
         if(forwardBack && leftRight)
             // Scale the rectangular movement to fit within the unit circle
-            move = AZ::Vector3(leftRight * sqrt(1 - 0.5*forwardBack*forwardBack),
-                               forwardBack * sqrt(1 - 0.5*leftRight*leftRight), 0.f);
+            move = AZ::Vector3(leftRight * static_cast<float>(AZStd::sqrt(1 - 0.5*forwardBack*forwardBack)),
+                               forwardBack * static_cast<float>(AZStd::sqrt(1 - 0.5*leftRight*leftRight)), 0.f);
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
