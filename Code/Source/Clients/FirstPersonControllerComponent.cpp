@@ -150,6 +150,11 @@ namespace FirstPersonController
         {
             m_pitch_value = value;
         }
+        // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
+        else if(*inputId == m_SprintEventId)
+        {
+            m_sprint_value = value;
+        }
     }
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
@@ -265,15 +270,20 @@ namespace FirstPersonController
         const float currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
 
+        // Decelerate the sprint modifier if there are no movement keys pressed or if moving backwards
+        if(m_sprint_value != 1.f && ((!m_forward_pressed && !m_left_pressed && !m_right_pressed)
+                                  || (!m_forward_pressed && -m_left_value == m_right_value)))
+            m_sprint_value = 1.f;
+
         LerpMovement(deltaTime);
 
         const float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
         const float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
 
-        // Decelerate the sprint modifier if there is no movement or if moving backwards
-        if(forwardBack <= 0.f && !leftRight)
+        // Set the sprint lerp value to 1 if there is no movement
+        if(!forwardBack && !leftRight)
         {
-            m_sprint_value = m_current_sprint_lerp_value = m_last_sprint_lerp_value = 1.f;
+            m_current_sprint_lerp_value = m_last_sprint_lerp_value = 1.f;
             m_sprint_ramp_time = m_sprint_release_ramp_time = 0.f;
         }
 
@@ -286,10 +296,7 @@ namespace FirstPersonController
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
-        if(m_current_sprint_lerp_value != 1 && !m_back_value)
-            m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
-        else
-            m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
+        m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
 
         //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
 
