@@ -12,6 +12,7 @@ namespace FirstPersonController
     namespace LerpAccess
     {
         enum values {value, current_lerp_value, last_lerp_value, ramp_time, ramp_pressed_released_time};
+        enum directions {forward, back, left, right, sprint};
     }
 
     class FirstPersonControllerComponent

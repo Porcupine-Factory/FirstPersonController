@@ -207,7 +207,12 @@ namespace FirstPersonController
             using namespace LerpAccess;
 
             // Obtain the total ramp time based on the acceleration and top walk speed
-            float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
+            float total_ramp_time;
+            if(dir != sprint)
+                total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
+            else
+                // Subtract 1 for the sprint's total ramp time calculation since it's 1 when not pressed
+                total_ramp_time = abs((*m_directions_lerp[dir][value]-1.f)*m_speed)/m_accel;
 
             if(abs(*m_directions_lerp[dir][value]) > abs(*m_directions_lerp[dir][current_lerp_value]) &&
                *m_directions_lerp[dir][ramp_time] < total_ramp_time)
