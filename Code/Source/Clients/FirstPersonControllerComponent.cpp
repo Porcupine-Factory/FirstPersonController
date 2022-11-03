@@ -197,10 +197,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpMovement(float deltaTime)
     {
-        // The sprint value should never be 0
-        if(m_sprint_value == 0)
-            m_sprint_value = 1.f;
-
         // Lerp movements
         for(int dir = 0; dir < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++dir)
         {
@@ -275,9 +271,12 @@ namespace FirstPersonController
         const float currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
 
+        // The sprint value should never be 0
         // Decelerate the sprint modifier if there are no movement keys pressed or if moving backwards
-        if(m_sprint_value != 1.f && ((!m_forward_pressed && !m_left_pressed && !m_right_pressed)
-                                  || (!m_forward_pressed && -m_left_value == m_right_value)))
+        if(m_sprint_value == 0.f
+           || ( m_sprint_value != 1.f
+               && ((!m_forward_pressed && !m_left_pressed && !m_right_pressed) ||
+                   (!m_forward_pressed && -m_left_value == m_right_value)) ))
             m_sprint_value = 1.f;
 
         LerpMovement(deltaTime);
@@ -304,6 +303,9 @@ namespace FirstPersonController
         m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
 
         //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
+        //static float prev_velocity = m_velocity.GetY();
+        //AZ_Printf("", "VELOCITY DT = %.10f", (m_velocity.GetY() - prev_velocity));
+        //prev_velocity = m_velocity.GetY();
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);
