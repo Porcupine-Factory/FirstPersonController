@@ -40,10 +40,10 @@ namespace FirstPersonController
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::Entity* GetActiveCamera();
 
-        void ProcessInput(float deltaTime);
+        void ProcessInput(const float& deltaTime);
 
-        void UpdateVelocity(float deltaTime);
-        void LerpMovement(float deltaTime);
+        void UpdateVelocity(const float& deltaTime);
+        void LerpMovement(const float& deltaTime);
         AZ::Vector3 m_velocity = AZ::Vector3::CreateZero();
         float m_speed = 10.f;
 

@@ -195,7 +195,7 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::LerpMovement(float deltaTime)
+    void FirstPersonControllerComponent::LerpMovement(const float& deltaTime)
     {
         // Lerp movements
         for(int dir = 0; dir < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++dir)
@@ -266,7 +266,7 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::UpdateVelocity(float deltaTime)
+    void FirstPersonControllerComponent::UpdateVelocity(const float& deltaTime)
     {
         const float currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
@@ -311,7 +311,7 @@ namespace FirstPersonController
             &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);
     }
 
-    void FirstPersonControllerComponent::ProcessInput(float deltaTime)
+    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
     {
         UpdateRotation();
         UpdateVelocity(deltaTime);
