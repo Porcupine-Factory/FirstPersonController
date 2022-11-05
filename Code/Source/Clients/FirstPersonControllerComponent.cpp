@@ -112,7 +112,7 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                // AZ_Printf("Pressed", it_event.first->ToString().c_str());
+                //AZ_Printf("Pressed", it_event.first->ToString().c_str());
             }
         }
     }
@@ -129,7 +129,7 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                // AZ_Printf("Released", it_event->first->ToString().c_str());
+                //AZ_Printf("Released", it_event.first->ToString().c_str());
             }
         }
     }
@@ -216,7 +216,7 @@ namespace FirstPersonController
                 *m_directions_lerp[dir][ramp_time] += deltaTime;
             }
             else if(abs(*m_directions_lerp[dir][value]) < abs(*m_directions_lerp[dir][current_lerp_value]) &&
-                    *m_directions_lerp[dir][ramp_time] > 0.f)
+                    *m_directions_lerp[dir][ramp_time] > total_ramp_time)
             {
                 *m_directions_lerp[dir][ramp_time] -= deltaTime;
             }
@@ -303,8 +303,9 @@ namespace FirstPersonController
         m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
 
         //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
+        //AZ_Printf("", "m_current_sprint_lerp_value = %.10f", m_current_sprint_lerp_value);
         //static float prev_velocity = m_velocity.GetY();
-        //AZ_Printf("", "VELOCITY DT = %.10f", (m_velocity.GetY() - prev_velocity));
+        //AZ_Printf("", "dv/dt = %.10f", (m_velocity.GetY() - prev_velocity));
         //prev_velocity = m_velocity.GetY();
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
