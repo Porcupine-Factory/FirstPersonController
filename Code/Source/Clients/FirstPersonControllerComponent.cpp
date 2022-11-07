@@ -203,12 +203,10 @@ namespace FirstPersonController
             using namespace LerpAccess;
 
             // Obtain the total ramp time based on the acceleration and top walk speed
-            float total_ramp_time;
-            if(m_directions_lerp[dir][value] != &m_sprint_value)
-                total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
-            else
+            float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
+            if(m_directions_lerp[dir][value] == &m_sprint_value)
                 // Subtract 1 for the sprint's total ramp time calculation since it's 1 when not pressed
-                total_ramp_time = abs((*m_directions_lerp[dir][value]-1.f)*m_speed)/m_accel;
+                total_ramp_time = ((*m_directions_lerp[dir][value]-1.f)*m_speed)/m_accel;
 
             if(abs(*m_directions_lerp[dir][value]) > abs(*m_directions_lerp[dir][current_lerp_value]) &&
                *m_directions_lerp[dir][ramp_time] < total_ramp_time)
@@ -275,14 +273,15 @@ namespace FirstPersonController
         // Decelerate the sprint modifier if there are no movement keys pressed or if moving backwards
         if(m_sprint_value == 0.f
            || ( m_sprint_value != 1.f
-               && ((!m_forward_pressed && !m_left_pressed && !m_right_pressed) ||
-                   (!m_forward_pressed && -m_left_value == m_right_value)) ))
+               && ((!m_forward_value && !m_left_value && !m_right_value) ||
+                   (!m_forward_value && -m_left_value == m_right_value)) ))
             m_sprint_value = 1.f;
 
         LerpMovement(deltaTime);
 
-        const float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
-        const float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
+        float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
+        float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
+        const float greater = abs(forwardBack) >= abs(leftRight) ? abs(forwardBack) : abs(leftRight);
 
         // Set the sprint lerp value to 1 if there is no movement
         if(!forwardBack && !leftRight)
@@ -293,10 +292,27 @@ namespace FirstPersonController
 
         AZ::Vector3 move = AZ::Vector3::CreateZero();
 
+        // If both axes have movement then produce a resultant vector which points in a direction
+        // defined by the X & Y components and which has a magnitude equal to whichever component is greater
         if(forwardBack && leftRight)
+        {
+            float scaleFactor = 1.f;
+            if(forwardBack != leftRight)
+            {
+                // This is a simplified form of:
+                //scaleFactor = greater / static_cast<float>(sqrt(pow(abs(leftRight) * cos(atan(abs(forwardBack) / abs(leftRight))),2) + pow(abs(forwardBack) * sin(atan(abs(forwardBack) / abs(leftRight))),2)));
+                scaleFactor = greater / static_cast<float>(sqrt( (pow(forwardBack, 4)+pow(leftRight, 4)) / (pow(forwardBack, 2)+pow(leftRight, 2)) ));
+                forwardBack *= scaleFactor;
+                leftRight *= scaleFactor;
+            }
             // Scale the rectangular movement to fit within the unit circle
-            move = AZ::Vector3(leftRight * static_cast<float>(AZStd::sqrt(1 - 0.5*forwardBack*forwardBack)),
-                               forwardBack * static_cast<float>(AZStd::sqrt(1 - 0.5*leftRight*leftRight)), 0.f);
+            if(signbit(forwardBack) == signbit(leftRight))
+                move = AZ::Vector3(leftRight * cos(atan(forwardBack / leftRight)),
+                                   forwardBack * sin(atan(forwardBack / leftRight)), 0.f);
+            else
+                move = AZ::Vector3(leftRight * cos(atan(forwardBack / leftRight)),
+                                   -1*forwardBack * sin(atan(forwardBack / leftRight)), 0.f);
+        }
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
@@ -304,9 +320,9 @@ namespace FirstPersonController
 
         //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
         //AZ_Printf("", "m_current_sprint_lerp_value = %.10f", m_current_sprint_lerp_value);
-        //static float prev_velocity = m_velocity.GetY();
-        //AZ_Printf("", "dv/dt = %.10f", (m_velocity.GetY() - prev_velocity));
-        //prev_velocity = m_velocity.GetY();
+        //static float prev_velocity = m_velocity.GetLength();
+        //AZ_Printf("", "dv/dt = %.10f", (m_velocity.GetLength() - prev_velocity));
+        //prev_velocity = m_velocity.GetLength();
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);
