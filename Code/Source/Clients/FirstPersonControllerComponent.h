@@ -97,6 +97,8 @@ namespace FirstPersonController
         float m_pitch_value = 0.f;
         float m_sprint_value = 1.f;
 
+        float m_sprint_pressed_value = 1.f;
+
         bool* m_pressed[5] = {&m_forward_pressed, &m_back_pressed, &m_left_pressed, &m_right_pressed, &m_sprint_pressed};
 
         float* m_directions_lerp[5][5] = {

@@ -106,11 +106,16 @@ namespace FirstPersonController
         if(inputId == nullptr)
             return;
 
+        if(*inputId == m_SprintEventId)
+        {
+            m_sprint_value = m_sprint_pressed_value = value;
+        }
+
         for(auto& it_event : m_control_map)
         {
-            if(*inputId == *(it_event.first))
+            if(*inputId == *(it_event.first) && !(*(it_event.first) == m_SprintEventId))
             {
-                *(it_event.second) = value;
+                *(it_event.second) = value * m_sprint_value;
                 // print the local user ID and the action name CRC
                 //AZ_Printf("Pressed", it_event.first->ToString().c_str());
             }
@@ -153,7 +158,17 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if(*inputId == m_SprintEventId)
         {
-            m_sprint_value = value;
+            m_sprint_value = m_sprint_pressed_value = value;
+        }
+
+        for(auto& it_event : m_control_map)
+        {
+            if(*inputId == *(it_event.first) && !(*(it_event.first) == m_SprintEventId))
+            {
+                *(it_event.second) = value * m_sprint_value;
+                // print the local user ID and the action name CRC
+                //AZ_Printf("Held", it_event.first->ToString().c_str());
+            }
         }
     }
 
@@ -202,21 +217,27 @@ namespace FirstPersonController
         {
             using namespace LerpAccess;
 
+            float deltaTimeSprint = deltaTime;
+
             // Obtain the total ramp time based on the acceleration and top walk speed
             float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
             if(m_directions_lerp[dir][value] == &m_sprint_value)
                 // Subtract 1 for the sprint's total ramp time calculation since it's 1 when not pressed
                 total_ramp_time = ((*m_directions_lerp[dir][value]-1.f)*m_speed)/m_accel;
 
+            // Apply a greater acceleration to the movement when sprinting
+            if(m_current_sprint_lerp_value != 1.f)
+                deltaTimeSprint *= m_sprint_pressed_value;
+
             if(abs(*m_directions_lerp[dir][value]) > abs(*m_directions_lerp[dir][current_lerp_value]) &&
                *m_directions_lerp[dir][ramp_time] < total_ramp_time)
             {
-                *m_directions_lerp[dir][ramp_time] += deltaTime;
+                *m_directions_lerp[dir][ramp_time] += deltaTimeSprint;
             }
             else if(abs(*m_directions_lerp[dir][value]) < abs(*m_directions_lerp[dir][current_lerp_value]) &&
                     *m_directions_lerp[dir][ramp_time] > total_ramp_time)
             {
-                *m_directions_lerp[dir][ramp_time] -= deltaTime;
+                *m_directions_lerp[dir][ramp_time] -= deltaTimeSprint;
             }
 
             if(abs(*m_directions_lerp[dir][current_lerp_value]) < abs(*m_directions_lerp[dir][value]))
@@ -248,8 +269,11 @@ namespace FirstPersonController
                 }
                 //AZ_Printf("", "SLOWING DOWN");
 
+                float target = 0.f;
+                if(m_directions_lerp[dir][value] == &m_sprint_value)
+                    target = 1.f;
                 *m_directions_lerp[dir][current_lerp_value] =
-                    AZ::Lerp(*m_directions_lerp[dir][value],
+                    AZ::Lerp(target,
                              *m_directions_lerp[dir][last_lerp_value],
                              (*m_directions_lerp[dir][ramp_time] / *m_directions_lerp[dir][ramp_pressed_released_time]));
 
@@ -316,7 +340,7 @@ namespace FirstPersonController
         else
             move = AZ::Vector3(leftRight, forwardBack, 0.f);
 
-        m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
+        m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
 
         //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
         //AZ_Printf("", "m_current_sprint_lerp_value = %.10f", m_current_sprint_lerp_value);
