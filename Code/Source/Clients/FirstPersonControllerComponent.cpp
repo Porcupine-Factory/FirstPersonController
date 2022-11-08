@@ -220,7 +220,17 @@ namespace FirstPersonController
             float deltaTimeSprint = deltaTime;
 
             // Obtain the total ramp time based on the acceleration and top walk speed
-            float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/m_accel;
+            const float forwardBack_value = m_forward_value + m_back_value;
+            const float leftRight_value = m_left_value + m_right_value;
+            float accel_ratio = 1.f;
+            if(forwardBack_value && leftRight_value)
+            {
+                accel_ratio = abs(forwardBack_value / leftRight_value);
+                if(m_directions_lerp[dir][value] == &m_left_value || m_directions_lerp[dir][value] == &m_right_value)
+                    accel_ratio = 1.f/accel_ratio;
+                accel_ratio = accel_ratio <= 1.f ? accel_ratio : 1.f;
+            }
+            float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/(m_accel*accel_ratio);
             if(m_directions_lerp[dir][value] == &m_sprint_value)
                 // Subtract 1 for the sprint's total ramp time calculation since it's 1 when not pressed
                 total_ramp_time = ((*m_directions_lerp[dir][value]-1.f)*m_speed)/m_accel;
@@ -342,6 +352,9 @@ namespace FirstPersonController
 
         m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed;
 
+        //AZ_Printf("", "atan(m_velocity.GetY()/m_velocity.GetX()) = %.10f", atan(m_velocity.GetY()/m_velocity.GetX()));
+        //AZ_Printf("", "m_velocity.GetX() = %.10f", m_velocity.GetX());
+        //AZ_Printf("", "m_velocity.GetY() = %.10f", m_velocity.GetY());
         //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
         //AZ_Printf("", "m_current_sprint_lerp_value = %.10f", m_current_sprint_lerp_value);
         //static float prev_velocity = m_velocity.GetLength();
