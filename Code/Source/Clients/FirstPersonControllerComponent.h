@@ -38,7 +38,7 @@ namespace FirstPersonController
         void UpdateVelocity(const float& deltaTime);
 
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
-        void SprintManager(const float& currentHeading, const float& deltaTime);
+        void SprintManager(const float& deltaTime);
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
@@ -53,6 +53,8 @@ namespace FirstPersonController
         // assuming the event value multiplier is 1.0
         float m_yaw_sensitivity = 0.005f;
         float m_pitch_sensitivity = 0.005f;
+
+        float m_current_heading = 0.f;
 
         // Acceleration lerp movement
         float m_accel = 1.f;

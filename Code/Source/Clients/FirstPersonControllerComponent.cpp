@@ -214,6 +214,9 @@ namespace FirstPersonController
         {
             t->RotateAroundLocalX(-1.f * m_pitch_value * m_pitch_sensitivity);
         }
+
+        m_current_heading = GetEntity()->GetTransform()->
+            GetWorldRotationQuaternion().GetEulerRadians().GetZ();
     }
 
     AZ::Vector3 FirstPersonControllerComponent::LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime)
@@ -221,7 +224,7 @@ namespace FirstPersonController
         float total_lerp_time = m_last_applied_velocity.GetDistance(target_velocity)/m_accel;
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
-        m_lerp_time += m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_value-1.f) * m_sprint_adjust) : deltaTime;
+        m_lerp_time += m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_adjust) : deltaTime;
 
         if(m_lerp_time >= total_lerp_time)
             m_lerp_time = total_lerp_time;
@@ -232,10 +235,10 @@ namespace FirstPersonController
         return new_velocity;
     }
 
-    void FirstPersonControllerComponent::SprintManager(const float& currentHeading, const float& deltaTime)
+    void FirstPersonControllerComponent::SprintManager(const float& deltaTime)
     {
         // Get the character's velocity to determine which way they're moving
-        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-currentHeading).TransformVector(m_apply_velocity);
+        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
 
         // The sprint value should never be 0 and it shouldn't be applied if you're moving backwards
         if(m_sprint_value == 0.f
@@ -261,6 +264,20 @@ namespace FirstPersonController
             // Sprint adjustment factor based on the angle of the character's movement
             // with respect to their frame of reference
             m_sprint_adjust = abs(atan(character_velocity.GetY()/character_velocity.GetX()))/(AZ::Constants::Pi/2.f);
+
+            // Spit the sprint adjust value into discrete bins
+            // this is done because the character_velocity X/Y components contain unwanted noise
+            if(m_sprint_adjust >= 0.8f)
+                m_sprint_adjust = 1.0f;
+            else if(m_sprint_adjust >= 0.625f)
+                m_sprint_adjust = 0.75f;
+            else if(m_sprint_adjust >= 0.375f)
+                m_sprint_adjust = 0.5f;
+            else if(m_sprint_adjust >= 0.2f)
+                m_sprint_adjust = 0.25f;
+            else
+                m_sprint_adjust = 0.f;
+
             m_sprint_time += deltaTime;
             if(m_sprint_time > total_sprint_time)
                 m_sprint_time = total_sprint_time;
@@ -276,10 +293,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateVelocity(const float& deltaTime)
     {
-        // Get the current heading
-        const float currentHeading = GetEntity()->GetTransform()->
-            GetWorldRotationQuaternion().GetEulerRadians().GetZ();
-
         float forwardBack = m_forward_value * m_forward_scale + m_back_value * m_back_scale;
         float leftRight = m_left_value * m_left_scale + m_right_value * m_right_scale;
 
@@ -308,7 +321,7 @@ namespace FirstPersonController
             target_velocity.SetX(target_velocity.GetX() * m_left_scale);
 
         // Call the sprint manager
-        SprintManager(currentHeading, deltaTime);
+        SprintManager(deltaTime);
 
         // Apply the speed and sprint factor
         target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_adjust);
@@ -320,27 +333,28 @@ namespace FirstPersonController
             m_prev_target_velocity = target_velocity;
 
             // Store the last applied velocity to be used for the lerping
-            m_last_applied_velocity = AZ::Quaternion::CreateRotationZ(-currentHeading).TransformVector(m_apply_velocity);
+            m_last_applied_velocity = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
 
             // Reset the lerp time since the target velocity changed
             m_lerp_time = 0.f;
         }
 
         // Get the character's velocity from their frame of reference
-        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-currentHeading).TransformVector(m_apply_velocity);
+        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
 
         // Lerp to the velocity if we're not already there
         if(character_velocity != target_velocity)
-            m_apply_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(LerpVelocity(target_velocity, deltaTime));
+            m_apply_velocity = AZ::Quaternion::CreateRotationZ(m_current_heading).TransformVector(LerpVelocity(target_velocity, deltaTime));
 
         // Debug print statements to observe the velocity and acceleration
-        //AZ_Printf("", "currentHeading = %.10f", currentHeading);
+        //AZ_Printf("", "m_current_heading = %.10f", m_current_heading);
         //AZ_Printf("", "atan(m_apply_velocity.GetY()/m_apply_velocity.GetX()) = %.10f", atan(m_apply_velocity.GetY()/m_apply_velocity.GetX()));
         //AZ_Printf("", "m_apply_velocity.GetLength() = %.10f", m_apply_velocity.GetLength());
         //AZ_Printf("", "m_apply_velocity.GetX() = %.10f", m_apply_velocity.GetX());
         //AZ_Printf("", "m_apply_velocity.GetY() = %.10f", m_apply_velocity.GetY());
         //AZ_Printf("", "m_sprint_time = %.10f", m_sprint_time);
         //AZ_Printf("", "m_sprint_value = %.10f", m_sprint_value);
+        //AZ_Printf("", "m_sprint_adjust = %.10f", m_sprint_adjust);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
         //prev_velocity = m_apply_velocity.GetLength();
