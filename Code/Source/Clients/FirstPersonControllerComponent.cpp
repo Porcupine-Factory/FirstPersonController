@@ -269,6 +269,9 @@ namespace FirstPersonController
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
         else if(m_sprint_value == 1.f)
         {
+            // Set the sprint adjust to 0 since there is no sprint applied
+            m_sprint_adjust = 0.f;
+
             m_sprint_time -= deltaTime;
             if(m_sprint_time < 0.f)
                 m_sprint_time = 0.f;
