@@ -235,7 +235,7 @@ namespace FirstPersonController
         return new_velocity;
     }
 
-    void FirstPersonControllerComponent::SprintManager(const float& deltaTime)
+    void FirstPersonControllerComponent::SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime)
     {
         // Get the character's velocity to determine which way they're moving
         const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
@@ -261,22 +261,9 @@ namespace FirstPersonController
         // If the sprint key is pressed then increment the sprint counter
         if(m_sprint_value != 1.f)
         {
-            // Sprint adjustment factor based on the angle of the character's movement
+            // Sprint adjustment factor based on the angle of the target velocity
             // with respect to their frame of reference
-            m_sprint_adjust = abs(atan(character_velocity.GetY()/character_velocity.GetX()))/(AZ::Constants::Pi/2.f);
-
-            // Spit the sprint adjust value into discrete bins
-            // this is done because the character_velocity X/Y components contain unwanted noise
-            if(m_sprint_adjust >= 0.8f)
-                m_sprint_adjust = 1.0f;
-            else if(m_sprint_adjust >= 0.625f)
-                m_sprint_adjust = 0.75f;
-            else if(m_sprint_adjust >= 0.375f)
-                m_sprint_adjust = 0.5f;
-            else if(m_sprint_adjust >= 0.2f)
-                m_sprint_adjust = 0.25f;
-            else
-                m_sprint_adjust = 0.f;
+            m_sprint_adjust = 1.f - target_velocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::Pi/2.f);
 
             m_sprint_time += deltaTime;
             if(m_sprint_time > total_sprint_time)
@@ -321,7 +308,7 @@ namespace FirstPersonController
             target_velocity.SetX(target_velocity.GetX() * m_left_scale);
 
         // Call the sprint manager
-        SprintManager(deltaTime);
+        SprintManager(target_velocity, deltaTime);
 
         // Apply the speed and sprint factor
         target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_adjust);

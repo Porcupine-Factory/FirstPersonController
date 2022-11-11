@@ -38,7 +38,7 @@ namespace FirstPersonController
         void UpdateVelocity(const float& deltaTime);
 
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
-        void SprintManager(const float& deltaTime);
+        void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
