@@ -22,6 +22,10 @@ namespace FirstPersonController
               ->Field("Left Key", &FirstPersonControllerComponent::m_str_left)
               ->Field("Right Key", &FirstPersonControllerComponent::m_str_right)
               ->Field("Sprint Key", &FirstPersonControllerComponent::m_str_sprint)
+              ->Field("Forward Scale", &FirstPersonControllerComponent::m_forward_scale)
+              ->Field("Back Scale", &FirstPersonControllerComponent::m_back_scale)
+              ->Field("Left Scale", &FirstPersonControllerComponent::m_left_scale)
+              ->Field("Right Scale", &FirstPersonControllerComponent::m_right_scale)
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
               ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
@@ -50,6 +54,18 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_right,
                         "Right Key", "Key for moving right")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_forward_scale,
+                        "Forward Scale", "Forward movement scale factor")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_back_scale,
+                        "Back Scale", "Back movement scale factor")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_left_scale,
+                        "Left Scale", "Left movement scale factor")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_right_scale,
+                        "Right Scale", "Right movement scale factor")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_sprint,
                         "Sprint Key", "Key for sprinting")
@@ -106,9 +122,14 @@ namespace FirstPersonController
         if(inputId == nullptr)
             return;
 
+        if(*inputId == m_SprintEventId)
+        {
+            m_sprint_value = m_sprint_pressed_value = value;
+        }
+
         for(auto& it_event : m_control_map)
         {
-            if(*inputId == *(it_event.first))
+            if(*inputId == *(it_event.first) && !(*(it_event.first) == m_SprintEventId))
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
@@ -153,7 +174,7 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if(*inputId == m_SprintEventId)
         {
-            m_sprint_value = value;
+            m_sprint_value = m_sprint_pressed_value = value;
         }
     }
 
@@ -178,167 +199,154 @@ namespace FirstPersonController
 
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
-        t->RotateAroundLocalZ(-1 * m_yaw_value * m_yaw_sensitivity);
+        t->RotateAroundLocalZ(-1.f * m_yaw_value * m_yaw_sensitivity);
 
         m_activeCameraEntity = GetActiveCamera();
         t = m_activeCameraEntity->GetTransform();
 
-        const float rotate_pitch = -1 * m_pitch_value * m_pitch_sensitivity;
+        const float rotate_pitch = -1.f * m_pitch_value * m_pitch_sensitivity;
         const float current_pitch = t->GetLocalRotation().GetX();
 
         using namespace AZ::Constants;
-        if(abs(current_pitch) <= Pi/2 ||
-           current_pitch >= Pi/2 && rotate_pitch < 0 ||
-           current_pitch <= -Pi/2 && rotate_pitch > 0)
+        if(abs(current_pitch) <= Pi/2.f ||
+           current_pitch >= Pi/2.f && rotate_pitch < 0.f ||
+           current_pitch <= -Pi/2.f && rotate_pitch > 0.f)
         {
-            t->RotateAroundLocalX(-1 * m_pitch_value * m_pitch_sensitivity);
+            t->RotateAroundLocalX(-1.f * m_pitch_value * m_pitch_sensitivity);
         }
     }
 
-    void FirstPersonControllerComponent::LerpMovement(const float& deltaTime)
+    AZ::Vector3 FirstPersonControllerComponent::LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime)
     {
-        // Lerp movements
-        for(int dir = 0; dir < sizeof(m_directions_lerp) / sizeof(m_directions_lerp[0]); ++dir)
+        float total_lerp_time = m_last_applied_velocity.GetDistance(target_velocity)/m_accel;
+
+        // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
+        m_lerp_time += m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_value-1.f) * m_sprint_adjust) : deltaTime;
+
+        if(m_lerp_time >= total_lerp_time)
+            m_lerp_time = total_lerp_time;
+
+        // Lerp the velocity from the last applied velocity to the target velocity
+        const AZ::Vector3 new_velocity = m_last_applied_velocity.Lerp(target_velocity, m_lerp_time / total_lerp_time);
+
+        return new_velocity;
+    }
+
+    void FirstPersonControllerComponent::SprintManager(const float& currentHeading, const float& deltaTime)
+    {
+        // Get the character's velocity to determine which way they're moving
+        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-currentHeading).TransformVector(m_apply_velocity);
+
+        // The sprint value should never be 0 and it shouldn't be applied if you're moving backwards
+        if(m_sprint_value == 0.f
+           || (!m_apply_velocity.GetY() && !m_apply_velocity.GetX())
+           || (m_sprint_value != 1.f
+               && ((!m_forward_value && !m_left_value && !m_right_value) ||
+                   (!m_forward_value && -m_left_value == m_right_value) ||
+                   (character_velocity.GetY() < 0.f)) ))
+            m_sprint_value = 1.f;
+
+        // Set the sprint value to 1 and reset the counter if there is no movement
+        if(!m_apply_velocity.GetY() && !m_apply_velocity.GetX())
         {
-            using namespace LerpAccess;
+            m_sprint_value = 1.f;
+            m_sprint_time = 0.f;
+        }
 
-            // Obtain the total ramp time based on the acceleration and top walk speed
-            const float forwardBack_value = m_forward_value + m_back_value;
-            const float leftRight_value = m_left_value + m_right_value;
-            float accel_ratio = 1.f;
-            if(forwardBack_value && leftRight_value)
-            {
-                accel_ratio = abs(forwardBack_value / leftRight_value);
-                if(m_directions_lerp[dir][value] == &m_left_value || m_directions_lerp[dir][value] == &m_right_value)
-                    accel_ratio = 1.f/accel_ratio;
-                accel_ratio = accel_ratio <= 1.f ? accel_ratio : 1.f;
-            }
-            float total_ramp_time = abs(*m_directions_lerp[dir][value]*m_speed)/(m_accel*accel_ratio);
-            if(m_directions_lerp[dir][value] == &m_sprint_value)
-                // Subtract 1 for the sprint's total ramp time calculation since it's 1 when not pressed
-                total_ramp_time = ((*m_directions_lerp[dir][value]-1.f)*m_speed)/m_accel;
+        const float total_sprint_time = ((m_sprint_value-1.f)*m_speed)/m_accel;
 
-            if(abs(*m_directions_lerp[dir][value]) > abs(*m_directions_lerp[dir][current_lerp_value]) &&
-               *m_directions_lerp[dir][ramp_time] < total_ramp_time)
-            {
-                *m_directions_lerp[dir][ramp_time] += deltaTime;
-            }
-            else if(abs(*m_directions_lerp[dir][value]) < abs(*m_directions_lerp[dir][current_lerp_value]) &&
-                    *m_directions_lerp[dir][ramp_time] > total_ramp_time)
-            {
-                *m_directions_lerp[dir][ramp_time] -= deltaTime;
-            }
-
-            if(abs(*m_directions_lerp[dir][current_lerp_value]) < abs(*m_directions_lerp[dir][value]))
-            {
-                if(!*m_pressed[dir])
-                {
-                    *m_pressed[dir] = true;
-                    *m_directions_lerp[dir][last_lerp_value] = *m_directions_lerp[dir][current_lerp_value];
-                    *m_directions_lerp[dir][ramp_pressed_released_time] = *m_directions_lerp[dir][ramp_time];
-                }
-                //AZ_Printf("", "SPEEDING UP");
-
-                *m_directions_lerp[dir][current_lerp_value] =
-                    AZ::Lerp(*m_directions_lerp[dir][last_lerp_value],
-                             *m_directions_lerp[dir][value],
-                             ((*m_directions_lerp[dir][ramp_time] - *m_directions_lerp[dir][ramp_pressed_released_time])
-                              / (total_ramp_time - *m_directions_lerp[dir][ramp_pressed_released_time])));
-
-                if(abs(*m_directions_lerp[dir][current_lerp_value]) > abs(*m_directions_lerp[dir][value]))
-                    *m_directions_lerp[dir][current_lerp_value] = *m_directions_lerp[dir][value];
-            }
-            else if(abs(*m_directions_lerp[dir][current_lerp_value]) > abs(*m_directions_lerp[dir][value]))
-            {
-                if(*m_pressed[dir])
-                {
-                    *m_pressed[dir] = false;
-                    *m_directions_lerp[dir][last_lerp_value] = *m_directions_lerp[dir][current_lerp_value];
-                    *m_directions_lerp[dir][ramp_pressed_released_time] = *m_directions_lerp[dir][ramp_time];
-                }
-                //AZ_Printf("", "SLOWING DOWN");
-
-                *m_directions_lerp[dir][current_lerp_value] =
-                    AZ::Lerp(*m_directions_lerp[dir][value],
-                             *m_directions_lerp[dir][last_lerp_value],
-                             (*m_directions_lerp[dir][ramp_time] / *m_directions_lerp[dir][ramp_pressed_released_time]));
-
-                if((*m_directions_lerp[dir][last_lerp_value] > *m_directions_lerp[dir][value] &&
-                    *m_directions_lerp[dir][current_lerp_value] < *m_directions_lerp[dir][value]) ||
-                   (*m_directions_lerp[dir][last_lerp_value] < *m_directions_lerp[dir][value] &&
-                    *m_directions_lerp[dir][current_lerp_value] > *m_directions_lerp[dir][value]))
-                {
-                    *m_directions_lerp[dir][current_lerp_value] = *m_directions_lerp[dir][value];
-                }
-            }
+        // If the sprint key is pressed then increment the sprint counter
+        if(m_sprint_value != 1.f)
+        {
+            // Sprint adjustment factor based on the angle of the character's movement
+            // with respect to their frame of reference
+            m_sprint_adjust = abs(atan(character_velocity.GetY()/character_velocity.GetX()))/(AZ::Constants::Pi/2.f);
+            m_sprint_time += deltaTime;
+            if(m_sprint_time > total_sprint_time)
+                m_sprint_time = total_sprint_time;
+        }
+        // Otherwise if the sprint key isn't pressed then decrement the sprint counter
+        else if(m_sprint_value == 1.f)
+        {
+            m_sprint_time -= deltaTime;
+            if(m_sprint_time < 0.f)
+                m_sprint_time = 0.f;
         }
     }
 
     void FirstPersonControllerComponent::UpdateVelocity(const float& deltaTime)
     {
+        // Get the current heading
         const float currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
 
-        // The sprint value should never be 0
-        // Decelerate the sprint modifier if there are no movement keys pressed or if moving backwards
-        if(m_sprint_value == 0.f
-           || ( m_sprint_value != 1.f
-               && ((!m_forward_value && !m_left_value && !m_right_value) ||
-                   (!m_forward_value && -m_left_value == m_right_value)) ))
-            m_sprint_value = 1.f;
+        float forwardBack = m_forward_value * m_forward_scale + m_back_value * m_back_scale;
+        float leftRight = m_left_value * m_left_scale + m_right_value * m_right_scale;
 
-        LerpMovement(deltaTime);
-
-        float forwardBack = m_current_forward_lerp_value + m_current_back_lerp_value;
-        float leftRight = m_current_left_lerp_value + m_current_right_lerp_value;
-        const float greater = abs(forwardBack) >= abs(leftRight) ? abs(forwardBack) : abs(leftRight);
-
-        // Set the sprint lerp value to 1 if there is no movement
-        if(!forwardBack && !leftRight)
-        {
-            m_current_sprint_lerp_value = m_last_sprint_lerp_value = 1.f;
-            m_sprint_ramp_time = m_sprint_release_ramp_time = 0.f;
-        }
-
-        AZ::Vector3 move = AZ::Vector3::CreateZero();
-
-        // If both axes have movement then produce a resultant vector which points in a direction
-        // defined by the X & Y components and which has a magnitude equal to whichever component is greater
-        if(forwardBack && leftRight)
-        {
-            float scaleFactor = 1.f;
-            if(forwardBack != leftRight)
-            {
-                // This is a simplified form of:
-                //scaleFactor = greater / static_cast<float>(sqrt(pow(abs(leftRight) * cos(atan(abs(forwardBack) / abs(leftRight))),2) + pow(abs(forwardBack) * sin(atan(abs(forwardBack) / abs(leftRight))),2)));
-                scaleFactor = greater / static_cast<float>(sqrt( (pow(forwardBack, 4)+pow(leftRight, 4)) / (pow(forwardBack, 2)+pow(leftRight, 2)) ));
-                forwardBack *= scaleFactor;
-                leftRight *= scaleFactor;
-            }
-            // Scale the rectangular movement to fit within the unit circle
-            if(signbit(forwardBack) == signbit(leftRight))
-                move = AZ::Vector3(leftRight * cos(atan(forwardBack / leftRight)),
-                                   forwardBack * sin(atan(forwardBack / leftRight)), 0.f);
-            else
-                move = AZ::Vector3(leftRight * cos(atan(forwardBack / leftRight)),
-                                   -1*forwardBack * sin(atan(forwardBack / leftRight)), 0.f);
-        }
+        // Remove the scale factor since it's going to be applied after the normalization
+        if(forwardBack >= 0.f)
+            forwardBack /= m_forward_scale;
         else
-            move = AZ::Vector3(leftRight, forwardBack, 0.f);
+            forwardBack /= m_back_scale;
+        if(leftRight >= 0.f)
+            leftRight /= m_right_scale;
+        else
+            leftRight /= m_left_scale;
 
-        m_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(move) * m_speed * m_current_sprint_lerp_value;
+        AZ::Vector3 target_velocity = AZ::Vector3(leftRight, forwardBack, 0.f);
 
-        //AZ_Printf("", "atan(m_velocity.GetY()/m_velocity.GetX()) = %.10f", atan(m_velocity.GetY()/m_velocity.GetX()));
-        //AZ_Printf("", "m_velocity.GetX() = %.10f", m_velocity.GetX());
-        //AZ_Printf("", "m_velocity.GetY() = %.10f", m_velocity.GetY());
-        //AZ_Printf("", "m_velocity.GetLength() = %.10f", m_velocity.GetLength());
-        //AZ_Printf("", "m_current_sprint_lerp_value = %.10f", m_current_sprint_lerp_value);
-        //static float prev_velocity = m_velocity.GetLength();
-        //AZ_Printf("", "dv/dt = %.10f", (m_velocity.GetLength() - prev_velocity));
-        //prev_velocity = m_velocity.GetLength();
+        // Normalize the vector if its magnitude is greater than 1 and then scale it
+        if((forwardBack || leftRight) && sqrt(forwardBack*forwardBack + leftRight*leftRight) > 1.f)
+            target_velocity.Normalize();
+        if(target_velocity.GetY() >= 0.f)
+            target_velocity.SetY(target_velocity.GetY() * m_forward_scale);
+        else
+            target_velocity.SetY(target_velocity.GetY() * m_back_scale);
+        if(target_velocity.GetX() >= 0.f)
+            target_velocity.SetX(target_velocity.GetX() * m_right_scale);
+        else
+            target_velocity.SetX(target_velocity.GetX() * m_left_scale);
+
+        // Call the sprint manager
+        SprintManager(currentHeading, deltaTime);
+
+        // Apply the speed and sprint factor
+        target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_adjust);
+
+        // Obtain the last applied velocity if the target velocity changed
+        if(m_prev_target_velocity != target_velocity)
+        {
+            // Set the previous target velocity to the new one
+            m_prev_target_velocity = target_velocity;
+
+            // Store the last applied velocity to be used for the lerping
+            m_last_applied_velocity = AZ::Quaternion::CreateRotationZ(-currentHeading).TransformVector(m_apply_velocity);
+
+            // Reset the lerp time since the target velocity changed
+            m_lerp_time = 0.f;
+        }
+
+        // Get the character's velocity from their frame of reference
+        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-currentHeading).TransformVector(m_apply_velocity);
+
+        // Lerp to the velocity if we're not already there
+        if(character_velocity != target_velocity)
+            m_apply_velocity = AZ::Quaternion::CreateRotationZ(currentHeading).TransformVector(LerpVelocity(target_velocity, deltaTime));
+
+        // Debug print statements to observe the velocity and acceleration
+        //AZ_Printf("", "currentHeading = %.10f", currentHeading);
+        //AZ_Printf("", "atan(m_apply_velocity.GetY()/m_apply_velocity.GetX()) = %.10f", atan(m_apply_velocity.GetY()/m_apply_velocity.GetX()));
+        //AZ_Printf("", "m_apply_velocity.GetLength() = %.10f", m_apply_velocity.GetLength());
+        //AZ_Printf("", "m_apply_velocity.GetX() = %.10f", m_apply_velocity.GetX());
+        //AZ_Printf("", "m_apply_velocity.GetY() = %.10f", m_apply_velocity.GetY());
+        //AZ_Printf("", "m_sprint_time = %.10f", m_sprint_time);
+        //AZ_Printf("", "m_sprint_value = %.10f", m_sprint_value);
+        //static float prev_velocity = m_apply_velocity.GetLength();
+        //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
+        //prev_velocity = m_apply_velocity.GetLength();
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
-            &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_velocity);
+            &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_apply_velocity);
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
