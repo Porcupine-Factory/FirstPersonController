@@ -323,11 +323,11 @@ namespace FirstPersonController
             m_lerp_time = 0.f;
         }
 
-        // Get the character's velocity from their frame of reference
-        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
+        // Rotate the target velocity vector so that it can be compared against the applied velocity
+        const AZ::Vector3 target_velocity_world = AZ::Quaternion::CreateRotationZ(m_current_heading).TransformVector(target_velocity);
 
         // Lerp to the velocity if we're not already there
-        if(character_velocity != target_velocity)
+        if(m_apply_velocity != target_velocity_world)
             m_apply_velocity = AZ::Quaternion::CreateRotationZ(m_current_heading).TransformVector(LerpVelocity(target_velocity, deltaTime));
 
         // Debug print statements to observe the velocity and acceleration
