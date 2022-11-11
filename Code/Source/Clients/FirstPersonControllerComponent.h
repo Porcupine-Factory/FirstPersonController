@@ -7,13 +7,6 @@
 
 namespace FirstPersonController
 {
-    static constexpr float Sqrt2 = 1.4142135623730950488016887242097;
-
-    namespace LerpAccess
-    {
-        enum values {value, current_lerp_value, last_lerp_value, ramp_time, ramp_pressed_released_time};
-    }
-
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
@@ -43,9 +36,17 @@ namespace FirstPersonController
         void ProcessInput(const float& deltaTime);
 
         void UpdateVelocity(const float& deltaTime);
-        void LerpMovement(const float& deltaTime);
-        AZ::Vector3 m_velocity = AZ::Vector3::CreateZero();
+
+        AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
+        void SprintManager(const float& currentHeading, const float& deltaTime);
+
+        AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_last_applied_velocity = AZ::Vector3::CreateZero();
+
         float m_speed = 10.f;
+        
+        float m_lerp_time = 0.f;
 
         void UpdateRotation();
         // These default values work well
@@ -56,37 +57,12 @@ namespace FirstPersonController
         // Acceleration lerp movement
         float m_accel = 1.f;
 
-        float m_current_forward_lerp_value = 0.f;
-        float m_last_forward_lerp_value = 0.f;
-        float m_forward_ramp_time = 0.f;
-        float m_forward_release_ramp_time = 0.f;
-
-        float m_current_back_lerp_value = 0.f;
-        float m_last_back_lerp_value = 0.f;
-        float m_back_ramp_time = 0.f;
-        float m_back_release_ramp_time = 0.f;
-
-        float m_current_left_lerp_value = 0.f;
-        float m_last_left_lerp_value = 0.f;
-        float m_left_ramp_time = 0.f;
-        float m_left_release_ramp_time = 0.f;
-
-        float m_current_right_lerp_value = 0.f;
-        float m_last_right_lerp_value = 0.f;
-        float m_right_ramp_time = 0.f;
-        float m_right_release_ramp_time = 0.f;
-
-        float m_current_sprint_lerp_value = 1.f;
-        float m_last_sprint_lerp_value = 1.f;
-        float m_sprint_ramp_time = 0.f;
-        float m_sprint_release_ramp_time = 0.f;
-
-        // Track when the key is pressed / released
-        bool m_forward_pressed = false;
-        bool m_back_pressed = false;
-        bool m_left_pressed = false;
-        bool m_right_pressed = false;
-        bool m_sprint_pressed = false;
+        // Movement scale factors
+        // assuming the event value multipliers are all +/-1.0
+        float m_forward_scale = 1.f;
+        float m_back_scale = 0.75f;
+        float m_left_scale = 1.f;
+        float m_right_scale = 1.f;
 
         // Event value multipliers
         float m_forward_value = 0.f;
@@ -97,16 +73,10 @@ namespace FirstPersonController
         float m_pitch_value = 0.f;
         float m_sprint_value = 1.f;
 
+        // Sprint application variables
         float m_sprint_pressed_value = 1.f;
-
-        bool* m_pressed[5] = {&m_forward_pressed, &m_back_pressed, &m_left_pressed, &m_right_pressed, &m_sprint_pressed};
-
-        float* m_directions_lerp[5][5] = {
-            {&m_forward_value, &m_current_forward_lerp_value, &m_last_forward_lerp_value, &m_forward_ramp_time, &m_forward_release_ramp_time},
-            {&m_back_value, &m_current_back_lerp_value, &m_last_back_lerp_value, &m_back_ramp_time, &m_back_release_ramp_time},
-            {&m_left_value, &m_current_left_lerp_value, &m_last_left_lerp_value, &m_left_ramp_time, &m_left_release_ramp_time},
-            {&m_right_value, &m_current_right_lerp_value, &m_last_right_lerp_value, &m_right_ramp_time, &m_right_release_ramp_time},
-            {&m_sprint_value, &m_current_sprint_lerp_value, &m_last_sprint_lerp_value, &m_sprint_ramp_time, &m_sprint_release_ramp_time}};
+        float m_sprint_adjust = 0.f;
+        float m_sprint_time = 0.f;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
