@@ -237,16 +237,13 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime)
     {
-        // Get the character's velocity to determine which way they're moving
-        const AZ::Vector3 character_velocity = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
-
-        // The sprint value should never be 0 and it shouldn't be applied if you're moving backwards
+        // The sprint value should never be 0 and it shouldn't be applied if you're trying to moving backwards
         if(m_sprint_value == 0.f
            || (!m_apply_velocity.GetY() && !m_apply_velocity.GetX())
            || (m_sprint_value != 1.f
                && ((!m_forward_value && !m_left_value && !m_right_value) ||
                    (!m_forward_value && -m_left_value == m_right_value) ||
-                   (character_velocity.GetY() < 0.f)) ))
+                   (target_velocity.GetY() < 0.f)) ))
             m_sprint_value = 1.f;
 
         // Set the sprint value to 1 and reset the counter if there is no movement
