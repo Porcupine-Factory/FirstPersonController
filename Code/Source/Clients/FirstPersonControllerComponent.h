@@ -2,6 +2,7 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
 #include <AzCore/Math/Vector3.h>
+#include <AzCore/Math/Quaternion.h>
 #include <AzCore/std/containers/map.h>
 #include <StartingPointInput/InputEventNotificationBus.h>
 
@@ -38,6 +39,7 @@ namespace FirstPersonController
         void UpdateVelocity(const float& deltaTime);
 
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
+        AZ::Vector3 SlerpRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
@@ -48,13 +50,15 @@ namespace FirstPersonController
         
         float m_lerp_time = 0.f;
 
-        void UpdateRotation();
+        void UpdateRotation(const float& deltaTime);
         // These default values work well
         // assuming the event value multiplier is 1.0
         float m_yaw_sensitivity = 0.005f;
         float m_pitch_sensitivity = 0.005f;
 
         float m_current_heading = 0.f;
+        AZ::Quaternion m_new_look_direction = AZ::Quaternion::CreateZero();
+        float m_rotation_damp = 10.f;
 
         // Acceleration lerp movement
         float m_accel = 1.f;

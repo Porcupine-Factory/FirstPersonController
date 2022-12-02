@@ -28,6 +28,7 @@ namespace FirstPersonController
               ->Field("Right Scale", &FirstPersonControllerComponent::m_right_scale)
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
+              ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotation_damp)
               ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
@@ -75,6 +76,9 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_yaw,
                         "Camera Pitch Rotate Input", "Camera pitch rotation control")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_rotation_damp,
+                        "Camera Rotation Damp Factor", "The damp factor applied to the camera rotation")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_speed,
                         "Top Walking Speed (m/s)", "Speed of the character")
@@ -193,13 +197,28 @@ namespace FirstPersonController
         return ca->FindEntity(activeCameraId);
     }
 
-    void FirstPersonControllerComponent::UpdateRotation()
+    AZ::Vector3 FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
+    {
+        // Multiply by -1 since moving the mouse to the right produces a positive value
+        // but a positive rotation about Z is counterclockwise
+        const float angles[3] = {-1.f * m_pitch_value * m_pitch_sensitivity,
+                                 0.0,
+                                 -1.f * m_yaw_value * m_yaw_sensitivity};
+
+        const AZ::Quaternion target_look_direction = AZ::Quaternion::CreateFromEulerAnglesRadians(
+            AZ::Vector3::CreateFromFloat3(angles));
+
+        m_new_look_direction = m_new_look_direction.Slerp(target_look_direction, m_rotation_damp*deltaTime);
+
+        return m_new_look_direction.GetEulerRadians();
+    }
+
+    void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime)
     {
         AZ::TransformInterface* t = GetEntity()->GetTransform();
 
-        // Multiply by -1 since moving the mouse to the right produces a positive value
-        // but a positive rotation about Z is counterclockwise
-        t->RotateAroundLocalZ(-1.f * m_yaw_value * m_yaw_sensitivity);
+        const AZ::Vector3 new_look_direction = SlerpRotation(deltaTime);
+        t->RotateAroundLocalZ(new_look_direction.GetZ());
 
         m_activeCameraEntity = GetActiveCamera();
         t = m_activeCameraEntity->GetTransform();
@@ -212,7 +231,7 @@ namespace FirstPersonController
            current_pitch >= Pi/2.f && rotate_pitch < 0.f ||
            current_pitch <= -Pi/2.f && rotate_pitch > 0.f)
         {
-            t->RotateAroundLocalX(-1.f * m_pitch_value * m_pitch_sensitivity);
+            t->RotateAroundLocalX(new_look_direction.GetX());
         }
 
         m_current_heading = GetEntity()->GetTransform()->
@@ -352,7 +371,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
     {
-        UpdateRotation();
+        UpdateRotation(deltaTime);
         UpdateVelocity(deltaTime);
     }
 }
