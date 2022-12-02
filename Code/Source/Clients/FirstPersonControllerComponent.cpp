@@ -197,27 +197,27 @@ namespace FirstPersonController
         return ca->FindEntity(activeCameraId);
     }
 
-    AZ::Vector3 FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
+    void FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
     {
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
         const float angles[3] = {-1.f * m_pitch_value * m_pitch_sensitivity,
-                                 0.0,
+                                 0.f,
                                  -1.f * m_yaw_value * m_yaw_sensitivity};
 
         const AZ::Quaternion target_look_direction = AZ::Quaternion::CreateFromEulerAnglesRadians(
             AZ::Vector3::CreateFromFloat3(angles));
 
         m_new_look_direction = m_new_look_direction.Slerp(target_look_direction, m_rotation_damp*deltaTime);
-
-        return m_new_look_direction.GetEulerRadians();
     }
 
     void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime)
     {
         AZ::TransformInterface* t = GetEntity()->GetTransform();
 
-        const AZ::Vector3 new_look_direction = SlerpRotation(deltaTime);
+        SlerpRotation(deltaTime);
+        const AZ::Vector3 new_look_direction = m_new_look_direction.GetEulerRadians();
+
         t->RotateAroundLocalZ(new_look_direction.GetZ());
 
         m_activeCameraEntity = GetActiveCamera();
