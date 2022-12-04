@@ -33,6 +33,8 @@ namespace FirstPersonController
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
+              ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
+              ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -90,7 +92,13 @@ namespace FirstPersonController
                         "Pitch Sensitivity", "Camera up/down rotation sensitivity")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_accel,
-                        "Walking Acceleration (m/s²)", "Acceleration/deceleration");
+                        "Walking Acceleration (m/s²)", "Acceleration")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_decel,
+                        "Deceleration Factor", "Deceleration")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_break,
+                        "Breaking Factor", "Breaking");
             }
         }
     }
@@ -243,13 +251,36 @@ namespace FirstPersonController
         float total_lerp_time = m_last_applied_velocity.GetDistance(target_velocity)/m_accel;
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
-        m_lerp_time += m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_adjust) : deltaTime;
+        const float last_lerp_time = m_lerp_time;
+        m_lerp_time += m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_accel_adjust) : deltaTime;
 
         if(m_lerp_time >= total_lerp_time)
             m_lerp_time = total_lerp_time;
 
         // Lerp the velocity from the last applied velocity to the target velocity
-        const AZ::Vector3 new_velocity = m_last_applied_velocity.Lerp(target_velocity, m_lerp_time / total_lerp_time);
+        AZ::Vector3 new_velocity = m_last_applied_velocity.Lerp(target_velocity, m_lerp_time / total_lerp_time);
+
+        // Decelerate at a different rate than the acceleration
+        if(new_velocity.GetLength() < m_apply_velocity.GetLength())
+        {
+            // Get the current velocity vector with respect to the world coordinates
+            const AZ::Vector3 apply_velocity_world = AZ::Quaternion::CreateRotationZ(-m_current_heading).TransformVector(m_apply_velocity);
+
+            float deceleration_factor = m_decel;
+
+            // Compare the direction of the current velocity vector against the desired direction
+            // and if it's greater than 90 degrees then decelerate even more
+            if(target_velocity.GetLength() != 0.f && abs(apply_velocity_world.AngleDeg(target_velocity)) > 90.f)
+                deceleration_factor *= m_break;
+
+            // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
+            m_lerp_time = last_lerp_time + (m_lerp_time - last_lerp_time) * deceleration_factor;
+
+            if(m_lerp_time >= total_lerp_time)
+                m_lerp_time = total_lerp_time;
+
+            new_velocity = m_last_applied_velocity.Lerp(target_velocity, m_lerp_time / total_lerp_time);
+        }
 
         return new_velocity;
     }
@@ -279,7 +310,8 @@ namespace FirstPersonController
         {
             // Sprint adjustment factor based on the angle of the target velocity
             // with respect to their frame of reference
-            m_sprint_adjust = 1.f - target_velocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::Pi/2.f);
+            m_sprint_velocity_adjust = 1.f - target_velocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::Pi/2.f);
+            m_sprint_accel_adjust = m_sprint_velocity_adjust;
 
             m_sprint_time += deltaTime;
             if(m_sprint_time > total_sprint_time)
@@ -288,8 +320,8 @@ namespace FirstPersonController
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
         else if(m_sprint_value == 1.f)
         {
-            // Set the sprint adjust to 0 since there is no sprint applied
-            m_sprint_adjust = 0.f;
+            // Set the sprint velocity adjust to 0
+            m_sprint_velocity_adjust = 0.f;
 
             m_sprint_time -= deltaTime;
             if(m_sprint_time < 0.f)
@@ -330,7 +362,7 @@ namespace FirstPersonController
         SprintManager(target_velocity, deltaTime);
 
         // Apply the speed and sprint factor
-        target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_adjust);
+        target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_velocity_adjust);
 
         // Obtain the last applied velocity if the target velocity changed
         if(m_prev_target_velocity != target_velocity)
@@ -360,7 +392,8 @@ namespace FirstPersonController
         //AZ_Printf("", "m_apply_velocity.GetY() = %.10f", m_apply_velocity.GetY());
         //AZ_Printf("", "m_sprint_time = %.10f", m_sprint_time);
         //AZ_Printf("", "m_sprint_value = %.10f", m_sprint_value);
-        //AZ_Printf("", "m_sprint_adjust = %.10f", m_sprint_adjust);
+        //AZ_Printf("", "m_sprint_accel_adjust = %.10f", m_sprint_accel_adjust);
+        //AZ_Printf("", "m_sprint_velocity_adjust = %.10f", m_sprint_velocity_adjust);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
         //prev_velocity = m_apply_velocity.GetLength();

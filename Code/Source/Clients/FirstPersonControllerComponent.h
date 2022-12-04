@@ -63,6 +63,10 @@ namespace FirstPersonController
         // Acceleration lerp movement
         float m_accel = 1.f;
 
+        // Deceleration factor
+        float m_decel = 1.414f;
+        float m_break = 1.414f;
+
         // Movement scale factors
         // assuming the event value multipliers are all +/-1.0
         float m_forward_scale = 1.f;
@@ -81,7 +85,8 @@ namespace FirstPersonController
 
         // Sprint application variables
         float m_sprint_pressed_value = 1.f;
-        float m_sprint_adjust = 0.f;
+        float m_sprint_velocity_adjust = 0.f;
+        float m_sprint_accel_adjust = 0.f;
         float m_sprint_time = 0.f;
 
         // Event IDs and action names
