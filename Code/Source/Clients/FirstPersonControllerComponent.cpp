@@ -35,6 +35,8 @@ namespace FirstPersonController
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
+              ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprint_max_time)
+              ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -98,7 +100,13 @@ namespace FirstPersonController
                         "Deceleration Factor", "Deceleration")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_break,
-                        "Breaking Factor", "Breaking");
+                        "Breaking Factor", "Breaking")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprint_max_time,
+                        "Sprint Max Time (sec)", "Maximum Sprint Applied Time")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprint_cooldown_time,
+                        "Sprint Cooldown (sec)", "Sprint Cooldown Time");
             }
         }
     }
@@ -306,7 +314,7 @@ namespace FirstPersonController
         const float total_sprint_time = ((m_sprint_value-1.f)*m_speed)/m_accel;
 
         // If the sprint key is pressed then increment the sprint counter
-        if(m_sprint_value != 1.f)
+        if(m_sprint_value != 1.f && m_sprint_held_duration < m_sprint_max_time && m_sprint_cooldown == 0.f)
         {
             // Sprint adjustment factor based on the angle of the target velocity
             // with respect to their frame of reference
@@ -314,11 +322,13 @@ namespace FirstPersonController
             m_sprint_accel_adjust = m_sprint_velocity_adjust;
 
             m_sprint_time += deltaTime;
+            m_sprint_held_duration += deltaTime;
+
             if(m_sprint_time > total_sprint_time)
                 m_sprint_time = total_sprint_time;
         }
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
-        else if(m_sprint_value == 1.f)
+        else if(m_sprint_value == 1.f || m_sprint_held_duration >= m_sprint_max_time || m_sprint_cooldown != 0.f)
         {
             // Set the sprint velocity adjust to 0
             m_sprint_velocity_adjust = 0.f;
@@ -326,6 +336,18 @@ namespace FirstPersonController
             m_sprint_time -= deltaTime;
             if(m_sprint_time < 0.f)
                 m_sprint_time = 0.f;
+
+            if(m_sprint_held_duration >= m_sprint_max_time && m_sprint_cooldown == 0.f)
+            {
+                m_sprint_held_duration = 0.f;
+                m_sprint_cooldown = m_sprint_cooldown_time - deltaTime;
+            }
+            else
+            {
+                m_sprint_cooldown -= deltaTime;
+                if(m_sprint_cooldown < 0.f)
+                    m_sprint_cooldown = 0.f;
+            }
         }
     }
 
@@ -394,6 +416,8 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprint_value = %.10f", m_sprint_value);
         //AZ_Printf("", "m_sprint_accel_adjust = %.10f", m_sprint_accel_adjust);
         //AZ_Printf("", "m_sprint_velocity_adjust = %.10f", m_sprint_velocity_adjust);
+        //AZ_Printf("", "m_sprint_held_duration = %.10f", m_sprint_held_duration);
+        //AZ_Printf("", "m_sprint_cooldown = %.10f", m_sprint_cooldown);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
         //prev_velocity = m_apply_velocity.GetLength();

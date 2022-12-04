@@ -88,6 +88,10 @@ namespace FirstPersonController
         float m_sprint_velocity_adjust = 0.f;
         float m_sprint_accel_adjust = 0.f;
         float m_sprint_time = 0.f;
+        float m_sprint_held_duration = 0.f;
+        float m_sprint_max_time = 3.f;
+        float m_sprint_cooldown = 0.f;
+        float m_sprint_cooldown_time = 5.f;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
