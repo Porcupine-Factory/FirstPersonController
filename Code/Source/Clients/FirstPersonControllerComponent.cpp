@@ -224,7 +224,10 @@ namespace FirstPersonController
         const AZ::Quaternion target_look_direction = AZ::Quaternion::CreateFromEulerAnglesRadians(
             AZ::Vector3::CreateFromFloat3(angles));
 
-        m_new_look_direction = m_new_look_direction.Slerp(target_look_direction, m_rotation_damp*deltaTime);
+        if(m_rotation_damp*deltaTime <= 1.f)
+            m_new_look_direction = m_new_look_direction.Slerp(target_look_direction, m_rotation_damp*deltaTime);
+        else
+            m_new_look_direction = target_look_direction;
     }
 
     void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime)
