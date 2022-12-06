@@ -8,6 +8,10 @@
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Components/CameraBus.h>
 
+#include <AzFramework/Physics/PhysicsScene.h>
+#include <AzFramework/Physics/Common/PhysicsTypes.h>
+#include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
+
 namespace FirstPersonController
 {
     using namespace StartingPointInput;
@@ -22,6 +26,7 @@ namespace FirstPersonController
               ->Field("Left Key", &FirstPersonControllerComponent::m_str_left)
               ->Field("Right Key", &FirstPersonControllerComponent::m_str_right)
               ->Field("Sprint Key", &FirstPersonControllerComponent::m_str_sprint)
+              ->Field("Jump Key", &FirstPersonControllerComponent::m_str_jump)
               ->Field("Forward Scale", &FirstPersonControllerComponent::m_forward_scale)
               ->Field("Back Scale", &FirstPersonControllerComponent::m_back_scale)
               ->Field("Left Scale", &FirstPersonControllerComponent::m_left_scale)
@@ -33,10 +38,14 @@ namespace FirstPersonController
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
+              ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprint_max_time)
               ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
+              ->Field("Capsule Cast Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
+              ->Field("Capsule Cast Height (m)", &FirstPersonControllerComponent::m_capsule_height)
+              ->Field("Capsule Cast Detect Distance (m)", &FirstPersonControllerComponent::m_capsule_distance)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -75,6 +84,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_str_sprint,
                         "Sprint Key", "Key for sprinting")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_jump,
+                        "Jump Key", "Key for jumping")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_pitch,
                         "Camera Yaw Rotate Input", "Camera yaw rotation control")
                     ->DataElement(nullptr,
@@ -96,6 +108,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_accel,
                         "Walking Acceleration (m/s²)", "Acceleration")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_gravity,
+                        "Gravity (m/s²)", "-Z Acceleration due to gravity")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_decel,
                         "Deceleration Factor", "Deceleration")
                     ->DataElement(nullptr,
@@ -106,7 +121,16 @@ namespace FirstPersonController
                         "Sprint Max Time (sec)", "Maximum Sprint Applied Time")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprint_cooldown_time,
-                        "Sprint Cooldown (sec)", "Sprint Cooldown Time");
+                        "Sprint Cooldown (sec)", "Sprint Cooldown Time")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_capsule_radius,
+                        "Capsule Cast Radius (m)", "The capsule cast's radius in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_capsule_height,
+                        "Capsule Cast Height (m)", "The capsule cast's height in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_capsule_distance,
+                        "Capsule Cast Detect Distance (m)", "The capsule cast's detection distance in meters");
             }
         }
     }
@@ -354,7 +378,7 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::UpdateVelocity(const float& deltaTime)
+    void FirstPersonControllerComponent::UpdateVelocityXY(const float& deltaTime)
     {
         float forwardBack = m_forward_value * m_forward_scale + m_back_value * m_back_scale;
         float leftRight = m_left_value * m_left_scale + m_right_value * m_right_scale;
@@ -415,6 +439,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_apply_velocity.GetLength() = %.10f", m_apply_velocity.GetLength());
         //AZ_Printf("", "m_apply_velocity.GetX() = %.10f", m_apply_velocity.GetX());
         //AZ_Printf("", "m_apply_velocity.GetY() = %.10f", m_apply_velocity.GetY());
+        //AZ_Printf("", "m_apply_velocity.GetZ() = %.10f", m_apply_velocity.GetZ());
         //AZ_Printf("", "m_sprint_time = %.10f", m_sprint_time);
         //AZ_Printf("", "m_sprint_value = %.10f", m_sprint_value);
         //AZ_Printf("", "m_sprint_accel_adjust = %.10f", m_sprint_accel_adjust);
@@ -424,14 +449,70 @@ namespace FirstPersonController
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
         //prev_velocity = m_apply_velocity.GetLength();
+    }
 
-        Physics::CharacterRequestBus::Event(GetEntityId(),
-            &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_apply_velocity);
+    bool FirstPersonControllerComponent::CheckGrounded()
+    {
+        auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(m_capsule_radius,
+            m_capsule_height,
+            AZ::Transform::CreateTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation()),
+            AZ::Vector3(0.0f, 0.0f, -1.0f),
+            m_capsule_distance,
+            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+            AzPhysics::CollisionGroup::All,
+            nullptr);
+
+        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
+        m_grounded = hits ? true : false;
+
+        return m_grounded;
+    }
+
+    void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
+    {
+        AZ::Vector3 current_velocity = AZ::Vector3::CreateZero();
+        Physics::CharacterRequestBus::EventResult(current_velocity, GetEntityId(),
+            &Physics::CharacterRequestBus::Events::GetVelocity);
+
+        if(m_grounded && current_velocity.GetZ() == 0.f)
+        {
+            if(m_jump_value == 0.f)
+                m_jump_pressed = false;
+            else
+                m_jump_pressed = true;
+            m_z_velocity = m_jump_value;
+        }
+        else if(m_grounded && current_velocity.GetZ() > 0.f && m_jump_pressed)
+        {
+            if(m_jump_value == 0.f)
+                m_jump_pressed = false;
+            else
+                m_z_velocity = m_jump_value;
+        }
+        else
+        {
+            m_jump_pressed = false;
+            m_z_velocity += m_gravity * deltaTime;
+        }
+
+        //AZ_Printf("", "m_z_velocity = %.10f", m_z_velocity);
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
     {
         UpdateRotation(deltaTime);
-        UpdateVelocity(deltaTime);
+
+        if(CheckGrounded())
+            UpdateVelocityXY(deltaTime);
+
+        UpdateVelocityZ(deltaTime);
+
+        Physics::CharacterRequestBus::Event(GetEntityId(),
+            &Physics::CharacterRequestBus::Events::AddVelocityForTick,
+            (m_apply_velocity + AZ::Vector3::CreateAxisZ(m_z_velocity)));
     }
 }

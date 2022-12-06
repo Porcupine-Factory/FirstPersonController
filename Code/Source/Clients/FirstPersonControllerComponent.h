@@ -36,11 +36,14 @@ namespace FirstPersonController
 
         void ProcessInput(const float& deltaTime);
 
-        void UpdateVelocity(const float& deltaTime);
+        void UpdateVelocityXY(const float& deltaTime);
+        void UpdateVelocityZ(const float& deltaTime);
 
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
         void SlerpRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
+
+        bool CheckGrounded();
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
@@ -49,6 +52,15 @@ namespace FirstPersonController
         float m_speed = 10.f;
         
         float m_lerp_time = 0.f;
+
+        // Jumping and gravity
+        float m_gravity = -9.81f;
+        bool m_grounded = true;
+        bool m_jump_pressed = false;
+        float m_z_velocity = 0.f;
+        float m_capsule_radius = 0.25f;
+        float m_capsule_height = 1.753f;
+        float m_capsule_distance = 0.1f;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well
@@ -82,6 +94,7 @@ namespace FirstPersonController
         float m_yaw_value = 0.f;
         float m_pitch_value = 0.f;
         float m_sprint_value = 1.f;
+        float m_jump_value = 0.f;
 
         // Sprint application variables
         float m_sprint_pressed_value = 1.f;
@@ -108,13 +121,15 @@ namespace FirstPersonController
         AZStd::string m_str_pitch;
         StartingPointInput::InputEventNotificationId m_SprintEventId;
         AZStd::string m_str_sprint;
+        StartingPointInput::InputEventNotificationId m_JumpEventId;
+        AZStd::string m_str_jump;
 
         // list of action names
-        AZStd::string* m_input_names[7] = {
+        AZStd::string* m_input_names[8] = {
             &m_str_forward, &m_str_back,
             &m_str_left, &m_str_right,
             &m_str_yaw, &m_str_pitch,
-            &m_str_sprint
+            &m_str_sprint, &m_str_jump
         };
 
         // map of event IDs and event value multipliers
@@ -125,6 +140,7 @@ namespace FirstPersonController
             {&m_MoveRightEventId, &m_right_value},
             {&m_RotateYawEventId, &m_yaw_value},
             {&m_RotatePitchEventId, &m_pitch_value},
-            {&m_SprintEventId, &m_sprint_value}};
+            {&m_SprintEventId, &m_sprint_value},
+            {&m_JumpEventId, &m_jump_value}};
     };
 }
