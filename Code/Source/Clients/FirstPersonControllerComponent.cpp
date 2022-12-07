@@ -87,10 +87,10 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_str_jump,
                         "Jump Key", "Key for jumping")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_str_pitch,
+                        &FirstPersonControllerComponent::m_str_yaw,
                         "Camera Yaw Rotate Input", "Camera yaw rotation control")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_str_yaw,
+                        &FirstPersonControllerComponent::m_str_pitch,
                         "Camera Pitch Rotate Input", "Camera pitch rotation control")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rotation_damp,
