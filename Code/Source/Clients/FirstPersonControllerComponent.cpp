@@ -516,8 +516,13 @@ namespace FirstPersonController
         {
             m_jump_pressed = false;
             m_z_velocity += m_gravity * deltaTime;
+
+            // Account for the case where the PhysX Character Gameplay component's gravity is used instead
+            if(m_gravity == 0.f && m_grounded && current_velocity.GetZ() < 0.f)
+                m_z_velocity = 0.f;
         }
 
+        //AZ_Printf("", "current_velocity.GetZ() = %.10f", current_velocity.GetZ());
         //AZ_Printf("", "m_z_velocity = %.10f", m_z_velocity);
         //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
     }
