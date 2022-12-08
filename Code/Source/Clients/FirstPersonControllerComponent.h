@@ -60,7 +60,9 @@ namespace FirstPersonController
         float m_z_velocity = 0.f;
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
-        float m_capsule_distance = 0.1f;
+        // The center of the capsule is at Z=0 if m_capsule_offset is set to 0
+        // This math makes it so that the grounded state is detected 0.1 meters below the character
+        float m_capsule_offset = m_capsule_height/2.f - 0.1f;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well

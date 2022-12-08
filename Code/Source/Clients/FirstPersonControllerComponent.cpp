@@ -43,9 +43,9 @@ namespace FirstPersonController
               ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprint_max_time)
               ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
-              ->Field("Capsule Cast Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
-              ->Field("Capsule Cast Height (m)", &FirstPersonControllerComponent::m_capsule_height)
-              ->Field("Capsule Cast Detect Distance (m)", &FirstPersonControllerComponent::m_capsule_distance)
+              ->Field("Capsule Overlap Height (m)", &FirstPersonControllerComponent::m_capsule_height)
+              ->Field("Capsule Overlap Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
+              ->Field("Capsule Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -123,14 +123,14 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_sprint_cooldown_time,
                         "Sprint Cooldown (sec)", "Sprint Cooldown Time")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_capsule_radius,
-                        "Capsule Cast Radius (m)", "The capsule cast's radius in meters")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_height,
-                        "Capsule Cast Height (m)", "The capsule cast's height in meters")
+                        "Capsule Overlap Height (m)", "The ground detect capsule overlap height in meters")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_capsule_distance,
-                        "Capsule Cast Detect Distance (m)", "The capsule cast's detection distance in meters");
+                        &FirstPersonControllerComponent::m_capsule_radius,
+                        "Capsule Overlap Radius (m)", "The ground detect capsule overlap radius in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_capsule_offset,
+                        "Capsule Overlap Offset (m)", "The capsule overlap's offset in meters");
             }
         }
     }
@@ -433,7 +433,7 @@ namespace FirstPersonController
         if(m_apply_velocity != target_velocity_world)
             m_apply_velocity = AZ::Quaternion::CreateRotationZ(m_current_heading).TransformVector(LerpVelocity(target_velocity, deltaTime));
 
-        // Debug print statements to observe the velocity and acceleration
+        // Debug print statements to observe the velocity, acceleration, and position
         //AZ_Printf("", "m_current_heading = %.10f", m_current_heading);
         //AZ_Printf("", "atan(m_apply_velocity.GetY()/m_apply_velocity.GetX()) = %.10f", atan(m_apply_velocity.GetY()/m_apply_velocity.GetX()));
         //AZ_Printf("", "m_apply_velocity.GetLength() = %.10f", m_apply_velocity.GetLength());
@@ -448,6 +448,10 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprint_cooldown = %.10f", m_sprint_cooldown);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
+        //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
+        //AZ_Printf("", "X Position = %.10f", pos.GetX());
+        //AZ_Printf("", "Y Position = %.10f", pos.GetY());
+        //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
         //prev_velocity = m_apply_velocity.GetLength();
     }
 
@@ -455,17 +459,32 @@ namespace FirstPersonController
     {
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(m_capsule_radius,
+        // Rotate the pose by 90 degrees on the Y axis since by default the capsule's height
+        // is oriented along the X axis when we want it oriented along the Z axis
+        AZ::Transform capsule_intersect_pose = AZ::Transform::CreateRotationY(AZ::Constants::HalfPi);
+        // Move the capsule to the location of the character and apply the Z offset
+        capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_offset));
+
+        AzPhysics::OverlapRequest request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
             m_capsule_height,
-            AZ::Transform::CreateTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation()),
-            AZ::Vector3(0.0f, 0.0f, -1.0f),
-            m_capsule_distance,
-            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-            AzPhysics::CollisionGroup::All,
+            m_capsule_radius,
+            capsule_intersect_pose,
             nullptr);
 
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
+        // Disregard the intersection with the character's collider
+        AZStd::erase_if(hits.m_hits, [this](AzPhysics::SceneQueryHit hit)
+            {
+              /*if(hit.m_entityId == GetEntityId())
+                {
+                    AZ_Printf("", "Self Intersect");
+                }
+                else
+                    AZ_Printf("", "Intersected with something else");*/
+                return (hit.m_entityId == GetEntityId());
+            });
 
         m_grounded = hits ? true : false;
 
@@ -500,6 +519,7 @@ namespace FirstPersonController
         }
 
         //AZ_Printf("", "m_z_velocity = %.10f", m_z_velocity);
+        //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
