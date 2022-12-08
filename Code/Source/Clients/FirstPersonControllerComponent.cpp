@@ -500,21 +500,28 @@ namespace FirstPersonController
         if(m_grounded && current_velocity.GetZ() == 0.f)
         {
             if(m_jump_value == 0.f)
-                m_jump_pressed = false;
+            {
+                m_jump_held = false;
+                m_z_velocity = m_jump_value;
+            }
+            else if(!m_jump_held)
+            {
+                m_z_velocity = m_jump_value;
+                m_jump_held = true;
+            }
             else
-                m_jump_pressed = true;
-            m_z_velocity = m_jump_value;
+                m_z_velocity = 0.f;
         }
-        else if(m_grounded && current_velocity.GetZ() > 0.f && m_jump_pressed)
+        else if(m_grounded && current_velocity.GetZ() > 0.f && m_jump_held)
         {
             if(m_jump_value == 0.f)
-                m_jump_pressed = false;
+                m_jump_held = false;
             else
                 m_z_velocity = m_jump_value;
         }
         else
         {
-            m_jump_pressed = false;
+            m_jump_held = true;
             m_z_velocity += m_gravity * deltaTime;
 
             // Account for the case where the PhysX Character Gameplay component's gravity is used instead

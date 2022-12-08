@@ -57,6 +57,7 @@ namespace FirstPersonController
         float m_gravity = -9.81f;
         bool m_grounded = true;
         bool m_jump_pressed = false;
+        bool m_jump_held = false;
         float m_z_velocity = 0.f;
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
