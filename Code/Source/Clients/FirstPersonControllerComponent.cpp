@@ -6,11 +6,8 @@
 #include <AzCore/Serialization/EditContext.h>
 
 #include <AzFramework/Physics/CharacterBus.h>
-#include <AzFramework/Components/CameraBus.h>
-
 #include <AzFramework/Physics/PhysicsScene.h>
-#include <AzFramework/Physics/Common/PhysicsTypes.h>
-#include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
+#include <AzFramework/Components/CameraBus.h>
 
 namespace FirstPersonController
 {
@@ -46,6 +43,7 @@ namespace FirstPersonController
               ->Field("Capsule Overlap Height (m)", &FirstPersonControllerComponent::m_capsule_height)
               ->Field("Capsule Overlap Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
               ->Field("Capsule Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
+              ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -109,13 +107,13 @@ namespace FirstPersonController
                         "Walking Acceleration (m/s²)", "Acceleration")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
-                        "Gravity (m/s²)", "-Z Acceleration due to gravity")
+                        "Gravity (m/s²)", "Z Acceleration due to gravity")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_decel,
-                        "Deceleration Factor", "Deceleration")
+                        "Deceleration Factor", "Deceleration multiplier")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_break,
-                        "Breaking Factor", "Breaking")
+                        "Breaking Factor", "Breaking multiplier")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprint_max_time,
                         "Sprint Max Time (sec)", "Maximum Sprint Applied Time")
@@ -130,13 +128,19 @@ namespace FirstPersonController
                         "Capsule Overlap Radius (m)", "The ground detect capsule overlap radius in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_offset,
-                        "Capsule Overlap Offset (m)", "The capsule overlap's offset in meters");
+                        "Capsule Overlap Offset (m)", "The capsule overlap's ground detect offset in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_capsule_jump_hold_offset,
+                        "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters");
             }
         }
     }
 
     void FirstPersonControllerComponent::Activate()
     {
+        m_capsule_offset = m_capsule_height/2.f - m_capsule_offset;
+        m_capsule_jump_hold_offset = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
         if(m_control_map.size() != (sizeof(m_input_names) / sizeof(AZStd::string*)))
         {
             AZ_Printf("FirstPersonControllerComponent",
@@ -481,7 +485,7 @@ namespace FirstPersonController
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
         // Disregard intersections with the character's collider and its child entities
-        AZStd::erase_if(hits.m_hits, [this](AzPhysics::SceneQueryHit hit)
+        auto self_child_entity_check = [this](const AzPhysics::SceneQueryHit& hit)
             {
                 if(hit.m_entityId == GetEntityId())
                     return true;
@@ -497,9 +501,34 @@ namespace FirstPersonController
                         return true;
 
                 return false;
-            });
+            };
 
-        return m_grounded = hits ? true : false;
+        AZStd::erase_if(hits.m_hits, self_child_entity_check);
+        m_grounded = hits ? true : false;
+
+        if(m_grounded)
+            m_ground_close = true;
+        // Check to see if the character is still close to the ground after pressing and holding the jump key
+        // to allow them to jump higher based on the m_capsule_jump_hold_offset distance
+        else if(m_jump_held)
+        {
+            capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_jump_hold_offset));
+
+            request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
+                m_capsule_height,
+                m_capsule_radius,
+                capsule_intersect_pose,
+                nullptr);
+
+            hits = sceneInterface->QueryScene(sceneHandle, &request);
+            AZStd::erase_if(hits.m_hits, self_child_entity_check);
+            m_ground_close = hits ? true : false;
+            //AZ_Printf("", "m_ground_close = %s", m_ground_close ? "true" : "false");
+        }
+        else
+            m_ground_close = false;
+
+        return m_grounded;
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
@@ -523,7 +552,7 @@ namespace FirstPersonController
             else
                 m_z_velocity = 0.f;
         }
-        else if(m_grounded && current_velocity.GetZ() > 0.f && m_jump_held)
+        else if(m_ground_close && current_velocity.GetZ() > 0.f && m_jump_held)
         {
             if(m_jump_value == 0.f)
                 m_jump_held = false;
@@ -532,7 +561,7 @@ namespace FirstPersonController
         }
         else
         {
-            m_jump_held = false;
+            m_jump_held = true;
             m_z_velocity += m_gravity * deltaTime;
 
             // Account for the case where the PhysX Character Gameplay component's gravity is used instead
@@ -540,6 +569,8 @@ namespace FirstPersonController
                 m_z_velocity = 0.f;
         }
 
+        //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
+        //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
         //AZ_Printf("", "current_velocity.GetZ() = %.10f", current_velocity.GetZ());
         //AZ_Printf("", "m_z_velocity = %.10f", m_z_velocity);
         //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");

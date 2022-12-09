@@ -4,7 +4,10 @@
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/Math/Quaternion.h>
 #include <AzCore/std/containers/map.h>
+
 #include <StartingPointInput/InputEventNotificationBus.h>
+
+#include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
 
 namespace FirstPersonController
 {
@@ -62,14 +65,18 @@ namespace FirstPersonController
         // Jumping and gravity
         float m_gravity = -9.81f;
         bool m_grounded = true;
+        bool m_ground_close = true;
         bool m_jump_pressed = false;
         bool m_jump_held = false;
         float m_z_velocity = 0.f;
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
-        // The center of the capsule is at Z=0 if m_capsule_offset is set to 0
-        // This math makes it so that the grounded state is detected 0.001 meters below the character
-        float m_capsule_offset = m_capsule_height/2.f - 0.001f;
+        // The capsule offset determines how far below the character's feet the ground is detected
+        float m_capsule_offset = 0.001f;
+        // The capsule jump hold offset makes it so that the initial jump velocity is held constant
+        // for the offset value entered, up to a maximum of roughly the capsule height,
+        // depending on the jump velocity/height
+        float m_capsule_jump_hold_offset = 0.8765f;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well
