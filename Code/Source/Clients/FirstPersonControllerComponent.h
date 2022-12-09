@@ -22,6 +22,8 @@ namespace FirstPersonController
         void Activate() override;
         void Deactivate() override;
 
+        static void GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& req);
+
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;
         void OnReleased(float value) override;
@@ -33,6 +35,10 @@ namespace FirstPersonController
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::Entity* GetActiveCamera();
+
+        // Child entity IDs
+        bool m_obtained_child_ids = false;
+        AZStd::vector<AZ::EntityId> m_children;
 
         void ProcessInput(const float& deltaTime);
 
@@ -62,8 +68,8 @@ namespace FirstPersonController
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
         // The center of the capsule is at Z=0 if m_capsule_offset is set to 0
-        // This math makes it so that the grounded state is detected 0.1 meters below the character
-        float m_capsule_offset = m_capsule_height/2.f - 0.1f;
+        // This math makes it so that the grounded state is detected 0.001 meters below the character
+        float m_capsule_offset = m_capsule_height/2.f - 0.001f;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well

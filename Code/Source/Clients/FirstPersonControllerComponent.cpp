@@ -160,6 +160,12 @@ namespace FirstPersonController
         InputEventNotificationBus::MultiHandler::BusDisconnect();
     }
 
+    void FirstPersonControllerComponent::GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& req)
+    {
+        // This component requires the Transform Service
+        req.push_back(AZ_CRC_CE("TransformService"));
+    }
+
     void FirstPersonControllerComponent::OnPressed(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
@@ -474,21 +480,26 @@ namespace FirstPersonController
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
-        // Disregard the intersection with the character's collider
+        // Disregard intersections with the character's collider and its child entities
         AZStd::erase_if(hits.m_hits, [this](AzPhysics::SceneQueryHit hit)
             {
-              /*if(hit.m_entityId == GetEntityId())
+                if(hit.m_entityId == GetEntityId())
+                    return true;
+
+                // Obtain the child IDs if we don't already have them
+                if(!m_obtained_child_ids)
                 {
-                    AZ_Printf("", "Self Intersect");
+                    AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                    m_obtained_child_ids = true;
                 }
-                else
-                    AZ_Printf("", "Intersected with something else");*/
-                return (hit.m_entityId == GetEntityId());
+                for(AZ::EntityId id: m_children)
+                    if(hit.m_entityId == id)
+                        return true;
+
+                return false;
             });
 
-        m_grounded = hits ? true : false;
-
-        return m_grounded;
+        return m_grounded = hits ? true : false;
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
@@ -497,12 +508,12 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(current_velocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        if(m_grounded && current_velocity.GetZ() == 0.f)
+        if(m_grounded && current_velocity.GetZ() <= 0.f)
         {
             if(m_jump_value == 0.f)
             {
-                m_jump_held = false;
                 m_z_velocity = m_jump_value;
+                m_jump_held = false;
             }
             else if(!m_jump_held)
             {
@@ -521,7 +532,7 @@ namespace FirstPersonController
         }
         else
         {
-            m_jump_held = true;
+            m_jump_held = false;
             m_z_velocity += m_gravity * deltaTime;
 
             // Account for the case where the PhysX Character Gameplay component's gravity is used instead
