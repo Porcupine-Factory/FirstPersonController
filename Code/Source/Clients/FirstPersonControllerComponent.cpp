@@ -276,15 +276,22 @@ namespace FirstPersonController
         m_activeCameraEntity = GetActiveCamera();
         t = m_activeCameraEntity->GetTransform();
 
-        const float rotate_pitch = -1.f * m_pitch_value * m_pitch_sensitivity;
-        const float current_pitch = t->GetLocalRotation().GetX();
+        float current_pitch = t->GetLocalRotation().GetX();
 
         using namespace AZ::Constants;
         if(abs(current_pitch) <= HalfPi ||
-           current_pitch >= HalfPi && rotate_pitch < 0.f ||
-           current_pitch <= -HalfPi && rotate_pitch > 0.f)
+           current_pitch >= HalfPi && new_look_direction.GetX() < 0.f ||
+           current_pitch <= -HalfPi && new_look_direction.GetX() > 0.f)
         {
             t->RotateAroundLocalX(new_look_direction.GetX());
+            current_pitch = t->GetLocalRotation().GetX();
+        }
+        if(abs(current_pitch) > HalfPi)
+        {
+            if(current_pitch > HalfPi)
+                t->RotateAroundLocalX(HalfPi - current_pitch);
+            else
+                t->RotateAroundLocalX(-HalfPi - current_pitch);
         }
 
         m_current_heading = GetEntity()->GetTransform()->
