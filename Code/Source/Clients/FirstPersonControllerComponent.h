@@ -79,14 +79,14 @@ namespace FirstPersonController
         float m_capsule_jump_hold_offset = 0.8765f;
 
         void UpdateRotation(const float& deltaTime);
-        // These default values work well
+        // These default values work well, depending on OS mouse settings,
         // assuming the event value multiplier is 1.0
         float m_yaw_sensitivity = 0.005f;
         float m_pitch_sensitivity = 0.005f;
 
         float m_current_heading = 0.f;
         AZ::Quaternion m_new_look_direction = AZ::Quaternion::CreateZero();
-        float m_rotation_damp = 10.f;
+        float m_rotation_damp = 20.f;
 
         // Acceleration lerp movement
         float m_accel = 1.f;
@@ -124,21 +124,21 @@ namespace FirstPersonController
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
-        AZStd::string m_str_forward;
+        AZStd::string m_str_forward = "Forward";
         StartingPointInput::InputEventNotificationId m_MoveBackEventId;
-        AZStd::string m_str_back;
+        AZStd::string m_str_back = "Back";
         StartingPointInput::InputEventNotificationId m_MoveLeftEventId;
-        AZStd::string m_str_left;
+        AZStd::string m_str_left = "Left";
         StartingPointInput::InputEventNotificationId m_MoveRightEventId;
-        AZStd::string m_str_right;
+        AZStd::string m_str_right = "Right";
         StartingPointInput::InputEventNotificationId m_RotateYawEventId;
-        AZStd::string m_str_yaw;
+        AZStd::string m_str_yaw = "Yaw";
         StartingPointInput::InputEventNotificationId m_RotatePitchEventId;
-        AZStd::string m_str_pitch;
+        AZStd::string m_str_pitch = "Pitch";
         StartingPointInput::InputEventNotificationId m_SprintEventId;
-        AZStd::string m_str_sprint;
+        AZStd::string m_str_sprint = "Sprint";
         StartingPointInput::InputEventNotificationId m_JumpEventId;
-        AZStd::string m_str_jump;
+        AZStd::string m_str_jump = "Jump";
 
         // list of action names
         AZStd::string* m_input_names[8] = {

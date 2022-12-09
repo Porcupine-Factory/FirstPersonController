@@ -280,9 +280,9 @@ namespace FirstPersonController
         const float current_pitch = t->GetLocalRotation().GetX();
 
         using namespace AZ::Constants;
-        if(abs(current_pitch) <= Pi/2.f ||
-           current_pitch >= Pi/2.f && rotate_pitch < 0.f ||
-           current_pitch <= -Pi/2.f && rotate_pitch > 0.f)
+        if(abs(current_pitch) <= HalfPi ||
+           current_pitch >= HalfPi && rotate_pitch < 0.f ||
+           current_pitch <= -HalfPi && rotate_pitch > 0.f)
         {
             t->RotateAroundLocalX(new_look_direction.GetX());
         }
