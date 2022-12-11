@@ -322,7 +322,7 @@ namespace FirstPersonController
 
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
-            if(target_velocity.GetLength() != 0.f && abs(apply_velocity_world.AngleDeg(target_velocity)) > 90.f)
+            if(target_velocity.GetLength() != 0.f && abs(apply_velocity_world.Angle(target_velocity)) > AZ::Constants::HalfPi)
                 deceleration_factor *= m_break;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
@@ -465,11 +465,11 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprint_cooldown = %.10f", m_sprint_cooldown);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
+        //prev_velocity = m_apply_velocity.GetLength();
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "X Position = %.10f", pos.GetX());
         //AZ_Printf("", "Y Position = %.10f", pos.GetY());
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
-        //prev_velocity = m_apply_velocity.GetLength();
     }
 
     bool FirstPersonControllerComponent::CheckGrounded()
@@ -544,20 +544,20 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(current_velocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        if(m_grounded && current_velocity.GetZ() <= 0.f)
+        if(m_grounded && (m_jump_req_repress || current_velocity.GetZ() <= 0.f))
         {
-            if(m_jump_value == 0.f)
-            {
-                m_z_velocity = m_jump_value;
-                m_jump_held = false;
-            }
-            else if(!m_jump_held)
+            if(m_jump_value && !m_jump_held)
             {
                 m_z_velocity = m_jump_value;
                 m_jump_held = true;
+                m_jump_req_repress = false;
             }
             else
+            {
                 m_z_velocity = 0.f;
+                if(m_jump_value == 0.f && m_jump_held)
+                    m_jump_held = false;
+            }
         }
         else if(m_ground_close && current_velocity.GetZ() > 0.f && m_jump_held)
         {
@@ -568,7 +568,9 @@ namespace FirstPersonController
         }
         else
         {
-            m_jump_held = true;
+            if(!m_jump_req_repress)
+                m_jump_req_repress = true;
+
             m_z_velocity += m_gravity * deltaTime;
 
             // Account for the case where the PhysX Character Gameplay component's gravity is used instead

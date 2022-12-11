@@ -68,6 +68,7 @@ namespace FirstPersonController
         bool m_ground_close = true;
         bool m_jump_pressed = false;
         bool m_jump_held = false;
+        bool m_jump_req_repress = true;
         float m_z_velocity = 0.f;
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
