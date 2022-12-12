@@ -1,4 +1,6 @@
 #pragma once
+#include <FirstPersonController/FirstPersonControllerComponentBus.h>
+
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
 #include <AzCore/Math/Vector3.h>
@@ -15,6 +17,7 @@ namespace FirstPersonController
         : public AZ::Component
         , public AZ::TickBus::Handler
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
+        , public FirstPersonControllerComponentRequestBus::Handler
     {
     public:
         AZ_COMPONENT(FirstPersonControllerComponent, "{0a47c7c2-0f94-48dd-8e3f-fd55c30475b9}");
@@ -35,6 +38,10 @@ namespace FirstPersonController
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
+        // FirstPersonControllerRequestBus
+        bool GetGrounded() const override;
+        bool GetGroundClose() const override;
+
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::Entity* GetActiveCamera();
@@ -53,6 +60,9 @@ namespace FirstPersonController
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
 
         void CheckGrounded();
+        void OnGroundHit();
+        void OnGroundSoonHit();
+        void OnUngrounded();
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();

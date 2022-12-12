@@ -138,6 +138,21 @@ namespace FirstPersonController
                         "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters");
             }
         }
+
+        if(auto bc = azrtti_cast<AZ::BehaviorContext*>(rc))
+        {
+            bc->EBus<FirstPersonControllerNotificationBus>("FirstPersonNotificationBus")
+                ->Handler<FirstPersonControllerNotificationHandler>();
+
+            bc->EBus<FirstPersonControllerComponentRequestBus>("FirstPersonControllerComponentRequestBus")
+                ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
+                ->Attribute(AZ::Script::Attributes::Module, "controller")
+                ->Attribute(AZ::Script::Attributes::Category, "FirstPerson")
+                ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
+                ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose);
+
+            bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
+        }
     }
 
     void FirstPersonControllerComponent::Activate()
@@ -164,12 +179,14 @@ namespace FirstPersonController
             }
         }
         AZ::TickBus::Handler::BusConnect();
+        FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
     }
 
     void FirstPersonControllerComponent::Deactivate()
     {
-        AZ::TickBus::Handler::BusDisconnect();
         InputEventNotificationBus::MultiHandler::BusDisconnect();
+        AZ::TickBus::Handler::BusDisconnect();
+        FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
     }
 
     void FirstPersonControllerComponent::GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& req)
@@ -480,9 +497,25 @@ namespace FirstPersonController
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
     }
 
+    void FirstPersonControllerComponent::OnGroundHit(){}
+    void FirstPersonControllerComponent::OnGroundSoonHit(){}
+    void FirstPersonControllerComponent::OnUngrounded(){}
+    bool FirstPersonControllerComponent::GetGrounded() const
+    {
+        return m_grounded;
+    }
+    bool FirstPersonControllerComponent::GetGroundClose() const
+    {
+        return m_ground_close;
+    }
+
     void FirstPersonControllerComponent::CheckGrounded()
     {
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+        // Used to determine when event notifications occur
+        const bool prev_grounded = m_grounded;
+        const bool prev_ground_close = m_ground_close;
 
         // Rotate the pose by 90 degrees on the Y axis since by default the capsule's height
         // is oriented along the X axis when we want it oriented along the Z axis
@@ -525,7 +558,7 @@ namespace FirstPersonController
             m_ground_close = true;
         // Check to see if the character is still close to the ground after pressing and holding the jump key
         // to allow them to jump higher based on the m_capsule_jump_hold_offset distance
-        else if(m_jump_held)
+        else
         {
             capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_jump_hold_offset));
 
@@ -540,8 +573,15 @@ namespace FirstPersonController
             m_ground_close = hits ? true : false;
             //AZ_Printf("", "m_ground_close = %s", m_ground_close ? "true" : "false");
         }
-        else
-            m_ground_close = false;
+
+        // Trigger an event notification if the player hits the ground, is about to hit the ground,
+        // or just left the ground (via jumping or otherwise)
+        if(!prev_grounded && m_grounded)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGroundHit);
+        else if(!prev_ground_close && m_ground_close)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGroundSoonHit);
+        else if(prev_grounded && !m_grounded)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnUngrounded);
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
@@ -565,7 +605,7 @@ namespace FirstPersonController
                     m_jump_held = false;
             }
         }
-        else if(m_ground_close && current_velocity.GetZ() > 0.f && m_jump_held)
+        else if(m_ground_close && current_velocity.GetZ() > 0.f && m_jump_held && !m_jump_req_repress)
         {
             if(m_jump_value == 0.f)
                 m_jump_held = false;
