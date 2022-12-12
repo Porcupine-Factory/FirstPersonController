@@ -52,7 +52,7 @@ namespace FirstPersonController
         void SlerpRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
 
-        bool CheckGrounded();
+        void CheckGrounded();
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
@@ -91,10 +91,14 @@ namespace FirstPersonController
 
         // Acceleration lerp movement
         float m_accel = 1.f;
+        float m_grounded_accel = 1.f;
+        float m_jump_accel_factor = 0.5f;
 
         // Deceleration factor
         float m_decel = 1.414f;
+        float m_grounded_decel = m_decel;
         float m_break = 1.414f;
+        float m_grounded_break = m_break;
 
         // Movement scale factors
         // assuming the event value multipliers are all +/-1.0

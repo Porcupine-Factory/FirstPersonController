@@ -35,6 +35,7 @@ namespace FirstPersonController
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
+              ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jump_accel_factor)
               ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
@@ -106,6 +107,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_accel,
                         "Walking Acceleration (m/s²)", "Acceleration")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jump_accel_factor,
+                        "XY Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
                         "Gravity (m/s²)", "Z Acceleration due to gravity")
                     ->DataElement(nullptr,
@@ -140,6 +144,10 @@ namespace FirstPersonController
     {
         m_capsule_offset = m_capsule_height/2.f - m_capsule_offset;
         m_capsule_jump_hold_offset = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
+        m_grounded_accel = m_accel;
+        m_grounded_decel = m_decel;
+        m_grounded_break = m_break;
 
         if(m_control_map.size() != (sizeof(m_input_names) / sizeof(AZStd::string*)))
         {
@@ -472,7 +480,7 @@ namespace FirstPersonController
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
     }
 
-    bool FirstPersonControllerComponent::CheckGrounded()
+    void FirstPersonControllerComponent::CheckGrounded()
     {
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
@@ -534,8 +542,6 @@ namespace FirstPersonController
         }
         else
             m_ground_close = false;
-
-        return m_grounded;
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
@@ -589,8 +595,22 @@ namespace FirstPersonController
     {
         UpdateRotation(deltaTime);
 
-        if(CheckGrounded())
+        CheckGrounded();
+
+        if(m_grounded)
+        {
+            m_accel = m_grounded_accel;
+            m_decel = m_grounded_decel;
+            m_break = m_grounded_break;
             UpdateVelocityXY(deltaTime);
+        }
+        else if(m_ground_close)
+        {
+            m_accel = m_grounded_accel * m_jump_accel_factor;
+            m_decel = m_grounded_decel * m_jump_accel_factor;
+            m_break = m_grounded_break * m_jump_accel_factor;
+            UpdateVelocityXY(deltaTime);
+        }
 
         UpdateVelocityZ(deltaTime);
 
