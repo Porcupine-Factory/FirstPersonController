@@ -387,11 +387,13 @@ namespace FirstPersonController
         {
             // Sprint adjustment factor based on the angle of the target velocity
             // with respect to their frame of reference
-            m_sprint_velocity_adjust = 1.f - target_velocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::Pi/2.f);
+            m_sprint_velocity_adjust = 1.f - target_velocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
             m_sprint_accel_adjust = m_sprint_velocity_adjust;
 
             m_sprint_time += deltaTime;
-            m_sprint_held_duration += deltaTime;
+            m_sprint_held_duration += deltaTime * m_sprint_velocity_adjust;
+
+            m_sprint_decrementing = false;
 
             if(m_sprint_time > total_sprint_time)
                 m_sprint_time = total_sprint_time;
@@ -409,13 +411,68 @@ namespace FirstPersonController
             if(m_sprint_held_duration >= m_sprint_max_time && m_sprint_cooldown == 0.f)
             {
                 m_sprint_held_duration = 0.f;
-                m_sprint_cooldown = m_sprint_cooldown_time - deltaTime;
+                m_sprint_cooldown = m_sprint_cooldown_time;
             }
-            else
+            else if(m_sprint_cooldown != 0.f)
             {
                 m_sprint_cooldown -= deltaTime;
                 if(m_sprint_cooldown < 0.f)
                     m_sprint_cooldown = 0.f;
+            }
+            // If the sprint cooldown time is longer than the maximum sprint duration
+            // then apply a pause based on the difference between the two, times the ratio of
+            // how long sprint was held divided by the maximum sprint duration prior to
+            // decrementing the sprint held duration
+            else if(m_sprint_cooldown_time > m_sprint_max_time)
+            {
+                m_sprint_decrement_pause -= deltaTime;
+
+                if(m_sprint_held_duration > 0.f && !m_sprint_decrementing)
+                {
+                    m_sprint_decrement_pause = (m_sprint_cooldown_time - m_sprint_max_time)
+                                                *(m_sprint_held_duration/m_sprint_max_time);
+                    m_sprint_decrementing = true;
+                }
+
+                if(m_sprint_decrement_pause <= 0.f)
+                {
+                    m_sprint_held_duration -= deltaTime;
+                    m_sprint_decrement_pause = 0.f;
+                    if(m_sprint_held_duration <= 0.f)
+                    {
+                        m_sprint_held_duration = 0.f;
+                        m_sprint_decrementing = false;
+                    }
+                }
+            }
+            else if(m_sprint_cooldown_time < m_sprint_max_time)
+            {
+                m_sprint_decrement_pause -= deltaTime;
+                // The use of m_sprint_decrement_pause here is somewhat unnecessary since when
+                // m_sprint_cooldown_time < m_sprint_max_time it is advantageous to always hold down the sprint
+                // key if the goal is to maximize the average velocity over time. Using m_sprint_decrement_pause
+                // here is simply to deter spamming the key in an attempt to maintain it from elapsing.
+                if(m_sprint_held_duration > 0.f && !m_sprint_decrementing)
+                {
+                    // Making m_sprint_decrement_pause = m_sprint_cooldown_time * 0.1 is arbitrary,
+                    // this can be set to any other desired number if you have
+                    // m_sprint_cooldown_time < m_sprint_max_time.
+                    // It is not exposed in the editor since it would only be desirable to make it a constant
+                    // in the condition where m_sprint_cooldown_time < m_sprint_max_time
+                    m_sprint_decrement_pause = m_sprint_cooldown_time * 0.1f;
+                    m_sprint_decrementing = true;
+                }
+
+                if(m_sprint_decrement_pause <= 0.f)
+                {
+                    m_sprint_held_duration -= deltaTime;
+                    m_sprint_decrement_pause = 0.f;
+                    if(m_sprint_held_duration <= 0.f)
+                    {
+                        m_sprint_held_duration = 0.f;
+                        m_sprint_decrementing = false;
+                    }
+                }
             }
         }
     }
@@ -487,6 +544,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprint_accel_adjust = %.10f", m_sprint_accel_adjust);
         //AZ_Printf("", "m_sprint_velocity_adjust = %.10f", m_sprint_velocity_adjust);
         //AZ_Printf("", "m_sprint_held_duration = %.10f", m_sprint_held_duration);
+        //AZ_Printf("", "m_sprint_decrement_pause = %.10f", m_sprint_decrement_pause);
         //AZ_Printf("", "m_sprint_cooldown = %.10f", m_sprint_cooldown);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
