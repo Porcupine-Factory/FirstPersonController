@@ -431,6 +431,8 @@ namespace FirstPersonController
                 {
                     m_sprint_decrement_pause = (m_sprint_cooldown_time - m_sprint_max_time)
                                                 *(m_sprint_held_duration/m_sprint_max_time);
+                    // m_sprint_prev_decrement_pause is not used here, but setting it for potential future use
+                    m_sprint_prev_decrement_pause = m_sprint_decrement_pause;
                     m_sprint_decrementing = true;
                 }
 
@@ -448,24 +450,27 @@ namespace FirstPersonController
             else if(m_sprint_cooldown_time <= m_sprint_max_time)
             {
                 m_sprint_decrement_pause -= deltaTime;
-                // The use of m_sprint_decrement_pause here is somewhat unnecessary since when
-                // m_sprint_cooldown_time <= m_sprint_max_time it is advantageous to always hold down the sprint
-                // key if the goal is to maximize the average velocity over time. Using m_sprint_decrement_pause
-                // here is simply to deter spamming the key in an attempt to maintain it from elapsing.
                 if(m_sprint_held_duration > 0.f && !m_sprint_decrementing)
                 {
-                    // Making m_sprint_decrement_pause = m_sprint_cooldown_time * 0.1 is arbitrary,
+                    // Making the m_sprint_decrement_pause a factor of 0.1 here is somewhat arbitrary,
                     // this can be set to any other desired number if you have
                     // m_sprint_cooldown_time <= m_sprint_max_time.
-                    // It is not exposed in the editor since it would only be desirable to make it a constant
-                    // in the condition where m_sprint_cooldown_time <= m_sprint_max_time
-                    m_sprint_decrement_pause = m_sprint_cooldown_time * 0.1f;
+                    // The decrement time here is also set based on the cooldown time and the ratio of the
+                    // held duration divided by the maximum consecutive sprint time so that the pause is longer
+                    // if you recently sprinted for a while.
+                    m_sprint_decrement_pause = 0.1f * m_sprint_cooldown_time * m_sprint_held_duration / m_sprint_max_time;
+                    m_sprint_prev_decrement_pause = m_sprint_decrement_pause;
                     m_sprint_decrementing = true;
                 }
 
                 if(m_sprint_decrement_pause <= 0.f)
                 {
-                    m_sprint_held_duration -= deltaTime;
+                    // Decrement the held duration by a factor of the ratio of the max sprint time plus the
+                    // previous decrement pause time, divided by the cooldown time
+                    // so there is not an incentive to elapse it.
+                    // This makes it so that the held duration decrements and gets back to 0 at the same rate
+                    // as if you were to just allow it to elapse.
+                    m_sprint_held_duration -= deltaTime * ((m_sprint_max_time+m_sprint_prev_decrement_pause)/m_sprint_cooldown_time);
                     m_sprint_decrement_pause = 0.f;
                     if(m_sprint_held_duration <= 0.f)
                     {
@@ -545,6 +550,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprint_velocity_adjust = %.10f", m_sprint_velocity_adjust);
         //AZ_Printf("", "m_sprint_held_duration = %.10f", m_sprint_held_duration);
         //AZ_Printf("", "m_sprint_decrement_pause = %.10f", m_sprint_decrement_pause);
+        //AZ_Printf("", "m_sprint_prev_decrement_pause = %.10f", m_sprint_prev_decrement_pause);
         //AZ_Printf("", "m_sprint_cooldown = %.10f", m_sprint_cooldown);
         //static float prev_velocity = m_apply_velocity.GetLength();
         //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));

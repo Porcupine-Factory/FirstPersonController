@@ -131,6 +131,7 @@ namespace FirstPersonController
         float m_sprint_time = 0.f;
         float m_sprint_held_duration = 0.f;
         float m_sprint_decrement_pause = 0.f;
+        float m_sprint_prev_decrement_pause = 0.f;
         float m_sprint_max_time = 3.f;
         float m_sprint_cooldown = 0.f;
         float m_sprint_cooldown_time = 5.f;
