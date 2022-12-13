@@ -160,10 +160,6 @@ namespace FirstPersonController
         m_capsule_offset = m_capsule_height/2.f - m_capsule_offset;
         m_capsule_jump_hold_offset = m_capsule_height/2.f - m_capsule_jump_hold_offset;
 
-        m_grounded_accel = m_accel;
-        m_grounded_decel = m_decel;
-        m_grounded_break = m_break;
-
         if(m_control_map.size() != (sizeof(m_input_names) / sizeof(AZStd::string*)))
         {
             AZ_Printf("FirstPersonControllerComponent",
@@ -329,7 +325,11 @@ namespace FirstPersonController
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float last_lerp_time = m_lerp_time;
-        m_lerp_time += m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_accel_adjust) : deltaTime;
+
+        float lerp_deltaTime = m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_accel_adjust) : deltaTime;
+        lerp_deltaTime *= m_grounded ? 1.f : m_jump_accel_factor;
+
+        m_lerp_time += lerp_deltaTime;
 
         if(m_lerp_time >= total_lerp_time)
             m_lerp_time = total_lerp_time;
@@ -351,7 +351,7 @@ namespace FirstPersonController
                 deceleration_factor *= m_break;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
-            m_lerp_time = last_lerp_time + (m_lerp_time - last_lerp_time) * deceleration_factor;
+            m_lerp_time = last_lerp_time + lerp_deltaTime * deceleration_factor;
 
             if(m_lerp_time >= total_lerp_time)
                 m_lerp_time = total_lerp_time;
@@ -637,20 +637,8 @@ namespace FirstPersonController
 
         CheckGrounded();
 
-        if(m_grounded)
-        {
-            m_accel = m_grounded_accel;
-            m_decel = m_grounded_decel;
-            m_break = m_grounded_break;
+        if(m_ground_close)
             UpdateVelocityXY(deltaTime);
-        }
-        else if(m_ground_close)
-        {
-            m_accel = m_grounded_accel * m_jump_accel_factor;
-            m_decel = m_grounded_decel * m_jump_accel_factor;
-            m_break = m_grounded_break * m_jump_accel_factor;
-            UpdateVelocityXY(deltaTime);
-        }
 
         UpdateVelocityZ(deltaTime);
 

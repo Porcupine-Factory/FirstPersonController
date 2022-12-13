@@ -101,14 +101,11 @@ namespace FirstPersonController
 
         // Acceleration lerp movement
         float m_accel = 1.f;
-        float m_grounded_accel = 1.f;
         float m_jump_accel_factor = 0.5f;
 
         // Deceleration factor
         float m_decel = 1.414f;
-        float m_grounded_decel = m_decel;
         float m_break = 1.414f;
-        float m_grounded_break = m_break;
 
         // Movement scale factors
         // assuming the event value multipliers are all +/-1.0
