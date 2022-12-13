@@ -445,20 +445,20 @@ namespace FirstPersonController
                     }
                 }
             }
-            else if(m_sprint_cooldown_time < m_sprint_max_time)
+            else if(m_sprint_cooldown_time <= m_sprint_max_time)
             {
                 m_sprint_decrement_pause -= deltaTime;
                 // The use of m_sprint_decrement_pause here is somewhat unnecessary since when
-                // m_sprint_cooldown_time < m_sprint_max_time it is advantageous to always hold down the sprint
+                // m_sprint_cooldown_time <= m_sprint_max_time it is advantageous to always hold down the sprint
                 // key if the goal is to maximize the average velocity over time. Using m_sprint_decrement_pause
                 // here is simply to deter spamming the key in an attempt to maintain it from elapsing.
                 if(m_sprint_held_duration > 0.f && !m_sprint_decrementing)
                 {
                     // Making m_sprint_decrement_pause = m_sprint_cooldown_time * 0.1 is arbitrary,
                     // this can be set to any other desired number if you have
-                    // m_sprint_cooldown_time < m_sprint_max_time.
+                    // m_sprint_cooldown_time <= m_sprint_max_time.
                     // It is not exposed in the editor since it would only be desirable to make it a constant
-                    // in the condition where m_sprint_cooldown_time < m_sprint_max_time
+                    // in the condition where m_sprint_cooldown_time <= m_sprint_max_time
                     m_sprint_decrement_pause = m_sprint_cooldown_time * 0.1f;
                     m_sprint_decrementing = true;
                 }
