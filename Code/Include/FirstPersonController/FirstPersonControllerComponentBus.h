@@ -12,6 +12,9 @@ namespace FirstPersonController
 
         virtual bool GetGrounded() const = 0;
         virtual bool GetGroundClose() const = 0;
+        virtual float GetSprintHeldTime() const = 0;
+        virtual float GetSprintCooldown() const = 0;
+        virtual float GetSprintPauseTime() const = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;
@@ -23,6 +26,7 @@ namespace FirstPersonController
         virtual void OnGroundHit() = 0;
         virtual void OnGroundSoonHit() = 0;
         virtual void OnUngrounded() = 0;
+        virtual void OnSprintCooldown() = 0;
     };
 
     using FirstPersonControllerNotificationBus = AZ::EBus<FirstPersonControllerNotifications>;
@@ -34,7 +38,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnSprintCooldown);
 
         void OnGroundHit() override
         {
@@ -47,6 +51,10 @@ namespace FirstPersonController
         void OnUngrounded() override
         {
             Call(FN_OnUngrounded);
+        }
+        void OnSprintCooldown() override
+        {
+            Call(FN_OnSprintCooldown);
         }
     };
 } // namespace FirstPersonController

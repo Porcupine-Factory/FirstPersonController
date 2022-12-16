@@ -149,7 +149,10 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "FirstPerson")
                 ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
-                ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose);
+                ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
+                ->Event("GetSprintHeldTime", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
+                ->Event("GetSprintCooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
+                ->Event("GetSprintPauseTime", &FirstPersonControllerComponentRequests::GetSprintPauseTime);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -408,10 +411,12 @@ namespace FirstPersonController
             if(m_sprint_time < 0.f)
                 m_sprint_time = 0.f;
 
+            // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
             if(m_sprint_held_duration >= m_sprint_max_time && m_sprint_cooldown == 0.f)
             {
                 m_sprint_held_duration = 0.f;
                 m_sprint_cooldown = m_sprint_cooldown_time;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintCooldown);
             }
             else if(m_sprint_cooldown != 0.f)
             {
@@ -561,18 +566,6 @@ namespace FirstPersonController
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
     }
 
-    void FirstPersonControllerComponent::OnGroundHit(){}
-    void FirstPersonControllerComponent::OnGroundSoonHit(){}
-    void FirstPersonControllerComponent::OnUngrounded(){}
-    bool FirstPersonControllerComponent::GetGrounded() const
-    {
-        return m_grounded;
-    }
-    bool FirstPersonControllerComponent::GetGroundClose() const
-    {
-        return m_ground_close;
-    }
-
     void FirstPersonControllerComponent::CheckGrounded()
     {
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
@@ -709,5 +702,30 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick,
             (m_apply_velocity + AZ::Vector3::CreateAxisZ(m_z_velocity)));
+    }
+
+    void FirstPersonControllerComponent::OnGroundHit(){}
+    void FirstPersonControllerComponent::OnGroundSoonHit(){}
+    void FirstPersonControllerComponent::OnUngrounded(){}
+    void FirstPersonControllerComponent::OnSprintCooldown(){}
+    bool FirstPersonControllerComponent::GetGrounded() const
+    {
+        return m_grounded;
+    }
+    bool FirstPersonControllerComponent::GetGroundClose() const
+    {
+        return m_ground_close;
+    }
+    float FirstPersonControllerComponent::GetSprintHeldTime() const
+    {
+        return m_sprint_held_duration;
+    }
+    float FirstPersonControllerComponent::GetSprintCooldown() const
+    {
+        return m_sprint_cooldown;
+    }
+    float FirstPersonControllerComponent::GetSprintPauseTime() const
+    {
+        return m_sprint_decrement_pause;
     }
 }

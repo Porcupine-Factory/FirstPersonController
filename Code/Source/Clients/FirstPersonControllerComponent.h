@@ -41,6 +41,9 @@ namespace FirstPersonController
         // FirstPersonControllerRequestBus
         bool GetGrounded() const override;
         bool GetGroundClose() const override;
+        float GetSprintHeldTime() const override;
+        float GetSprintCooldown() const override;
+        float GetSprintPauseTime() const override;
 
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -60,9 +63,12 @@ namespace FirstPersonController
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
 
         void CheckGrounded();
+
+        // FirstPersonControllerNotificationBus
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
+        void OnSprintCooldown();
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
