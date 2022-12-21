@@ -668,7 +668,7 @@ namespace FirstPersonController
                     m_jump_held = false;
             }
         }
-        else if((m_ground_close || m_jump_counter < m_jump_time) && current_velocity.GetZ() > 0.f && m_jump_held && !m_jump_req_repress)
+        else if(m_jump_counter < m_jump_time && current_velocity.GetZ() > 0.f && m_jump_held && !m_jump_req_repress)
         {
             if(m_jump_value == 0.f)
             {
@@ -711,6 +711,7 @@ namespace FirstPersonController
 
         CheckGrounded();
 
+        // So long as the ground is close, allow the velocity on X & Y to be changed
         if(m_ground_close)
             UpdateVelocityXY(deltaTime);
 
