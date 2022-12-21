@@ -82,6 +82,7 @@ namespace FirstPersonController
         float m_gravity = -9.81f;
         bool m_grounded = true;
         bool m_ground_close = true;
+        float m_jump_initial_velocity = 2.5f;
         bool m_jump_pressed = false;
         bool m_jump_held = false;
         bool m_jump_req_repress = true;
@@ -93,7 +94,9 @@ namespace FirstPersonController
         // The capsule jump hold offset makes it so that the initial jump velocity is held constant
         // for the offset value entered, up to a maximum of roughly the capsule height,
         // depending on the jump velocity/height
-        float m_capsule_jump_hold_offset = 0.8765f;
+        float m_capsule_jump_hold_offset = 0.5f;
+        float m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
+        float m_jump_counter = 0.f;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well, depending on OS mouse settings,

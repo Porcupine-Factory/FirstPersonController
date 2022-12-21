@@ -28,6 +28,7 @@ namespace FirstPersonController
               ->Field("Back Scale", &FirstPersonControllerComponent::m_back_scale)
               ->Field("Left Scale", &FirstPersonControllerComponent::m_left_scale)
               ->Field("Right Scale", &FirstPersonControllerComponent::m_right_scale)
+              ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jump_initial_velocity)
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
               ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotation_damp)
@@ -68,6 +69,12 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_str_right,
                         "Right Key", "Key for moving right")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_sprint,
+                        "Sprint Key", "Key for sprinting")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_jump,
+                        "Jump Key", "Key for jumping")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_forward_scale,
                         "Forward Scale", "Forward movement scale factor")
                     ->DataElement(nullptr,
@@ -80,11 +87,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_right_scale,
                         "Right Scale", "Right movement scale factor")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_str_sprint,
-                        "Sprint Key", "Key for sprinting")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_str_jump,
-                        "Jump Key", "Key for jumping")
+                        &FirstPersonControllerComponent::m_jump_initial_velocity,
+                        "Jump Initial Velocity (m/s)", "Initial jump velocity")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_yaw,
                         "Camera Yaw Rotate Input", "Camera yaw rotation control")
@@ -160,6 +164,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
+        m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
         m_capsule_offset = m_capsule_height/2.f - m_capsule_offset;
         m_capsule_jump_hold_offset = m_capsule_height/2.f - m_capsule_jump_hold_offset;
 
@@ -651,28 +656,37 @@ namespace FirstPersonController
         {
             if(m_jump_value && !m_jump_held)
             {
-                m_z_velocity = m_jump_value;
+                m_z_velocity = m_jump_initial_velocity;
                 m_jump_held = true;
                 m_jump_req_repress = false;
             }
             else
             {
                 m_z_velocity = 0.f;
+                m_jump_counter = 0.f;
                 if(m_jump_value == 0.f && m_jump_held)
                     m_jump_held = false;
             }
         }
-        else if(m_ground_close && current_velocity.GetZ() > 0.f && m_jump_held && !m_jump_req_repress)
+        else if((m_ground_close || m_jump_counter < m_jump_time) && current_velocity.GetZ() > 0.f && m_jump_held && !m_jump_req_repress)
         {
             if(m_jump_value == 0.f)
+            {
                 m_jump_held = false;
+                m_jump_counter = 0.f;
+            }
             else
-                m_z_velocity = m_jump_value;
+            {
+                m_z_velocity = m_jump_initial_velocity;
+                m_jump_counter += deltaTime;
+            }
         }
         else
         {
             if(!m_jump_req_repress)
                 m_jump_req_repress = true;
+
+            m_jump_counter = 0.f;
 
             m_z_velocity += m_gravity * deltaTime;
 
@@ -686,6 +700,9 @@ namespace FirstPersonController
         //AZ_Printf("", "current_velocity.GetZ() = %.10f", current_velocity.GetZ());
         //AZ_Printf("", "m_z_velocity = %.10f", m_z_velocity);
         //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
+        //AZ_Printf("", "m_jump_counter = %.10f", m_jump_counter);
+        //AZ_Printf("", "m_jump_time = %.10f", m_jump_time);
+        //AZ_Printf("", "m_capsule_jump_hold_offset = %.10f", m_capsule_jump_hold_offset);
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
