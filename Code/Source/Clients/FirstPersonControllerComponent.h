@@ -28,7 +28,8 @@ namespace FirstPersonController
         void Activate() override;
         void Deactivate() override;
 
-        static void GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& req);
+        static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
+        static void GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
 
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;
