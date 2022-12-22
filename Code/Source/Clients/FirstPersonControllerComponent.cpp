@@ -576,7 +576,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprint_prev_decrement_pause = %.10f", m_sprint_prev_decrement_pause);
         //AZ_Printf("", "m_sprint_cooldown = %.10f", m_sprint_cooldown);
         //static float prev_velocity = m_apply_velocity.GetLength();
-        //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity));
+        //AZ_Printf("", "dv/dt = %.10f", (m_apply_velocity.GetLength() - prev_velocity)/deltaTime);
         //prev_velocity = m_apply_velocity.GetLength();
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "X Position = %.10f", pos.GetX());
@@ -719,6 +719,9 @@ namespace FirstPersonController
         //AZ_Printf("", "m_jump_counter = %.10f", m_jump_counter);
         //AZ_Printf("", "m_jump_time = %.10f", m_jump_time);
         //AZ_Printf("", "m_capsule_jump_hold_offset = %.10f", m_capsule_jump_hold_offset);
+        //static float prev_z_velocity = m_z_velocity;
+        //AZ_Printf("", "dvz/dt = %.10f", (m_z_velocity - prev_z_velocity)/deltaTime);
+        //prev_z_velocity = m_z_velocity;
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
