@@ -29,6 +29,8 @@ namespace FirstPersonController
               ->Field("Left Scale", &FirstPersonControllerComponent::m_left_scale)
               ->Field("Right Scale", &FirstPersonControllerComponent::m_right_scale)
               ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jump_initial_velocity)
+              ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jump_held_gravity_factor)
+              ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jump_falling_gravity_factor)
               ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
               ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
               ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotation_damp)
@@ -89,6 +91,12 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jump_initial_velocity,
                         "Jump Initial Velocity (m/s)", "Initial jump velocity")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jump_held_gravity_factor,
+                        "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jump_falling_gravity_factor,
+                        "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the Z velocity is negative")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_yaw,
                         "Camera Yaw Rotate Input", "Camera yaw rotation control")
@@ -677,7 +685,7 @@ namespace FirstPersonController
             }
             else
             {
-                m_z_velocity = m_jump_initial_velocity;
+                m_z_velocity += m_gravity * m_jump_held_gravity_factor * deltaTime;
                 m_jump_counter += deltaTime;
             }
         }
@@ -688,7 +696,10 @@ namespace FirstPersonController
 
             m_jump_counter = 0.f;
 
-            m_z_velocity += m_gravity * deltaTime;
+            if(m_z_velocity <= 0.f)
+                m_z_velocity += m_gravity * m_jump_falling_gravity_factor * deltaTime;
+            else
+                m_z_velocity += m_gravity * deltaTime;
 
             // Account for the case where the PhysX Character Gameplay component's gravity is used instead
             if(m_gravity == 0.f && m_grounded && current_velocity.GetZ() < 0.f)

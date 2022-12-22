@@ -97,6 +97,8 @@ namespace FirstPersonController
         float m_capsule_jump_hold_offset = 0.5f;
         float m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
         float m_jump_counter = 0.f;
+        float m_jump_held_gravity_factor = 0.1f;
+        float m_jump_falling_gravity_factor = 1.1f;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well, depending on OS mouse settings,
