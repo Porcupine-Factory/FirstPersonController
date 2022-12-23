@@ -680,7 +680,7 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(current_velocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        // Used for the verlet integration averaging calculation
+        // Used for the Verlet integration averaging calculation
         m_z_velocity_prev_delta = m_z_velocity_current_delta;
 
         if(m_grounded && (m_jump_req_repress || current_velocity.GetZ() <= 0.f))
@@ -755,8 +755,8 @@ namespace FirstPersonController
 
         CheckGrounded();
 
-        // So long as the ground is close, allow the velocity on X & Y to be changed
-        if(m_ground_close)
+        // So long as the ground is close and the z velocity is >=0, allow the velocity on X & Y to be changed
+        if(m_ground_close && m_z_velocity >= 0.f)
             UpdateVelocityXY(deltaTime);
 
         UpdateVelocityZ(deltaTime);
