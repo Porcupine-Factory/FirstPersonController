@@ -43,6 +43,7 @@ namespace FirstPersonController
         bool GetGrounded() const override;
         bool GetGroundClose() const override;
         float GetSprintHeldTime() const override;
+        void SetSprintHeldTime(const float& new_held_time) override;
         float GetSprintCooldown() const override;
         float GetSprintPauseTime() const override;
 

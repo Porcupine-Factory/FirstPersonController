@@ -163,6 +163,7 @@ namespace FirstPersonController
                 ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("GetSprintHeldTime", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
+                ->Event("SetSprintHeldTime", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
                 ->Event("GetSprintCooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
                 ->Event("GetSprintPauseTime", &FirstPersonControllerComponentRequests::GetSprintPauseTime);
 
@@ -766,6 +767,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetSprintHeldTime() const
     {
         return m_sprint_held_duration;
+    }
+    void FirstPersonControllerComponent::SetSprintHeldTime(const float& new_held_time)
+    {
+        m_sprint_held_duration = new_held_time;
     }
     float FirstPersonControllerComponent::GetSprintCooldown() const
     {

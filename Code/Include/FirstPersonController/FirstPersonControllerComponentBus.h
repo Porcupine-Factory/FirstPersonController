@@ -13,6 +13,7 @@ namespace FirstPersonController
         virtual bool GetGrounded() const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual float GetSprintHeldTime() const = 0;
+        virtual void SetSprintHeldTime(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;
         virtual float GetSprintPauseTime() const = 0;
     };
