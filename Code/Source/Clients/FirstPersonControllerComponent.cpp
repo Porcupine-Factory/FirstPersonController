@@ -173,7 +173,21 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
-        m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
+        // Calculate the amount of time that the jump key can be held based on m_capsule_jump_hold_offset
+        // divided by the average of the initial jump velocity and the velocity at the edge of the capsule
+        const float jump_velocity_capsule_edge_squared = m_jump_initial_velocity*m_jump_initial_velocity
+                                                         + 2.f*m_gravity*m_jump_held_gravity_factor*m_capsule_jump_hold_offset;
+        // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
+        // then compute how long the jump key is held while still inside the jump hold offset overlap capsule
+        if(jump_velocity_capsule_edge_squared >= 0.f)
+            m_jump_time = m_capsule_jump_hold_offset / ((m_jump_initial_velocity
+                                                        + sqrt(jump_velocity_capsule_edge_squared)) / 2.f);
+        // Otherwise the apogee will be reached inside m_capsule_jump_hold_offset
+        // and the jump time needs to computed accordingly
+        else
+            m_jump_time = abs(m_jump_initial_velocity / (m_gravity*m_jump_held_gravity_factor));
+
+        // Calculate the actual offset that will be used to translate the overlap capsule
         m_capsule_offset = m_capsule_height/2.f - m_capsule_offset;
         m_capsule_jump_hold_offset = m_capsule_height/2.f - m_capsule_jump_hold_offset;
 
