@@ -665,17 +665,21 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(current_velocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
+        // Used for the verlet integration averaging calculation
+        m_z_velocity_prev_delta = m_z_velocity_current_delta;
+
         if(m_grounded && (m_jump_req_repress || current_velocity.GetZ() <= 0.f))
         {
             if(m_jump_value && !m_jump_held)
             {
-                m_z_velocity = m_jump_initial_velocity;
+                m_z_velocity_current_delta = m_jump_initial_velocity;
                 m_jump_held = true;
                 m_jump_req_repress = false;
             }
             else
             {
                 m_z_velocity = 0.f;
+                m_z_velocity_current_delta = 0.f;
                 m_jump_counter = 0.f;
                 if(m_jump_value == 0.f && m_jump_held)
                     m_jump_held = false;
@@ -687,11 +691,12 @@ namespace FirstPersonController
             {
                 m_jump_held = false;
                 m_jump_counter = 0.f;
+                m_z_velocity_current_delta = m_gravity * deltaTime;
             }
             else
             {
-                m_z_velocity += m_gravity * m_jump_held_gravity_factor * deltaTime;
                 m_jump_counter += deltaTime;
+                m_z_velocity_current_delta = m_gravity * m_jump_held_gravity_factor * deltaTime;
             }
         }
         else
@@ -699,17 +704,22 @@ namespace FirstPersonController
             if(!m_jump_req_repress)
                 m_jump_req_repress = true;
 
-            m_jump_counter = 0.f;
+            if(m_jump_counter != 0.f)
+                m_jump_counter = 0.f;
 
-            if(m_z_velocity <= 0.f)
-                m_z_velocity += m_gravity * m_jump_falling_gravity_factor * deltaTime;
+            if(current_velocity.GetZ() <= 0.f)
+                m_z_velocity_current_delta = m_gravity * m_jump_falling_gravity_factor * deltaTime;
             else
-                m_z_velocity += m_gravity * deltaTime;
-
-            // Account for the case where the PhysX Character Gameplay component's gravity is used instead
-            if(m_gravity == 0.f && m_grounded && current_velocity.GetZ() < 0.f)
-                m_z_velocity = 0.f;
+                m_z_velocity_current_delta = m_gravity * deltaTime;
         }
+
+        // Perform an average of the current and previous Z velocity delta
+        // as described by Verlet integration, which should reduce accumulated error
+        m_z_velocity += (m_z_velocity_current_delta + m_z_velocity_prev_delta) / 2.f;
+
+        // Account for the case where the PhysX Character Gameplay component's gravity is used instead
+        if(m_gravity == 0.f && m_grounded && current_velocity.GetZ() < 0.f)
+            m_z_velocity = 0.f;
 
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());

@@ -88,6 +88,8 @@ namespace FirstPersonController
         bool m_jump_held = false;
         bool m_jump_req_repress = true;
         float m_z_velocity = 0.f;
+        float m_z_velocity_current_delta = 0.f;
+        float m_z_velocity_prev_delta = 0.f;
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
         // The capsule offset determines how far below the character's feet the ground is detected
