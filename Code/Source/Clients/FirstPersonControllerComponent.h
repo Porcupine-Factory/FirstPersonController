@@ -104,6 +104,10 @@ namespace FirstPersonController
         float m_jump_held_gravity_factor = 0.1f;
         float m_jump_falling_gravity_factor = 1.1f;
 
+        bool m_update_xy_midair = true;
+        bool m_update_xy_only_near_ground = true;
+        bool m_update_xy_only_positive_z = true;
+
         void UpdateRotation(const float& deltaTime);
         // These default values work well, depending on OS mouse settings,
         // assuming the event value multiplier is 1.0
@@ -128,6 +132,7 @@ namespace FirstPersonController
         float m_back_scale = 0.75f;
         float m_left_scale = 1.f;
         float m_right_scale = 1.f;
+        float m_sprint_scale = 1.5f;
 
         // Event value multipliers
         float m_forward_value = 0.f;

@@ -18,46 +18,71 @@ namespace FirstPersonController
         if(auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
         {
             sc->Class<FirstPersonControllerComponent, AZ::Component>()
+              // Input Bindings group
+              ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
+              ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
               ->Field("Forward Key", &FirstPersonControllerComponent::m_str_forward)
               ->Field("Back Key", &FirstPersonControllerComponent::m_str_back)
               ->Field("Left Key", &FirstPersonControllerComponent::m_str_left)
               ->Field("Right Key", &FirstPersonControllerComponent::m_str_right)
               ->Field("Sprint Key", &FirstPersonControllerComponent::m_str_sprint)
               ->Field("Jump Key", &FirstPersonControllerComponent::m_str_jump)
+
+              // Camera Rotation group
+              ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
+              ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
+              ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotation_damp)
+
+              // Scale Factors group
               ->Field("Forward Scale", &FirstPersonControllerComponent::m_forward_scale)
               ->Field("Back Scale", &FirstPersonControllerComponent::m_back_scale)
               ->Field("Left Scale", &FirstPersonControllerComponent::m_left_scale)
               ->Field("Right Scale", &FirstPersonControllerComponent::m_right_scale)
+              ->Field("Sprint Scale", &FirstPersonControllerComponent::m_sprint_scale)
+
+              // X&Y Movement group
+              ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
+              ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
+              ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
+              ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
+
+              // Sprint Timing group
+              ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprint_max_time)
+              ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
+
+              // Jumping group
+              ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
               ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jump_initial_velocity)
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jump_held_gravity_factor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jump_falling_gravity_factor)
-              ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_str_yaw)
-              ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_str_pitch)
-              ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotation_damp)
-              ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
-              ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yaw_sensitivity)
-              ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitch_sensitivity)
-              ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jump_accel_factor)
-              ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
-              ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
-              ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
-              ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprint_max_time)
-              ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
               ->Field("Capsule Overlap Height (m)", &FirstPersonControllerComponent::m_capsule_height)
               ->Field("Capsule Overlap Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
-              ->Field("Capsule Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
+              ->Field("Capsule Grounded Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
+              ->Field("Update X&Y Velocity Midair", &FirstPersonControllerComponent::m_update_xy_midair)
+              ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_update_xy_only_near_ground)
+              ->Field("Update X&Y Velocity Only When Ascending", &FirstPersonControllerComponent::m_update_xy_only_positive_z)
+
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
             {
                 using namespace AZ::Edit::Attributes;
                 ec->Class<FirstPersonControllerComponent>("First Person Controller",
-                    "[First person character controller]")
+                    "First person character controller")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_yaw,
+                        "Camera Yaw Rotate Input", "Camera yaw rotation control")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_pitch,
+                        "Camera Pitch Rotate Input", "Camera pitch rotation control")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_forward,
                         "Forward Key", "Key for moving forward")
@@ -76,6 +101,36 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_jump,
                         "Jump Key", "Key for jumping")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Rotation")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_yaw_sensitivity,
+                        "Yaw Sensitivity", "Camera left/right rotation sensitivity")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_pitch_sensitivity,
+                        "Pitch Sensitivity", "Camera up/down rotation sensitivity")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_rotation_damp,
+                        "Camera Rotation Damp Factor", "The damp factor applied to the camera rotation")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "X&Y Movement")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_speed,
+                        "Top Walking Speed (m/s)", "Speed of the character")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_accel,
+                        "Walking Acceleration (m/s²)", "Acceleration")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_decel,
+                        "Deceleration Factor", "Deceleration multiplier")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_break,
+                        "Breaking Factor", "Breaking multiplier, the final factor is the product of this and the deceleration factor")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Scale Factors")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_forward_scale,
                         "Forward Scale", "Forward movement scale factor")
@@ -89,6 +144,24 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_right_scale,
                         "Right Scale", "Right movement scale factor")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprint_scale,
+                        "Sprint Scale", "Sprint scale factor")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Sprint Timing")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprint_max_time,
+                        "Sprint Max Time (sec)", "Maximum Sprint Applied Time")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprint_cooldown_time,
+                        "Sprint Cooldown (sec)", "Sprint Cooldown Time")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_gravity,
+                        "Gravity (m/s²)", "Z Acceleration due to gravity, set this to 0 if you prefer to use the PhysX Character Gameplay component's gravity instead")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jump_initial_velocity,
                         "Jump Initial Velocity (m/s)", "Initial jump velocity")
                     ->DataElement(nullptr,
@@ -98,44 +171,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jump_falling_gravity_factor,
                         "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the Z velocity is negative")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_str_yaw,
-                        "Camera Yaw Rotate Input", "Camera yaw rotation control")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_str_pitch,
-                        "Camera Pitch Rotate Input", "Camera pitch rotation control")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_rotation_damp,
-                        "Camera Rotation Damp Factor", "The damp factor applied to the camera rotation")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_speed,
-                        "Top Walking Speed (m/s)", "Speed of the character")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_yaw_sensitivity,
-                        "Yaw Sensitivity", "Camera left/right rotation sensitivity")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_pitch_sensitivity,
-                        "Pitch Sensitivity", "Camera up/down rotation sensitivity")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_accel,
-                        "Walking Acceleration (m/s²)", "Acceleration")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jump_accel_factor,
                         "XY Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_gravity,
-                        "Gravity (m/s²)", "Z Acceleration due to gravity")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_decel,
-                        "Deceleration Factor", "Deceleration multiplier")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_break,
-                        "Breaking Factor", "Breaking multiplier")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprint_max_time,
-                        "Sprint Max Time (sec)", "Maximum Sprint Applied Time")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprint_cooldown_time,
-                        "Sprint Cooldown (sec)", "Sprint Cooldown Time")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_height,
                         "Capsule Overlap Height (m)", "The ground detect capsule overlap height in meters")
@@ -144,10 +181,19 @@ namespace FirstPersonController
                         "Capsule Overlap Radius (m)", "The ground detect capsule overlap radius in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_offset,
-                        "Capsule Overlap Offset (m)", "The capsule overlap's ground detect offset in meters")
+                        "Capsule Grounded Overlap Offset (m)", "The capsule overlap's ground detect offset in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_jump_hold_offset,
-                        "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters");
+                        "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_update_xy_midair,
+                        "Update X&Y Velocity Midair", "Determines if the X&Y velocity components will be updated when in the air, if this isn't enabled then the options for updating X&Y near the ground and when ascending are effectively ignored")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_update_xy_only_near_ground,
+                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close overlap capsule has an intersection")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_update_xy_only_positive_z,
+                        "Update X&Y Velocity Only When Ascending", "Determines if the X&Y velocity components will be updated only when the character is ascending (moving positively on Z)");
             }
         }
 
@@ -235,7 +281,7 @@ namespace FirstPersonController
 
         if(*inputId == m_SprintEventId)
         {
-            m_sprint_value = m_sprint_pressed_value = value;
+            m_sprint_value = m_sprint_pressed_value = value * m_sprint_scale;
         }
 
         for(auto& it_event : m_control_map)
@@ -285,7 +331,7 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if(*inputId == m_SprintEventId)
         {
-            m_sprint_value = m_sprint_pressed_value = value;
+            m_sprint_value = m_sprint_pressed_value = value * m_sprint_scale;
         }
     }
 
@@ -755,8 +801,14 @@ namespace FirstPersonController
 
         CheckGrounded();
 
-        // So long as the ground is close and the z velocity is >=0, allow the velocity on X & Y to be changed
-        if(m_ground_close && m_z_velocity >= 0.f)
+        // So long as the character is grounded or depending on how the update X&Y velocity while jumping
+        // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
+        if(m_grounded
+           || m_update_xy_midair
+              && ((m_update_xy_only_near_ground && m_ground_close) && (m_update_xy_only_positive_z && m_z_velocity >= 0.f)
+                 || ((m_update_xy_only_near_ground && m_ground_close) && !m_update_xy_only_positive_z)
+                 || ((m_update_xy_only_positive_z && m_z_velocity >= 0.f) && !m_update_xy_only_near_ground)
+                 || (!m_update_xy_only_near_ground && !m_update_xy_only_positive_z)) )
             UpdateVelocityXY(deltaTime);
 
         UpdateVelocityZ(deltaTime);
