@@ -777,6 +777,9 @@ namespace FirstPersonController
         }
         else
         {
+            if(!m_jump_held)
+                m_jump_held = true;
+
             if(!m_jump_req_repress)
                 m_jump_req_repress = true;
 
