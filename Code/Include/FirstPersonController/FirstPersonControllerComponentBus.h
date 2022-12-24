@@ -12,10 +12,20 @@ namespace FirstPersonController
 
         virtual bool GetGrounded() const = 0;
         virtual bool GetGroundClose() const = 0;
+        virtual float GetGravity() const = 0;
+        virtual void SetGravity(const float&) = 0;
+        virtual float GetInitialJumpVelocity() const = 0;
+        virtual void SetInitialJumpVelocity(const float&) = 0;
+        virtual float GetTopWalkSpeed() const = 0;
+        virtual void SetTopWalkSpeed(const float&) = 0;
+        virtual float GetSprintScale() const = 0;
+        virtual void SetSprintScale(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;
         virtual void SetSprintHeldTime(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;
+        virtual void SetSprintCooldown(const float&) = 0;
         virtual float GetSprintPauseTime() const = 0;
+        virtual void SetSprintPauseTime(const float&) = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;

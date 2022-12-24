@@ -208,10 +208,20 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Category, "FirstPerson")
                 ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
+                ->Event("GetGravity", &FirstPersonControllerComponentRequests::GetGravity)
+                ->Event("SetGravity", &FirstPersonControllerComponentRequests::SetGravity)
+                ->Event("GetInitialJumpVelocity", &FirstPersonControllerComponentRequests::GetInitialJumpVelocity)
+                ->Event("SetInitialJumpVelocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
+                ->Event("GetTopWalkSpeed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
+                ->Event("SetTopWalkSpeed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
+                ->Event("GetSprintScale", &FirstPersonControllerComponentRequests::GetSprintScale)
+                ->Event("SetSprintScale", &FirstPersonControllerComponentRequests::SetSprintScale)
                 ->Event("GetSprintHeldTime", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
                 ->Event("SetSprintHeldTime", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
                 ->Event("GetSprintCooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
-                ->Event("GetSprintPauseTime", &FirstPersonControllerComponentRequests::GetSprintPauseTime);
+                ->Event("SetSprintCooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
+                ->Event("GetSprintPauseTime", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
+                ->Event("SetSprintPauseTime", &FirstPersonControllerComponentRequests::SetSprintPauseTime);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -219,23 +229,11 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
-        // Calculate the amount of time that the jump key can be held based on m_capsule_jump_hold_offset
-        // divided by the average of the initial jump velocity and the velocity at the edge of the capsule
-        const float jump_velocity_capsule_edge_squared = m_jump_initial_velocity*m_jump_initial_velocity
-                                                         + 2.f*m_gravity*m_jump_held_gravity_factor*m_capsule_jump_hold_offset;
-        // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
-        // then compute how long the jump key is held while still inside the jump hold offset overlap capsule
-        if(jump_velocity_capsule_edge_squared >= 0.f)
-            m_jump_time = m_capsule_jump_hold_offset / ((m_jump_initial_velocity
-                                                        + sqrt(jump_velocity_capsule_edge_squared)) / 2.f);
-        // Otherwise the apogee will be reached inside m_capsule_jump_hold_offset
-        // and the jump time needs to computed accordingly
-        else
-            m_jump_time = abs(m_jump_initial_velocity / (m_gravity*m_jump_held_gravity_factor));
+        UpdateJumpTime();
 
         // Calculate the actual offset that will be used to translate the overlap capsule
-        m_capsule_offset = m_capsule_height/2.f - m_capsule_offset;
-        m_capsule_jump_hold_offset = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+        m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
+        m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
 
         if(m_control_map.size() != (sizeof(m_input_names) / sizeof(AZStd::string*)))
         {
@@ -657,7 +655,7 @@ namespace FirstPersonController
         // is oriented along the X axis when we want it oriented along the Z axis
         AZ::Transform capsule_intersect_pose = AZ::Transform::CreateRotationY(AZ::Constants::HalfPi);
         // Move the capsule to the location of the character and apply the Z offset
-        capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_offset));
+        capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_offset_translation));
 
         AzPhysics::OverlapRequest request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
             m_capsule_height,
@@ -693,10 +691,10 @@ namespace FirstPersonController
         if(m_grounded)
             m_ground_close = true;
         // Check to see if the character is still close to the ground after pressing and holding the jump key
-        // to allow them to jump higher based on the m_capsule_jump_hold_offset distance
+        // to allow them to jump higher based on the m_capsule_jump_hold_offset_translation distance
         else
         {
-            capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_jump_hold_offset));
+            capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_jump_hold_offset_translation));
 
             request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
                 m_capsule_height,
@@ -718,6 +716,23 @@ namespace FirstPersonController
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGroundSoonHit);
         else if(prev_grounded && !m_grounded)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnUngrounded);
+    }
+
+    void FirstPersonControllerComponent::UpdateJumpTime()
+    {
+        // Calculate the amount of time that the jump key can be held based on m_capsule_jump_hold_offset
+        // divided by the average of the initial jump velocity and the velocity at the edge of the capsule
+        const float jump_velocity_capsule_edge_squared = m_jump_initial_velocity*m_jump_initial_velocity
+                                                         + 2.f*m_gravity*m_jump_held_gravity_factor*m_capsule_jump_hold_offset;
+        // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
+        // then compute how long the jump key is held while still inside the jump hold offset overlap capsule
+        if(jump_velocity_capsule_edge_squared >= 0.f)
+            m_jump_time = m_capsule_jump_hold_offset / ((m_jump_initial_velocity
+                                                        + sqrt(jump_velocity_capsule_edge_squared)) / 2.f);
+        // Otherwise the apogee will be reached inside m_capsule_jump_hold_offset
+        // and the jump time needs to computed accordingly
+        else
+            m_jump_time = abs(m_jump_initial_velocity / (m_gravity*m_jump_held_gravity_factor));
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
@@ -815,10 +830,13 @@ namespace FirstPersonController
             (m_apply_velocity + AZ::Vector3::CreateAxisZ(m_z_velocity)));
     }
 
+    // Event Notification methods for use in scripts
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
     void FirstPersonControllerComponent::OnSprintCooldown(){}
+
+    // Request Bus getter and setter methods for use in scripts
     bool FirstPersonControllerComponent::GetGrounded() const
     {
         return m_grounded;
@@ -827,20 +845,64 @@ namespace FirstPersonController
     {
         return m_ground_close;
     }
+    float FirstPersonControllerComponent::GetGravity() const
+    {
+        return m_speed;
+    }
+    void FirstPersonControllerComponent::SetGravity(const float& new_gravity)
+    {
+        m_gravity = new_gravity;
+
+        UpdateJumpTime();
+    }
+    float FirstPersonControllerComponent::GetInitialJumpVelocity() const
+    {
+        return m_speed;
+    }
+    void FirstPersonControllerComponent::SetInitialJumpVelocity(const float& new_initial_jump_velocity)
+    {
+        m_jump_initial_velocity = new_initial_jump_velocity;
+
+        UpdateJumpTime();
+    }
+    float FirstPersonControllerComponent::GetTopWalkSpeed() const
+    {
+        return m_speed;
+    }
+    void FirstPersonControllerComponent::SetTopWalkSpeed(const float& new_speed)
+    {
+        m_speed = new_speed;
+    }
+    float FirstPersonControllerComponent::GetSprintScale() const
+    {
+        return m_sprint_scale;
+    }
+    void FirstPersonControllerComponent::SetSprintScale(const float& new_sprint_scale)
+    {
+        m_sprint_scale = new_sprint_scale;
+    }
     float FirstPersonControllerComponent::GetSprintHeldTime() const
     {
         return m_sprint_held_duration;
     }
-    void FirstPersonControllerComponent::SetSprintHeldTime(const float& new_held_time)
+    void FirstPersonControllerComponent::SetSprintHeldTime(const float& new_sprint_held_duration)
     {
-        m_sprint_held_duration = new_held_time;
+        m_sprint_held_duration = new_sprint_held_duration;
     }
     float FirstPersonControllerComponent::GetSprintCooldown() const
     {
         return m_sprint_cooldown;
     }
+    void FirstPersonControllerComponent::SetSprintCooldown(const float& new_sprint_cooldown)
+    {
+        m_sprint_cooldown = new_sprint_cooldown;
+    }
     float FirstPersonControllerComponent::GetSprintPauseTime() const
     {
         return m_sprint_decrement_pause;
+    }
+    void FirstPersonControllerComponent::SetSprintPauseTime(const float& new_sprint_decrement_pause)
+    {
+        m_sprint_decrement_pause = new_sprint_decrement_pause;
     }
 }

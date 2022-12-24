@@ -42,10 +42,20 @@ namespace FirstPersonController
         // FirstPersonControllerRequestBus
         bool GetGrounded() const override;
         bool GetGroundClose() const override;
+        float GetGravity() const override;
+        void SetGravity(const float& new_gravity) override;
+        float GetInitialJumpVelocity() const override;
+        void SetInitialJumpVelocity(const float& new_initial_jump_velocity) override;
+        float GetTopWalkSpeed() const override;
+        void SetTopWalkSpeed(const float& new_speed) override;
+        float GetSprintScale() const override;
+        void SetSprintScale(const float& new_sprint_scale) override;
         float GetSprintHeldTime() const override;
-        void SetSprintHeldTime(const float& new_held_time) override;
+        void SetSprintHeldTime(const float& new_sprint_held_duration) override;
         float GetSprintCooldown() const override;
+        void SetSprintCooldown(const float& new_sprint_cooldown) override;
         float GetSprintPauseTime() const override;
+        void SetSprintPauseTime(const float& new_sprint_decrement_pause) override;
 
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -58,6 +68,7 @@ namespace FirstPersonController
         void ProcessInput(const float& deltaTime);
 
         void UpdateVelocityXY(const float& deltaTime);
+        void UpdateJumpTime();
         void UpdateVelocityZ(const float& deltaTime);
 
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
@@ -95,10 +106,12 @@ namespace FirstPersonController
         float m_capsule_height = 1.753f;
         // The capsule offset determines how far below the character's feet the ground is detected
         float m_capsule_offset = 0.001f;
+        float m_capsule_offset_translation = m_capsule_offset;
         // The capsule jump hold offset makes it so that the initial jump velocity is held constant
         // for the offset value entered, up to a maximum of roughly the capsule height,
         // depending on the jump velocity/height
         float m_capsule_jump_hold_offset = 0.5f;
+        float m_capsule_jump_hold_offset_translation = m_capsule_jump_hold_offset;
         float m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
         float m_jump_counter = 0.f;
         float m_jump_held_gravity_factor = 0.1f;
