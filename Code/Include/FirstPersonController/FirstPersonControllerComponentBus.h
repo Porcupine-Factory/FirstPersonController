@@ -26,6 +26,14 @@ namespace FirstPersonController
         virtual void SetSprintCooldown(const float&) = 0;
         virtual float GetSprintPauseTime() const = 0;
         virtual void SetSprintPauseTime(const float&) = 0;
+        virtual float GetCameraPitchSensitivity() const = 0;
+        virtual void SetCameraPitchSensitivity(const float&) = 0;
+        virtual float GetCameraYawSensitivity() const = 0;
+        virtual void SetCameraYawSensitivity(const float&) = 0;
+        virtual float GetCameraRotationDampFactor() const = 0;
+        virtual void SetCameraRotationDampFactor(const float&) = 0;
+        virtual void UpdateCameraPitch(const float&) = 0;
+        virtual void UpdateCameraYaw(const float&) = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;

@@ -221,7 +221,15 @@ namespace FirstPersonController
                 ->Event("GetSprintCooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
                 ->Event("SetSprintCooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
                 ->Event("GetSprintPauseTime", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
-                ->Event("SetSprintPauseTime", &FirstPersonControllerComponentRequests::SetSprintPauseTime);
+                ->Event("SetSprintPauseTime", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
+                ->Event("GetCameraPitchSensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
+                ->Event("SetCameraPitchSensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
+                ->Event("GetCameraYawSensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
+                ->Event("SetCameraYawSensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
+                ->Event("GetCameraRotationDampFactor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
+                ->Event("SetCameraRotationDampFactor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
+                ->Event("UpdateCameraPitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
+                ->Event("UpdateCameraYaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -350,14 +358,21 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
     {
+        // Multiply by -1 since moving the mouse up produces a negative value from the input bus
+        if(!m_rotating_pitch_via_script)
+            m_camera_rotation_angles[0] = -1.f * m_pitch_value * m_pitch_sensitivity;
+        else
+            m_rotating_pitch_via_script = false;
+
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
-        const float angles[3] = {-1.f * m_pitch_value * m_pitch_sensitivity,
-                                 0.f,
-                                 -1.f * m_yaw_value * m_yaw_sensitivity};
+        if(!m_rotating_yaw_via_script)
+            m_camera_rotation_angles[2] = -1.f * m_yaw_value * m_yaw_sensitivity;
+        else
+            m_rotating_yaw_via_script = false;
 
         const AZ::Quaternion target_look_direction = AZ::Quaternion::CreateFromEulerAnglesRadians(
-            AZ::Vector3::CreateFromFloat3(angles));
+            AZ::Vector3::CreateFromFloat3(m_camera_rotation_angles));
 
         if(m_rotation_damp*deltaTime <= 1.f)
             m_new_look_direction = m_new_look_direction.Slerp(target_look_direction, m_rotation_damp*deltaTime);
@@ -907,5 +922,39 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintPauseTime(const float& new_sprint_decrement_pause)
     {
         m_sprint_decrement_pause = new_sprint_decrement_pause;
+    }
+    float FirstPersonControllerComponent::GetCameraPitchSensitivity() const
+    {
+        return m_pitch_sensitivity;
+    }
+    void FirstPersonControllerComponent::SetCameraPitchSensitivity(const float& new_pitch_sensitivity)
+    {
+        m_pitch_sensitivity = new_pitch_sensitivity;
+    }
+    float FirstPersonControllerComponent::GetCameraYawSensitivity() const
+    {
+        return m_yaw_sensitivity;
+    }
+    void FirstPersonControllerComponent::SetCameraYawSensitivity(const float& new_yaw_sensitivity)
+    {
+        m_yaw_sensitivity = new_yaw_sensitivity;
+    }
+    float FirstPersonControllerComponent::GetCameraRotationDampFactor() const
+    {
+        return m_rotation_damp;
+    }
+    void FirstPersonControllerComponent::SetCameraRotationDampFactor(const float& new_rotation_damp)
+    {
+        m_rotation_damp = new_rotation_damp;
+    }
+    void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_camera_pitch_angle)
+    {
+        m_camera_rotation_angles[0] = new_camera_pitch_angle - m_pitch_value * m_pitch_sensitivity;
+        m_rotating_pitch_via_script = true;
+    }
+    void FirstPersonControllerComponent::UpdateCameraYaw(const float& new_camera_yaw_angle)
+    {
+        m_camera_rotation_angles[2] = new_camera_yaw_angle - m_yaw_value * m_yaw_sensitivity;
+        m_rotating_yaw_via_script = true;
     }
 }

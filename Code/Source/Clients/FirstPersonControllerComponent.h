@@ -56,6 +56,14 @@ namespace FirstPersonController
         void SetSprintCooldown(const float& new_sprint_cooldown) override;
         float GetSprintPauseTime() const override;
         void SetSprintPauseTime(const float& new_sprint_decrement_pause) override;
+        float GetCameraPitchSensitivity() const override;
+        void SetCameraPitchSensitivity(const float& new_pitch_sensitivity) override;
+        float GetCameraYawSensitivity() const override;
+        void SetCameraYawSensitivity(const float& new_yaw_sensitivity) override;
+        float GetCameraRotationDampFactor() const override;
+        void SetCameraRotationDampFactor(const float& new_rotation_damp) override;
+        void UpdateCameraPitch(const float& new_camera_pitch_angle) override;
+        void UpdateCameraYaw(const float& new_camera_yaw_angle) override;
 
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -87,8 +95,12 @@ namespace FirstPersonController
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_last_applied_velocity = AZ::Vector3::CreateZero();
 
+        // Angles used to rotate the camera
+        float m_camera_rotation_angles[3] = {0.f, 0.f, 0.f};
+
+        // Top walk speed
         float m_speed = 10.f;
-        
+
         float m_lerp_time = 0.f;
 
         // Jumping and gravity
@@ -124,12 +136,16 @@ namespace FirstPersonController
         void UpdateRotation(const float& deltaTime);
         // These default values work well, depending on OS mouse settings,
         // assuming the event value multiplier is 1.0
-        float m_yaw_sensitivity = 0.005f;
         float m_pitch_sensitivity = 0.005f;
+        float m_yaw_sensitivity = 0.005f;
 
         float m_current_heading = 0.f;
         AZ::Quaternion m_new_look_direction = AZ::Quaternion::CreateZero();
         float m_rotation_damp = 20.f;
+
+        // Used when a script wants to update the camera angle via the Request Bus
+        bool m_rotating_pitch_via_script = false;
+        bool m_rotating_yaw_via_script = false;
 
         // Acceleration lerp movement
         float m_accel = 1.f;
