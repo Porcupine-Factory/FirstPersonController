@@ -60,9 +60,9 @@ namespace FirstPersonController
               ->Field("Capsule Overlap Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
               ->Field("Capsule Grounded Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
-              ->Field("Update X&Y Velocity Midair", &FirstPersonControllerComponent::m_update_xy_midair)
+              ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_update_xy_ascending)
+              ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_update_xy_descending)
               ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_update_xy_only_near_ground)
-              ->Field("Update X&Y Velocity Only When Ascending", &FirstPersonControllerComponent::m_update_xy_only_positive_z)
 
               ->Version(1);
 
@@ -186,14 +186,14 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_capsule_jump_hold_offset,
                         "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_update_xy_midair,
-                        "Update X&Y Velocity Midair", "Determines if the X&Y velocity components will be updated when in the air, if this isn't enabled then the options for updating X&Y near the ground and when ascending are effectively ignored")
+                        &FirstPersonControllerComponent::m_update_xy_ascending,
+                        "Update X&Y Velocity When Ascending", "Determines if the X&Y velocity components will be updated when ascending")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_update_xy_descending,
+                        "Update X&Y Velocity When Descending", "Determines if the X&Y velocity components will be updated when descending")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_update_xy_only_near_ground,
-                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close overlap capsule has an intersection")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_update_xy_only_positive_z,
-                        "Update X&Y Velocity Only When Ascending", "Determines if the X&Y velocity components will be updated only when the character is ascending (moving positively on Z)");
+                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close overlap capsule has an intersection, if the ascending and descending options are disabled then this will effectively do nothing");
             }
         }
 
@@ -803,12 +803,9 @@ namespace FirstPersonController
 
         // So long as the character is grounded or depending on how the update X&Y velocity while jumping
         // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
-        if(m_grounded
-           || m_update_xy_midair
-              && ((m_update_xy_only_near_ground && m_ground_close) && (m_update_xy_only_positive_z && m_z_velocity >= 0.f)
-                 || ((m_update_xy_only_near_ground && m_ground_close) && !m_update_xy_only_positive_z)
-                 || ((m_update_xy_only_positive_z && m_z_velocity >= 0.f) && !m_update_xy_only_near_ground)
-                 || (!m_update_xy_only_near_ground && !m_update_xy_only_positive_z)) )
+        if(m_grounded || (m_update_xy_ascending && m_update_xy_descending && !m_update_xy_only_near_ground)
+           || ((m_update_xy_ascending && m_z_velocity >= 0.f) && (!m_update_xy_only_near_ground || m_ground_close))
+           || ((m_update_xy_descending && m_z_velocity <= 0.f) && (!m_update_xy_only_near_ground || m_ground_close)) )
             UpdateVelocityXY(deltaTime);
 
         UpdateVelocityZ(deltaTime);

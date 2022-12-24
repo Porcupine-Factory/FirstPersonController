@@ -104,9 +104,9 @@ namespace FirstPersonController
         float m_jump_held_gravity_factor = 0.1f;
         float m_jump_falling_gravity_factor = 1.1f;
 
-        bool m_update_xy_midair = true;
+        bool m_update_xy_ascending = true;
+        bool m_update_xy_descending = true;
         bool m_update_xy_only_near_ground = true;
-        bool m_update_xy_only_positive_z = true;
 
         void UpdateRotation(const float& deltaTime);
         // These default values work well, depending on OS mouse settings,
