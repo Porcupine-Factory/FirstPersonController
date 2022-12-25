@@ -60,6 +60,7 @@ namespace FirstPersonController
               ->Field("Capsule Overlap Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
               ->Field("Capsule Grounded Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
+              ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_double_jump_enabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_update_xy_ascending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_update_xy_descending)
               ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_update_xy_only_near_ground)
@@ -186,6 +187,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_capsule_jump_hold_offset,
                         "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_double_jump_enabled,
+                        "Enable Double Jump", "Turn this on if you want to enable double jumping")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_update_xy_ascending,
                         "Update X&Y Velocity When Ascending", "Determines if the X&Y velocity components will be updated when ascending")
                     ->DataElement(nullptr,
@@ -213,6 +217,8 @@ namespace FirstPersonController
                 ->Event("SetGravity", &FirstPersonControllerComponentRequests::SetGravity)
                 ->Event("GetInitialJumpVelocity", &FirstPersonControllerComponentRequests::GetInitialJumpVelocity)
                 ->Event("SetInitialJumpVelocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
+                ->Event("GetDoubleJump", &FirstPersonControllerComponentRequests::GetDoubleJump)
+                ->Event("SetDoubleJump", &FirstPersonControllerComponentRequests::SetDoubleJump)
                 ->Event("GetTopWalkSpeed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
                 ->Event("SetTopWalkSpeed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
                 ->Event("GetSprintScale", &FirstPersonControllerComponentRequests::GetSprintScale)
@@ -781,6 +787,8 @@ namespace FirstPersonController
                 m_jump_counter = 0.f;
                 if(m_jump_value == 0.f && m_jump_held)
                     m_jump_held = false;
+                if(m_double_jump_enabled && m_second_jump)
+                    m_second_jump = false;
             }
         }
         else if(m_jump_counter < m_jump_time && current_velocity.GetZ() > 0.f && m_jump_held && !m_jump_req_repress)
@@ -799,9 +807,6 @@ namespace FirstPersonController
         }
         else
         {
-            if(!m_jump_held)
-                m_jump_held = true;
-
             if(!m_jump_req_repress)
                 m_jump_req_repress = true;
 
@@ -812,6 +817,20 @@ namespace FirstPersonController
                 m_z_velocity_current_delta = m_gravity * m_jump_falling_gravity_factor * deltaTime;
             else
                 m_z_velocity_current_delta = m_gravity * deltaTime;
+
+            if(!m_double_jump_enabled && !m_jump_held)
+                m_jump_held = true;
+            else if(m_double_jump_enabled && m_jump_value == 0.f && m_jump_held)
+                m_jump_held = false;
+
+            if(m_double_jump_enabled && !m_second_jump && !m_jump_held && m_jump_value != 0.f)
+            {
+                m_z_velocity = m_jump_initial_velocity;
+                m_z_velocity_current_delta = 0.f;
+                m_second_jump = true;
+                m_jump_held = true;
+                AZ_Printf("", "SECOND JUMP!!!");
+            }
         }
 
         // Perform an average of the current and previous Z velocity delta
@@ -893,6 +912,14 @@ namespace FirstPersonController
         m_jump_initial_velocity = new_initial_jump_velocity;
 
         UpdateJumpTime();
+    }
+    bool FirstPersonControllerComponent::GetDoubleJump() const
+    {
+        return m_double_jump_enabled;
+    }
+    void FirstPersonControllerComponent::SetDoubleJump(const bool& new_double_jump)
+    {
+        m_double_jump_enabled = new_double_jump;
     }
     float FirstPersonControllerComponent::GetTopWalkSpeed() const
     {

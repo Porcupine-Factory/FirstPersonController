@@ -17,6 +17,8 @@ namespace FirstPersonController
         virtual void SetGravity(const float&) = 0;
         virtual float GetInitialJumpVelocity() const = 0;
         virtual void SetInitialJumpVelocity(const float&) = 0;
+        virtual bool GetDoubleJump() const = 0;
+        virtual void SetDoubleJump(const bool&) = 0;
         virtual float GetTopWalkSpeed() const = 0;
         virtual void SetTopWalkSpeed(const float&) = 0;
         virtual float GetSprintScale() const = 0;

@@ -48,6 +48,8 @@ namespace FirstPersonController
         void SetGravity(const float& new_gravity) override;
         float GetInitialJumpVelocity() const override;
         void SetInitialJumpVelocity(const float& new_initial_jump_velocity) override;
+        bool GetDoubleJump() const override;
+        void SetDoubleJump(const bool& new_double_jump) override;
         float GetTopWalkSpeed() const override;
         void SetTopWalkSpeed(const float& new_speed) override;
         float GetSprintScale() const override;
@@ -130,6 +132,8 @@ namespace FirstPersonController
         float m_jump_counter = 0.f;
         float m_jump_held_gravity_factor = 0.1f;
         float m_jump_falling_gravity_factor = 1.1f;
+        bool m_double_jump_enabled = false;
+        bool m_second_jump = false;
 
         bool m_update_xy_ascending = true;
         bool m_update_xy_descending = true;
