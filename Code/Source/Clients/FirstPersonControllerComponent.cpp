@@ -268,15 +268,21 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
     }
 
+    void FirstPersonControllerComponent::GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
+    {
+        required.push_back(AZ_CRC_CE("PhysicsCharacterControllerService"));
+        required.push_back(AZ_CRC_CE("TransformService"));
+    }
+
     void FirstPersonControllerComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
     {
         provided.push_back(AZ_CRC_CE("FirstPersonControllerService"));
     }
 
-    void FirstPersonControllerComponent::GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
+    void FirstPersonControllerComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
     {
-        required.push_back(AZ_CRC_CE("PhysicsCharacterControllerService"));
-        required.push_back(AZ_CRC_CE("TransformService"));
+        incompatible.push_back(AZ_CRC_CE("FirstPersonControllerService"));
+        incompatible.push_back(AZ_CRC_CE("InputService"));
     }
 
     void FirstPersonControllerComponent::OnPressed(float value)
