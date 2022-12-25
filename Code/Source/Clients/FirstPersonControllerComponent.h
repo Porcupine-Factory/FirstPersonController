@@ -41,6 +41,7 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // FirstPersonControllerRequestBus
+        AZ::EntityId GetActiveCameraId() const;
         bool GetGrounded() const override;
         bool GetGroundClose() const override;
         float GetGravity() const override;
@@ -68,7 +69,7 @@ namespace FirstPersonController
 
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
-        AZ::Entity* GetActiveCamera();
+        AZ::Entity* GetActiveCamera() const;
 
         // Child entity IDs
         bool m_obtained_child_ids = false;

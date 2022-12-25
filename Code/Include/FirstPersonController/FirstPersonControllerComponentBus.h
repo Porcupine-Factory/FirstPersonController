@@ -10,6 +10,7 @@ namespace FirstPersonController
     public:
         ~FirstPersonControllerComponentRequests() override = default;
 
+        virtual AZ::EntityId GetActiveCameraId() const = 0;
         virtual bool GetGrounded() const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual float GetGravity() const = 0;

@@ -206,6 +206,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "FirstPerson")
+                ->Event("GetActiveCameraId", &FirstPersonControllerComponentRequests::GetActiveCameraId)
                 ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("GetGravity", &FirstPersonControllerComponentRequests::GetGravity)
@@ -352,7 +353,7 @@ namespace FirstPersonController
         ProcessInput(deltaTime);
     }
 
-    AZ::Entity* FirstPersonControllerComponent::GetActiveCamera()
+    AZ::Entity* FirstPersonControllerComponent::GetActiveCamera() const
     {
         AZ::EntityId activeCameraId;
         Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId,
@@ -861,6 +862,10 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnSprintCooldown(){}
 
     // Request Bus getter and setter methods for use in scripts
+    AZ::EntityId FirstPersonControllerComponent::GetActiveCameraId() const
+    {
+        return m_activeCameraEntity->GetId();
+    }
     bool FirstPersonControllerComponent::GetGrounded() const
     {
         return m_grounded;
@@ -871,7 +876,7 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetGravity() const
     {
-        return m_speed;
+        return m_gravity;
     }
     void FirstPersonControllerComponent::SetGravity(const float& new_gravity)
     {
@@ -881,7 +886,7 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetInitialJumpVelocity() const
     {
-        return m_speed;
+        return m_jump_initial_velocity;
     }
     void FirstPersonControllerComponent::SetInitialJumpVelocity(const float& new_initial_jump_velocity)
     {
