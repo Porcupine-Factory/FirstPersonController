@@ -44,6 +44,7 @@ namespace FirstPersonController
         AZ::EntityId GetActiveCameraId() const;
         bool GetGrounded() const override;
         bool GetGroundClose() const override;
+        float GetJumpKeyValue() const override;;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
         float GetInitialJumpVelocity() const override;

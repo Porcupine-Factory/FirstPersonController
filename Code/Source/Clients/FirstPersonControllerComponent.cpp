@@ -213,6 +213,7 @@ namespace FirstPersonController
                 ->Event("GetActiveCameraId", &FirstPersonControllerComponentRequests::GetActiveCameraId)
                 ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
+                ->Event("GetJumpKeyValue", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
                 ->Event("GetGravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("SetGravity", &FirstPersonControllerComponentRequests::SetGravity)
                 ->Event("GetInitialJumpVelocity", &FirstPersonControllerComponentRequests::GetInitialJumpVelocity)
@@ -602,6 +603,7 @@ namespace FirstPersonController
             forwardBack /= m_forward_scale;
         else
             forwardBack /= m_back_scale;
+
         if(leftRight >= 0.f)
             leftRight /= m_right_scale;
         else
@@ -612,10 +614,12 @@ namespace FirstPersonController
         // Normalize the vector if its magnitude is greater than 1 and then scale it
         if((forwardBack || leftRight) && sqrt(forwardBack*forwardBack + leftRight*leftRight) > 1.f)
             target_velocity.Normalize();
+
         if(target_velocity.GetY() >= 0.f)
             target_velocity.SetY(target_velocity.GetY() * m_forward_scale);
         else
             target_velocity.SetY(target_velocity.GetY() * m_back_scale);
+
         if(target_velocity.GetX() >= 0.f)
             target_velocity.SetX(target_velocity.GetX() * m_right_scale);
         else
@@ -706,6 +710,7 @@ namespace FirstPersonController
                     AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
                     m_obtained_child_ids = true;
                 }
+
                 for(AZ::EntityId id: m_children)
                     if(hit.m_entityId == id)
                         return true;
@@ -785,8 +790,10 @@ namespace FirstPersonController
                 m_z_velocity = 0.f;
                 m_z_velocity_current_delta = 0.f;
                 m_jump_counter = 0.f;
+
                 if(m_jump_value == 0.f && m_jump_held)
                     m_jump_held = false;
+
                 if(m_double_jump_enabled && m_second_jump)
                     m_second_jump = false;
             }
@@ -892,6 +899,10 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetGroundClose() const
     {
         return m_ground_close;
+    }
+    float FirstPersonControllerComponent::GetJumpKeyValue() const
+    {
+        return m_jump_value;
     }
     float FirstPersonControllerComponent::GetGravity() const
     {
