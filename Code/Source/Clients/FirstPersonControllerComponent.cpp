@@ -784,6 +784,7 @@ namespace FirstPersonController
                 m_z_velocity_current_delta = m_jump_initial_velocity;
                 m_jump_held = true;
                 m_jump_req_repress = false;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnFirstJump);
             }
             else
             {
@@ -836,7 +837,7 @@ namespace FirstPersonController
                 m_z_velocity_current_delta = 0.f;
                 m_second_jump = true;
                 m_jump_held = true;
-                AZ_Printf("", "SECOND JUMP!!!");
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSecondJump);
             }
         }
 
@@ -885,6 +886,8 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
+    void FirstPersonControllerComponent::OnFirstJump(){}
+    void FirstPersonControllerComponent::OnSecondJump(){}
     void FirstPersonControllerComponent::OnSprintCooldown(){}
 
     // Request Bus getter and setter methods for use in scripts

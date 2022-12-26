@@ -49,6 +49,8 @@ namespace FirstPersonController
         virtual void OnGroundHit() = 0;
         virtual void OnGroundSoonHit() = 0;
         virtual void OnUngrounded() = 0;
+        virtual void OnFirstJump() = 0;
+        virtual void OnSecondJump() = 0;
         virtual void OnSprintCooldown() = 0;
     };
 
@@ -61,7 +63,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnSprintCooldown);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnFirstJump, OnSecondJump, OnSprintCooldown);
 
         void OnGroundHit() override
         {
@@ -74,6 +76,14 @@ namespace FirstPersonController
         void OnUngrounded() override
         {
             Call(FN_OnUngrounded);
+        }
+        void OnFirstJump() override
+        {
+            Call(FN_OnFirstJump);
+        }
+        void OnSecondJump() override
+        {
+            Call(FN_OnSecondJump);
         }
         void OnSprintCooldown() override
         {

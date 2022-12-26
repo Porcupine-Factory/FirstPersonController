@@ -94,6 +94,8 @@ namespace FirstPersonController
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
+        void OnFirstJump();
+        void OnSecondJump();
         void OnSprintCooldown();
 
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
