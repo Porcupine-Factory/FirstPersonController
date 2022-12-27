@@ -44,6 +44,7 @@ namespace FirstPersonController
         AZ::EntityId GetActiveCameraId() const;
         bool GetGrounded() const override;
         bool GetGroundClose() const override;
+        float GetAirTime() const override;
         float GetJumpKeyValue() const override;;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
@@ -88,7 +89,7 @@ namespace FirstPersonController
         void SlerpRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
 
-        void CheckGrounded();
+        void CheckGrounded(const float& deltaTime);
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();
@@ -114,6 +115,7 @@ namespace FirstPersonController
         float m_gravity = -9.81f;
         bool m_grounded = true;
         bool m_ground_close = true;
+        float m_air_time = 0.f;
         float m_jump_initial_velocity = 2.5f;
         bool m_jump_pressed = false;
         bool m_jump_held = false;
@@ -149,7 +151,7 @@ namespace FirstPersonController
         float m_yaw_sensitivity = 0.005f;
 
         float m_current_heading = 0.f;
-        AZ::Quaternion m_new_look_direction = AZ::Quaternion::CreateZero();
+        AZ::Quaternion m_new_look_rotation_delta = AZ::Quaternion::CreateZero();
         float m_rotation_damp = 20.f;
 
         // Used when a script wants to update the camera angle via the Request Bus

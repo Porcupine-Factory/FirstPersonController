@@ -213,6 +213,7 @@ namespace FirstPersonController
                 ->Event("GetActiveCameraId", &FirstPersonControllerComponentRequests::GetActiveCameraId)
                 ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
+                ->Event("GetAirTime", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("GetJumpKeyValue", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
                 ->Event("GetGravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("SetGravity", &FirstPersonControllerComponentRequests::SetGravity)
@@ -385,13 +386,13 @@ namespace FirstPersonController
         else
             m_rotating_yaw_via_script = false;
 
-        const AZ::Quaternion target_look_direction = AZ::Quaternion::CreateFromEulerAnglesRadians(
+        const AZ::Quaternion target_look_rotation_delta = AZ::Quaternion::CreateFromEulerAnglesRadians(
             AZ::Vector3::CreateFromFloat3(m_camera_rotation_angles));
 
         if(m_rotation_damp*deltaTime <= 1.f)
-            m_new_look_direction = m_new_look_direction.Slerp(target_look_direction, m_rotation_damp*deltaTime);
+            m_new_look_rotation_delta = m_new_look_rotation_delta.Slerp(target_look_rotation_delta, m_rotation_damp*deltaTime);
         else
-            m_new_look_direction = target_look_direction;
+            m_new_look_rotation_delta = target_look_rotation_delta;
     }
 
     void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime)
@@ -399,9 +400,9 @@ namespace FirstPersonController
         AZ::TransformInterface* t = GetEntity()->GetTransform();
 
         SlerpRotation(deltaTime);
-        const AZ::Vector3 new_look_direction = m_new_look_direction.GetEulerRadians();
+        const AZ::Vector3 new_look_rotation_delta = m_new_look_rotation_delta.GetEulerRadians();
 
-        t->RotateAroundLocalZ(new_look_direction.GetZ());
+        t->RotateAroundLocalZ(new_look_rotation_delta.GetZ());
 
         m_activeCameraEntity = GetActiveCamera();
         t = m_activeCameraEntity->GetTransform();
@@ -410,10 +411,10 @@ namespace FirstPersonController
 
         using namespace AZ::Constants;
         if(abs(current_pitch) <= HalfPi ||
-           current_pitch >= HalfPi && new_look_direction.GetX() < 0.f ||
-           current_pitch <= -HalfPi && new_look_direction.GetX() > 0.f)
+           current_pitch >= HalfPi && new_look_rotation_delta.GetX() < 0.f ||
+           current_pitch <= -HalfPi && new_look_rotation_delta.GetX() > 0.f)
         {
-            t->RotateAroundLocalX(new_look_direction.GetX());
+            t->RotateAroundLocalX(new_look_rotation_delta.GetX());
             current_pitch = t->GetLocalRotation().GetX();
         }
         if(abs(current_pitch) > HalfPi)
@@ -675,7 +676,7 @@ namespace FirstPersonController
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
     }
 
-    void FirstPersonControllerComponent::CheckGrounded()
+    void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
     {
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
@@ -722,11 +723,16 @@ namespace FirstPersonController
         m_grounded = hits ? true : false;
 
         if(m_grounded)
+        {
             m_ground_close = true;
+            m_air_time = 0.f;
+        }
         // Check to see if the character is still close to the ground after pressing and holding the jump key
         // to allow them to jump higher based on the m_capsule_jump_hold_offset_translation distance
         else
         {
+            m_air_time += deltaTime;
+
             capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_jump_hold_offset_translation));
 
             request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
@@ -866,7 +872,7 @@ namespace FirstPersonController
     {
         UpdateRotation(deltaTime);
 
-        CheckGrounded();
+        CheckGrounded(deltaTime);
 
         // So long as the character is grounded or depending on how the update X&Y velocity while jumping
         // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
@@ -902,6 +908,10 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetGroundClose() const
     {
         return m_ground_close;
+    }
+    float FirstPersonControllerComponent::GetAirTime() const
+    {
+        return m_air_time;
     }
     float FirstPersonControllerComponent::GetJumpKeyValue() const
     {

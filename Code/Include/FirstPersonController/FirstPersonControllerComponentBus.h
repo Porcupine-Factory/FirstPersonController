@@ -13,6 +13,7 @@ namespace FirstPersonController
         virtual AZ::EntityId GetActiveCameraId() const = 0;
         virtual bool GetGrounded() const = 0;
         virtual bool GetGroundClose() const = 0;
+        virtual float GetAirTime() const = 0;
         virtual float GetJumpKeyValue() const = 0;
         virtual float GetGravity() const = 0;
         virtual void SetGravity(const float&) = 0;
