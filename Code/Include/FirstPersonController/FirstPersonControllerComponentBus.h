@@ -23,6 +23,12 @@ namespace FirstPersonController
         virtual void SetDoubleJump(const bool&) = 0;
         virtual float GetTopWalkSpeed() const = 0;
         virtual void SetTopWalkSpeed(const float&) = 0;
+        virtual float GetWalkAcceleration() const = 0;
+        virtual void SetWalkAcceleration(const float&) = 0;
+        virtual float GetWalkDeceleration() const = 0;
+        virtual void SetWalkDeceleration(const float&) = 0;
+        virtual float GetWalkBreak() const = 0;
+        virtual void SetWalkBreak(const float&) = 0;
         virtual float GetSprintScale() const = 0;
         virtual void SetSprintScale(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;

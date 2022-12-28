@@ -54,6 +54,12 @@ namespace FirstPersonController
         void SetDoubleJump(const bool& new_double_jump) override;
         float GetTopWalkSpeed() const override;
         void SetTopWalkSpeed(const float& new_speed) override;
+        float GetWalkAcceleration() const override;
+        void SetWalkAcceleration(const float& new_accel) override;
+        float GetWalkDeceleration() const override;
+        void SetWalkDeceleration(const float& new_decel) override;
+        float GetWalkBreak() const override;
+        void SetWalkBreak(const float& new_break) override;
         float GetSprintScale() const override;
         void SetSprintScale(const float& new_sprint_scale) override;
         float GetSprintHeldTime() const override;

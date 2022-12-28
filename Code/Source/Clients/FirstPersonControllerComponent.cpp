@@ -209,36 +209,42 @@ namespace FirstPersonController
             bc->EBus<FirstPersonControllerComponentRequestBus>("FirstPersonControllerComponentRequestBus")
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
-                ->Attribute(AZ::Script::Attributes::Category, "FirstPerson")
-                ->Event("GetActiveCameraId", &FirstPersonControllerComponentRequests::GetActiveCameraId)
-                ->Event("GetGrounded", &FirstPersonControllerComponentRequests::GetGrounded)
-                ->Event("GetGroundClose", &FirstPersonControllerComponentRequests::GetGroundClose)
-                ->Event("GetAirTime", &FirstPersonControllerComponentRequests::GetAirTime)
-                ->Event("GetJumpKeyValue", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
-                ->Event("GetGravity", &FirstPersonControllerComponentRequests::GetGravity)
-                ->Event("SetGravity", &FirstPersonControllerComponentRequests::SetGravity)
-                ->Event("GetInitialJumpVelocity", &FirstPersonControllerComponentRequests::GetInitialJumpVelocity)
-                ->Event("SetInitialJumpVelocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
-                ->Event("GetDoubleJump", &FirstPersonControllerComponentRequests::GetDoubleJump)
-                ->Event("SetDoubleJump", &FirstPersonControllerComponentRequests::SetDoubleJump)
-                ->Event("GetTopWalkSpeed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
-                ->Event("SetTopWalkSpeed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
-                ->Event("GetSprintScale", &FirstPersonControllerComponentRequests::GetSprintScale)
-                ->Event("SetSprintScale", &FirstPersonControllerComponentRequests::SetSprintScale)
-                ->Event("GetSprintHeldTime", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
-                ->Event("SetSprintHeldTime", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
-                ->Event("GetSprintCooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
-                ->Event("SetSprintCooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
-                ->Event("GetSprintPauseTime", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
-                ->Event("SetSprintPauseTime", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
-                ->Event("GetCameraPitchSensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
-                ->Event("SetCameraPitchSensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
-                ->Event("GetCameraYawSensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
-                ->Event("SetCameraYawSensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
-                ->Event("GetCameraRotationDampFactor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
-                ->Event("SetCameraRotationDampFactor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
-                ->Event("UpdateCameraPitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
-                ->Event("UpdateCameraYaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw);
+                ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
+                ->Event("Get Active Camera Id", &FirstPersonControllerComponentRequests::GetActiveCameraId)
+                ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
+                ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
+                ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
+                ->Event("Get Jump Key Value", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
+                ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
+                ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
+                ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetInitialJumpVelocity)
+                ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
+                ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
+                ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
+                ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
+                ->Event("Set Top Walk Speed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
+                ->Event("Get Walk Acceleration", &FirstPersonControllerComponentRequests::GetWalkAcceleration)
+                ->Event("Set Walk Acceleration", &FirstPersonControllerComponentRequests::SetWalkAcceleration)
+                ->Event("Get Walk Deceleration", &FirstPersonControllerComponentRequests::GetWalkDeceleration)
+                ->Event("Set Walk Deceleration", &FirstPersonControllerComponentRequests::SetWalkDeceleration)
+                ->Event("Get Walk Break", &FirstPersonControllerComponentRequests::GetWalkBreak)
+                ->Event("Set Walk Break", &FirstPersonControllerComponentRequests::SetWalkBreak)
+                ->Event("Get Sprint Scale", &FirstPersonControllerComponentRequests::GetSprintScale)
+                ->Event("Set Sprint Scale", &FirstPersonControllerComponentRequests::SetSprintScale)
+                ->Event("Get Sprint Held Time", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
+                ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
+                ->Event("Get Sprint Cooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
+                ->Event("Set Sprint Cooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
+                ->Event("Get Sprint Pause Time", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
+                ->Event("Set Sprint Pause Time", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
+                ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
+                ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
+                ->Event("Get Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
+                ->Event("Set Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
+                ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
+                ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
+                ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
+                ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -952,6 +958,30 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetTopWalkSpeed(const float& new_speed)
     {
         m_speed = new_speed;
+    }
+    float FirstPersonControllerComponent::GetWalkAcceleration() const
+    {
+        return m_accel;
+    }
+    void FirstPersonControllerComponent::SetWalkAcceleration(const float& new_accel)
+    {
+        m_accel = new_accel;
+    }
+    float FirstPersonControllerComponent::GetWalkDeceleration() const
+    {
+        return m_decel;
+    }
+    void FirstPersonControllerComponent::SetWalkDeceleration(const float& new_decel)
+    {
+        m_decel = new_decel;
+    }
+    float FirstPersonControllerComponent::GetWalkBreak() const
+    {
+        return m_break;
+    }
+    void FirstPersonControllerComponent::SetWalkBreak(const float& new_break)
+    {
+        m_break = new_break;
     }
     float FirstPersonControllerComponent::GetSprintScale() const
     {
