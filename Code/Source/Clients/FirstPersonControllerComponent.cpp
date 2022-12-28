@@ -76,7 +76,7 @@ namespace FirstPersonController
                     "First person character controller")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
-                    ->Attribute(Category, "First Person")
+                    ->Attribute(Category, "First Person Controller")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -275,7 +275,13 @@ namespace FirstPersonController
             }
         }
         AZ::TickBus::Handler::BusConnect();
+
         InputChannelEventListener::Connect();
+        // Attempting to allow all possible input events through without filtering anything out
+        // This may not be necessary
+        AZStd::shared_ptr<AzFramework::InputChannelEventFilterInclusionList> filter;
+        AzFramework::InputChannelEventListener::SetFilter(filter);
+
         FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
     }
 
@@ -371,6 +377,7 @@ namespace FirstPersonController
         const AzFramework::InputDeviceId& deviceId = inputChannel.GetInputDevice().GetInputDeviceId();
 
         // TODO: Implement gamepad support
+        // AZ_Printf("", "OnInputChannelEventFiltered");
         if(AzFramework::InputDeviceGamepad::IsGamepadDevice(deviceId))
             OnGamepadEvent(inputChannel);
 
