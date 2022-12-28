@@ -10,12 +10,14 @@
 #include <StartingPointInput/InputEventNotificationBus.h>
 
 #include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
+#include <AzFramework/Input/Events/InputChannelEventListener.h>
 
 namespace FirstPersonController
 {
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
+        , public AzFramework::InputChannelEventListener
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentRequestBus::Handler
     {
@@ -36,6 +38,12 @@ namespace FirstPersonController
         void OnPressed(float value) override;
         void OnReleased(float value) override;
         void OnHeld(float value) override;
+
+        // AzFramework::InputChannelEventListener
+        bool OnInputChannelEventFiltered(const AzFramework::InputChannel& inputChannel) override;
+
+        // Gamepad Events
+        void OnGamepadEvent(const AzFramework::InputChannel& inputChannel);
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;

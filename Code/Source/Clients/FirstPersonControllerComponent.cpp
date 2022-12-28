@@ -8,6 +8,8 @@
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Physics/PhysicsScene.h>
 #include <AzFramework/Components/CameraBus.h>
+#include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
+#include <AzFramework/Input/Devices/InputDeviceId.h>
 
 namespace FirstPersonController
 {
@@ -273,6 +275,7 @@ namespace FirstPersonController
             }
         }
         AZ::TickBus::Handler::BusConnect();
+        InputChannelEventListener::Connect();
         FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
     }
 
@@ -280,6 +283,7 @@ namespace FirstPersonController
     {
         InputEventNotificationBus::MultiHandler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
+        InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
     }
 
@@ -359,6 +363,55 @@ namespace FirstPersonController
         else if(*inputId == m_SprintEventId)
         {
             m_sprint_value = m_sprint_pressed_value = value * m_sprint_scale;
+        }
+    }
+
+    bool FirstPersonControllerComponent::OnInputChannelEventFiltered(const AzFramework::InputChannel& inputChannel)
+    {
+        const AzFramework::InputDeviceId& deviceId = inputChannel.GetInputDevice().GetInputDeviceId();
+
+        // TODO: Implement gamepad support
+        if(AzFramework::InputDeviceGamepad::IsGamepadDevice(deviceId))
+            OnGamepadEvent(inputChannel);
+
+        return false;
+    }
+
+    void FirstPersonControllerComponent::OnGamepadEvent(const AzFramework::InputChannel& inputChannel)
+    {
+        // TODO: Implement gamepad support
+        const AzFramework::InputChannelId& channelId = inputChannel.GetInputChannelId();
+
+        if (channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LR)
+        {
+            m_right_value = inputChannel.GetValue();
+            m_left_value = 0.f;
+        }
+        else if (channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LL)
+        {
+            m_right_value = 0.f;
+            m_left_value = abs(inputChannel.GetValue());
+        }
+
+        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LU)
+        {
+            m_forward_value = inputChannel.GetValue();
+            m_back_value = 0.f;
+        }
+        else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LD)
+        {
+            m_forward_value = 0.f;
+            m_back_value = abs(inputChannel.GetValue());
+        }
+
+        if (channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
+        {
+            m_camera_rotation_angles[2] = inputChannel.GetValue() * m_yaw_sensitivity;
+        }
+
+        if (channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
+        {
+            m_camera_rotation_angles[0] = inputChannel.GetValue() * m_pitch_sensitivity;
         }
     }
 
