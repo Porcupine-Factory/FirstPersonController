@@ -295,6 +295,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
+        required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("PhysicsCharacterControllerService"));
         required.push_back(AZ_CRC_CE("TransformService"));
     }
