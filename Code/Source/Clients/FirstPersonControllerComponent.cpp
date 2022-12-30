@@ -58,10 +58,11 @@ namespace FirstPersonController
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jump_held_gravity_factor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jump_falling_gravity_factor)
               ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jump_accel_factor)
-              ->Field("Capsule Overlap Height (m)", &FirstPersonControllerComponent::m_capsule_height)
-              ->Field("Capsule Overlap Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
-              ->Field("Capsule Grounded Overlap Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
+              ->Field("Capsule Height (m)", &FirstPersonControllerComponent::m_capsule_height)
+              ->Field("Capsule Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
+              ->Field("Capsule Grounded Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
+              ->Field("Max Grounded Slope Angle (°)", &FirstPersonControllerComponent::m_max_grounded_angle_degrees)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_double_jump_enabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_update_xy_ascending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_update_xy_descending)
@@ -178,16 +179,23 @@ namespace FirstPersonController
                         "XY Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_height,
-                        "Capsule Overlap Height (m)", "The ground detect capsule overlap height in meters")
+                        "Capsule Height (m)", "The ground detect capsule height in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_radius,
-                        "Capsule Overlap Radius (m)", "The ground detect capsule overlap radius in meters")
+                        "Capsule Radius (m)", "The ground detect capsule radius in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_offset,
-                        "Capsule Grounded Overlap Offset (m)", "The capsule overlap's ground detect offset in meters")
+                        "Capsule Grounded Offset (m)", "The capsule's ground detect offset in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_jump_hold_offset,
                         "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_max_grounded_angle_degrees,
+                        "Max Grounded Slope Angle (°)", "The most steep angle that the character can stand on, it is recommended to set this number to something very slightly larger than the PhysX Character Controller component's Maximum Slope Angle value")
+                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
+                        ->Attribute(AZ::Edit::Attributes::Step, 1.0f)
+                        ->Attribute(AZ::Edit::Attributes::Max, 89.11f)
+                        ->Attribute(AZ::Edit::Attributes::Suffix, " degrees")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_double_jump_enabled,
                         "Enable Double Jump", "Turn this on if you want to enable double jumping")
@@ -199,7 +207,7 @@ namespace FirstPersonController
                         "Update X&Y Velocity When Descending", "Determines if the X&Y velocity components will be updated when descending")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_update_xy_only_near_ground,
-                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close overlap capsule has an intersection, if the ascending and descending options are disabled then this will effectively do nothing");
+                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close capsule has an intersection, if the ascending and descending options are disabled then this will effectively do nothing");
             }
         }
 
@@ -214,7 +222,9 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
                 ->Event("Get Active Camera Id", &FirstPersonControllerComponentRequests::GetActiveCameraId)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
+                ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
+                ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
                 ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("Get Jump Key Value", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
@@ -246,7 +256,8 @@ namespace FirstPersonController
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
-                ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw);
+                ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
+                ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -256,7 +267,7 @@ namespace FirstPersonController
     {
         UpdateJumpTime();
 
-        // Calculate the actual offset that will be used to translate the overlap capsule
+        // Calculate the actual offset that will be used to translate the intersection capsule
         m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
         m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
 
@@ -756,19 +767,25 @@ namespace FirstPersonController
         // is oriented along the X axis when we want it oriented along the Z axis
         AZ::Transform capsule_intersect_pose = AZ::Transform::CreateRotationY(AZ::Constants::HalfPi);
         // Move the capsule to the location of the character and apply the Z offset
+
         capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_offset_translation));
 
-        AzPhysics::OverlapRequest request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
-            m_capsule_height,
+        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
             m_capsule_radius,
+            m_capsule_height,
             capsule_intersect_pose,
+            AZ::Vector3(0.f, 0.f, -1.f),
+            0.f,
+            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+            AzPhysics::CollisionGroup::All,
             nullptr);
 
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
-        // Disregard intersections with the character's collider and its child entities
-        auto self_child_entity_check = [this](const AzPhysics::SceneQueryHit& hit)
+        // Disregard intersections with the character's collider, its child entities,
+        // and if the slope angle of the thing that's intersecting is greater than the max grounded angle
+        auto self_child_slope_entity_check = [this](AzPhysics::SceneQueryHit& hit)
             {
                 if(hit.m_entityId == GetEntityId())
                     return true;
@@ -781,14 +798,24 @@ namespace FirstPersonController
                 }
 
                 for(AZ::EntityId id: m_children)
+                {
                     if(hit.m_entityId == id)
                         return true;
+                    else if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_max_grounded_angle_degrees)
+                        return true;
+                }
 
                 return false;
             };
 
-        AZStd::erase_if(hits.m_hits, self_child_entity_check);
+        AZStd::erase_if(hits.m_hits, self_child_slope_entity_check);
         m_grounded = hits ? true : false;
+
+        if(m_script_set_ground_tick)
+        {
+            m_grounded = m_script_grounded;
+            m_script_set_ground_tick = false;
+        }
 
         if(m_grounded)
         {
@@ -803,15 +830,25 @@ namespace FirstPersonController
 
             capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_jump_hold_offset_translation));
 
-            request = AzPhysics::OverlapRequestHelpers::CreateCapsuleOverlapRequest(
-                m_capsule_height,
+            request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
                 m_capsule_radius,
+                m_capsule_height,
                 capsule_intersect_pose,
+                AZ::Vector3(0.f, 0.f, -1.f),
+                0.f,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                AzPhysics::CollisionGroup::All,
                 nullptr);
 
             hits = sceneInterface->QueryScene(sceneHandle, &request);
-            AZStd::erase_if(hits.m_hits, self_child_entity_check);
+            AZStd::erase_if(hits.m_hits, self_child_slope_entity_check);
             m_ground_close = hits ? true : false;
+
+            if(m_script_set_ground_close_tick)
+            {
+                m_ground_close = m_script_ground_close;
+                m_script_set_ground_close_tick = false;
+            }
             //AZ_Printf("", "m_ground_close = %s", m_ground_close ? "true" : "false");
         }
 
@@ -832,7 +869,7 @@ namespace FirstPersonController
         const float jump_velocity_capsule_edge_squared = m_jump_initial_velocity*m_jump_initial_velocity
                                                          + 2.f*m_gravity*m_jump_held_gravity_factor*m_capsule_jump_hold_offset;
         // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
-        // then compute how long the jump key is held while still inside the jump hold offset overlap capsule
+        // then compute how long the jump key is held while still inside the jump hold offset intersection capsule
         if(jump_velocity_capsule_edge_squared >= 0.f)
             m_jump_time = m_capsule_jump_hold_offset / ((m_jump_initial_velocity
                                                         + sqrt(jump_velocity_capsule_edge_squared)) / 2.f);
@@ -978,9 +1015,19 @@ namespace FirstPersonController
     {
         return m_grounded;
     }
+    void FirstPersonControllerComponent::SetGroundedForTick(const bool& new_grounded)
+    {
+        m_script_grounded = new_grounded;
+        m_script_set_ground_tick = true;
+    }
     bool FirstPersonControllerComponent::GetGroundClose() const
     {
         return m_ground_close;
+    }
+    void FirstPersonControllerComponent::SetGroundCloseForTick(const bool& new_ground_close)
+    {
+        m_script_ground_close = new_ground_close;
+        m_script_set_ground_close_tick = true;
     }
     float FirstPersonControllerComponent::GetAirTime() const
     {
@@ -997,7 +1044,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGravity(const float& new_gravity)
     {
         m_gravity = new_gravity;
-
         UpdateJumpTime();
     }
     float FirstPersonControllerComponent::GetInitialJumpVelocity() const
@@ -1007,7 +1053,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetInitialJumpVelocity(const float& new_initial_jump_velocity)
     {
         m_jump_initial_velocity = new_initial_jump_velocity;
-
         UpdateJumpTime();
     }
     bool FirstPersonControllerComponent::GetDoubleJump() const
@@ -1115,5 +1160,9 @@ namespace FirstPersonController
     {
         m_camera_rotation_angles[2] = new_camera_yaw_angle - m_yaw_value * m_yaw_sensitivity;
         m_rotating_yaw_via_script = true;
+    }
+    float FirstPersonControllerComponent::GetHeading() const
+    {
+        return m_current_heading;
     }
 }

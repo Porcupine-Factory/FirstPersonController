@@ -12,7 +12,9 @@ namespace FirstPersonController
 
         virtual AZ::EntityId GetActiveCameraId() const = 0;
         virtual bool GetGrounded() const = 0;
+        virtual void SetGroundedForTick(const bool&) = 0;
         virtual bool GetGroundClose() const = 0;
+        virtual void SetGroundCloseForTick(const bool&) = 0;
         virtual float GetAirTime() const = 0;
         virtual float GetJumpKeyValue() const = 0;
         virtual float GetGravity() const = 0;
@@ -45,6 +47,7 @@ namespace FirstPersonController
         virtual void SetCameraRotationDampFactor(const float&) = 0;
         virtual void UpdateCameraPitch(const float&) = 0;
         virtual void UpdateCameraYaw(const float&) = 0;
+        virtual float GetHeading() const = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;

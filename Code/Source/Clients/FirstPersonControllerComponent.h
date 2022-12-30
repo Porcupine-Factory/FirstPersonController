@@ -51,7 +51,9 @@ namespace FirstPersonController
         // FirstPersonControllerRequestBus
         AZ::EntityId GetActiveCameraId() const;
         bool GetGrounded() const override;
+        void SetGroundedForTick(const bool& new_grounded) override;
         bool GetGroundClose() const override;
+        void SetGroundCloseForTick(const bool& new_ground_close) override;
         float GetAirTime() const override;
         float GetJumpKeyValue() const override;;
         float GetGravity() const override;
@@ -84,6 +86,7 @@ namespace FirstPersonController
         void SetCameraRotationDampFactor(const float& new_rotation_damp) override;
         void UpdateCameraPitch(const float& new_camera_pitch_angle) override;
         void UpdateCameraYaw(const float& new_camera_yaw_angle) override;
+        float GetHeading() const override;
 
     private:
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -128,7 +131,12 @@ namespace FirstPersonController
         // Jumping and gravity
         float m_gravity = -9.81f;
         bool m_grounded = true;
+        float m_max_grounded_angle_degrees = 30.01f;
+        bool m_script_grounded = true;
+        bool m_script_set_ground_tick = false;
         bool m_ground_close = true;
+        bool m_script_ground_close = true;
+        bool m_script_set_ground_close_tick = false;
         float m_air_time = 0.f;
         float m_jump_initial_velocity = 2.5f;
         bool m_jump_pressed = false;
