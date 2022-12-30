@@ -780,12 +780,16 @@ namespace FirstPersonController
             AzPhysics::CollisionGroup::All,
             nullptr);
 
+        request.m_reportMultipleHits = true;
+
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
+        AZStd::vector<AZ::Vector3> steep_normals;
+
         // Disregard intersections with the character's collider, its child entities,
         // and if the slope angle of the thing that's intersecting is greater than the max grounded angle
-        auto self_child_slope_entity_check = [this](AzPhysics::SceneQueryHit& hit)
+        auto self_child_slope_entity_check = [this, &steep_normals](AzPhysics::SceneQueryHit& hit)
             {
                 if(hit.m_entityId == GetEntityId())
                     return true;
@@ -802,7 +806,10 @@ namespace FirstPersonController
                     if(hit.m_entityId == id)
                         return true;
                     else if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_max_grounded_angle_degrees)
+                    {
+                        steep_normals.push_back(hit.m_normal);
                         return true;
+                    }
                 }
 
                 return false;
@@ -810,6 +817,18 @@ namespace FirstPersonController
 
         AZStd::erase_if(hits.m_hits, self_child_slope_entity_check);
         m_grounded = hits ? true : false;
+
+        // Check to see if the sum of the steep angles is less than or equal to m_max_grounded_angle_degrees
+        if(!m_grounded && steep_normals.size() > 1)
+        {
+            AZ::Vector3 sum_normals = AZ::Vector3::CreateZero();
+            for(AZ::Vector3 normal: steep_normals)
+                sum_normals += normal;
+
+            if(abs(sum_normals.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) <= m_max_grounded_angle_degrees)
+                m_grounded = true;
+        }
+        steep_normals.clear();
 
         if(m_script_set_ground_tick)
         {
@@ -839,6 +858,8 @@ namespace FirstPersonController
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                 AzPhysics::CollisionGroup::All,
                 nullptr);
+
+            request.m_reportMultipleHits = true;
 
             hits = sceneInterface->QueryScene(sceneHandle, &request);
             AZStd::erase_if(hits.m_hits, self_child_slope_entity_check);
