@@ -202,7 +202,7 @@ namespace FirstPersonController
         float m_sprint_pressed_value = 1.f;
         float m_sprint_velocity_adjust = 0.f;
         float m_sprint_accel_adjust = 0.f;
-        float m_sprint_time = 0.f;
+        float m_sprint_increment_time = 0.f;
         float m_sprint_held_duration = 0.f;
         float m_sprint_decrement_pause = 0.f;
         float m_sprint_prev_decrement_pause = 0.f;

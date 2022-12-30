@@ -503,7 +503,7 @@ namespace FirstPersonController
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float last_lerp_time = m_lerp_time;
 
-        float lerp_deltaTime = m_sprint_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_accel_adjust) : deltaTime;
+        float lerp_deltaTime = m_sprint_increment_time > 0.f ? deltaTime * (1.f + (m_sprint_pressed_value-1.f) * m_sprint_accel_adjust) : deltaTime;
         lerp_deltaTime *= m_grounded ? 1.f : m_jump_accel_factor;
 
         m_lerp_time += lerp_deltaTime;
@@ -554,7 +554,7 @@ namespace FirstPersonController
         if(!m_apply_velocity.GetY() && !m_apply_velocity.GetX())
         {
             m_sprint_value = 1.f;
-            m_sprint_time = 0.f;
+            m_sprint_increment_time = 0.f;
         }
 
         const float total_sprint_time = ((m_sprint_value-1.f)*m_speed)/m_accel;
@@ -567,13 +567,13 @@ namespace FirstPersonController
             m_sprint_velocity_adjust = 1.f - target_velocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
             m_sprint_accel_adjust = m_sprint_velocity_adjust;
 
-            m_sprint_time += deltaTime;
+            m_sprint_increment_time += deltaTime;
             m_sprint_held_duration += deltaTime * m_sprint_velocity_adjust;
 
             m_sprint_decrementing = false;
 
-            if(m_sprint_time > total_sprint_time)
-                m_sprint_time = total_sprint_time;
+            if(m_sprint_increment_time > total_sprint_time)
+                m_sprint_increment_time = total_sprint_time;
         }
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
         else if(m_sprint_value == 1.f || m_sprint_held_duration >= m_sprint_max_time || m_sprint_cooldown != 0.f)
@@ -581,9 +581,9 @@ namespace FirstPersonController
             // Set the sprint velocity adjust to 0
             m_sprint_velocity_adjust = 0.f;
 
-            m_sprint_time -= deltaTime;
-            if(m_sprint_time < 0.f)
-                m_sprint_time = 0.f;
+            m_sprint_increment_time -= deltaTime;
+            if(m_sprint_increment_time < 0.f)
+                m_sprint_increment_time = 0.f;
 
             // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
             if(m_sprint_held_duration >= m_sprint_max_time && m_sprint_cooldown == 0.f)
@@ -726,7 +726,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_apply_velocity.GetX() = %.10f", m_apply_velocity.GetX());
         //AZ_Printf("", "m_apply_velocity.GetY() = %.10f", m_apply_velocity.GetY());
         //AZ_Printf("", "m_apply_velocity.GetZ() = %.10f", m_apply_velocity.GetZ());
-        //AZ_Printf("", "m_sprint_time = %.10f", m_sprint_time);
+        //AZ_Printf("", "m_sprint_increment_time = %.10f", m_sprint_increment_time);
         //AZ_Printf("", "m_sprint_value = %.10f", m_sprint_value);
         //AZ_Printf("", "m_sprint_accel_adjust = %.10f", m_sprint_accel_adjust);
         //AZ_Printf("", "m_sprint_velocity_adjust = %.10f", m_sprint_velocity_adjust);
@@ -741,6 +741,7 @@ namespace FirstPersonController
         //AZ_Printf("", "X Position = %.10f", pos.GetX());
         //AZ_Printf("", "Y Position = %.10f", pos.GetY());
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
+        //AZ_Printf("","");
     }
 
     void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
@@ -850,7 +851,7 @@ namespace FirstPersonController
         // Used for the Verlet integration averaging calculation
         m_z_velocity_prev_delta = m_z_velocity_current_delta;
 
-        if(m_grounded && (m_jump_req_repress || current_velocity.GetZ() <= 0.f))
+        if(m_grounded && (m_jump_req_repress || (current_velocity.GetZ() <= 0.f && m_z_velocity <= 0.f)))
         {
             if(m_jump_value && !m_jump_held)
             {
@@ -922,16 +923,21 @@ namespace FirstPersonController
         if(m_gravity == 0.f && m_grounded && current_velocity.GetZ() < 0.f)
             m_z_velocity = 0.f;
 
+        // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
         //AZ_Printf("", "current_velocity.GetZ() = %.10f", current_velocity.GetZ());
+        //AZ_Printf("", "m_z_velocity_prev_delta = %.10f", m_z_velocity_prev_delta);
+        //AZ_Printf("", "m_z_velocity_current_delta = %.10f", m_z_velocity_current_delta);
         //AZ_Printf("", "m_z_velocity = %.10f", m_z_velocity);
         //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
         //AZ_Printf("", "m_jump_counter = %.10f", m_jump_counter);
+        //AZ_Printf("", "deltaTime = %.10f", deltaTime);
         //AZ_Printf("", "m_jump_time = %.10f", m_jump_time);
         //AZ_Printf("", "m_capsule_jump_hold_offset = %.10f", m_capsule_jump_hold_offset);
         //static float prev_z_velocity = m_z_velocity;
         //AZ_Printf("", "dvz/dt = %.10f", (m_z_velocity - prev_z_velocity)/deltaTime);
+        //AZ_Printf("","");
         //prev_z_velocity = m_z_velocity;
     }
 
