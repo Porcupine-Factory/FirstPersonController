@@ -808,6 +808,8 @@ namespace FirstPersonController
                     else if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_max_grounded_angle_degrees)
                     {
                         steep_normals.push_back(hit.m_normal);
+                        //AZ_Printf("", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
+                        //AZ_Printf("", "Steep Angle = %.10f", hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
                         return true;
                     }
                 }
@@ -825,6 +827,7 @@ namespace FirstPersonController
             for(AZ::Vector3 normal: steep_normals)
                 sum_normals += normal;
 
+            //AZ_Printf("", "Sum of Steep Angles = %.10f", sum_normals.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
             if(abs(sum_normals.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) <= m_max_grounded_angle_degrees)
                 m_grounded = true;
         }
