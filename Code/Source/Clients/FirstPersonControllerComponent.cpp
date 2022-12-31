@@ -805,13 +805,14 @@ namespace FirstPersonController
                 {
                     if(hit.m_entityId == id)
                         return true;
-                    else if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_max_grounded_angle_degrees)
-                    {
-                        steep_normals.push_back(hit.m_normal);
-                        //AZ_Printf("", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
-                        //AZ_Printf("", "Steep Angle = %.10f", hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
-                        return true;
-                    }
+                }
+
+                if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_max_grounded_angle_degrees)
+                {
+                    steep_normals.push_back(hit.m_normal);
+                    //AZ_Printf("", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
+                    //AZ_Printf("", "Steep Angle = %.10f", hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
+                    return true;
                 }
 
                 return false;
