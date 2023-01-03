@@ -11,6 +11,8 @@
 #include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
 #include <AzFramework/Input/Devices/InputDeviceId.h>
 
+#include <PhysX/CharacterControllerBus.h>
+
 namespace FirstPersonController
 {
     using namespace StartingPointInput;
@@ -65,8 +67,6 @@ namespace FirstPersonController
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jump_held_gravity_factor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jump_falling_gravity_factor)
               ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jump_accel_factor)
-              ->Field("Capsule Height (m)", &FirstPersonControllerComponent::m_capsule_height)
-              ->Field("Capsule Radius (m)", &FirstPersonControllerComponent::m_capsule_radius)
               ->Field("Capsule Grounded Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
               ->Field("Max Grounded Slope Angle (°)", &FirstPersonControllerComponent::m_max_grounded_angle_degrees)
@@ -203,12 +203,6 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jump_accel_factor,
                         "XY Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_capsule_height,
-                        "Capsule Height (m)", "The ground detect capsule height in meters")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_capsule_radius,
-                        "Capsule Radius (m)", "The ground detect capsule radius in meters")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsule_offset,
                         "Capsule Grounded Offset (m)", "The capsule's ground detect offset in meters")
                     ->DataElement(nullptr,
@@ -299,6 +293,13 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::Activate()
     {
         UpdateJumpTime();
+
+        // Obtain the PhysX Character Controller's capsule height and radius
+        // and use those dimensions for the ground detection shapecast capsule
+        PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
+            &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+        PhysX::CharacterControllerRequestBus::EventResult(m_capsule_radius, GetEntityId(),
+            &PhysX::CharacterControllerRequestBus::Events::GetRadius);
 
         // Calculate the actual offset that will be used to translate the intersection capsule
         m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
@@ -422,7 +423,7 @@ namespace FirstPersonController
         const AzFramework::InputDeviceId& deviceId = inputChannel.GetInputDevice().GetInputDeviceId();
 
         // TODO: Implement gamepad support
-        // AZ_Printf("", "OnInputChannelEventFiltered");
+        //AZ_Printf("", "OnInputChannelEventFiltered");
         if(AzFramework::InputDeviceGamepad::IsGamepadDevice(deviceId))
             OnGamepadEvent(inputChannel);
 
@@ -729,10 +730,30 @@ namespace FirstPersonController
             float camera_travel_delta = -1.f * m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
             m_camera_local_z_travel_distance += camera_travel_delta;
 
-            if(m_camera_local_z_travel_distance < -1.f * m_crouch_camera_distance)
+            if(m_camera_local_z_travel_distance <= -1.f * m_crouch_camera_distance)
             {
                 camera_travel_delta += abs(m_camera_local_z_travel_distance) - m_crouch_camera_distance;
                 m_camera_local_z_travel_distance = -1.f * m_crouch_camera_distance;
+
+                // Adjust the height of the collider capsule based on the crouching height
+                if(m_crouch_capsule_standing)
+                {
+                    PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
+                        &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+
+                    // Subtract the distance to get down to the crouching height
+                    m_capsule_height -= m_crouch_camera_distance;
+                    //AZ_Printf("", "Crouching capsule height = %.10f", m_capsule_height);
+
+                    // Recalculate the ground detect shapecast capsule's offset
+                    m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
+                    m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
+                    PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
+                        &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsule_height);
+
+                    m_crouch_capsule_standing = false;
+                }
             }
 
             camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);
@@ -742,10 +763,30 @@ namespace FirstPersonController
             float camera_travel_delta = m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
             m_camera_local_z_travel_distance += camera_travel_delta;
 
-            if(m_camera_local_z_travel_distance > 0.f)
+            if(m_camera_local_z_travel_distance >= 0.f)
             {
                 camera_travel_delta -= m_camera_local_z_travel_distance;
                 m_camera_local_z_travel_distance = 0.f;
+
+                // Adjust the height of the collider capsule based on the standing height
+                if(!m_crouch_capsule_standing)
+                {
+                    PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
+                        &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+
+                    // Add the distance to get back to the standing height
+                    m_capsule_height += m_crouch_camera_distance;
+                    //AZ_Printf("", "Standing capsule height = %.10f", m_capsule_height);
+
+                    // Recalculate the ground detect shapecast capsule's offset
+                    m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
+                    m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
+                    PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
+                        &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsule_height);
+
+                    m_crouch_capsule_standing = true;;
+                }
             }
 
             camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);

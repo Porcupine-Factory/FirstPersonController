@@ -237,6 +237,7 @@ namespace FirstPersonController
         float m_crouch_prev_value = 0.f;
         bool m_crouching = false;
         float m_camera_local_z_travel_distance = 0.f;
+        bool m_crouch_capsule_standing = true;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
