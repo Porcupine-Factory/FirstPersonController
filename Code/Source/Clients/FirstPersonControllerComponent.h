@@ -78,6 +78,14 @@ namespace FirstPersonController
         void SetSprintCooldown(const float& new_sprint_cooldown) override;
         float GetSprintPauseTime() const override;
         void SetSprintPauseTime(const float& new_sprint_decrement_pause) override;
+        bool GetCrouching() const override;
+        void SetCrouching(const bool& new_crouching) override;
+        float GetCrouchCameraDistance() const override;
+        void SetCrouchCameraDistance(const float& new_crouch_camera_distance) override;
+        float GetCrouchCameraTime() const override;
+        void SetCrouchCameraTime(const float& new_crouch_camera_time) override;
+        bool GetCrouchEnableToggle() const override;
+        void SetCrouchEnableToggle(const bool& new_crouch_enable_toggle) override;
         float GetCameraPitchSensitivity() const override;
         void SetCameraPitchSensitivity(const float& new_pitch_sensitivity) override;
         float GetCameraYawSensitivity() const override;
@@ -105,6 +113,7 @@ namespace FirstPersonController
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
         void SlerpRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
+        void CrouchManager(const float& deltaTime);
 
         void CheckGrounded(const float& deltaTime);
 
@@ -195,6 +204,7 @@ namespace FirstPersonController
         float m_left_scale = 1.f;
         float m_right_scale = 1.f;
         float m_sprint_scale = 1.5f;
+        float m_crouch_scale = 0.65f;
 
         // Event value multipliers
         float m_forward_value = 0.f;
@@ -204,6 +214,7 @@ namespace FirstPersonController
         float m_yaw_value = 0.f;
         float m_pitch_value = 0.f;
         float m_sprint_value = 1.f;
+        float m_crouch_value = 0.f;
         float m_jump_value = 0.f;
 
         // Sprint application variables
@@ -218,6 +229,14 @@ namespace FirstPersonController
         float m_sprint_cooldown = 0.f;
         float m_sprint_cooldown_time = 5.f;
         bool m_sprint_decrementing = false;
+
+        // Crouch application variables
+        float m_crouch_camera_distance = 1.f;
+        float m_crouch_camera_time = 1.f;
+        bool m_crouch_enable_toggle = true;
+        float m_crouch_prev_value = 0.f;
+        bool m_crouching = false;
+        float m_camera_local_z_travel_distance = 0.f;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
@@ -234,15 +253,18 @@ namespace FirstPersonController
         AZStd::string m_str_pitch = "Pitch";
         StartingPointInput::InputEventNotificationId m_SprintEventId;
         AZStd::string m_str_sprint = "Sprint";
+        StartingPointInput::InputEventNotificationId m_CrouchEventId;
+        AZStd::string m_str_crouch = "Crouch";
         StartingPointInput::InputEventNotificationId m_JumpEventId;
         AZStd::string m_str_jump = "Jump";
 
         // list of action names
-        AZStd::string* m_input_names[8] = {
+        AZStd::string* m_input_names[9] = {
             &m_str_forward, &m_str_back,
             &m_str_left, &m_str_right,
             &m_str_yaw, &m_str_pitch,
-            &m_str_sprint, &m_str_jump
+            &m_str_sprint, &m_str_crouch,
+            &m_str_jump
         };
 
         // map of event IDs and event value multipliers
@@ -254,6 +276,7 @@ namespace FirstPersonController
             {&m_RotateYawEventId, &m_yaw_value},
             {&m_RotatePitchEventId, &m_pitch_value},
             {&m_SprintEventId, &m_sprint_value},
+            {&m_CrouchEventId, &m_crouch_value},
             {&m_JumpEventId, &m_jump_value}};
     };
 }

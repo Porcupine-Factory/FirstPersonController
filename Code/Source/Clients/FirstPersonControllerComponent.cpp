@@ -28,6 +28,7 @@ namespace FirstPersonController
               ->Field("Left Key", &FirstPersonControllerComponent::m_str_left)
               ->Field("Right Key", &FirstPersonControllerComponent::m_str_right)
               ->Field("Sprint Key", &FirstPersonControllerComponent::m_str_sprint)
+              ->Field("Crouch Key", &FirstPersonControllerComponent::m_str_crouch)
               ->Field("Jump Key", &FirstPersonControllerComponent::m_str_jump)
 
               // Camera Rotation group
@@ -41,6 +42,7 @@ namespace FirstPersonController
               ->Field("Left Scale", &FirstPersonControllerComponent::m_left_scale)
               ->Field("Right Scale", &FirstPersonControllerComponent::m_right_scale)
               ->Field("Sprint Scale", &FirstPersonControllerComponent::m_sprint_scale)
+              ->Field("Crouch Scale", &FirstPersonControllerComponent::m_crouch_scale)
 
               // X&Y Movement group
               ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
@@ -51,6 +53,11 @@ namespace FirstPersonController
               // Sprint Timing group
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprint_max_time)
               ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
+
+              // Crouching group
+              ->Field("Crouch Camera Distance", &FirstPersonControllerComponent::m_crouch_camera_distance)
+              ->Field("Crouch Camera Time", &FirstPersonControllerComponent::m_crouch_camera_time)
+              ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouch_enable_toggle)
 
               // Jumping group
               ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
@@ -103,6 +110,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_str_sprint,
                         "Sprint Key", "Key for sprinting")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_str_crouch,
+                        "Crouch Key", "Key for crouching")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_str_jump,
                         "Jump Key", "Key for jumping")
 
@@ -150,6 +160,9 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprint_scale,
                         "Sprint Scale", "Sprint scale factor")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_scale,
+                        "Crouch Scale", "Crouch scale factor")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Sprint Timing")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -159,6 +172,18 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprint_cooldown_time,
                         "Sprint Cooldown (sec)", "Sprint Cooldown Time")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_camera_distance,
+                        "Crouch Camera Distance", "Determines the distance the camera will move on the Z axis")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_camera_time,
+                        "Crouch Camera Time", "Determines the time it takes the camera to complete its movement")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_enable_toggle,
+                        "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -249,6 +274,14 @@ namespace FirstPersonController
                 ->Event("Set Sprint Cooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
                 ->Event("Get Sprint Pause Time", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
                 ->Event("Set Sprint Pause Time", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
+                ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
+                ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
+                ->Event("Get Crouch Camera Distance", &FirstPersonControllerComponentRequests::GetCrouchCameraDistance)
+                ->Event("Set Crouch Camera Distance", &FirstPersonControllerComponentRequests::SetCrouchCameraDistance)
+                ->Event("Get Crouch Camera Time", &FirstPersonControllerComponentRequests::GetCrouchCameraTime)
+                ->Event("Set Crouch Camera Time", &FirstPersonControllerComponentRequests::SetCrouchCameraTime)
+                ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
+                ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
                 ->Event("Get Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
@@ -554,6 +587,7 @@ namespace FirstPersonController
     {
         // The sprint value should never be 0 and it shouldn't be applied if you're trying to moving backwards
         if(m_sprint_value == 0.f
+           || m_crouching
            || (!m_apply_velocity.GetY() && !m_apply_velocity.GetX())
            || (m_sprint_value != 1.f
                && ((!m_forward_value && !m_left_value && !m_right_value) ||
@@ -672,6 +706,54 @@ namespace FirstPersonController
         }
     }
 
+    void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
+    {
+        AZ::TransformInterface* camera_transform = m_activeCameraEntity->GetTransform();
+
+        if(m_crouch_enable_toggle && m_crouch_prev_value == 0.f && m_crouch_value == 1.f)
+        {
+            m_crouching = !m_crouching;
+        }
+        else if(!m_crouch_enable_toggle)
+        {
+            if(m_crouch_value != 0.f)
+                m_crouching = true;
+            else
+                m_crouching = false;
+        }
+
+        //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
+
+        if(m_crouching && m_camera_local_z_travel_distance > -1.f * m_crouch_camera_distance)
+        {
+            float camera_travel_delta = -1.f * m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
+            m_camera_local_z_travel_distance += camera_travel_delta;
+
+            if(m_camera_local_z_travel_distance < -1.f * m_crouch_camera_distance)
+            {
+                camera_travel_delta += abs(m_camera_local_z_travel_distance) - m_crouch_camera_distance;
+                m_camera_local_z_travel_distance = -1.f * m_crouch_camera_distance;
+            }
+
+            camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);
+        }
+        else if(!m_crouching && m_camera_local_z_travel_distance != 0.f)
+        {
+            float camera_travel_delta = m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
+            m_camera_local_z_travel_distance += camera_travel_delta;
+
+            if(m_camera_local_z_travel_distance > 0.f)
+            {
+                camera_travel_delta -= m_camera_local_z_travel_distance;
+                m_camera_local_z_travel_distance = 0.f;
+            }
+
+            camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);
+        }
+
+        m_crouch_prev_value = m_crouch_value;
+    }
+
     void FirstPersonControllerComponent::UpdateVelocityXY(const float& deltaTime)
     {
         float forwardBack = m_forward_value * m_forward_scale + m_back_value * m_back_scale;
@@ -708,7 +790,11 @@ namespace FirstPersonController
         SprintManager(target_velocity, deltaTime);
 
         // Apply the speed and sprint factor
-        target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_velocity_adjust);
+        if(!m_crouching)
+            target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_velocity_adjust);
+        // Don't apply the sprint factor when crouching
+        else
+            target_velocity *= m_speed * m_crouch_scale;
 
         // Obtain the last applied velocity if the target velocity changed
         if(m_prev_target_velocity != target_velocity)
@@ -1009,6 +1095,9 @@ namespace FirstPersonController
 
         CheckGrounded(deltaTime);
 
+        if(m_grounded)
+            CrouchManager(deltaTime);
+
         // So long as the character is grounded or depending on how the update X&Y velocity while jumping
         // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
         if(m_grounded || (m_update_xy_ascending && m_update_xy_descending && !m_update_xy_only_near_ground)
@@ -1151,6 +1240,38 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintPauseTime(const float& new_sprint_decrement_pause)
     {
         m_sprint_decrement_pause = new_sprint_decrement_pause;
+    }
+    bool FirstPersonControllerComponent::GetCrouching() const
+    {
+        return m_crouching;
+    }
+    void FirstPersonControllerComponent::SetCrouching(const bool& new_crouching)
+    {
+        m_crouching = new_crouching;
+    }
+    float FirstPersonControllerComponent::GetCrouchCameraDistance() const
+    {
+        return m_crouch_camera_distance;
+    }
+    void FirstPersonControllerComponent::SetCrouchCameraDistance(const float& new_crouch_camera_distance)
+    {
+        m_crouch_camera_distance = new_crouch_camera_distance;
+    }
+    float FirstPersonControllerComponent::GetCrouchCameraTime() const
+    {
+        return m_crouch_camera_time;
+    }
+    void FirstPersonControllerComponent::SetCrouchCameraTime(const float& new_crouch_camera_time)
+    {
+        m_crouch_camera_time = new_crouch_camera_time;
+    }
+    bool FirstPersonControllerComponent::GetCrouchEnableToggle() const
+    {
+        return m_crouch_enable_toggle;
+    }
+    void FirstPersonControllerComponent::SetCrouchEnableToggle(const bool& new_crouch_enable_toggle)
+    {
+        m_crouch_enable_toggle = new_crouch_enable_toggle;
     }
     float FirstPersonControllerComponent::GetCameraPitchSensitivity() const
     {
