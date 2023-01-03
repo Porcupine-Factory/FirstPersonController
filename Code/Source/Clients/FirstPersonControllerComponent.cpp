@@ -168,10 +168,10 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprint_max_time,
-                        "Sprint Max Time (sec)", "Maximum Sprint Applied Time")
+                        "Sprint Max Time (sec)", "The maximum consecutive sprinting time")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprint_cooldown_time,
-                        "Sprint Cooldown (sec)", "Sprint Cooldown Time")
+                        "Sprint Cooldown (sec)", "The time required to wait before sprinting again when the maximum consecutive sprint time has been reached")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -434,15 +434,15 @@ namespace FirstPersonController
         // TODO: Implement gamepad support
         const AzFramework::InputChannelId& channelId = inputChannel.GetInputChannelId();
 
-        if (channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LR)
+        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LR)
         {
             m_right_value = inputChannel.GetValue();
             m_left_value = 0.f;
         }
-        else if (channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LL)
+        else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LL)
         {
             m_right_value = 0.f;
-            m_left_value = abs(inputChannel.GetValue());
+            m_left_value = inputChannel.GetValue();
         }
 
         if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LU)
@@ -453,15 +453,15 @@ namespace FirstPersonController
         else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LD)
         {
             m_forward_value = 0.f;
-            m_back_value = abs(inputChannel.GetValue());
+            m_back_value = inputChannel.GetValue();
         }
 
-        if (channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
+        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
         {
             m_camera_rotation_angles[2] = inputChannel.GetValue() * m_yaw_sensitivity;
         }
 
-        if (channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
+        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
         {
             m_camera_rotation_angles[0] = inputChannel.GetValue() * m_pitch_sensitivity;
         }
