@@ -734,32 +734,79 @@ namespace FirstPersonController
             {
                 camera_travel_delta += abs(m_camera_local_z_travel_distance) - m_crouch_camera_distance;
                 m_camera_local_z_travel_distance = -1.f * m_crouch_camera_distance;
-
-                // Adjust the height of the collider capsule based on the crouching height
-                if(m_crouch_capsule_standing)
-                {
-                    PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
-                        &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-
-                    // Subtract the distance to get down to the crouching height
-                    m_capsule_height -= m_crouch_camera_distance;
-                    //AZ_Printf("", "Crouching capsule height = %.10f", m_capsule_height);
-
-                    // Recalculate the ground detect shapecast capsule's offset
-                    m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
-                    m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
-
-                    PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
-                        &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsule_height);
-
-                    m_crouch_capsule_standing = false;
-                }
             }
+
+            // Adjust the height of the collider capsule based on the crouching height
+            PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
+                &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+
+            // Subtract the distance to get down to the crouching height
+            m_capsule_height += camera_travel_delta;
+            //AZ_Printf("", "Crouching capsule height = %.10f", m_capsule_height);
+
+            // Recalculate the ground detect shapecast capsule's offset
+            m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
+            m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
+            PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
+                &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsule_height);
 
             camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);
         }
         else if(!m_crouching && m_camera_local_z_travel_distance != 0.f)
         {
+            // Create a shapecast capsule that will be used to detect whether there is an obstruction
+            // above the players head, and prevent them from fully standing up if there is
+            auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+            // Rotate the pose by 90 degrees on the Y axis since by default the capsule's height
+            // is oriented along the X axis when we want it oriented along the Z axis
+            AZ::Transform capsule_intersect_pose = AZ::Transform::CreateRotationY(AZ::Constants::HalfPi);
+            // Move the capsule to the location of the character and apply the Z offset
+
+            capsule_intersect_pose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsule_height/2.f + m_capsule_offset));
+
+            AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+                m_capsule_radius,
+                m_capsule_height,
+                capsule_intersect_pose,
+                AZ::Vector3(0.f, 0.f, 1.f),
+                0.f,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                AzPhysics::CollisionGroup::All,
+                nullptr);
+
+            AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+            AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
+            // Disregard intersections with the character's collider and its child entities,
+            auto self_child_entity_check = [this](AzPhysics::SceneQueryHit& hit)
+                {
+                    if(hit.m_entityId == GetEntityId())
+                        return true;
+
+                    // Obtain the child IDs if we don't already have them
+                    if(!m_obtained_child_ids)
+                    {
+                        AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                        m_obtained_child_ids = true;
+                    }
+
+                    for(AZ::EntityId id: m_children)
+                    {
+                        if(hit.m_entityId == id)
+                            return true;
+                    }
+
+                    return false;
+                };
+
+            AZStd::erase_if(hits.m_hits, self_child_entity_check);
+
+            // Bail if something is detected above the player
+            if(hits)
+                return;
+
             float camera_travel_delta = m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
             m_camera_local_z_travel_distance += camera_travel_delta;
 
@@ -767,27 +814,22 @@ namespace FirstPersonController
             {
                 camera_travel_delta -= m_camera_local_z_travel_distance;
                 m_camera_local_z_travel_distance = 0.f;
-
-                // Adjust the height of the collider capsule based on the standing height
-                if(!m_crouch_capsule_standing)
-                {
-                    PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
-                        &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-
-                    // Add the distance to get back to the standing height
-                    m_capsule_height += m_crouch_camera_distance;
-                    //AZ_Printf("", "Standing capsule height = %.10f", m_capsule_height);
-
-                    // Recalculate the ground detect shapecast capsule's offset
-                    m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
-                    m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
-
-                    PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
-                        &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsule_height);
-
-                    m_crouch_capsule_standing = true;;
-                }
             }
+
+            // Adjust the height of the collider capsule based on the standing height
+            PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
+                &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+
+            // Add the distance to get back to the standing height
+            m_capsule_height += camera_travel_delta;
+            //AZ_Printf("", "Standing capsule height = %.10f", m_capsule_height);
+
+            // Recalculate the ground detect shapecast capsule's offset
+            m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
+            m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
+            PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
+                &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsule_height);
 
             camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);
         }
