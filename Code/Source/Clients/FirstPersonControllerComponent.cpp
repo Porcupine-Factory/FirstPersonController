@@ -443,7 +443,7 @@ namespace FirstPersonController
         else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LL)
         {
             m_right_value = 0.f;
-            m_left_value = inputChannel.GetValue();
+            m_left_value = -1.f*inputChannel.GetValue();
         }
 
         if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LU)
@@ -454,17 +454,19 @@ namespace FirstPersonController
         else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LD)
         {
             m_forward_value = 0.f;
-            m_back_value = inputChannel.GetValue();
-        }
-
-        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
-        {
-            m_camera_rotation_angles[2] = inputChannel.GetValue() * m_yaw_sensitivity;
+            m_back_value = -1.f*inputChannel.GetValue();
         }
 
         if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
         {
             m_camera_rotation_angles[0] = inputChannel.GetValue() * m_pitch_sensitivity;
+            m_rotating_pitch_via_script_gamepad = true;
+        }
+
+        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
+        {
+            m_camera_rotation_angles[2] = -1.f*inputChannel.GetValue() * m_yaw_sensitivity;
+            m_rotating_yaw_via_script_gamepad = true;
         }
     }
 
@@ -486,17 +488,17 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
     {
         // Multiply by -1 since moving the mouse up produces a negative value from the input bus
-        if(!m_rotating_pitch_via_script)
+        if(!m_rotating_pitch_via_script_gamepad)
             m_camera_rotation_angles[0] = -1.f * m_pitch_value * m_pitch_sensitivity;
         else
-            m_rotating_pitch_via_script = false;
+            m_rotating_pitch_via_script_gamepad = false;
 
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
-        if(!m_rotating_yaw_via_script)
+        if(!m_rotating_yaw_via_script_gamepad)
             m_camera_rotation_angles[2] = -1.f * m_yaw_value * m_yaw_sensitivity;
         else
-            m_rotating_yaw_via_script = false;
+            m_rotating_yaw_via_script_gamepad = false;
 
         const AZ::Quaternion target_look_rotation_delta = AZ::Quaternion::CreateFromEulerAnglesRadians(
             AZ::Vector3::CreateFromFloat3(m_camera_rotation_angles));
@@ -1383,12 +1385,12 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_camera_pitch_angle)
     {
         m_camera_rotation_angles[0] = new_camera_pitch_angle - m_pitch_value * m_pitch_sensitivity;
-        m_rotating_pitch_via_script = true;
+        m_rotating_pitch_via_script_gamepad = true;
     }
     void FirstPersonControllerComponent::UpdateCameraYaw(const float& new_camera_yaw_angle)
     {
         m_camera_rotation_angles[2] = new_camera_yaw_angle - m_yaw_value * m_yaw_sensitivity;
-        m_rotating_yaw_via_script = true;
+        m_rotating_yaw_via_script_gamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const
     {

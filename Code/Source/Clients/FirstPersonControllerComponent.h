@@ -185,9 +185,9 @@ namespace FirstPersonController
         AZ::Quaternion m_new_look_rotation_delta = AZ::Quaternion::CreateZero();
         float m_rotation_damp = 20.f;
 
-        // Used when a script wants to update the camera angle via the Request Bus
-        bool m_rotating_pitch_via_script = false;
-        bool m_rotating_yaw_via_script = false;
+        // Used when a script wants to update the camera angle via the Request Bus or a gamepad
+        bool m_rotating_pitch_via_script_gamepad = false;
+        bool m_rotating_yaw_via_script_gamepad = false;
 
         // Acceleration lerp movement
         float m_accel = 1.f;
