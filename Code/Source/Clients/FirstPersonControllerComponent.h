@@ -62,6 +62,8 @@ namespace FirstPersonController
         void SetInitialJumpVelocity(const float& new_initial_jump_velocity) override;
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_double_jump) override;
+        float GetMaxGroundedAngleDegrees() const override;
+        void SetMaxGroundedAngleDegrees(const float& new_max_grounded_angle_degrees) override;
         float GetTopWalkSpeed() const override;
         void SetTopWalkSpeed(const float& new_speed) override;
         float GetWalkAcceleration() const override;
@@ -140,7 +142,7 @@ namespace FirstPersonController
         // Jumping and gravity
         float m_gravity = -9.81f;
         bool m_grounded = true;
-        float m_max_grounded_angle_degrees = 30.01f;
+        float m_max_grounded_angle_degrees = 30.0f;
         bool m_script_grounded = true;
         bool m_script_set_ground_tick = false;
         bool m_ground_close = true;

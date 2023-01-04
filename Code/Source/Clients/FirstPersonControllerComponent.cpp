@@ -69,7 +69,6 @@ namespace FirstPersonController
               ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jump_accel_factor)
               ->Field("Capsule Grounded Offset (m)", &FirstPersonControllerComponent::m_capsule_offset)
               ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsule_jump_hold_offset)
-              ->Field("Max Grounded Slope Angle (°)", &FirstPersonControllerComponent::m_max_grounded_angle_degrees)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_double_jump_enabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_update_xy_ascending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_update_xy_descending)
@@ -209,13 +208,6 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_capsule_jump_hold_offset,
                         "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_max_grounded_angle_degrees,
-                        "Max Grounded Slope Angle (°)", "The most steep angle that the character can stand on, it is recommended to set this number to something very slightly larger than the PhysX Character Controller component's Maximum Slope Angle value")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.0f)
-                        ->Attribute(AZ::Edit::Attributes::Step, 1.0f)
-                        ->Attribute(AZ::Edit::Attributes::Max, 89.11f)
-                        ->Attribute(AZ::Edit::Attributes::Suffix, " degrees")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_double_jump_enabled,
                         "Enable Double Jump", "Turn this on if you want to enable double jumping")
                     ->DataElement(nullptr,
@@ -252,6 +244,8 @@ namespace FirstPersonController
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
+                ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
+                ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
                 ->Event("Set Top Walk Speed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
                 ->Event("Get Walk Acceleration", &FirstPersonControllerComponentRequests::GetWalkAcceleration)
@@ -300,6 +294,12 @@ namespace FirstPersonController
             &PhysX::CharacterControllerRequestBus::Events::GetHeight);
         PhysX::CharacterControllerRequestBus::EventResult(m_capsule_radius, GetEntityId(),
             &PhysX::CharacterControllerRequestBus::Events::GetRadius);
+        Physics::CharacterRequestBus::EventResult(m_max_grounded_angle_degrees, GetEntityId(),
+            &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
+
+        // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
+        // maximum slope angle value
+        m_max_grounded_angle_degrees += 0.01f;
 
         // Calculate the actual offset that will be used to translate the intersection capsule
         m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
@@ -1261,6 +1261,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetDoubleJump(const bool& new_double_jump)
     {
         m_double_jump_enabled = new_double_jump;
+    }
+    float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
+    {
+        return m_max_grounded_angle_degrees;
+    }
+    void FirstPersonControllerComponent::SetMaxGroundedAngleDegrees(const float& new_max_grounded_angle_degrees)
+    {
+        m_max_grounded_angle_degrees = new_max_grounded_angle_degrees;
     }
     float FirstPersonControllerComponent::GetTopWalkSpeed() const
     {
