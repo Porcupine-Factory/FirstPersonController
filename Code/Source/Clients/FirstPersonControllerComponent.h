@@ -62,6 +62,10 @@ namespace FirstPersonController
         void SetInitialJumpVelocity(const float& new_initial_jump_velocity) override;
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_double_jump) override;
+        float GetCapsuleOffset() const override;
+        void SetCapsuleOffset(const float& new_capsule_jump_hold_offset) override;
+        float GetCapsuleJumpHoldOffset() const override;
+        void SetCapsuleJumpHoldOffset(const float& new_capsule_offset) override;
         float GetMaxGroundedAngleDegrees() const override;
         void SetMaxGroundedAngleDegrees(const float& new_max_grounded_angle_degrees) override;
         float GetTopWalkSpeed() const override;
@@ -105,6 +109,8 @@ namespace FirstPersonController
         // Child entity IDs
         bool m_obtained_child_ids = false;
         AZStd::vector<AZ::EntityId> m_children;
+
+        bool m_obtained_physx_character_values = false;
 
         void ProcessInput(const float& deltaTime);
 

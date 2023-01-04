@@ -244,6 +244,10 @@ namespace FirstPersonController
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
+                ->Event("Get Capsule Offset", &FirstPersonControllerComponentRequests::GetCapsuleOffset)
+                ->Event("Set Capsule Offset", &FirstPersonControllerComponentRequests::SetCapsuleOffset)
+                ->Event("Get Capsule Jump Hold Offset", &FirstPersonControllerComponentRequests::GetCapsuleJumpHoldOffset)
+                ->Event("Set Capsule Jump Hold Offset", &FirstPersonControllerComponentRequests::SetCapsuleJumpHoldOffset)
                 ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -287,23 +291,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::Activate()
     {
         UpdateJumpTime();
-
-        // Obtain the PhysX Character Controller's capsule height and radius
-        // and use those dimensions for the ground detection shapecast capsule
-        PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
-            &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-        PhysX::CharacterControllerRequestBus::EventResult(m_capsule_radius, GetEntityId(),
-            &PhysX::CharacterControllerRequestBus::Events::GetRadius);
-        Physics::CharacterRequestBus::EventResult(m_max_grounded_angle_degrees, GetEntityId(),
-            &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
-
-        // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
-        // maximum slope angle value
-        m_max_grounded_angle_degrees += 0.01f;
-
-        // Calculate the actual offset that will be used to translate the intersection capsule
-        m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
-        m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
 
         if(m_control_map.size() != (sizeof(m_input_names) / sizeof(AZStd::string*)))
         {
@@ -928,6 +915,37 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
     {
+        // Obtaining the PhysX Character Controller values here instead of the Activate method
+        // because doing this inside the Activate method does not yield what is given to the PhysX component
+        // even though PhysicsCharacterControllerService is set as a required service
+        if(!m_obtained_physx_character_values)
+        {
+            // Obtain the PhysX Character Controller's capsule height and radius
+            // and use those dimensions for the ground detection shapecast capsule
+            PhysX::CharacterControllerRequestBus::EventResult(m_capsule_height, GetEntityId(),
+                &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+            PhysX::CharacterControllerRequestBus::EventResult(m_capsule_radius, GetEntityId(),
+                &PhysX::CharacterControllerRequestBus::Events::GetRadius);
+            Physics::CharacterRequestBus::EventResult(m_max_grounded_angle_degrees, GetEntityId(),
+                &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
+
+            // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
+            // maximum slope angle value
+            m_max_grounded_angle_degrees += 0.01f;
+
+            //AZ_Printf("", "m_capsule_height = %.10f", m_capsule_height);
+            //AZ_Printf("", "m_capsule_radius = %.10f", m_capsule_radius);
+            //AZ_Printf("", "m_max_grounded_angle_degrees = %.10f", m_max_grounded_angle_degrees);
+
+            // Calculate the actual offset that will be used to translate the intersection capsule
+            m_capsule_offset_translation = m_capsule_height/2.f - m_capsule_offset;
+            m_capsule_jump_hold_offset_translation = m_capsule_height/2.f - m_capsule_jump_hold_offset;
+
+            UpdateJumpTime();
+
+            m_obtained_physx_character_values = true;
+        }
+
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
         // Used to determine when event notifications occur
@@ -1261,6 +1279,24 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetDoubleJump(const bool& new_double_jump)
     {
         m_double_jump_enabled = new_double_jump;
+    }
+    float FirstPersonControllerComponent::GetCapsuleOffset() const
+    {
+        return m_capsule_offset;
+    }
+    void FirstPersonControllerComponent::SetCapsuleOffset(const float& new_capsule_offset)
+    {
+        m_capsule_offset = new_capsule_offset;
+        UpdateJumpTime();
+    }
+    float FirstPersonControllerComponent::GetCapsuleJumpHoldOffset() const
+    {
+        return m_capsule_jump_hold_offset;
+    }
+    void FirstPersonControllerComponent::SetCapsuleJumpHoldOffset(const float& new_capsule_jump_hold_offset)
+    {
+        m_capsule_jump_hold_offset = new_capsule_jump_hold_offset;
+        UpdateJumpTime();
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {

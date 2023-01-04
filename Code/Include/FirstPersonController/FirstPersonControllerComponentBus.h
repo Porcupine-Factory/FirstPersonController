@@ -23,6 +23,10 @@ namespace FirstPersonController
         virtual void SetInitialJumpVelocity(const float&) = 0;
         virtual bool GetDoubleJump() const = 0;
         virtual void SetDoubleJump(const bool&) = 0;
+        virtual float GetCapsuleOffset() const = 0;
+        virtual void SetCapsuleOffset(const float&) = 0;
+        virtual float GetCapsuleJumpHoldOffset() const = 0;
+        virtual void SetCapsuleJumpHoldOffset(const float&) = 0;
         virtual float GetMaxGroundedAngleDegrees() const = 0;
         virtual void SetMaxGroundedAngleDegrees(const float&) = 0;
         virtual float GetTopWalkSpeed() const = 0;
