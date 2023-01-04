@@ -868,7 +868,7 @@ namespace FirstPersonController
         SprintManager(target_velocity, deltaTime);
 
         // Apply the speed and sprint factor
-        if(!m_crouching)
+        if(m_standing)
             target_velocity *= m_speed * (1.f + (m_sprint_value-1.f) * m_sprint_velocity_adjust);
         // Don't apply the sprint factor when crouching
         else
