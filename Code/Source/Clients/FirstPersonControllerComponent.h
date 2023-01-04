@@ -103,6 +103,7 @@ namespace FirstPersonController
         float GetHeading() const override;
 
     private:
+        // Active camera entity
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::Entity* GetActiveCamera() const;
 
@@ -110,20 +111,22 @@ namespace FirstPersonController
         bool m_obtained_child_ids = false;
         AZStd::vector<AZ::EntityId> m_children;
 
+        // Used to determine if the PhysX Character Controller component's values have been obtained
         bool m_obtained_physx_character_values = false;
 
+        // Called on each tick
         void ProcessInput(const float& deltaTime);
 
+        // Various methods used to implement the First Person Controller functionality
+        void CheckGrounded(const float& deltaTime);
         void UpdateVelocityXY(const float& deltaTime);
         void UpdateJumpTime();
         void UpdateVelocityZ(const float& deltaTime);
-
+        void UpdateRotation(const float& deltaTime);
         AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
         void SlerpRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
-
-        void CheckGrounded(const float& deltaTime);
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();
@@ -133,6 +136,7 @@ namespace FirstPersonController
         void OnSecondJump();
         void OnSprintCooldown();
 
+        // Velocity application variables
         AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_last_applied_velocity = AZ::Vector3::CreateZero();
@@ -143,6 +147,7 @@ namespace FirstPersonController
         // Top walk speed
         float m_speed = 10.f;
 
+        // Used to track where we are along lerping the velocity between the two values
         float m_lerp_time = 0.f;
 
         // Jumping and gravity
@@ -167,9 +172,8 @@ namespace FirstPersonController
         // The capsule offset determines how far below the character's feet the ground is detected
         float m_capsule_offset = 0.001f;
         float m_capsule_offset_translation = m_capsule_offset;
-        // The capsule jump hold offset makes it so that the initial jump velocity is held constant
-        // for the offset value entered, up to a maximum of roughly the capsule height,
-        // depending on the jump velocity/height
+        // The capsule jump hold offset is used to determine initial (ascending) distance of the of the jump
+        // where the m_jump_held_gravity_factor is applied to the gravity
         float m_capsule_jump_hold_offset = 0.5f;
         float m_capsule_jump_hold_offset_translation = m_capsule_jump_hold_offset;
         float m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
@@ -179,16 +183,17 @@ namespace FirstPersonController
         bool m_double_jump_enabled = false;
         bool m_second_jump = false;
 
+        // Variables used to determine when the X&Y velocity should be updated
         bool m_update_xy_ascending = true;
         bool m_update_xy_descending = true;
         bool m_update_xy_only_near_ground = true;
 
-        void UpdateRotation(const float& deltaTime);
         // These default values work well, depending on OS mouse settings,
         // assuming the event value multiplier is 1.0
         float m_pitch_sensitivity = 0.005f;
         float m_yaw_sensitivity = 0.005f;
 
+        // Rotation-related variables
         float m_current_heading = 0.f;
         AZ::Quaternion m_new_look_rotation_delta = AZ::Quaternion::CreateZero();
         float m_rotation_damp = 20.f;
