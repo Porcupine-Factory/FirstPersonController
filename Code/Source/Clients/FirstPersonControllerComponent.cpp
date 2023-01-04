@@ -714,8 +714,12 @@ namespace FirstPersonController
 
         //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
 
+        // Crouch down
         if(m_crouching && m_camera_local_z_travel_distance > -1.f * m_crouch_camera_distance)
         {
+            if(m_standing)
+                m_standing = false;
+
             float camera_travel_delta = -1.f * m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
             m_camera_local_z_travel_distance += camera_travel_delta;
 
@@ -742,6 +746,7 @@ namespace FirstPersonController
 
             camera_transform->SetLocalZ(camera_transform->GetLocalZ() + camera_travel_delta);
         }
+        // Stand up
         else if(!m_crouching && m_camera_local_z_travel_distance != 0.f)
         {
             // Create a shapecast capsule that will be used to detect whether there is an obstruction
@@ -803,6 +808,7 @@ namespace FirstPersonController
             {
                 camera_travel_delta -= m_camera_local_z_travel_distance;
                 m_camera_local_z_travel_distance = 0.f;
+                m_standing = true;
             }
 
             // Adjust the height of the collider capsule based on the standing height
@@ -1106,14 +1112,14 @@ namespace FirstPersonController
         {
             if(m_jump_value && !m_jump_held)
             {
+                if(!m_standing)
+                {
+                    m_crouching = false;
+                    return;
+                }
                 m_z_velocity_current_delta = m_jump_initial_velocity;
                 m_jump_held = true;
                 m_jump_req_repress = false;
-                if(m_crouching)
-                {
-                    m_crouching = false;
-                    CrouchManager(deltaTime);
-                }
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnFirstJump);
             }
             else
@@ -1163,15 +1169,15 @@ namespace FirstPersonController
 
             if(m_double_jump_enabled && !m_second_jump && !m_jump_held && m_jump_value != 0.f)
             {
+                if(!m_standing)
+                {
+                    m_crouching = false;
+                    return;
+                }
                 m_z_velocity = m_jump_initial_velocity;
                 m_z_velocity_current_delta = 0.f;
                 m_second_jump = true;
                 m_jump_held = true;
-                if(m_crouching)
-                {
-                    m_crouching = false;
-                    CrouchManager(deltaTime);
-                }
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSecondJump);
             }
         }

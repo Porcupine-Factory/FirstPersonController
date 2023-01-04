@@ -170,7 +170,7 @@ namespace FirstPersonController
         float m_capsule_radius = 0.25f;
         float m_capsule_height = 1.753f;
         // The capsule offset determines how far below the character's feet the ground is detected
-        float m_capsule_offset = 0.001f;
+        float m_capsule_offset = 0.05f;
         float m_capsule_offset_translation = m_capsule_offset;
         // The capsule jump hold offset is used to determine initial (ascending) distance of the of the jump
         // where the m_jump_held_gravity_factor is applied to the gravity
@@ -249,6 +249,7 @@ namespace FirstPersonController
         bool m_crouch_enable_toggle = true;
         float m_crouch_prev_value = 0.f;
         bool m_crouching = false;
+        bool m_standing = true;
         float m_camera_local_z_travel_distance = 0.f;
 
         // Event IDs and action names
