@@ -1109,6 +1109,11 @@ namespace FirstPersonController
                 m_z_velocity_current_delta = m_jump_initial_velocity;
                 m_jump_held = true;
                 m_jump_req_repress = false;
+                if(m_crouching)
+                {
+                    m_crouching = false;
+                    CrouchManager(deltaTime);
+                }
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnFirstJump);
             }
             else
@@ -1162,6 +1167,11 @@ namespace FirstPersonController
                 m_z_velocity_current_delta = 0.f;
                 m_second_jump = true;
                 m_jump_held = true;
+                if(m_crouching)
+                {
+                    m_crouching = false;
+                    CrouchManager(deltaTime);
+                }
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSecondJump);
             }
         }
