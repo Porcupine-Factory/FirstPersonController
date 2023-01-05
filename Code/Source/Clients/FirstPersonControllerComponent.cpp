@@ -766,6 +766,7 @@ namespace FirstPersonController
             {
                 cameraTravelDelta += abs(m_cameraLocalZTravelDistance) - m_crouchDistance;
                 m_cameraLocalZTravelDistance = -1.f * m_crouchDistance;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCrouched);
             }
 
             // Adjust the height of the collider capsule based on the crouching height
@@ -848,6 +849,7 @@ namespace FirstPersonController
                 cameraTravelDelta -= m_cameraLocalZTravelDistance;
                 m_cameraLocalZTravelDistance = 0.f;
                 m_standing = true;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStoodUp);
             }
 
             // Adjust the height of the collider capsule based on the standing height
@@ -1279,6 +1281,8 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
+    void FirstPersonControllerComponent::OnCrouched(){}
+    void FirstPersonControllerComponent::OnStoodUp(){}
     void FirstPersonControllerComponent::OnFirstJump(){}
     void FirstPersonControllerComponent::OnSecondJump(){}
     void FirstPersonControllerComponent::OnSprintCooldown(){}

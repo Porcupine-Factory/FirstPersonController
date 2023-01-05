@@ -140,6 +140,8 @@ namespace FirstPersonController
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
+        void OnCrouched();
+        void OnStoodUp();
         void OnFirstJump();
         void OnSecondJump();
         void OnSprintCooldown();
