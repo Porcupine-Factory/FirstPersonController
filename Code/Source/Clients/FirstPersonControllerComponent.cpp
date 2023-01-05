@@ -179,10 +179,10 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
-                        "Crouch Camera Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height, this number cannot be greater than the capsule's height minus two times its radius")
+                        "Crouch Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height, this number cannot be greater than the capsule's height minus two times its radius")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchTime,
-                        "Crouch Camera Time", "Determines the time it takes to complete the crouch")
+                        "Crouch Time", "Determines the time it takes to complete the crouch")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchEnableToggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
