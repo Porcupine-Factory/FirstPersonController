@@ -92,6 +92,8 @@ namespace FirstPersonController
         void SetCrouchTime(const float& new_crouch_camera_time) override;
         bool GetCrouchEnableToggle() const override;
         void SetCrouchEnableToggle(const bool& new_crouch_enable_toggle) override;
+        bool GetCrouchJumpCausesStanding() const override;
+        void SetCrouchJumpCausesStanding(const bool& new_crouch_jump_causes_standing) override;
         bool GetCrouchSprintCausesStanding() const override;
         void SetCrouchSprintCausesStanding(const bool& new_crouch_sprint_causes_standing) override;
         bool GetCrouchPriorityWhenSprintPressed() const override;
@@ -255,6 +257,7 @@ namespace FirstPersonController
         bool m_standing = true;
         float m_camera_local_z_travel_distance = 0.f;
         bool m_crouch_enable_toggle = true;
+        bool m_crouch_jump_causes_standing = true;
         bool m_crouch_sprint_causes_standing = false;
         bool m_crouch_priority_when_sprint_pressed = true;
 

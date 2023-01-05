@@ -60,6 +60,7 @@ namespace FirstPersonController
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouch_distance)
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouch_time)
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouch_enable_toggle)
+              ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouch_jump_causes_standing)
               ->Field("Crouch Sprint Causes Standing", &FirstPersonControllerComponent::m_crouch_sprint_causes_standing)
               ->Field("Crouch Priority When Sprint Pressed", &FirstPersonControllerComponent::m_crouch_priority_when_sprint_pressed)
 
@@ -186,6 +187,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_crouch_enable_toggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_jump_causes_standing,
+                        "Crouch Jump Causes Standing", "Determines whether pressing jump while crouched causes the character to stand up, and then jump once fully standing")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouch_sprint_causes_standing,
                         "Crouch Sprint Causes Standing", "Determines whether pressing sprint while crouched causes the character to stand up, and then sprint once fully standing")
                     ->DataElement(nullptr,
@@ -282,6 +286,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Time", &FirstPersonControllerComponentRequests::SetCrouchTime)
                 ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
                 ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
+                ->Event("Get Crouch Jump Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchJumpCausesStanding)
+                ->Event("Set Crouch Jump Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchJumpCausesStanding)
                 ->Event("Get Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchSprintCausesStanding)
                 ->Event("Set Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchSprintCausesStanding)
                 ->Event("Get Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::GetCrouchPriorityWhenSprintPressed)
@@ -1148,7 +1154,8 @@ namespace FirstPersonController
             {
                 if(!m_standing)
                 {
-                    m_crouching = false;
+                    if(m_crouch_jump_causes_standing)
+                        m_crouching = false;
                     return;
                 }
                 m_z_velocity_current_delta = m_jump_initial_velocity;
@@ -1205,7 +1212,8 @@ namespace FirstPersonController
             {
                 if(!m_standing)
                 {
-                    m_crouching = false;
+                    if(m_crouch_jump_causes_standing)
+                        m_crouching = false;
                     return;
                 }
                 m_z_velocity = m_jump_initial_velocity;
@@ -1451,6 +1459,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchEnableToggle(const bool& new_crouch_enable_toggle)
     {
         m_crouch_enable_toggle = new_crouch_enable_toggle;
+    }
+    bool FirstPersonControllerComponent::GetCrouchJumpCausesStanding() const
+    {
+        return m_crouch_jump_causes_standing;
+    }
+    void FirstPersonControllerComponent::SetCrouchJumpCausesStanding(const bool& new_crouch_jump_causes_standing)
+    {
+        m_crouch_jump_causes_standing = new_crouch_jump_causes_standing;
     }
     bool FirstPersonControllerComponent::GetCrouchSprintCausesStanding() const
     {

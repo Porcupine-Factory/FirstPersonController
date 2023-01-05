@@ -53,6 +53,8 @@ namespace FirstPersonController
         virtual void SetCrouchTime(const float&) = 0;
         virtual bool GetCrouchEnableToggle() const = 0;
         virtual void SetCrouchEnableToggle(const bool&) = 0;
+        virtual bool GetCrouchJumpCausesStanding() const = 0;
+        virtual void SetCrouchJumpCausesStanding(const bool&) = 0;
         virtual bool GetCrouchSprintCausesStanding() const = 0;
         virtual void SetCrouchSprintCausesStanding(const bool&) = 0;
         virtual bool GetCrouchPriorityWhenSprintPressed() const = 0;
