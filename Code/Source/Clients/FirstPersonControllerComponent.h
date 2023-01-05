@@ -53,21 +53,21 @@ namespace FirstPersonController
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
         bool GetGroundClose() const override;
-        void SetGroundCloseForTick(const bool& new_ground_close) override;
+        void SetGroundCloseForTick(const bool& new_groundClose) override;
         float GetAirTime() const override;
         float GetJumpKeyValue() const override;;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
         float GetInitialJumpVelocity() const override;
-        void SetInitialJumpVelocity(const float& new_initial_jump_velocity) override;
+        void SetInitialJumpVelocity(const float& new_jumpInitialVelocity) override;
         bool GetDoubleJump() const override;
-        void SetDoubleJump(const bool& new_double_jump) override;
+        void SetDoubleJump(const bool& new_doubleJumpEnabled) override;
         float GetCapsuleOffset() const override;
-        void SetCapsuleOffset(const float& new_capsule_jump_hold_offset) override;
+        void SetCapsuleOffset(const float& new_capsuleJumpHoldOffset) override;
         float GetCapsuleJumpHoldOffset() const override;
-        void SetCapsuleJumpHoldOffset(const float& new_capsule_offset) override;
+        void SetCapsuleJumpHoldOffset(const float& new_capsuleOffset) override;
         float GetMaxGroundedAngleDegrees() const override;
-        void SetMaxGroundedAngleDegrees(const float& new_max_grounded_angle_degrees) override;
+        void SetMaxGroundedAngleDegrees(const float& new_maxGroundedAngleDegrees) override;
         float GetTopWalkSpeed() const override;
         void SetTopWalkSpeed(const float& new_speed) override;
         float GetWalkAcceleration() const override;
@@ -77,35 +77,35 @@ namespace FirstPersonController
         float GetWalkBreak() const override;
         void SetWalkBreak(const float& new_break) override;
         float GetSprintScale() const override;
-        void SetSprintScale(const float& new_sprint_scale) override;
+        void SetSprintScale(const float& new_sprintScale) override;
         float GetSprintHeldTime() const override;
-        void SetSprintHeldTime(const float& new_sprint_held_duration) override;
+        void SetSprintHeldTime(const float& new_sprintHeldDuration) override;
         float GetSprintCooldown() const override;
-        void SetSprintCooldown(const float& new_sprint_cooldown) override;
+        void SetSprintCooldown(const float& new_sprintCooldown) override;
         float GetSprintPauseTime() const override;
-        void SetSprintPauseTime(const float& new_sprint_decrement_pause) override;
+        void SetSprintPauseTime(const float& new_sprintDecrementPause) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
         float GetCrouchDistance() const override;
-        void SetCrouchDistance(const float& new_crouch_camera_distance) override;
+        void SetCrouchDistance(const float& new_crouchDistance) override;
         float GetCrouchTime() const override;
-        void SetCrouchTime(const float& new_crouch_camera_time) override;
+        void SetCrouchTime(const float& new_crouchTime) override;
         bool GetCrouchEnableToggle() const override;
-        void SetCrouchEnableToggle(const bool& new_crouch_enable_toggle) override;
+        void SetCrouchEnableToggle(const bool& new_crouchEnableToggle) override;
         bool GetCrouchJumpCausesStanding() const override;
-        void SetCrouchJumpCausesStanding(const bool& new_crouch_jump_causes_standing) override;
+        void SetCrouchJumpCausesStanding(const bool& new_crouchJumpCausesStanding) override;
         bool GetCrouchSprintCausesStanding() const override;
-        void SetCrouchSprintCausesStanding(const bool& new_crouch_sprint_causes_standing) override;
+        void SetCrouchSprintCausesStanding(const bool& new_crouchSprintCausesStanding) override;
         bool GetCrouchPriorityWhenSprintPressed() const override;
-        void SetCrouchPriorityWhenSprintPressed(const bool& new_crouch_priority_when_sprint_pressed) override;
+        void SetCrouchPriorityWhenSprintPressed(const bool& new_crouchPriorityWhenSprintPressed) override;
         float GetCameraPitchSensitivity() const override;
-        void SetCameraPitchSensitivity(const float& new_pitch_sensitivity) override;
+        void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
         float GetCameraYawSensitivity() const override;
-        void SetCameraYawSensitivity(const float& new_yaw_sensitivity) override;
+        void SetCameraYawSensitivity(const float& new_yawSensitivity) override;
         float GetCameraRotationDampFactor() const override;
-        void SetCameraRotationDampFactor(const float& new_rotation_damp) override;
-        void UpdateCameraPitch(const float& new_camera_pitch_angle) override;
-        void UpdateCameraYaw(const float& new_camera_yaw_angle) override;
+        void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
+        void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
+        void UpdateCameraYaw(const float& new_cameraYawAngle) override;
         float GetHeading() const override;
 
     private:
@@ -114,11 +114,11 @@ namespace FirstPersonController
         AZ::Entity* GetActiveCamera() const;
 
         // Child entity IDs
-        bool m_obtained_child_ids = false;
+        bool m_obtainedChildIds = false;
         AZStd::vector<AZ::EntityId> m_children;
 
         // Used to determine if the PhysX Character Controller component's values have been obtained
-        bool m_obtained_physx_character_values = false;
+        bool m_obtainedPhysxCharacterValues = false;
 
         // Called on each tick
         void ProcessInput(const float& deltaTime);
@@ -129,9 +129,9 @@ namespace FirstPersonController
         void UpdateJumpTime();
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation(const float& deltaTime);
-        AZ::Vector3 LerpVelocity(const AZ::Vector3& target_velocity, const float& deltaTime);
+        AZ::Vector3 LerpVelocity(const AZ::Vector3& targetVelocity, const float& deltaTime);
         void SlerpRotation(const float& deltaTime);
-        void SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime);
+        void SprintManager(const AZ::Vector3& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
 
         // FirstPersonControllerNotificationBus
@@ -143,74 +143,73 @@ namespace FirstPersonController
         void OnSprintCooldown();
 
         // Velocity application variables
-        AZ::Vector3 m_apply_velocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_prev_target_velocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_last_applied_velocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_applyVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_lastAppliedVelocity = AZ::Vector3::CreateZero();
 
         // Angles used to rotate the camera
-        float m_camera_rotation_angles[3] = {0.f, 0.f, 0.f};
+        float m_cameraRotationAngles[3] = {0.f, 0.f, 0.f};
 
         // Top walk speed
         float m_speed = 10.f;
 
         // Used to track where we are along lerping the velocity between the two values
-        float m_lerp_time = 0.f;
+        float m_lerpTime = 0.f;
 
         // Jumping and gravity
         float m_gravity = -9.81f;
         bool m_grounded = true;
-        float m_max_grounded_angle_degrees = 30.0f;
-        bool m_script_grounded = true;
-        bool m_script_set_ground_tick = false;
-        bool m_ground_close = true;
-        bool m_script_ground_close = true;
-        bool m_script_set_ground_close_tick = false;
-        float m_air_time = 0.f;
-        float m_jump_initial_velocity = 2.5f;
-        bool m_jump_pressed = false;
-        bool m_jump_held = false;
-        bool m_jump_req_repress = true;
-        float m_z_velocity = 0.f;
-        float m_z_velocity_current_delta = 0.f;
-        float m_z_velocity_prev_delta = 0.f;
-        float m_capsule_radius = 0.25f;
-        float m_capsule_height = 1.753f;
+        float m_maxGroundedAngleDegrees = 30.0f;
+        bool m_scriptGrounded = true;
+        bool m_scriptSetGroundTick = false;
+        bool m_groundClose = true;
+        bool m_scriptGroundClose = true;
+        bool m_scriptSetGroundCloseTick = false;
+        float m_airTime = 0.f;
+        float m_jumpInitialVelocity = 2.5f;
+        bool m_jumpHeld = false;
+        bool m_jumpReqRepress = true;
+        float m_zVelocity = 0.f;
+        float m_zVelocityCurrentDelta = 0.f;
+        float m_zVelocityPrevDelta = 0.f;
+        float m_capsuleRadius = 0.25f;
+        float m_capsuleHeight = 1.753f;
         // The capsule offset determines how far below the character's feet the ground is detected
-        float m_capsule_offset = 0.05f;
-        float m_capsule_offset_translation = m_capsule_offset;
+        float m_capsuleOffset = 0.05f;
+        float m_capsuleOffsetTranslation = m_capsuleOffset;
         // The capsule jump hold offset is used to determine initial (ascending) distance of the of the jump
-        // where the m_jump_held_gravity_factor is applied to the gravity
-        float m_capsule_jump_hold_offset = 0.5f;
-        float m_capsule_jump_hold_offset_translation = m_capsule_jump_hold_offset;
-        float m_jump_time = m_capsule_jump_hold_offset / m_jump_initial_velocity;
-        float m_jump_counter = 0.f;
-        float m_jump_held_gravity_factor = 0.1f;
-        float m_jump_falling_gravity_factor = 1.1f;
-        bool m_double_jump_enabled = false;
-        bool m_second_jump = false;
+        // where the m_jumpHeldGravityFactor is applied to the gravity
+        float m_capsuleJumpHoldOffset = 0.5f;
+        float m_capsuleJumpHoldOffsetTranslation = m_capsuleJumpHoldOffset;
+        float m_jumpTime = m_capsuleJumpHoldOffset / m_jumpInitialVelocity;
+        float m_jumpCounter = 0.f;
+        float m_jumpHeldGravityFactor = 0.1f;
+        float m_jumpFallingGravityFactor = 1.1f;
+        bool m_doubleJumpEnabled = false;
+        bool m_secondJump = false;
 
         // Variables used to determine when the X&Y velocity should be updated
-        bool m_update_xy_ascending = true;
-        bool m_update_xy_descending = true;
-        bool m_update_xy_only_near_ground = true;
+        bool m_updateXYAscending = true;
+        bool m_updateXYDecending = true;
+        bool m_updateXYOnlyNearGround = true;
 
         // These default values work well, depending on OS mouse settings,
         // assuming the event value multiplier is 1.0
-        float m_pitch_sensitivity = 0.005f;
-        float m_yaw_sensitivity = 0.005f;
+        float m_pitchSensitivity = 0.005f;
+        float m_yawSensitivity = 0.005f;
 
         // Rotation-related variables
-        float m_current_heading = 0.f;
-        AZ::Quaternion m_new_look_rotation_delta = AZ::Quaternion::CreateZero();
-        float m_rotation_damp = 20.f;
+        float m_currentHeading = 0.f;
+        AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
+        float m_rotationDamp = 20.f;
 
         // Used when a script wants to update the camera angle via the Request Bus or a gamepad
-        bool m_rotating_pitch_via_script_gamepad = false;
-        bool m_rotating_yaw_via_script_gamepad = false;
+        bool m_rotatingPitchViaScriptGamepad = false;
+        bool m_rotatingYawViaScriptGamepad = false;
 
         // Acceleration lerp movement
         float m_accel = 1.f;
-        float m_jump_accel_factor = 0.5f;
+        float m_jumpAccelFactor = 0.5f;
 
         // Deceleration factor
         float m_decel = 1.414f;
@@ -218,88 +217,88 @@ namespace FirstPersonController
 
         // Movement scale factors
         // assuming the event value multipliers are all +/-1.0
-        float m_forward_scale = 1.f;
-        float m_back_scale = 0.75f;
-        float m_left_scale = 1.f;
-        float m_right_scale = 1.f;
-        float m_sprint_scale = 1.5f;
-        float m_crouch_scale = 0.65f;
+        float m_forwardScale = 1.f;
+        float m_backScale = 0.75f;
+        float m_leftScale = 1.f;
+        float m_rightScale = 1.f;
+        float m_sprintScale = 1.5f;
+        float m_crouchScale = 0.65f;
 
         // Event value multipliers
-        float m_forward_value = 0.f;
-        float m_back_value = 0.f;
-        float m_left_value = 0.f;
-        float m_right_value = 0.f;
-        float m_yaw_value = 0.f;
-        float m_pitch_value = 0.f;
-        float m_sprint_value = 1.f;
-        float m_crouch_value = 0.f;
-        float m_jump_value = 0.f;
+        float m_forwardValue = 0.f;
+        float m_backValue = 0.f;
+        float m_leftValue = 0.f;
+        float m_rightValue = 0.f;
+        float m_yawValue = 0.f;
+        float m_pitchValue = 0.f;
+        float m_sprintValue = 1.f;
+        float m_crouchValue = 0.f;
+        float m_jumpValue = 0.f;
 
         // Sprint application variables
-        float m_sprint_pressed_value = 1.f;
-        float m_sprint_velocity_adjust = 0.f;
-        float m_sprint_accel_adjust = 0.f;
-        float m_sprint_increment_time = 0.f;
-        float m_sprint_held_duration = 0.f;
-        float m_sprint_decrement_pause = 0.f;
-        float m_sprint_prev_decrement_pause = 0.f;
-        float m_sprint_max_time = 3.f;
-        float m_sprint_cooldown = 0.f;
-        float m_sprint_cooldown_time = 5.f;
-        bool m_sprint_decrementing = false;
+        float m_sprintPressedValue = 1.f;
+        float m_sprintVelocityAdjust = 0.f;
+        float m_sprintAccelAdjust = 0.f;
+        float m_sprintIncrementTime = 0.f;
+        float m_sprintHeldDuration = 0.f;
+        float m_sprintDecrementPause = 0.f;
+        float m_sprintPrevDecrementPause = 0.f;
+        float m_sprintMaxTime = 3.f;
+        float m_sprintCooldown = 0.f;
+        float m_sprintCooldownTime = 5.f;
+        bool m_sprintDecrementing = false;
 
         // Crouch application variables
-        float m_crouch_distance = 0.5f;
-        float m_crouch_time = 0.2f;
-        float m_crouch_prev_value = 0.f;
+        float m_crouchDistance = 0.5f;
+        float m_crouchTime = 0.2f;
+        float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
         bool m_standing = true;
-        float m_camera_local_z_travel_distance = 0.f;
-        bool m_crouch_enable_toggle = true;
-        bool m_crouch_jump_causes_standing = true;
-        bool m_crouch_sprint_causes_standing = false;
-        bool m_crouch_priority_when_sprint_pressed = true;
+        float m_cameraLocalZTravelDistance = 0.f;
+        bool m_crouchEnableToggle = true;
+        bool m_crouchJumpCausesStanding = true;
+        bool m_crouchSprintCausesStanding = false;
+        bool m_crouchPriorityWhenSprintPressed = true;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
-        AZStd::string m_str_forward = "Forward";
+        AZStd::string m_strForward = "Forward";
         StartingPointInput::InputEventNotificationId m_MoveBackEventId;
-        AZStd::string m_str_back = "Back";
+        AZStd::string m_strBack = "Back";
         StartingPointInput::InputEventNotificationId m_MoveLeftEventId;
-        AZStd::string m_str_left = "Left";
+        AZStd::string m_strLeft = "Left";
         StartingPointInput::InputEventNotificationId m_MoveRightEventId;
-        AZStd::string m_str_right = "Right";
+        AZStd::string m_strRight = "Right";
         StartingPointInput::InputEventNotificationId m_RotateYawEventId;
-        AZStd::string m_str_yaw = "Yaw";
+        AZStd::string m_strYaw = "Yaw";
         StartingPointInput::InputEventNotificationId m_RotatePitchEventId;
-        AZStd::string m_str_pitch = "Pitch";
+        AZStd::string m_strPitch = "Pitch";
         StartingPointInput::InputEventNotificationId m_SprintEventId;
-        AZStd::string m_str_sprint = "Sprint";
+        AZStd::string m_strSprint = "Sprint";
         StartingPointInput::InputEventNotificationId m_CrouchEventId;
-        AZStd::string m_str_crouch = "Crouch";
+        AZStd::string m_strCrouch = "Crouch";
         StartingPointInput::InputEventNotificationId m_JumpEventId;
-        AZStd::string m_str_jump = "Jump";
+        AZStd::string m_strJump = "Jump";
 
         // list of action names
-        AZStd::string* m_input_names[9] = {
-            &m_str_forward, &m_str_back,
-            &m_str_left, &m_str_right,
-            &m_str_yaw, &m_str_pitch,
-            &m_str_sprint, &m_str_crouch,
-            &m_str_jump
+        AZStd::string* m_inputNames[9] = {
+            &m_strForward, &m_strBack,
+            &m_strLeft, &m_strRight,
+            &m_strYaw, &m_strPitch,
+            &m_strSprint, &m_strCrouch,
+            &m_strJump
         };
 
         // map of event IDs and event value multipliers
-        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_control_map = {
-            {&m_MoveForwardEventId, &m_forward_value},
-            {&m_MoveBackEventId, &m_back_value},
-            {&m_MoveLeftEventId, &m_left_value},
-            {&m_MoveRightEventId, &m_right_value},
-            {&m_RotateYawEventId, &m_yaw_value},
-            {&m_RotatePitchEventId, &m_pitch_value},
-            {&m_SprintEventId, &m_sprint_value},
-            {&m_CrouchEventId, &m_crouch_value},
-            {&m_JumpEventId, &m_jump_value}};
+        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
+            {&m_MoveForwardEventId, &m_forwardValue},
+            {&m_MoveBackEventId, &m_backValue},
+            {&m_MoveLeftEventId, &m_leftValue},
+            {&m_MoveRightEventId, &m_rightValue},
+            {&m_RotateYawEventId, &m_yawValue},
+            {&m_RotatePitchEventId, &m_pitchValue},
+            {&m_SprintEventId, &m_sprintValue},
+            {&m_CrouchEventId, &m_crouchValue},
+            {&m_JumpEventId, &m_jumpValue}};
     };
 }
