@@ -39,6 +39,8 @@ namespace FirstPersonController
         virtual void SetWalkBreak(const float&) = 0;
         virtual float GetSprintScale() const = 0;
         virtual void SetSprintScale(const float&) = 0;
+        virtual float GetCrouchScale() const = 0;
+        virtual void SetCrouchScale(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;
         virtual void SetSprintHeldTime(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;

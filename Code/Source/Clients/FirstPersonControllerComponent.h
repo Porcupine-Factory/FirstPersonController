@@ -7,10 +7,10 @@
 #include <AzCore/Math/Quaternion.h>
 #include <AzCore/std/containers/map.h>
 
-#include <StartingPointInput/InputEventNotificationBus.h>
-
 #include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
 #include <AzFramework/Input/Events/InputChannelEventListener.h>
+
+#include <StartingPointInput/InputEventNotificationBus.h>
 
 namespace FirstPersonController
 {
@@ -78,6 +78,8 @@ namespace FirstPersonController
         void SetWalkBreak(const float& new_break) override;
         float GetSprintScale() const override;
         void SetSprintScale(const float& new_sprintScale) override;
+        float GetCrouchScale() const override;
+        void SetCrouchScale(const float& new_crouchScale) override;
         float GetSprintHeldTime() const override;
         void SetSprintHeldTime(const float& new_sprintHeldDuration) override;
         float GetSprintCooldown() const override;
@@ -155,6 +157,31 @@ namespace FirstPersonController
 
         // Used to track where we are along lerping the velocity between the two values
         float m_lerpTime = 0.f;
+
+        // Sprint application variables
+        float m_sprintPressedValue = 1.f;
+        float m_sprintVelocityAdjust = 0.f;
+        float m_sprintAccelAdjust = 0.f;
+        float m_sprintIncrementTime = 0.f;
+        float m_sprintHeldDuration = 0.f;
+        float m_sprintDecrementPause = 0.f;
+        float m_sprintPrevDecrementPause = 0.f;
+        float m_sprintMaxTime = 3.f;
+        float m_sprintCooldown = 0.f;
+        float m_sprintCooldownTime = 5.f;
+        bool m_sprintDecrementing = false;
+
+        // Crouch application variables
+        float m_crouchDistance = 0.5f;
+        float m_crouchTime = 0.2f;
+        float m_crouchPrevValue = 0.f;
+        bool m_crouching = false;
+        bool m_standing = true;
+        float m_cameraLocalZTravelDistance = 0.f;
+        bool m_crouchEnableToggle = true;
+        bool m_crouchJumpCausesStanding = true;
+        bool m_crouchSprintCausesStanding = false;
+        bool m_crouchPriorityWhenSprintPressed = true;
 
         // Jumping and gravity
         float m_gravity = -9.81f;
@@ -234,31 +261,6 @@ namespace FirstPersonController
         float m_sprintValue = 1.f;
         float m_crouchValue = 0.f;
         float m_jumpValue = 0.f;
-
-        // Sprint application variables
-        float m_sprintPressedValue = 1.f;
-        float m_sprintVelocityAdjust = 0.f;
-        float m_sprintAccelAdjust = 0.f;
-        float m_sprintIncrementTime = 0.f;
-        float m_sprintHeldDuration = 0.f;
-        float m_sprintDecrementPause = 0.f;
-        float m_sprintPrevDecrementPause = 0.f;
-        float m_sprintMaxTime = 3.f;
-        float m_sprintCooldown = 0.f;
-        float m_sprintCooldownTime = 5.f;
-        bool m_sprintDecrementing = false;
-
-        // Crouch application variables
-        float m_crouchDistance = 0.5f;
-        float m_crouchTime = 0.2f;
-        float m_crouchPrevValue = 0.f;
-        bool m_crouching = false;
-        bool m_standing = true;
-        float m_cameraLocalZTravelDistance = 0.f;
-        bool m_crouchEnableToggle = true;
-        bool m_crouchJumpCausesStanding = true;
-        bool m_crouchSprintCausesStanding = false;
-        bool m_crouchPriorityWhenSprintPressed = true;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
