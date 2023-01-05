@@ -57,8 +57,8 @@ namespace FirstPersonController
               ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprint_cooldown_time)
 
               // Crouching group
-              ->Field("Crouch Camera Distance", &FirstPersonControllerComponent::m_crouch_camera_distance)
-              ->Field("Crouch Camera Time", &FirstPersonControllerComponent::m_crouch_camera_time)
+              ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouch_distance)
+              ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouch_time)
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouch_enable_toggle)
 
               // Jumping group
@@ -175,11 +175,11 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_crouch_camera_distance,
-                        "Crouch Camera Distance", "Determines the distance the camera will move on the Z axis")
+                        &FirstPersonControllerComponent::m_crouch_distance,
+                        "Crouch Camera Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height, this number cannot be greater than the capsule's height minus two times its radius")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_crouch_camera_time,
-                        "Crouch Camera Time", "Determines the time it takes the camera to complete its movement")
+                        &FirstPersonControllerComponent::m_crouch_time,
+                        "Crouch Camera Time", "Determines the time it takes to complete the crouch")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouch_enable_toggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
@@ -268,10 +268,10 @@ namespace FirstPersonController
                 ->Event("Set Sprint Pause Time", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
-                ->Event("Get Crouch Camera Distance", &FirstPersonControllerComponentRequests::GetCrouchCameraDistance)
-                ->Event("Set Crouch Camera Distance", &FirstPersonControllerComponentRequests::SetCrouchCameraDistance)
-                ->Event("Get Crouch Camera Time", &FirstPersonControllerComponentRequests::GetCrouchCameraTime)
-                ->Event("Set Crouch Camera Time", &FirstPersonControllerComponentRequests::SetCrouchCameraTime)
+                ->Event("Get Crouch Distance", &FirstPersonControllerComponentRequests::GetCrouchDistance)
+                ->Event("Set Crouch Distance", &FirstPersonControllerComponentRequests::SetCrouchDistance)
+                ->Event("Get Crouch Time", &FirstPersonControllerComponentRequests::GetCrouchTime)
+                ->Event("Set Crouch Time", &FirstPersonControllerComponentRequests::SetCrouchTime)
                 ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
                 ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
@@ -715,18 +715,18 @@ namespace FirstPersonController
         //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
 
         // Crouch down
-        if(m_crouching && m_camera_local_z_travel_distance > -1.f * m_crouch_camera_distance)
+        if(m_crouching && m_camera_local_z_travel_distance > -1.f * m_crouch_distance)
         {
             if(m_standing)
                 m_standing = false;
 
-            float camera_travel_delta = -1.f * m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
+            float camera_travel_delta = -1.f * m_crouch_distance * deltaTime / m_crouch_time;
             m_camera_local_z_travel_distance += camera_travel_delta;
 
-            if(m_camera_local_z_travel_distance <= -1.f * m_crouch_camera_distance)
+            if(m_camera_local_z_travel_distance <= -1.f * m_crouch_distance)
             {
-                camera_travel_delta += abs(m_camera_local_z_travel_distance) - m_crouch_camera_distance;
-                m_camera_local_z_travel_distance = -1.f * m_crouch_camera_distance;
+                camera_travel_delta += abs(m_camera_local_z_travel_distance) - m_crouch_distance;
+                m_camera_local_z_travel_distance = -1.f * m_crouch_distance;
             }
 
             // Adjust the height of the collider capsule based on the crouching height
@@ -801,7 +801,7 @@ namespace FirstPersonController
             if(hits)
                 return;
 
-            float camera_travel_delta = m_crouch_camera_distance * deltaTime / m_crouch_camera_time;
+            float camera_travel_delta = m_crouch_distance * deltaTime / m_crouch_time;
             m_camera_local_z_travel_distance += camera_travel_delta;
 
             if(m_camera_local_z_travel_distance >= 0.f)
@@ -934,6 +934,9 @@ namespace FirstPersonController
                 &PhysX::CharacterControllerRequestBus::Events::GetRadius);
             Physics::CharacterRequestBus::EventResult(m_max_grounded_angle_degrees, GetEntityId(),
                 &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
+
+            if(m_crouch_distance > m_capsule_height - 2.f*m_capsule_radius)
+                m_crouch_distance = m_capsule_height - 2.f*m_capsule_radius;
 
             // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
             // maximum slope angle value
@@ -1394,21 +1397,21 @@ namespace FirstPersonController
     {
         m_crouching = new_crouching;
     }
-    float FirstPersonControllerComponent::GetCrouchCameraDistance() const
+    float FirstPersonControllerComponent::GetCrouchDistance() const
     {
-        return m_crouch_camera_distance;
+        return m_crouch_distance;
     }
-    void FirstPersonControllerComponent::SetCrouchCameraDistance(const float& new_crouch_camera_distance)
+    void FirstPersonControllerComponent::SetCrouchDistance(const float& new_crouch_camera_distance)
     {
-        m_crouch_camera_distance = new_crouch_camera_distance;
+        m_crouch_distance = new_crouch_camera_distance;
     }
-    float FirstPersonControllerComponent::GetCrouchCameraTime() const
+    float FirstPersonControllerComponent::GetCrouchTime() const
     {
-        return m_crouch_camera_time;
+        return m_crouch_time;
     }
-    void FirstPersonControllerComponent::SetCrouchCameraTime(const float& new_crouch_camera_time)
+    void FirstPersonControllerComponent::SetCrouchTime(const float& new_crouch_camera_time)
     {
-        m_crouch_camera_time = new_crouch_camera_time;
+        m_crouch_time = new_crouch_camera_time;
     }
     bool FirstPersonControllerComponent::GetCrouchEnableToggle() const
     {

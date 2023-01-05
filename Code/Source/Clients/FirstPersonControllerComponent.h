@@ -86,10 +86,10 @@ namespace FirstPersonController
         void SetSprintPauseTime(const float& new_sprint_decrement_pause) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
-        float GetCrouchCameraDistance() const override;
-        void SetCrouchCameraDistance(const float& new_crouch_camera_distance) override;
-        float GetCrouchCameraTime() const override;
-        void SetCrouchCameraTime(const float& new_crouch_camera_time) override;
+        float GetCrouchDistance() const override;
+        void SetCrouchDistance(const float& new_crouch_camera_distance) override;
+        float GetCrouchTime() const override;
+        void SetCrouchTime(const float& new_crouch_camera_time) override;
         bool GetCrouchEnableToggle() const override;
         void SetCrouchEnableToggle(const bool& new_crouch_enable_toggle) override;
         float GetCameraPitchSensitivity() const override;
@@ -244,8 +244,8 @@ namespace FirstPersonController
         bool m_sprint_decrementing = false;
 
         // Crouch application variables
-        float m_crouch_camera_distance = 1.f;
-        float m_crouch_camera_time = 1.f;
+        float m_crouch_distance = 0.5f;
+        float m_crouch_time = 0.2f;
         bool m_crouch_enable_toggle = true;
         float m_crouch_prev_value = 0.f;
         bool m_crouching = false;
