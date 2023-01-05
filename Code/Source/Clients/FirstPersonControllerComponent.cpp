@@ -218,7 +218,7 @@ namespace FirstPersonController
                         "Capsule Grounded Offset (m)", "The capsule's ground detect offset in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_capsuleJumpHoldOffset,
-                        "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters")
+                        "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters, it is recommended to keep this number less than or equal to the PhysX Character Controller's capsule height")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
                         "Enable Double Jump", "Turn this on if you want to enable double jumping")
