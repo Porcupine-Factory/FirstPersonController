@@ -92,6 +92,10 @@ namespace FirstPersonController
         void SetCrouchTime(const float& new_crouch_camera_time) override;
         bool GetCrouchEnableToggle() const override;
         void SetCrouchEnableToggle(const bool& new_crouch_enable_toggle) override;
+        bool GetCrouchSprintCausesStanding() const override;
+        void SetCrouchSprintCausesStanding(const bool& new_crouch_sprint_causes_standing) override;
+        bool GetCrouchPriorityWhenSprintPressed() const override;
+        void SetCrouchPriorityWhenSprintPressed(const bool& new_crouch_priority_when_sprint_pressed) override;
         float GetCameraPitchSensitivity() const override;
         void SetCameraPitchSensitivity(const float& new_pitch_sensitivity) override;
         float GetCameraYawSensitivity() const override;
@@ -246,11 +250,13 @@ namespace FirstPersonController
         // Crouch application variables
         float m_crouch_distance = 0.5f;
         float m_crouch_time = 0.2f;
-        bool m_crouch_enable_toggle = true;
         float m_crouch_prev_value = 0.f;
         bool m_crouching = false;
         bool m_standing = true;
         float m_camera_local_z_travel_distance = 0.f;
+        bool m_crouch_enable_toggle = true;
+        bool m_crouch_sprint_causes_standing = false;
+        bool m_crouch_priority_when_sprint_pressed = true;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_MoveForwardEventId;

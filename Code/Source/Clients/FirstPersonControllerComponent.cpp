@@ -60,6 +60,8 @@ namespace FirstPersonController
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouch_distance)
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouch_time)
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouch_enable_toggle)
+              ->Field("Crouch Sprint Causes Standing", &FirstPersonControllerComponent::m_crouch_sprint_causes_standing)
+              ->Field("Crouch Priority When Sprint Pressed", &FirstPersonControllerComponent::m_crouch_priority_when_sprint_pressed)
 
               // Jumping group
               ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
@@ -183,6 +185,12 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouch_enable_toggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_sprint_causes_standing,
+                        "Crouch Sprint Causes Standing", "Determines whether pressing sprint while crouched causes the character to stand up, and then sprint once fully standing")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouch_priority_when_sprint_pressed,
+                        "Crouch Priority When Sprint Pressed", "Determines whether pressing crouch while sprint is held causes the character to crouch")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -274,6 +282,10 @@ namespace FirstPersonController
                 ->Event("Set Crouch Time", &FirstPersonControllerComponentRequests::SetCrouchTime)
                 ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
                 ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
+                ->Event("Get Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchSprintCausesStanding)
+                ->Event("Set Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchSprintCausesStanding)
+                ->Event("Get Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::GetCrouchPriorityWhenSprintPressed)
+                ->Event("Set Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::SetCrouchPriorityWhenSprintPressed)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
                 ->Event("Get Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
@@ -575,9 +587,13 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector3& target_velocity, const float& deltaTime)
     {
+        // Cause the character to stand if trying to sprint while crouched and the setting is enabled
+        if(m_crouch_sprint_causes_standing && m_sprint_value != 1.f && m_crouching)
+            m_crouching = false;
+
         // The sprint value should never be 0 and it shouldn't be applied if you're trying to moving backwards
         if(m_sprint_value == 0.f
-           || m_crouching
+           || !m_standing
            || (!m_apply_velocity.GetY() && !m_apply_velocity.GetX())
            || (m_sprint_value != 1.f
                && ((!m_forward_value && !m_left_value && !m_right_value) ||
@@ -711,6 +727,21 @@ namespace FirstPersonController
             else
                 m_crouching = false;
         }
+
+        // If the crouch key takes priority when the sprint key is held and we're attempting to crouch
+        // while the sprint key is being pressed then stop the sprinting and continue crouching
+        if(m_crouch_priority_when_sprint_pressed
+                && m_sprint_value != 1.f
+                && m_crouching
+                && m_camera_local_z_travel_distance > -1.f * m_crouch_distance)
+            m_sprint_value = 1.f;
+        // Otherwise if the crouch key does not take priority when the sprint key is held,
+        // and we are attempting to crouch while the sprint key is held, then do not crouch
+        else if(!m_crouch_priority_when_sprint_pressed
+            && m_sprint_value != 1.f
+            && m_crouching
+            && m_camera_local_z_travel_distance > -1.f * m_crouch_distance)
+           m_crouching = false;
 
         //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
 
@@ -1420,6 +1451,22 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchEnableToggle(const bool& new_crouch_enable_toggle)
     {
         m_crouch_enable_toggle = new_crouch_enable_toggle;
+    }
+    bool FirstPersonControllerComponent::GetCrouchSprintCausesStanding() const
+    {
+        return m_crouch_sprint_causes_standing;
+    }
+    void FirstPersonControllerComponent::SetCrouchSprintCausesStanding(const bool& new_crouch_sprint_causes_standing)
+    {
+        m_crouch_sprint_causes_standing = new_crouch_sprint_causes_standing;
+    }
+    bool FirstPersonControllerComponent::GetCrouchPriorityWhenSprintPressed() const
+    {
+        return m_crouch_priority_when_sprint_pressed;
+    }
+    void FirstPersonControllerComponent::SetCrouchPriorityWhenSprintPressed(const bool& new_crouch_priority_when_sprint_pressed)
+    {
+        m_crouch_priority_when_sprint_pressed = new_crouch_priority_when_sprint_pressed;
     }
     float FirstPersonControllerComponent::GetCameraPitchSensitivity() const
     {
