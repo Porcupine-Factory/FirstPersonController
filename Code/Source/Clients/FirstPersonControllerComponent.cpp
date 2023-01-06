@@ -59,6 +59,7 @@ namespace FirstPersonController
               // Crouching group
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
+              ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouchEnableToggle)
               ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouchJumpCausesStanding)
               ->Field("Crouch Sprint Causes Standing", &FirstPersonControllerComponent::m_crouchSprintCausesStanding)
@@ -70,8 +71,8 @@ namespace FirstPersonController
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jumpFallingGravityFactor)
               ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
-              ->Field("Capsule Grounded Offset (m)", &FirstPersonControllerComponent::m_capsuleOffset)
-              ->Field("Capsule Jump Hold Offset (m)", &FirstPersonControllerComponent::m_capsuleJumpHoldOffset)
+              ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
+              ->Field("Jump Hold Offset (m)", &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_updateXYDecending)
@@ -143,7 +144,7 @@ namespace FirstPersonController
                         "Deceleration Factor", "Deceleration multiplier")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_break,
-                        "Breaking Factor", "Breaking multiplier, the final factor is the product of this and the deceleration factor")
+                        "Breaking Factor", "Determines the deceleration when opposing the current direction of motion, the product of this number and Walking Acceleration creates the deceleration that's used")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Scale Factors")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -184,6 +185,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_crouchTime,
                         "Crouch Time", "Determines the time it takes to complete the crouch")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
+                        "Crouch Standing Head Clearance", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchEnableToggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
                     ->DataElement(nullptr,
@@ -214,11 +218,11 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
                         "XY Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_capsuleOffset,
-                        "Capsule Grounded Offset (m)", "The capsule's ground detect offset in meters")
+                        &FirstPersonControllerComponent::m_groundedSphereCastOffset,
+                        "Grounded Offset (m)", "The sphere cast's ground detect offset in meters")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_capsuleJumpHoldOffset,
-                        "Capsule Jump Hold Offset (m)", "The capsule's jump hold offset in meters, it is recommended to keep this number less than or equal to the PhysX Character Controller's capsule height")
+                        &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset,
+                        "Jump Hold Offset (m)", "The sphere cast's jump hold offset in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
                         "Enable Double Jump", "Turn this on if you want to enable double jumping")
@@ -230,7 +234,7 @@ namespace FirstPersonController
                         "Update X&Y Velocity When Descending", "Determines if the X&Y velocity components will be updated when descending")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYOnlyNearGround,
-                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close capsule has an intersection, if the ascending and descending options are disabled then this will effectively do nothing");
+                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close sphere cast has an intersection, if the ascending and descending options are disabled then this will effectively do nothing");
             }
         }
 
@@ -252,14 +256,16 @@ namespace FirstPersonController
                 ->Event("Get Jump Key Value", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
-                ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetInitialJumpVelocity)
-                ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetInitialJumpVelocity)
+                ->Event("Get Z Velocity", &FirstPersonControllerComponentRequests::GetZVelocity)
+                ->Event("Set Z Velocity", &FirstPersonControllerComponentRequests::SetZVelocity)
+                ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
+                ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
-                ->Event("Get Capsule Offset", &FirstPersonControllerComponentRequests::GetCapsuleOffset)
-                ->Event("Set Capsule Offset", &FirstPersonControllerComponentRequests::SetCapsuleOffset)
-                ->Event("Get Capsule Jump Hold Offset", &FirstPersonControllerComponentRequests::GetCapsuleJumpHoldOffset)
-                ->Event("Set Capsule Jump Hold Offset", &FirstPersonControllerComponentRequests::SetCapsuleJumpHoldOffset)
+                ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
+                ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
+                ->Event("Get Jump Hold Offset", &FirstPersonControllerComponentRequests::GetJumpHoldOffset)
+                ->Event("Set Jump Hold Offset", &FirstPersonControllerComponentRequests::SetJumpHoldOffset)
                 ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -331,10 +337,6 @@ namespace FirstPersonController
         //AZ_Printf("", "m_capsuleHeight = %.10f", m_capsuleHeight);
         //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
         //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
-
-        // Calculate the actual offset that will be used to translate the intersection capsule
-        m_capsuleOffsetTranslation = m_capsuleHeight/2.f - m_capsuleOffset;
-        m_capsuleJumpHoldOffsetTranslation = m_capsuleHeight/2.f - m_capsuleJumpHoldOffset;
 
         m_obtainedPhysxCharacterValues = true;
 
@@ -809,10 +811,6 @@ namespace FirstPersonController
             m_capsuleHeight += cameraTravelDelta;
             //AZ_Printf("", "Crouching capsule height = %.10f", m_capsuleHeight);
 
-            // Recalculate the ground detect shapecast capsule's offset
-            m_capsuleOffsetTranslation = m_capsuleHeight/2.f - m_capsuleOffset;
-            m_capsuleJumpHoldOffsetTranslation = m_capsuleHeight/2.f - m_capsuleJumpHoldOffset;
-
             PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
                 &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleHeight);
 
@@ -821,26 +819,25 @@ namespace FirstPersonController
         // Stand up
         else if(!m_crouching && m_cameraLocalZTravelDistance != 0.f)
         {
-            // Create a shapecast capsule that will be used to detect whether there is an obstruction
+            // Create a shapecast sphere that will be used to detect whether there is an obstruction
             // above the players head, and prevent them from fully standing up if there is
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            // Rotate the pose by 90 degrees on the Y axis since by default the capsule's height
-            // is oriented along the X axis when we want it oriented along the Z axis
-            AZ::Transform capsuleIntersectionPose = AZ::Transform::CreateRotationY(AZ::Constants::HalfPi);
-            // Move the capsule to the location of the character and apply the Z offset
+            AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
 
-            capsuleIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight/2.f + m_capsuleOffset));
+            // Move the sphere to the location of the character and apply the Z offset
+            sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
 
-            AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+            AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
                 m_capsuleRadius,
-                m_capsuleHeight,
-                capsuleIntersectionPose,
+                sphereIntersectionPose,
                 AZ::Vector3(0.f, 0.f, 1.f),
-                0.f,
+                m_uncrouchHeadSphereCastOffset,
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                 AzPhysics::CollisionGroup::All,
                 nullptr);
+
+            request.m_reportMultipleHits = true;
 
             AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
             AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
@@ -891,10 +888,6 @@ namespace FirstPersonController
             // Add the distance to get back to the standing height
             m_capsuleHeight += cameraTravelDelta;
             //AZ_Printf("", "Standing capsule height = %.10f", m_capsuleHeight);
-
-            // Recalculate the ground detect shapecast capsule's offset
-            m_capsuleOffsetTranslation = m_capsuleHeight/2.f - m_capsuleOffset;
-            m_capsuleJumpHoldOffsetTranslation = m_capsuleHeight/2.f - m_capsuleJumpHoldOffset;
 
             PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
                 &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleHeight);
@@ -1000,19 +993,16 @@ namespace FirstPersonController
         const bool prevGrounded = m_grounded;
         const bool prevGroundClose = m_groundClose;
 
-        // Rotate the pose by 90 degrees on the Y axis since by default the capsule's height
-        // is oriented along the X axis when we want it oriented along the Z axis
-        AZ::Transform capsuleIntersectionPose = AZ::Transform::CreateRotationY(AZ::Constants::HalfPi);
-        // Move the capsule to the location of the character and apply the Z offset
+        AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
 
-        capsuleIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleOffsetTranslation));
+        // Move the sphere to the location of the character and apply the Z offset
+        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleRadius));
 
-        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
             m_capsuleRadius,
-            m_capsuleHeight,
-            capsuleIntersectionPose,
+            sphereIntersectionPose,
             AZ::Vector3(0.f, 0.f, -1.f),
-            0.f,
+            m_groundedSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
             AzPhysics::CollisionGroup::All,
             nullptr);
@@ -1083,35 +1073,32 @@ namespace FirstPersonController
             m_airTime = 0.f;
         }
         // Check to see if the character is still close to the ground after pressing and holding the jump key
-        // to allow them to jump higher based on the m_capsuleJumpHoldOffsetTranslation distance
+        // to allow them to jump higher based on the m_sphereCastJumpHoldOffset distance
         else
         {
-            m_airTime += deltaTime;
+             m_airTime += deltaTime;
 
-            capsuleIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleJumpHoldOffsetTranslation));
+             request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                 m_capsuleRadius,
+                 sphereIntersectionPose,
+                 AZ::Vector3(0.f, 0.f, -1.f),
+                 m_sphereCastJumpHoldOffset,
+                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                 AzPhysics::CollisionGroup::All,
+                 nullptr);
 
-            request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-                m_capsuleRadius,
-                m_capsuleHeight,
-                capsuleIntersectionPose,
-                AZ::Vector3(0.f, 0.f, -1.f),
-                0.f,
-                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                AzPhysics::CollisionGroup::All,
-                nullptr);
+             request.m_reportMultipleHits = true;
 
-            request.m_reportMultipleHits = true;
+             hits = sceneInterface->QueryScene(sceneHandle, &request);
+             AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
+             m_groundClose = hits ? true : false;
 
-            hits = sceneInterface->QueryScene(sceneHandle, &request);
-            AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
-            m_groundClose = hits ? true : false;
-
-            if(m_scriptSetGroundCloseTick)
-            {
-                m_groundClose = m_scriptGroundClose;
-                m_scriptSetGroundCloseTick = false;
-            }
-            //AZ_Printf("", "m_groundClose = %s", m_groundClose ? "true" : "false");
+             if(m_scriptSetGroundCloseTick)
+             {
+                 m_groundClose = m_scriptGroundClose;
+                 m_scriptSetGroundCloseTick = false;
+             }
+             //AZ_Printf("", "m_groundClose = %s", m_groundClose ? "true" : "false");
         }
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
@@ -1124,18 +1111,18 @@ namespace FirstPersonController
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnUngrounded);
     }
 
-    void FirstPersonControllerComponent::UpdateJumpTime()
+    void FirstPersonControllerComponent::UpdateJumpMaxHoldTime()
     {
-        // Calculate the amount of time that the jump key can be held based on m_capsuleJumpHoldOffset
+        // Calculate the amount of time that the jump key can be held based on m_sphereCastJumpHoldOffset
         // divided by the average of the initial jump velocity and the velocity at the edge of the capsule
         const float jumpVelocityCapsuleEdgeSquared = m_jumpInitialVelocity*m_jumpInitialVelocity
-                                                         + 2.f*m_gravity*m_jumpHeldGravityFactor*m_capsuleJumpHoldOffset;
+                                                         + 2.f*m_gravity*m_jumpHeldGravityFactor*m_sphereCastJumpHoldOffset;
         // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
         // then compute how long the jump key is held while still inside the jump hold offset intersection capsule
         if(jumpVelocityCapsuleEdgeSquared >= 0.f)
-            m_jumpMaxHoldTime = m_capsuleJumpHoldOffset / ((m_jumpInitialVelocity
+            m_jumpMaxHoldTime = m_sphereCastJumpHoldOffset / ((m_jumpInitialVelocity
                                                         + sqrt(jumpVelocityCapsuleEdgeSquared)) / 2.f);
-        // Otherwise the apogee will be reached inside m_capsuleJumpHoldOffset
+        // Otherwise the apogee will be reached inside m_sphereCastJumpHoldOffset
         // and the jump time needs to computed accordingly
         else
             m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity*m_jumpHeldGravityFactor));
@@ -1245,7 +1232,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_jumpCounter = %.10f", m_jumpCounter);
         //AZ_Printf("", "deltaTime = %.10f", deltaTime);
         //AZ_Printf("", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
-        //AZ_Printf("", "m_capsuleJumpHoldOffset = %.10f", m_capsuleJumpHoldOffset);
+        //AZ_Printf("", "m_sphereCastJumpHoldOffset = %.10f", m_sphereCastJumpHoldOffset);
         //static float prevZVelocity = m_zVelocity;
         //AZ_Printf("", "dvz/dt = %.10f", (m_zVelocity - prevZVelocity)/deltaTime);
         //AZ_Printf("","");
@@ -1323,16 +1310,24 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGravity(const float& new_gravity)
     {
         m_gravity = new_gravity;
-        UpdateJumpTime();
+        UpdateJumpMaxHoldTime();
     }
-    float FirstPersonControllerComponent::GetInitialJumpVelocity() const
+    float FirstPersonControllerComponent::GetZVelocity() const
+    {
+        return m_zVelocity;
+    }
+    void FirstPersonControllerComponent::SetZVelocity(const float& new_zVelocity)
+    {
+        m_zVelocity = new_zVelocity;
+    }
+    float FirstPersonControllerComponent::GetJumpInitialVelocity() const
     {
         return m_jumpInitialVelocity;
     }
-    void FirstPersonControllerComponent::SetInitialJumpVelocity(const float& new_jumpInitialVelocity)
+    void FirstPersonControllerComponent::SetJumpInitialVelocity(const float& new_jumpInitialVelocity)
     {
         m_jumpInitialVelocity = new_jumpInitialVelocity;
-        UpdateJumpTime();
+        UpdateJumpMaxHoldTime();
     }
     bool FirstPersonControllerComponent::GetDoubleJump() const
     {
@@ -1342,23 +1337,22 @@ namespace FirstPersonController
     {
         m_doubleJumpEnabled = new_doubleJumpEnabled;
     }
-    float FirstPersonControllerComponent::GetCapsuleOffset() const
+    float FirstPersonControllerComponent::GetGroundedOffset() const
     {
-        return m_capsuleOffset;
+        return m_groundedSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetCapsuleOffset(const float& new_capsuleOffset)
+    void FirstPersonControllerComponent::SetGroundedOffset(const float& new_groundedSphereCastOffset)
     {
-        m_capsuleOffset = new_capsuleOffset;
-        UpdateJumpTime();
+        m_groundedSphereCastOffset = new_groundedSphereCastOffset;
     }
-    float FirstPersonControllerComponent::GetCapsuleJumpHoldOffset() const
+    float FirstPersonControllerComponent::GetJumpHoldOffset() const
     {
-        return m_capsuleJumpHoldOffset;
+        return m_sphereCastJumpHoldOffset;
     }
-    void FirstPersonControllerComponent::SetCapsuleJumpHoldOffset(const float& new_capsuleJumpHoldOffset)
+    void FirstPersonControllerComponent::SetJumpHoldOffset(const float& new_sphereCastJumpHoldOffset)
     {
-        m_capsuleJumpHoldOffset = new_capsuleJumpHoldOffset;
-        UpdateJumpTime();
+        m_sphereCastJumpHoldOffset = new_sphereCastJumpHoldOffset;
+        UpdateJumpMaxHoldTime();
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {
@@ -1471,6 +1465,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchTime(const float& new_crouchTime)
     {
         m_crouchTime = new_crouchTime;
+    }
+    float FirstPersonControllerComponent::GetUncrouchHeadSphereCastOffset() const
+    {
+        return m_uncrouchHeadSphereCastOffset;
+    }
+    void FirstPersonControllerComponent::SetUncrouchHeadSphereCastOffset(const float& new_uncrouchHeadSphereCastOffset)
+    {
+        m_uncrouchHeadSphereCastOffset = new_uncrouchHeadSphereCastOffset;
     }
     bool FirstPersonControllerComponent::GetCrouchEnableToggle() const
     {

@@ -58,14 +58,16 @@ namespace FirstPersonController
         float GetJumpKeyValue() const override;;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
-        float GetInitialJumpVelocity() const override;
-        void SetInitialJumpVelocity(const float& new_jumpInitialVelocity) override;
+        float GetZVelocity() const override;
+        void SetZVelocity(const float& new_zVelocity) override;
+        float GetJumpInitialVelocity() const override;
+        void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_doubleJumpEnabled) override;
-        float GetCapsuleOffset() const override;
-        void SetCapsuleOffset(const float& new_capsuleJumpHoldOffset) override;
-        float GetCapsuleJumpHoldOffset() const override;
-        void SetCapsuleJumpHoldOffset(const float& new_capsuleOffset) override;
+        float GetGroundedOffset() const override;
+        void SetGroundedOffset(const float& new_sphereCastJumpHoldOffset) override;
+        float GetJumpHoldOffset() const override;
+        void SetJumpHoldOffset(const float& new_groundedSphereCastOffset) override;
         float GetMaxGroundedAngleDegrees() const override;
         void SetMaxGroundedAngleDegrees(const float& new_maxGroundedAngleDegrees) override;
         float GetTopWalkSpeed() const override;
@@ -94,6 +96,8 @@ namespace FirstPersonController
         void SetCrouchDistance(const float& new_crouchDistance) override;
         float GetCrouchTime() const override;
         void SetCrouchTime(const float& new_crouchTime) override;
+        float GetUncrouchHeadSphereCastOffset() const override;
+        void SetUncrouchHeadSphereCastOffset(const float& new_uncrouchHeadSphereCastOffset) override;
         bool GetCrouchEnableToggle() const override;
         void SetCrouchEnableToggle(const bool& new_crouchEnableToggle) override;
         bool GetCrouchJumpCausesStanding() const override;
@@ -130,7 +134,7 @@ namespace FirstPersonController
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float& deltaTime);
         void UpdateVelocityXY(const float& deltaTime);
-        void UpdateJumpTime();
+        void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation(const float& deltaTime);
         AZ::Vector3 LerpVelocity(const AZ::Vector3& targetVelocity, const float& deltaTime);
@@ -206,14 +210,13 @@ namespace FirstPersonController
         float m_zVelocityPrevDelta = 0.f;
         float m_capsuleRadius = 0.25f;
         float m_capsuleHeight = 1.753f;
-        // The capsule offset determines how far below the character's feet the ground is detected
-        float m_capsuleOffset = 0.05f;
-        float m_capsuleOffsetTranslation = m_capsuleOffset;
-        // The capsule jump hold offset is used to determine initial (ascending) distance of the of the jump
+        // The grounded sphere cast offset determines how far below the character's feet the ground is detected
+        float m_groundedSphereCastOffset = 0.001f;
+        // The sphere cast jump hold offset is used to determine initial (ascending) distance of the of the jump
         // where the m_jumpHeldGravityFactor is applied to the gravity
-        float m_capsuleJumpHoldOffset = 0.5f;
-        float m_capsuleJumpHoldOffsetTranslation = m_capsuleJumpHoldOffset;
-        float m_jumpMaxHoldTime = m_capsuleJumpHoldOffset / m_jumpInitialVelocity;
+        // It is also used to determine when the ground is close
+        float m_sphereCastJumpHoldOffset = 0.5f;
+        float m_jumpMaxHoldTime = m_sphereCastJumpHoldOffset / m_jumpInitialVelocity;
         float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;
         float m_jumpFallingGravityFactor = 1.1f;
@@ -255,6 +258,9 @@ namespace FirstPersonController
         float m_rightScale = 1.f;
         float m_sprintScale = 1.5f;
         float m_crouchScale = 0.65f;
+        // This sphere cast determines how far above the charcter's head that an obstruction is detected
+        // for allowing them to uncrouch
+        float m_uncrouchHeadSphereCastOffset = 0.1f;
 
         // Event value multipliers
         float m_forwardValue = 0.f;
