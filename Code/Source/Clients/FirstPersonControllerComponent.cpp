@@ -482,7 +482,7 @@ namespace FirstPersonController
         else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LL)
         {
             m_rightValue = 0.f;
-            m_leftValue = -1.f*inputChannel.GetValue();
+            m_leftValue = inputChannel.GetValue();
         }
 
         if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LU)
@@ -493,7 +493,7 @@ namespace FirstPersonController
         else if(channelId == AzFramework::InputDeviceGamepad::ThumbStickDirection::LD)
         {
             m_forwardValue = 0.f;
-            m_backValue = -1.f*inputChannel.GetValue();
+            m_backValue = inputChannel.GetValue();
         }
 
         if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
