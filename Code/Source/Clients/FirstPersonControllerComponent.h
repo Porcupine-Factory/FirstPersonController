@@ -30,7 +30,7 @@ namespace FirstPersonController
         void Activate() override;
         void Deactivate() override;
 
-        static void GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
+        static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
 

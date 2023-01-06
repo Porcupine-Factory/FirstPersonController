@@ -345,7 +345,7 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
     }
 
-    void FirstPersonControllerComponent::GetRequredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
+    void FirstPersonControllerComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
         required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("PhysicsCharacterControllerService"));
@@ -602,6 +602,7 @@ namespace FirstPersonController
         // The sprint value should never be 0 and it shouldn't be applied if you're trying to moving backwards
         if(m_sprintValue == 0.f
            || !m_standing
+           || !m_grounded
            || (!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
            || (m_sprintValue != 1.f
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
