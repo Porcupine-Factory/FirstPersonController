@@ -697,7 +697,7 @@ namespace FirstPersonController
             {
                 m_sprintDecrementPause -= deltaTime;
 
-                if(m_sprintHeldDuration > 0.f && !m_sprintDecrementing)
+                if(m_sprintHeldDuration > 0.f && !m_sprintDecrementing && m_sprintDecrementPause == 0.f)
                 {
                     m_sprintDecrementPause = (m_sprintCooldownTime - m_sprintMaxTime)
                                                 *(m_sprintHeldDuration/m_sprintMaxTime);
@@ -717,7 +717,7 @@ namespace FirstPersonController
                     }
                 }
             }
-            else if(m_sprintCooldownTime <= m_sprintMaxTime)
+            else if(m_sprintCooldownTime <= m_sprintMaxTime && m_sprintDecrementPause == 0.f)
             {
                 m_sprintDecrementPause -= deltaTime;
                 if(m_sprintHeldDuration > 0.f && !m_sprintDecrementing)
@@ -907,8 +907,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateVelocityXY(const float& deltaTime)
     {
-        float forwardBack = m_forwardValue * m_forwardScale + m_backValue * m_backScale;
-        float leftRight = m_leftValue * m_leftScale + m_rightValue * m_rightScale;
+        float forwardBack = m_forwardValue * m_forwardScale + -1.f * m_backValue * m_backScale;
+        float leftRight = -1.f * m_leftValue * m_leftScale + m_rightValue * m_rightScale;
 
         // Remove the scale factor since it's going to be applied after the normalization
         if(forwardBack >= 0.f)
@@ -1446,7 +1446,7 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetSprintPauseTime(const float& new_sprintDecrementPause)
     {
-        m_sprintDecrementPause = new_sprintDecrementPause;
+        m_sprintDecrementPause = m_sprintPrevDecrementPause = new_sprintDecrementPause;
     }
     bool FirstPersonControllerComponent::GetCrouching() const
     {
