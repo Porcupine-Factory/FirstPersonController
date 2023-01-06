@@ -80,6 +80,8 @@ namespace FirstPersonController
         void SetSprintScale(const float& new_sprintScale) override;
         float GetCrouchScale() const override;
         void SetCrouchScale(const float& new_crouchScale) override;
+        float GetSprintMaxTime() const override;
+        void SetSprintMaxTime(const float& new_sprintMaxTime) override;
         float GetSprintHeldTime() const override;
         void SetSprintHeldTime(const float& new_sprintHeldDuration) override;
         float GetSprintCooldown() const override;

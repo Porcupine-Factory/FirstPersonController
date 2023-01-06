@@ -274,6 +274,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Scale", &FirstPersonControllerComponentRequests::SetSprintScale)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
                 ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
+                ->Event("Get Sprint Max Time", &FirstPersonControllerComponentRequests::GetSprintMaxTime)
+                ->Event("Set Sprint Max Time", &FirstPersonControllerComponentRequests::SetSprintMaxTime)
                 ->Event("Get Sprint Held Time", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
                 ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
                 ->Event("Get Sprint Cooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
@@ -1413,6 +1415,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchScale(const float& new_crouchScale)
     {
         m_crouchScale = new_crouchScale;
+    }
+    float FirstPersonControllerComponent::GetSprintMaxTime() const
+    {
+        return m_sprintMaxTime;
+    }
+    void FirstPersonControllerComponent::SetSprintMaxTime(const float& new_sprintMaxTime)
+    {
+        m_sprintMaxTime = new_sprintMaxTime;
     }
     float FirstPersonControllerComponent::GetSprintHeldTime() const
     {
