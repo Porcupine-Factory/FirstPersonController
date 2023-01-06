@@ -162,6 +162,7 @@ namespace FirstPersonController
 
         // Sprint application variables
         float m_sprintPressedValue = 1.f;
+        float m_sprintPrevValue = 1.f;
         float m_sprintVelocityAdjust = 0.f;
         float m_sprintAccelAdjust = 0.f;
         float m_sprintIncrementTime = 0.f;
@@ -210,7 +211,7 @@ namespace FirstPersonController
         // where the m_jumpHeldGravityFactor is applied to the gravity
         float m_capsuleJumpHoldOffset = 0.5f;
         float m_capsuleJumpHoldOffsetTranslation = m_capsuleJumpHoldOffset;
-        float m_jumpTime = m_capsuleJumpHoldOffset / m_jumpInitialVelocity;
+        float m_jumpMaxHoldTime = m_capsuleJumpHoldOffset / m_jumpInitialVelocity;
         float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;
         float m_jumpFallingGravityFactor = 1.1f;

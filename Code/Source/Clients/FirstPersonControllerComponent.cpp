@@ -310,7 +310,31 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
-        UpdateJumpTime();
+        // Obtain the PhysX Character Controller's capsule height and radius
+        // and use those dimensions for the ground detection shapecast capsule
+        PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
+            &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+        PhysX::CharacterControllerRequestBus::EventResult(m_capsuleRadius, GetEntityId(),
+            &PhysX::CharacterControllerRequestBus::Events::GetRadius);
+        Physics::CharacterRequestBus::EventResult(m_maxGroundedAngleDegrees, GetEntityId(),
+            &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
+
+        if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
+            m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
+
+        // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
+        // maximum slope angle value
+        m_maxGroundedAngleDegrees += 0.01f;
+
+        //AZ_Printf("", "m_capsuleHeight = %.10f", m_capsuleHeight);
+        //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
+        //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
+
+        // Calculate the actual offset that will be used to translate the intersection capsule
+        m_capsuleOffsetTranslation = m_capsuleHeight/2.f - m_capsuleOffset;
+        m_capsuleJumpHoldOffsetTranslation = m_capsuleHeight/2.f - m_capsuleJumpHoldOffset;
+
+        m_obtainedPhysxCharacterValues = true;
 
         if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
         {
@@ -371,7 +395,10 @@ namespace FirstPersonController
 
         if(*inputId == m_SprintEventId)
         {
-            m_sprintValue = m_sprintPressedValue = value * m_sprintScale;
+            if(m_grounded)
+                m_sprintValue = m_sprintPressedValue = value * m_sprintScale;
+            else
+                m_sprintValue = m_sprintPressedValue = 1.f;
         }
 
         for(auto& it_event : m_controlMap)
@@ -421,7 +448,10 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if(*inputId == m_SprintEventId)
         {
-            m_sprintValue = m_sprintPressedValue = value * m_sprintScale;
+            if(m_grounded || m_sprintPrevValue != 1.f)
+                m_sprintValue = m_sprintPressedValue = value * m_sprintScale;
+            else
+                m_sprintValue = m_sprintPressedValue = 1.f;
         }
     }
 
@@ -599,10 +629,10 @@ namespace FirstPersonController
         if(m_crouchSprintCausesStanding && m_sprintValue != 1.f && m_crouching)
             m_crouching = false;
 
-        // The sprint value should never be 0 and it shouldn't be applied if you're trying to moving backwards
+        // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
+        // and it shouldn't be applied if you're crouching
         if(m_sprintValue == 0.f
            || !m_standing
-           || !m_grounded
            || (!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
            || (m_sprintValue != 1.f
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
@@ -610,12 +640,11 @@ namespace FirstPersonController
                    (targetVelocity.GetY() < 0.f)) ))
             m_sprintValue = 1.f;
 
-        // Set the sprint value to 1 and reset the counter if there is no movement
+        m_sprintPrevValue = m_sprintValue;
+
+        // Reset the counter if there is no movement
         if(!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
-        {
-            m_sprintValue = 1.f;
             m_sprintIncrementTime = 0.f;
-        }
 
         const float totalSprintTime = ((m_sprintValue-1.f)*m_speed)/m_accel;
 
@@ -963,40 +992,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
     {
-        // Obtaining the PhysX Character Controller values here instead of the Activate method
-        // because doing this inside the Activate method does not yield what is given to the PhysX component
-        // even though PhysicsCharacterControllerService is set as a required service
-        if(!m_obtainedPhysxCharacterValues)
-        {
-            // Obtain the PhysX Character Controller's capsule height and radius
-            // and use those dimensions for the ground detection shapecast capsule
-            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
-                &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleRadius, GetEntityId(),
-                &PhysX::CharacterControllerRequestBus::Events::GetRadius);
-            Physics::CharacterRequestBus::EventResult(m_maxGroundedAngleDegrees, GetEntityId(),
-                &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
-
-            if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
-                m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
-
-            // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
-            // maximum slope angle value
-            m_maxGroundedAngleDegrees += 0.01f;
-
-            //AZ_Printf("", "m_capsuleHeight = %.10f", m_capsuleHeight);
-            //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
-            //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
-
-            // Calculate the actual offset that will be used to translate the intersection capsule
-            m_capsuleOffsetTranslation = m_capsuleHeight/2.f - m_capsuleOffset;
-            m_capsuleJumpHoldOffsetTranslation = m_capsuleHeight/2.f - m_capsuleJumpHoldOffset;
-
-            UpdateJumpTime();
-
-            m_obtainedPhysxCharacterValues = true;
-        }
-
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
         // Used to determine when event notifications occur
@@ -1136,12 +1131,12 @@ namespace FirstPersonController
         // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
         // then compute how long the jump key is held while still inside the jump hold offset intersection capsule
         if(jumpVelocityCapsuleEdgeSquared >= 0.f)
-            m_jumpTime = m_capsuleJumpHoldOffset / ((m_jumpInitialVelocity
+            m_jumpMaxHoldTime = m_capsuleJumpHoldOffset / ((m_jumpInitialVelocity
                                                         + sqrt(jumpVelocityCapsuleEdgeSquared)) / 2.f);
         // Otherwise the apogee will be reached inside m_capsuleJumpHoldOffset
         // and the jump time needs to computed accordingly
         else
-            m_jumpTime = abs(m_jumpInitialVelocity / (m_gravity*m_jumpHeldGravityFactor));
+            m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity*m_jumpHeldGravityFactor));
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
@@ -1181,7 +1176,7 @@ namespace FirstPersonController
                     m_secondJump = false;
             }
         }
-        else if(m_jumpCounter < m_jumpTime && currentVelocity.GetZ() > 0.f && m_jumpHeld && !m_jumpReqRepress)
+        else if(m_jumpCounter < m_jumpMaxHoldTime && currentVelocity.GetZ() > 0.f && m_jumpHeld && !m_jumpReqRepress)
         {
             if(m_jumpValue == 0.f)
             {
@@ -1247,7 +1242,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
         //AZ_Printf("", "m_jumpCounter = %.10f", m_jumpCounter);
         //AZ_Printf("", "deltaTime = %.10f", deltaTime);
-        //AZ_Printf("", "m_jumpTime = %.10f", m_jumpTime);
+        //AZ_Printf("", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
         //AZ_Printf("", "m_capsuleJumpHoldOffset = %.10f", m_capsuleJumpHoldOffset);
         //static float prevZVelocity = m_zVelocity;
         //AZ_Printf("", "dvz/dt = %.10f", (m_zVelocity - prevZVelocity)/deltaTime);
