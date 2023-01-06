@@ -579,7 +579,7 @@ namespace FirstPersonController
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
             if(targetVelocity.GetLength() != 0.f && abs(applyVelocityWorld.Angle(targetVelocity)) > AZ::Constants::HalfPi)
-                decelerationFactor *= m_break;
+                decelerationFactor = m_break;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
             m_lerpTime = lastLerpTime + lerpDeltaTime * decelerationFactor;
