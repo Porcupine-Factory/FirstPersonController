@@ -1461,7 +1461,12 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetStaminaPercentage(const float& new_staminaPercentage)
     {
         const float prevStaminaPercentage = m_staminaPercentage;
-        m_staminaPercentage = new_staminaPercentage;
+        if(new_staminaPercentage >= 0.f && new_staminaPercentage <= 100.f)
+            m_staminaPercentage = new_staminaPercentage;
+        else if(new_staminaPercentage < 0.f)
+            m_staminaPercentage = 0.f;
+        else
+            m_staminaPercentage = 100.f;
         m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
         if(m_staminaPercentage < prevStaminaPercentage)
             m_staminaIncrementing = false;
