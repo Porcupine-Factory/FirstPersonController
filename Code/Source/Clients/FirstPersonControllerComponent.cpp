@@ -981,9 +981,9 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprintDecrementPause = %.10f", m_sprintDecrementPause);
         //AZ_Printf("", "m_sprintPrevDecrementPause = %.10f", m_sprintPrevDecrementPause);
         //AZ_Printf("", "m_sprintCooldown = %.10f", m_sprintCooldown);
-        //static float prevVelocity = m_applyVelocity.GetLength();
-        //AZ_Printf("", "dv/dt = %.10f", (m_applyVelocity.GetLength() - prevVelocity)/deltaTime);
-        //prevVelocity = m_applyVelocity.GetLength();
+        //static AZ::Vector3 prevVelocity = m_applyVelocity;
+        //AZ_Printf("", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocity)/deltaTime);
+        //prevVelocity = m_applyVelocity;
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "X Position = %.10f", pos.GetX());
         //AZ_Printf("", "Y Position = %.10f", pos.GetY());
