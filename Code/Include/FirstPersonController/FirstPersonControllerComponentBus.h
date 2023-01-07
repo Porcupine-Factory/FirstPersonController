@@ -29,6 +29,8 @@ namespace FirstPersonController
         virtual void SetGroundedOffset(const float&) = 0;
         virtual float GetJumpHoldOffset() const = 0;
         virtual void SetJumpHoldOffset(const float&) = 0;
+        virtual float GetSphereCastRadiusPercentageIncrease() const = 0;
+        virtual void SetSphereCastRadiusPercentageIncrease(const float&) = 0;
         virtual float GetMaxGroundedAngleDegrees() const = 0;
         virtual void SetMaxGroundedAngleDegrees(const float&) = 0;
         virtual float GetTopWalkSpeed() const = 0;

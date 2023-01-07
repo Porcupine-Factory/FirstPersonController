@@ -68,6 +68,8 @@ namespace FirstPersonController
         void SetGroundedOffset(const float& new_sphereCastJumpHoldOffset) override;
         float GetJumpHoldOffset() const override;
         void SetJumpHoldOffset(const float& new_groundedSphereCastOffset) override;
+        float GetSphereCastRadiusPercentageIncrease() const override;
+        void SetSphereCastRadiusPercentageIncrease(const float& new_sphereCastRadiusPercentageIncrease) override;
         float GetMaxGroundedAngleDegrees() const override;
         void SetMaxGroundedAngleDegrees(const float& new_maxGroundedAngleDegrees) override;
         float GetTopWalkSpeed() const override;
@@ -216,6 +218,8 @@ namespace FirstPersonController
         // where the m_jumpHeldGravityFactor is applied to the gravity
         // It is also used to determine when the ground is close
         float m_sphereCastJumpHoldOffset = 0.5f;
+        // The value of 41.5% was determined to work well based on testing
+        float m_sphereCastRadiusPercentageIncrease = 41.5;
         float m_jumpMaxHoldTime = m_sphereCastJumpHoldOffset / m_jumpInitialVelocity;
         float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;

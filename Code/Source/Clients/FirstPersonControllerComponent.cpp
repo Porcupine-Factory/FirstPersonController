@@ -73,6 +73,7 @@ namespace FirstPersonController
               ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
               ->Field("Jump Hold Offset (m)", &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset)
+              ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_sphereCastRadiusPercentageIncrease)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_updateXYDecending)
@@ -224,6 +225,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset,
                         "Jump Hold Offset (m)", "The sphere cast's jump hold offset in meters")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sphereCastRadiusPercentageIncrease,
+                        "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
                         "Enable Double Jump", "Turn this on if you want to enable double jumping")
                     ->DataElement(nullptr,
@@ -266,6 +270,8 @@ namespace FirstPersonController
                 ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
                 ->Event("Get Jump Hold Offset", &FirstPersonControllerComponentRequests::GetJumpHoldOffset)
                 ->Event("Set Jump Hold Offset", &FirstPersonControllerComponentRequests::SetJumpHoldOffset)
+                ->Event("Get Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetSphereCastRadiusPercentageIncrease)
+                ->Event("Set Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetSphereCastRadiusPercentageIncrease)
                 ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -996,10 +1002,10 @@ namespace FirstPersonController
         AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
 
         // Move the sphere to the location of the character and apply the Z offset
-        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleRadius));
+        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_sphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            m_capsuleRadius,
+            (1.f + m_sphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
             sphereIntersectionPose,
             AZ::Vector3(0.f, 0.f, -1.f),
             m_groundedSphereCastOffset,
@@ -1079,7 +1085,7 @@ namespace FirstPersonController
              m_airTime += deltaTime;
 
              request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                 m_capsuleRadius,
+                 (1.f + m_sphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
                  sphereIntersectionPose,
                  AZ::Vector3(0.f, 0.f, -1.f),
                  m_sphereCastJumpHoldOffset,
@@ -1353,6 +1359,14 @@ namespace FirstPersonController
     {
         m_sphereCastJumpHoldOffset = new_sphereCastJumpHoldOffset;
         UpdateJumpMaxHoldTime();
+    }
+    float FirstPersonControllerComponent::GetSphereCastRadiusPercentageIncrease() const
+    {
+        return m_sphereCastRadiusPercentageIncrease;
+    }
+    void FirstPersonControllerComponent::SetSphereCastRadiusPercentageIncrease(const float& new_sphereCastRadiusPercentageIncrease)
+    {
+        m_sphereCastRadiusPercentageIncrease = new_sphereCastRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {
