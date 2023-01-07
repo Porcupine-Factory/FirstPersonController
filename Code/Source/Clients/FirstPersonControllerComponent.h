@@ -76,8 +76,8 @@ namespace FirstPersonController
         void SetWalkAcceleration(const float& new_accel) override;
         float GetWalkDeceleration() const override;
         void SetWalkDeceleration(const float& new_decel) override;
-        float GetWalkBreak() const override;
-        void SetWalkBreak(const float& new_break) override;
+        float GetOpposingDecel() const override;
+        void SetOpposingDecel(const float& new_opposingDecel) override;
         float GetSprintScale() const override;
         void SetSprintScale(const float& new_sprintScale) override;
         float GetCrouchScale() const override;
@@ -247,8 +247,8 @@ namespace FirstPersonController
         float m_jumpAccelFactor = 0.5f;
 
         // Deceleration factor
-        float m_decel = 1.414f;
-        float m_break = 1.414f;
+        float m_decel = 1.5f;
+        float m_opposingDecel = 2.0f;
 
         // Movement scale factors
         // assuming the event value multipliers are all +/-1.0

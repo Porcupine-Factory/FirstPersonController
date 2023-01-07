@@ -50,7 +50,7 @@ namespace FirstPersonController
               ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
-              ->Field("Breaking Factor", &FirstPersonControllerComponent::m_break)
+              ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
 
               // Sprint Timing group
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprintMaxTime)
@@ -143,8 +143,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_decel,
                         "Deceleration Factor", "Deceleration multiplier")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_break,
-                        "Breaking Factor", "Determines the deceleration when opposing the current direction of motion, the product of this number and Walking Acceleration creates the deceleration that's used")
+                        &FirstPersonControllerComponent::m_opposingDecel,
+                        "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion, the product of this number and Walking Acceleration creates the deceleration that's used")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Scale Factors")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -274,8 +274,8 @@ namespace FirstPersonController
                 ->Event("Set Walk Acceleration", &FirstPersonControllerComponentRequests::SetWalkAcceleration)
                 ->Event("Get Walk Deceleration", &FirstPersonControllerComponentRequests::GetWalkDeceleration)
                 ->Event("Set Walk Deceleration", &FirstPersonControllerComponentRequests::SetWalkDeceleration)
-                ->Event("Get Walk Break", &FirstPersonControllerComponentRequests::GetWalkBreak)
-                ->Event("Set Walk Break", &FirstPersonControllerComponentRequests::SetWalkBreak)
+                ->Event("Get Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::GetOpposingDecel)
+                ->Event("Set Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::SetOpposingDecel)
                 ->Event("Get Sprint Scale", &FirstPersonControllerComponentRequests::GetSprintScale)
                 ->Event("Set Sprint Scale", &FirstPersonControllerComponentRequests::SetSprintScale)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
@@ -613,7 +613,7 @@ namespace FirstPersonController
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
             if(targetVelocity.GetLength() != 0.f && abs(applyVelocityWorld.Angle(targetVelocity)) > AZ::Constants::HalfPi)
-                decelerationFactor = m_break;
+                decelerationFactor = m_opposingDecel;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
             m_lerpTime = lastLerpTime + lerpDeltaTime * decelerationFactor;
@@ -1386,13 +1386,13 @@ namespace FirstPersonController
     {
         m_decel = new_decel;
     }
-    float FirstPersonControllerComponent::GetWalkBreak() const
+    float FirstPersonControllerComponent::GetOpposingDecel() const
     {
-        return m_break;
+        return m_opposingDecel;
     }
-    void FirstPersonControllerComponent::SetWalkBreak(const float& new_break)
+    void FirstPersonControllerComponent::SetOpposingDecel(const float& new_opposingDecel)
     {
-        m_break = new_break;
+        m_opposingDecel = new_opposingDecel;
     }
     float FirstPersonControllerComponent::GetSprintScale() const
     {
