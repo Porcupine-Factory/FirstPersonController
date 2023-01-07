@@ -671,6 +671,8 @@ namespace FirstPersonController
             m_sprintIncrementTime += deltaTime;
             m_sprintHeldDuration += deltaTime * m_sprintVelocityAdjust;
 
+            m_sprintDecrementPause = 0.f;
+
             m_staminaIncrementing = false;
 
             if(m_sprintIncrementTime > totalSprintTime)
@@ -705,16 +707,16 @@ namespace FirstPersonController
             // decrementing the sprint held duration
             else if(m_sprintCooldownTime > m_sprintMaxTime)
             {
-                m_sprintDecrementPause -= deltaTime;
-
                 if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
                 {
                     m_sprintDecrementPause = (m_sprintCooldownTime - m_sprintMaxTime)
-                                                *(m_sprintHeldDuration/m_sprintMaxTime);
+                                                *(m_sprintHeldDuration/m_sprintMaxTime) + deltaTime;
                     // m_sprintPrevDecrementPause is not used here, but setting it for potential future use
                     m_sprintPrevDecrementPause = m_sprintDecrementPause;
                     m_staminaIncrementing = true;
                 }
+
+                m_sprintDecrementPause -= deltaTime;
 
                 if(m_sprintDecrementPause <= 0.f)
                 {
