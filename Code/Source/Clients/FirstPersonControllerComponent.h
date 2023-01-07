@@ -88,6 +88,8 @@ namespace FirstPersonController
         void SetSprintMaxTime(const float& new_sprintMaxTime) override;
         float GetSprintHeldTime() const override;
         void SetSprintHeldTime(const float& new_sprintHeldDuration) override;
+        float GetStaminaPercentage() const override;
+        void SetStaminaPercentage(const float& new_staminaPercentage) override;
         float GetSprintCooldown() const override;
         void SetSprintCooldown(const float& new_sprintCooldown) override;
         float GetSprintPauseTime() const override;
@@ -180,7 +182,10 @@ namespace FirstPersonController
         float m_sprintMaxTime = 3.f;
         float m_sprintCooldown = 0.f;
         float m_sprintCooldownTime = 5.f;
-        bool m_sprintDecrementing = false;
+        bool m_staminaIncrementing = false;
+
+        // Stamina application variables
+        float m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
 
         // Crouch application variables
         float m_crouchDistance = 0.5f;

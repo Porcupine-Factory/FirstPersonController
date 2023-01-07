@@ -290,6 +290,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Max Time", &FirstPersonControllerComponentRequests::SetSprintMaxTime)
                 ->Event("Get Sprint Held Time", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
                 ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
+                ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
+                ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
                 ->Event("Get Sprint Cooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
                 ->Event("Set Sprint Cooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
                 ->Event("Get Sprint Pause Time", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
@@ -669,7 +671,7 @@ namespace FirstPersonController
             m_sprintIncrementTime += deltaTime;
             m_sprintHeldDuration += deltaTime * m_sprintVelocityAdjust;
 
-            m_sprintDecrementing = false;
+            m_staminaIncrementing = false;
 
             if(m_sprintIncrementTime > totalSprintTime)
                 m_sprintIncrementTime = totalSprintTime;
@@ -705,13 +707,13 @@ namespace FirstPersonController
             {
                 m_sprintDecrementPause -= deltaTime;
 
-                if(m_sprintHeldDuration > 0.f && !m_sprintDecrementing && m_sprintDecrementPause == 0.f)
+                if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
                 {
                     m_sprintDecrementPause = (m_sprintCooldownTime - m_sprintMaxTime)
                                                 *(m_sprintHeldDuration/m_sprintMaxTime);
                     // m_sprintPrevDecrementPause is not used here, but setting it for potential future use
                     m_sprintPrevDecrementPause = m_sprintDecrementPause;
-                    m_sprintDecrementing = true;
+                    m_staminaIncrementing = true;
                 }
 
                 if(m_sprintDecrementPause <= 0.f)
@@ -721,14 +723,13 @@ namespace FirstPersonController
                     if(m_sprintHeldDuration <= 0.f)
                     {
                         m_sprintHeldDuration = 0.f;
-                        m_sprintDecrementing = false;
+                        m_staminaIncrementing = false;
                     }
                 }
             }
-            else if(m_sprintCooldownTime <= m_sprintMaxTime && m_sprintDecrementPause == 0.f)
+            else if(m_sprintCooldownTime <= m_sprintMaxTime)
             {
-                m_sprintDecrementPause -= deltaTime;
-                if(m_sprintHeldDuration > 0.f && !m_sprintDecrementing)
+                if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
                 {
                     // Making the m_sprintDecrementPause a factor of 0.1 here is somewhat arbitrary,
                     // this can be set to any other desired number if you have
@@ -736,10 +737,12 @@ namespace FirstPersonController
                     // The decrement time here is also set based on the cooldown time and the ratio of the
                     // held duration divided by the maximum consecutive sprint time so that the pause is longer
                     // if you recently sprinted for a while.
-                    m_sprintDecrementPause = 0.1f * m_sprintCooldownTime * m_sprintHeldDuration / m_sprintMaxTime;
+                    m_sprintDecrementPause = 0.1f * m_sprintCooldownTime * m_sprintHeldDuration / m_sprintMaxTime + deltaTime;
                     m_sprintPrevDecrementPause = m_sprintDecrementPause;
-                    m_sprintDecrementing = true;
+                    m_staminaIncrementing = true;
                 }
+
+                m_sprintDecrementPause -= deltaTime;
 
                 if(m_sprintDecrementPause <= 0.f)
                 {
@@ -753,11 +756,14 @@ namespace FirstPersonController
                     if(m_sprintHeldDuration <= 0.f)
                     {
                         m_sprintHeldDuration = 0.f;
-                        m_sprintDecrementing = false;
+                        m_staminaIncrementing = false;
                     }
                 }
             }
         }
+
+        m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        //AZ_Printf("", "Stamina = %.10f\%", m_staminaPercentage);
     }
 
     void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
@@ -1431,6 +1437,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintMaxTime(const float& new_sprintMaxTime)
     {
         m_sprintMaxTime = new_sprintMaxTime;
+        m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
     }
     float FirstPersonControllerComponent::GetSprintHeldTime() const
     {
@@ -1438,7 +1445,26 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetSprintHeldTime(const float& new_sprintHeldDuration)
     {
-        m_sprintHeldDuration = new_sprintHeldDuration;
+        const float prevSprintHeldDuration = m_sprintHeldDuration;
+        if(new_sprintHeldDuration <= m_sprintMaxTime)
+            m_sprintHeldDuration = new_sprintHeldDuration;
+        else
+            m_sprintHeldDuration = m_sprintMaxTime;
+        m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        if(m_sprintHeldDuration > prevSprintHeldDuration)
+            m_staminaIncrementing = false;
+    }
+    float FirstPersonControllerComponent::GetStaminaPercentage() const
+    {
+        return m_staminaPercentage;
+    }
+    void FirstPersonControllerComponent::SetStaminaPercentage(const float& new_staminaPercentage)
+    {
+        const float prevStaminaPercentage = m_staminaPercentage;
+        m_staminaPercentage = new_staminaPercentage;
+        m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
+        if(m_staminaPercentage < prevStaminaPercentage)
+            m_staminaIncrementing = false;
     }
     float FirstPersonControllerComponent::GetSprintCooldown() const
     {

@@ -46,9 +46,11 @@ namespace FirstPersonController
         virtual float GetCrouchScale() const = 0;
         virtual void SetCrouchScale(const float&) = 0;
         virtual float GetSprintMaxTime() const = 0;
-        virtual void SetSprintMaxTime(const float& new_sprintMaxTime) = 0;
+        virtual void SetSprintMaxTime(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;
         virtual void SetSprintHeldTime(const float&) = 0;
+        virtual float GetStaminaPercentage() const = 0 ;
+        virtual void SetStaminaPercentage(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;
         virtual void SetSprintCooldown(const float&) = 0;
         virtual float GetSprintPauseTime() const = 0;
