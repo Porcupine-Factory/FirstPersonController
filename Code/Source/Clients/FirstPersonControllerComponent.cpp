@@ -38,13 +38,11 @@ namespace FirstPersonController
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitchSensitivity)
               ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotationDamp)
 
-              // Scale Factors group
+              // Direction Scale Factors group
               ->Field("Forward Scale", &FirstPersonControllerComponent::m_forwardScale)
               ->Field("Back Scale", &FirstPersonControllerComponent::m_backScale)
               ->Field("Left Scale", &FirstPersonControllerComponent::m_leftScale)
               ->Field("Right Scale", &FirstPersonControllerComponent::m_rightScale)
-              ->Field("Sprint Scale", &FirstPersonControllerComponent::m_sprintScale)
-              ->Field("Crouch Scale", &FirstPersonControllerComponent::m_crouchScale)
 
               // X&Y Movement group
               ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
@@ -53,11 +51,14 @@ namespace FirstPersonController
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
               ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
-              // Sprint Timing group
+              // Sprinting group
+              ->Field("Sprint Velocity Scale", &FirstPersonControllerComponent::m_sprintVelocityScale)
+              ->Field("Sprint Acceleration Scale", &FirstPersonControllerComponent::m_sprintAccelScale)
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprintMaxTime)
               ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprintCooldownTime)
 
               // Crouching group
+              ->Field("Crouch Scale", &FirstPersonControllerComponent::m_crouchScale)
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
               ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
@@ -151,7 +152,7 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_instantVelocityRotation,
                         "Instant Velocity Rotation", "Determines whether the velocity vector can rotate instantaneously with respect to the world coordinate system, if set to false then the acceleration and deceleration will apply when rotating the character")
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Scale Factors")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Direction Scale Factors")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_forwardScale,
@@ -165,15 +166,18 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rightScale,
                         "Right Scale", "Right movement scale factor")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprintScale,
-                        "Sprint Scale", "Sprint scale factor")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_crouchScale,
-                        "Crouch Scale", "Crouch scale factor")
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Sprint Timing")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Sprinting")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprintVelocityScale,
+                        "Sprint Velocity Scale", "Sprint velocity scale factor")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprintVelocityScale,
+                        "Sprint Velocity Scale", "Sprint velocity scale factor")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprintAccelScale,
+                        "Sprint Acceleration Scale", "Sprint acceleration scale factor")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintMaxTime,
                         "Sprint Max Time (sec)", "The maximum consecutive sprinting time")
@@ -183,6 +187,9 @@ namespace FirstPersonController
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouchScale,
+                        "Crouch Scale", "Determines how much slow the character will move when crouched, the product of this number and the top walk speed is the crouch walk speed, it is suggested to make this <1")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
                         "Crouch Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height, this number cannot be greater than the capsule's height minus two times its radius")
@@ -288,8 +295,10 @@ namespace FirstPersonController
                 ->Event("Set Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::SetOpposingDecel)
                 ->Event("Get Instant Velocity Rotation", &FirstPersonControllerComponentRequests::GetInstantVelocityRotation)
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
-                ->Event("Get Sprint Scale", &FirstPersonControllerComponentRequests::GetSprintScale)
-                ->Event("Set Sprint Scale", &FirstPersonControllerComponentRequests::SetSprintScale)
+                ->Event("Get Sprint Velocity Scale", &FirstPersonControllerComponentRequests::GetSprintVelocityScale)
+                ->Event("Set Sprint Velocity Scale", &FirstPersonControllerComponentRequests::SetSprintVelocityScale)
+                ->Event("Get Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::GetSprintAccelScale)
+                ->Event("Set Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::SetSprintAccelScale)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
                 ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
                 ->Event("Get Sprint Max Time", &FirstPersonControllerComponentRequests::GetSprintMaxTime)
@@ -414,9 +423,12 @@ namespace FirstPersonController
         if(*inputId == m_SprintEventId)
         {
             if(m_grounded)
-                m_sprintValue = m_sprintPressedValue = value * m_sprintScale;
+            {
+                m_sprintValue = value * m_sprintVelocityScale;
+                m_sprintAccelValue = value * m_sprintAccelScale;
+            }
             else
-                m_sprintValue = m_sprintPressedValue = 1.f;
+                m_sprintValue = m_sprintAccelValue = 1.f;
         }
 
         for(auto& it_event : m_controlMap)
@@ -467,9 +479,12 @@ namespace FirstPersonController
         else if(*inputId == m_SprintEventId)
         {
             if(m_grounded || m_sprintPrevValue != 1.f)
-                m_sprintValue = m_sprintPressedValue = value * m_sprintScale;
+            {
+                m_sprintValue = value * m_sprintVelocityScale;
+                m_sprintAccelValue = value * m_sprintAccelScale;
+            }
             else
-                m_sprintValue = m_sprintPressedValue = 1.f;
+                m_sprintValue = m_sprintAccelValue = 1.f;
         }
     }
 
@@ -605,7 +620,10 @@ namespace FirstPersonController
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
 
-        float lerpDeltaTime = m_sprintIncrementTime > 0.f ? deltaTime * (1.f + (m_sprintPressedValue-1.f) * m_sprintAccelAdjust) : deltaTime;
+        float lerpDeltaTime = m_sprintIncrementTime > 0.f ? deltaTime * (1.f + (m_sprintAccelValue-1.f) * m_sprintAccelAdjust) : deltaTime;
+        if(m_sprintAccelValue < 1.f && m_sprintIncrementTime > 0.f)
+            lerpDeltaTime = deltaTime * m_sprintAccelValue * m_sprintAccelAdjust;
+
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
 
         m_lerpTime += lerpDeltaTime;
@@ -655,11 +673,11 @@ namespace FirstPersonController
         if(m_sprintValue == 0.f
            || !m_standing
            || (!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
-           || (m_sprintValue != 1.f
+           || ((m_sprintValue != 1.f || m_sprintAccelValue != 1.f)
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
                    (!m_forwardValue && -m_leftValue == m_rightValue) ||
                    (targetVelocity.GetY() < 0.f)) ))
-            m_sprintValue = 1.f;
+            m_sprintValue = m_sprintAccelValue = 1.f;
 
         m_sprintPrevValue = m_sprintValue;
 
@@ -672,10 +690,10 @@ namespace FirstPersonController
         m_sprintVelocityAdjust = 1.f - targetVelocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
         // If m_sprintVelocityAdjust is close to zero then set m_sprintValue to one
         if(AZ::IsClose(m_sprintVelocityAdjust, 0.f))
-            m_sprintValue = 1.f;
+            m_sprintValue = m_sprintAccelValue = 1.f;
 
         // If the sprint key is pressed then increment the sprint counter
-        if(m_sprintValue != 1.f && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
+        if((m_sprintValue != 1.f || m_sprintAccelValue != 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
         {
             m_sprintAccelAdjust = m_sprintVelocityAdjust;
 
@@ -686,12 +704,12 @@ namespace FirstPersonController
 
             m_staminaIncrementing = false;
 
-            const float totalSprintTime = ((m_sprintValue-1.f)*m_speed)/m_accel;
+            const float totalSprintTime = (m_sprintValue*m_speed)/(m_sprintAccelValue*m_accel);
             if(m_sprintIncrementTime > totalSprintTime)
                 m_sprintIncrementTime = totalSprintTime;
         }
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
-        else if(m_sprintValue == 1.f || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
+        else if((m_sprintValue == 1.f && m_sprintAccelValue == 1.f) || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
         {
             // Set the sprint velocity adjust to 0
             m_sprintVelocityAdjust = 0.f;
@@ -810,7 +828,7 @@ namespace FirstPersonController
                 && m_sprintValue != 1.f
                 && m_crouching
                 && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
-            m_sprintValue = 1.f;
+            m_sprintValue = m_sprintAccelValue = 1.f;
         // Otherwise if the crouch key does not take priority when the sprint key is held,
         // and we are attempting to crouch while the sprint key is held, then do not crouch
         else if(!m_crouchPriorityWhenSprintPressed
@@ -1019,6 +1037,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_applyVelocity.GetZ() = %.10f", m_applyVelocity.GetZ());
         //AZ_Printf("", "m_sprintIncrementTime = %.10f", m_sprintIncrementTime);
         //AZ_Printf("", "m_sprintValue = %.10f", m_sprintValue);
+        //AZ_Printf("", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
         //AZ_Printf("", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
         //AZ_Printf("", "m_sprintVelocityAdjust = %.10f", m_sprintVelocityAdjust);
         //AZ_Printf("", "m_sprintHeldDuration = %.10f", m_sprintHeldDuration);
@@ -1460,13 +1479,21 @@ namespace FirstPersonController
     {
         m_instantVelocityRotation = new_instantVelocityRotation;
     }
-    float FirstPersonControllerComponent::GetSprintScale() const
+    float FirstPersonControllerComponent::GetSprintVelocityScale() const
     {
-        return m_sprintScale;
+        return m_sprintVelocityScale;
     }
-    void FirstPersonControllerComponent::SetSprintScale(const float& new_sprintScale)
+    void FirstPersonControllerComponent::SetSprintVelocityScale(const float& new_sprintVelocityScale)
     {
-        m_sprintScale = new_sprintScale;
+        m_sprintVelocityScale = new_sprintVelocityScale;
+    }
+    float FirstPersonControllerComponent::GetSprintAccelScale() const
+    {
+        return m_sprintAccelScale;
+    }
+    void FirstPersonControllerComponent::SetSprintAccelScale(const float& new_sprintAccelScale)
+    {
+        m_sprintAccelScale = new_sprintAccelScale;
     }
     float FirstPersonControllerComponent::GetCrouchScale() const
     {

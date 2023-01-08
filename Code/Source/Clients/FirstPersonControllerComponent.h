@@ -82,8 +82,10 @@ namespace FirstPersonController
         void SetOpposingDecel(const float& new_opposingDecel) override;
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
-        float GetSprintScale() const override;
-        void SetSprintScale(const float& new_sprintScale) override;
+        float GetSprintVelocityScale() const override;
+        void SetSprintVelocityScale(const float& new_sprintVelocityScale) override;
+        float GetSprintAccelScale() const override;
+        void SetSprintAccelScale(const float& new_sprintAccelScale) override;
         float GetCrouchScale() const override;
         void SetCrouchScale(const float& new_crouchScale) override;
         float GetSprintMaxTime() const override;
@@ -174,7 +176,7 @@ namespace FirstPersonController
         float m_lerpTime = 0.f;
 
         // Sprint application variables
-        float m_sprintPressedValue = 1.f;
+        float m_sprintAccelValue = 1.f;
         float m_sprintPrevValue = 1.f;
         float m_sprintVelocityAdjust = 0.f;
         float m_sprintAccelAdjust = 0.f;
@@ -263,12 +265,13 @@ namespace FirstPersonController
         float m_opposingDecel = 2.0f;
 
         // Movement scale factors
-        // assuming the event value multipliers are all +/-1.0
+        // assuming the event value multipliers are all +1.0
         float m_forwardScale = 1.f;
         float m_backScale = 0.75f;
         float m_leftScale = 1.f;
         float m_rightScale = 1.f;
-        float m_sprintScale = 1.5f;
+        float m_sprintVelocityScale = 1.5f;
+        float m_sprintAccelScale = 1.5f;
         float m_crouchScale = 0.65f;
         // This sphere cast determines how far above the charcter's head that an obstruction is detected
         // for allowing them to uncrouch
