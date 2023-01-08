@@ -660,12 +660,16 @@ namespace FirstPersonController
 
         const float totalSprintTime = ((m_sprintValue-1.f)*m_speed)/m_accel;
 
+        // Sprint adjustment factor based on the angle of the target velocity
+        // with respect to their frame of reference
+        m_sprintVelocityAdjust = 1.f - targetVelocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
+        // If m_sprintVelocityAdjust is close to zero then set m_sprintValue to one
+        if(AZ::IsClose(m_sprintVelocityAdjust, 0.f))
+            m_sprintValue = 1.f;
+
         // If the sprint key is pressed then increment the sprint counter
         if(m_sprintValue != 1.f && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
         {
-            // Sprint adjustment factor based on the angle of the target velocity
-            // with respect to their frame of reference
-            m_sprintVelocityAdjust = 1.f - targetVelocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
             m_sprintAccelAdjust = m_sprintVelocityAdjust;
 
             m_sprintIncrementTime += deltaTime;
@@ -709,8 +713,11 @@ namespace FirstPersonController
             {
                 if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
                 {
-                    m_sprintDecrementPause = (m_sprintCooldownTime - m_sprintMaxTime)
-                                                *(m_sprintHeldDuration/m_sprintMaxTime) + deltaTime;
+                    m_sprintDecrementPause = deltaTime;
+                    // Here is an option to apply a pause instead of incrementing m_sprintHeldDuration at a
+                    // rate that results in the same waiting period for the stamina to regenerate to its full
+                    // value when nearly depleted as compared to waiting the cooldown time
+                    //m_sprintDecrementPause = (m_sprintCooldownTime - m_sprintMaxTime)*(m_sprintHeldDuration/m_sprintMaxTime) + deltaTime;
                     // m_sprintPrevDecrementPause is not used here, but setting it for potential future use
                     m_sprintPrevDecrementPause = m_sprintDecrementPause;
                     m_staminaIncrementing = true;
@@ -720,7 +727,12 @@ namespace FirstPersonController
 
                 if(m_sprintDecrementPause <= 0.f)
                 {
-                    m_sprintHeldDuration -= deltaTime;
+                    // Decrement the sprint held duration at a rate which makes it so that the stamina
+                    // will regenerate when nearly depleted at the same time it would take if you were
+                    // just wait through the cooldown time.
+                    // Decrement this value by only deltaTime if you wish to instead use m_sprintDecrementPause
+                    // to achieve the same timing but instead through the use of a pause.
+                    m_sprintHeldDuration -= deltaTime * (m_sprintMaxTime / m_sprintCooldownTime);
                     m_sprintDecrementPause = 0.f;
                     if(m_sprintHeldDuration <= 0.f)
                     {
