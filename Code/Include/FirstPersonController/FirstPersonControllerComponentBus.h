@@ -41,6 +41,8 @@ namespace FirstPersonController
         virtual void SetWalkDeceleration(const float&) = 0;
         virtual float GetOpposingDecel() const = 0;
         virtual void SetOpposingDecel(const float&) = 0;
+        virtual bool GetInstantVelocityRotation() const = 0;
+        virtual void SetInstantVelocityRotation(const bool&) = 0;
         virtual float GetSprintScale() const = 0;
         virtual void SetSprintScale(const float&) = 0;
         virtual float GetCrouchScale() const = 0;

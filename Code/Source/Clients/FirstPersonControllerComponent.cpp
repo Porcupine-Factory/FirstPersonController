@@ -51,6 +51,7 @@ namespace FirstPersonController
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
+              ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
               // Sprint Timing group
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprintMaxTime)
@@ -146,6 +147,9 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_opposingDecel,
                         "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion, the product of this number and Walking Acceleration creates the deceleration that's used")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_instantVelocityRotation,
+                        "Instant Velocity Rotation", "Determines whether the velocity vector can rotate instantaneously with respect to the world coordinate system, if set to false then the acceleration and deceleration will apply when rotating the character")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Scale Factors")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -282,6 +286,8 @@ namespace FirstPersonController
                 ->Event("Set Walk Deceleration", &FirstPersonControllerComponentRequests::SetWalkDeceleration)
                 ->Event("Get Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::GetOpposingDecel)
                 ->Event("Set Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::SetOpposingDecel)
+                ->Event("Get Instant Velocity Rotation", &FirstPersonControllerComponentRequests::GetInstantVelocityRotation)
+                ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
                 ->Event("Get Sprint Scale", &FirstPersonControllerComponentRequests::GetSprintScale)
                 ->Event("Set Sprint Scale", &FirstPersonControllerComponentRequests::SetSprintScale)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
@@ -613,14 +619,17 @@ namespace FirstPersonController
         // Decelerate at a different rate than the acceleration
         if(newVelocity.GetLength() < m_applyVelocity.GetLength())
         {
-            // Get the current velocity vector with respect to the world coordinates
-            const AZ::Vector3 applyVelocityWorld = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
+            // Get the current velocity vector with respect to the character's local coordinate system
+            const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
 
             float decelerationFactor = m_decel;
 
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
-            if(targetVelocity.GetLength() != 0.f && abs(applyVelocityWorld.Angle(targetVelocity)) > AZ::Constants::HalfPi)
+            if(targetVelocity.GetLength() != 0.f
+                && m_instantVelocityRotation ?
+                    (abs(applyVelocityLocal.Angle(targetVelocity)) > AZ::Constants::HalfPi)
+                    : (abs(m_applyVelocity.Angle(targetVelocity)) > AZ::Constants::HalfPi))
                 decelerationFactor = m_opposingDecel;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
@@ -658,8 +667,6 @@ namespace FirstPersonController
         if(!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
             m_sprintIncrementTime = 0.f;
 
-        const float totalSprintTime = ((m_sprintValue-1.f)*m_speed)/m_accel;
-
         // Sprint adjustment factor based on the angle of the target velocity
         // with respect to their frame of reference
         m_sprintVelocityAdjust = 1.f - targetVelocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
@@ -679,6 +686,7 @@ namespace FirstPersonController
 
             m_staminaIncrementing = false;
 
+            const float totalSprintTime = ((m_sprintValue-1.f)*m_speed)/m_accel;
             if(m_sprintIncrementTime > totalSprintTime)
                 m_sprintIncrementTime = totalSprintTime;
         }
@@ -966,25 +974,41 @@ namespace FirstPersonController
         else
             targetVelocity *= m_speed * m_crouchScale;
 
-        // Obtain the last applied velocity if the target velocity changed
-        if(m_prevTargetVelocity != targetVelocity)
-        {
-            // Set the previous target velocity to the new one
-            m_prevTargetVelocity = targetVelocity;
+        // Rotate the target velocity vector so that it can be compared against the applied velocity
+        const AZ::Vector3 targetVelocityWorld = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(targetVelocity);
 
-            // Store the last applied velocity to be used for the lerping
-            m_lastAppliedVelocity = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
+        // Obtain the last applied velocity if the target velocity changed
+        if(m_instantVelocityRotation ? (m_prevTargetVelocity != targetVelocity)
+                                        : (m_prevTargetVelocity != targetVelocityWorld))
+        {
+
+            if(m_instantVelocityRotation)
+            {
+                // Set the previous target velocity to the new one
+                m_prevTargetVelocity = targetVelocity;
+                // Store the last applied velocity to be used for the lerping
+                m_lastAppliedVelocity = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
+            }
+            else
+            {
+                // Set the previous target velocity to the new one
+                m_prevTargetVelocity = targetVelocityWorld;
+                // Store the last applied velocity to be used for the lerping
+                m_lastAppliedVelocity = m_applyVelocity;
+            }
 
             // Reset the lerp time since the target velocity changed
             m_lerpTime = 0.f;
         }
 
-        // Rotate the target velocity vector so that it can be compared against the applied velocity
-        const AZ::Vector3 targetVelocityWorld = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(targetVelocity);
-
         // Lerp to the velocity if we're not already there
         if(m_applyVelocity != targetVelocityWorld)
-            m_applyVelocity = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(LerpVelocity(targetVelocity, deltaTime));
+        {
+            if(m_instantVelocityRotation)
+                m_applyVelocity = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(LerpVelocity(targetVelocity, deltaTime));
+            else
+                m_applyVelocity = LerpVelocity(targetVelocityWorld, deltaTime);
+        }
 
         // Debug print statements to observe the velocity, acceleration, and position
         //AZ_Printf("", "m_currentHeading = %.10f", m_currentHeading);
@@ -1427,6 +1451,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetOpposingDecel(const float& new_opposingDecel)
     {
         m_opposingDecel = new_opposingDecel;
+    }
+    bool FirstPersonControllerComponent::GetInstantVelocityRotation() const
+    {
+        return m_instantVelocityRotation;
+    }
+    void FirstPersonControllerComponent::SetInstantVelocityRotation(const bool& new_instantVelocityRotation)
+    {
+        m_instantVelocityRotation = new_instantVelocityRotation;
     }
     float FirstPersonControllerComponent::GetSprintScale() const
     {

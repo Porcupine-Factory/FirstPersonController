@@ -80,6 +80,8 @@ namespace FirstPersonController
         void SetWalkDeceleration(const float& new_decel) override;
         float GetOpposingDecel() const override;
         void SetOpposingDecel(const float& new_opposingDecel) override;
+        bool GetInstantVelocityRotation() const override;
+        void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
         float GetSprintScale() const override;
         void SetSprintScale(const float& new_sprintScale) override;
         float GetCrouchScale() const override;
@@ -160,6 +162,7 @@ namespace FirstPersonController
         AZ::Vector3 m_applyVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_lastAppliedVelocity = AZ::Vector3::CreateZero();
+        bool m_instantVelocityRotation = true;
 
         // Angles used to rotate the camera
         float m_cameraRotationAngles[3] = {0.f, 0.f, 0.f};
