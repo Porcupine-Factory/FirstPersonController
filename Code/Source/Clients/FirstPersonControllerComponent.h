@@ -49,7 +49,25 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // FirstPersonControllerRequestBus
-        AZ::EntityId GetActiveCameraId() const;
+        AZ::EntityId GetActiveCameraId() const override;
+        AZStd::string GetForwardEventName() const override;
+        void SetForwardEventName(AZStd::string new_strForward) override;
+        AZStd::string GetBackEventName() const override;
+        void SetBackEventName(AZStd::string new_strBack) override;
+        AZStd::string GetLeftEventName() const override;
+        void SetLeftEventName(AZStd::string new_strLeft) override;
+        AZStd::string GetRightEventName() const override;
+        void SetRightEventName(AZStd::string new_strRight) override;
+        AZStd::string GetYawEventName() const override;
+        void SetYawEventName(AZStd::string new_strYaw) override;
+        AZStd::string GetPitchEventName() const override;
+        void SetPitchEventName(AZStd::string new_strPitch) override;
+        AZStd::string GetSprintEventName() const override;
+        void SetSprintEventName(AZStd::string new_strSprint) override;
+        AZStd::string GetCrouchEventName() const override;
+        void SetCrouchEventName(AZStd::string new_strCrouch) override;
+        AZStd::string GetJumpEventName() const override;
+        void SetJumpEventName(AZStd::string new_strJump) override;
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
         bool GetGroundClose() const override;
@@ -114,17 +132,20 @@ namespace FirstPersonController
         void SetCrouchSprintCausesStanding(const bool& new_crouchSprintCausesStanding) override;
         bool GetCrouchPriorityWhenSprintPressed() const override;
         void SetCrouchPriorityWhenSprintPressed(const bool& new_crouchPriorityWhenSprintPressed) override;
-        float GetCameraPitchSensitivity() const override;
-        void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
         float GetCameraYawSensitivity() const override;
         void SetCameraYawSensitivity(const float& new_yawSensitivity) override;
+        float GetCameraPitchSensitivity() const override;
+        void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
-        void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
         void UpdateCameraYaw(const float& new_cameraYawAngle) override;
+        void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
         float GetHeading() const override;
 
     private:
+        // Input event assignment and notification bus connection
+        void AssignConnectInputEvents();
+
         // Active camera entity
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::Entity* GetActiveCamera() const;
@@ -132,9 +153,6 @@ namespace FirstPersonController
         // Child entity IDs
         bool m_obtainedChildIds = false;
         AZStd::vector<AZ::EntityId> m_children;
-
-        // Used to determine if the PhysX Character Controller component's values have been obtained
-        bool m_obtainedPhysxCharacterValues = false;
 
         // Called on each tick
         void ProcessInput(const float& deltaTime);

@@ -11,6 +11,24 @@ namespace FirstPersonController
         ~FirstPersonControllerComponentRequests() override = default;
 
         virtual AZ::EntityId GetActiveCameraId() const = 0;
+        virtual AZStd::string GetForwardEventName() const = 0;
+        virtual void SetForwardEventName(AZStd::string) = 0;
+        virtual AZStd::string GetBackEventName() const = 0;
+        virtual void SetBackEventName(AZStd::string) = 0;
+        virtual AZStd::string GetLeftEventName() const = 0;
+        virtual void SetLeftEventName(AZStd::string) = 0;
+        virtual AZStd::string GetRightEventName() const = 0;
+        virtual void SetRightEventName(AZStd::string) = 0;
+        virtual AZStd::string GetYawEventName() const = 0;
+        virtual void SetYawEventName(AZStd::string) = 0;
+        virtual AZStd::string GetPitchEventName() const = 0;
+        virtual void SetPitchEventName(AZStd::string) = 0;
+        virtual AZStd::string GetSprintEventName() const = 0;
+        virtual void SetSprintEventName(AZStd::string) = 0;
+        virtual AZStd::string GetCrouchEventName() const = 0;
+        virtual void SetCrouchEventName(AZStd::string) = 0;
+        virtual AZStd::string GetJumpEventName() const = 0;
+        virtual void SetJumpEventName(AZStd::string) = 0;
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
         virtual bool GetGroundClose() const = 0;

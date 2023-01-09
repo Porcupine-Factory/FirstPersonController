@@ -23,12 +23,12 @@ namespace FirstPersonController
         {
             sc->Class<FirstPersonControllerComponent, AZ::Component>()
               // Input Bindings group
-              ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_strYaw)
-              ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_strPitch)
               ->Field("Forward Key", &FirstPersonControllerComponent::m_strForward)
               ->Field("Back Key", &FirstPersonControllerComponent::m_strBack)
               ->Field("Left Key", &FirstPersonControllerComponent::m_strLeft)
               ->Field("Right Key", &FirstPersonControllerComponent::m_strRight)
+              ->Field("Camera Yaw Rotate Input", &FirstPersonControllerComponent::m_strYaw)
+              ->Field("Camera Pitch Rotate Input", &FirstPersonControllerComponent::m_strPitch)
               ->Field("Sprint Key", &FirstPersonControllerComponent::m_strSprint)
               ->Field("Crouch Key", &FirstPersonControllerComponent::m_strCrouch)
               ->Field("Jump Key", &FirstPersonControllerComponent::m_strJump)
@@ -95,12 +95,6 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_strYaw,
-                        "Camera Yaw Rotate Input", "Camera yaw rotation control")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_strPitch,
-                        "Camera Pitch Rotate Input", "Camera pitch rotation control")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strForward,
                         "Forward Key", "Key for moving forward")
                     ->DataElement(nullptr,
@@ -112,6 +106,12 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strRight,
                         "Right Key", "Key for moving right")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_strYaw,
+                        "Camera Yaw Rotate Input", "Camera yaw rotation control")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_strPitch,
+                        "Camera Pitch Rotate Input", "Camera pitch rotation control")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strSprint,
                         "Sprint Key", "Key for sprinting")
@@ -263,6 +263,24 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
                 ->Event("Get Active Camera Id", &FirstPersonControllerComponentRequests::GetActiveCameraId)
+                ->Event("Get Forward Event Name", &FirstPersonControllerComponentRequests::GetForwardEventName)
+                ->Event("Set Forward Event Name", &FirstPersonControllerComponentRequests::SetForwardEventName)
+                ->Event("Get Back Event Name", &FirstPersonControllerComponentRequests::GetBackEventName)
+                ->Event("Set Back Event Name", &FirstPersonControllerComponentRequests::SetBackEventName)
+                ->Event("Get Left Event Name", &FirstPersonControllerComponentRequests::GetLeftEventName)
+                ->Event("Set Left Event Name", &FirstPersonControllerComponentRequests::SetLeftEventName)
+                ->Event("Get Right Event Name", &FirstPersonControllerComponentRequests::GetRightEventName)
+                ->Event("Set Right Event Name", &FirstPersonControllerComponentRequests::SetRightEventName)
+                ->Event("Get Yaw Event Name", &FirstPersonControllerComponentRequests::GetYawEventName)
+                ->Event("Set Yaw Event Name", &FirstPersonControllerComponentRequests::SetYawEventName)
+                ->Event("Get Pitch Event Name", &FirstPersonControllerComponentRequests::GetPitchEventName)
+                ->Event("Set Pitch Event Name", &FirstPersonControllerComponentRequests::SetPitchEventName)
+                ->Event("Get Sprint Event Name", &FirstPersonControllerComponentRequests::GetSprintEventName)
+                ->Event("Set Sprint Event Name", &FirstPersonControllerComponentRequests::SetSprintEventName)
+                ->Event("Get Crouch Event Name", &FirstPersonControllerComponentRequests::GetCrouchEventName)
+                ->Event("Set Crouch Event Name", &FirstPersonControllerComponentRequests::SetCrouchEventName)
+                ->Event("Get Jump Event Name", &FirstPersonControllerComponentRequests::GetJumpEventName)
+                ->Event("Set Jump Event Name", &FirstPersonControllerComponentRequests::SetJumpEventName)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
@@ -325,14 +343,14 @@ namespace FirstPersonController
                 ->Event("Set Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchSprintCausesStanding)
                 ->Event("Get Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::GetCrouchPriorityWhenSprintPressed)
                 ->Event("Set Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::SetCrouchPriorityWhenSprintPressed)
-                ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
-                ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
                 ->Event("Get Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
                 ->Event("Set Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
+                ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
+                ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
-                ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
+                ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
@@ -361,22 +379,8 @@ namespace FirstPersonController
         //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
         //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
 
-        m_obtainedPhysxCharacterValues = true;
+        AssignConnectInputEvents();
 
-        if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
-        {
-            AZ_Printf("FirstPersonControllerComponent",
-                      "ERROR: Number of input IDs not equal to number of input names!");
-        }
-        else
-        {
-            for(auto& it_event : m_controlMap)
-            {
-                *(it_event.first) = StartingPointInput::InputEventNotificationId(
-                    (m_inputNames[std::distance(m_controlMap.begin(), m_controlMap.find(it_event.first))])->c_str());
-                InputEventNotificationBus::MultiHandler::BusConnect(*(it_event.first));
-            }
-        }
         AZ::TickBus::Handler::BusConnect();
 
         InputChannelEventListener::Connect();
@@ -412,6 +416,27 @@ namespace FirstPersonController
     {
         incompatible.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         incompatible.push_back(AZ_CRC_CE("InputService"));
+    }
+
+    void FirstPersonControllerComponent::AssignConnectInputEvents()
+    {
+        // Disconnect prior to connecting since this may be a reassignment
+        InputEventNotificationBus::MultiHandler::BusDisconnect();
+
+        if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
+        {
+            AZ_Printf("FirstPersonControllerComponent",
+                      "ERROR: Number of input IDs not equal to number of input names!");
+        }
+        else
+        {
+            for(auto& it_event : m_controlMap)
+            {
+                *(it_event.first) = StartingPointInput::InputEventNotificationId(
+                    (m_inputNames[std::distance(m_controlMap.begin(), m_controlMap.find(it_event.first))])->c_str());
+                InputEventNotificationBus::MultiHandler::BusConnect(*(it_event.first));
+            }
+        }
     }
 
     void FirstPersonControllerComponent::OnPressed(float value)
@@ -527,16 +552,16 @@ namespace FirstPersonController
             m_backValue = inputChannel.GetValue();
         }
 
-        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
-        {
-            m_cameraRotationAngles[0] = inputChannel.GetValue() * m_pitchSensitivity;
-            m_rotatingPitchViaScriptGamepad = true;
-        }
-
         if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
         {
             m_cameraRotationAngles[2] = -1.f*inputChannel.GetValue() * m_yawSensitivity;
             m_rotatingYawViaScriptGamepad = true;
+        }
+
+        if(channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
+        {
+            m_cameraRotationAngles[0] = inputChannel.GetValue() * m_pitchSensitivity;
+            m_rotatingPitchViaScriptGamepad = true;
         }
     }
 
@@ -557,18 +582,18 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
     {
-        // Multiply by -1 since moving the mouse up produces a negative value from the input bus
-        if(!m_rotatingPitchViaScriptGamepad)
-            m_cameraRotationAngles[0] = -1.f * m_pitchValue * m_pitchSensitivity;
-        else
-            m_rotatingPitchViaScriptGamepad = false;
-
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
         if(!m_rotatingYawViaScriptGamepad)
             m_cameraRotationAngles[2] = -1.f * m_yawValue * m_yawSensitivity;
         else
             m_rotatingYawViaScriptGamepad = false;
+
+        // Multiply by -1 since moving the mouse up produces a negative value from the input bus
+        if(!m_rotatingPitchViaScriptGamepad)
+            m_cameraRotationAngles[0] = -1.f * m_pitchValue * m_pitchSensitivity;
+        else
+            m_rotatingPitchViaScriptGamepad = false;
 
         const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerAnglesRadians(
             AZ::Vector3::CreateFromFloat3(m_cameraRotationAngles));
@@ -1346,6 +1371,87 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnSprintCooldown(){}
 
     // Request Bus getter and setter methods for use in scripts
+    AZStd::string FirstPersonControllerComponent::GetForwardEventName() const
+    {
+        return m_strForward;
+    }
+    void FirstPersonControllerComponent::SetForwardEventName(AZStd::string new_strForward)
+    {
+        m_strForward = new_strForward;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetBackEventName() const
+    {
+        return m_strBack;
+    }
+    void FirstPersonControllerComponent::SetBackEventName(AZStd::string new_strBack)
+    {
+        m_strBack = new_strBack;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetLeftEventName() const
+    {
+        return m_strLeft;
+    }
+    void FirstPersonControllerComponent::SetLeftEventName(AZStd::string new_strLeft)
+    {
+        m_strLeft = new_strLeft;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetRightEventName() const
+    {
+        return m_strRight;
+    }
+    void FirstPersonControllerComponent::SetRightEventName(AZStd::string new_strRight)
+    {
+        m_strRight = new_strRight;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetYawEventName() const
+    {
+        return m_strYaw;
+    }
+    void FirstPersonControllerComponent::SetYawEventName(AZStd::string new_strYaw)
+    {
+        m_strYaw = new_strYaw;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetPitchEventName() const
+    {
+        return m_strPitch;
+    }
+    void FirstPersonControllerComponent::SetPitchEventName(AZStd::string new_strPitch)
+    {
+        m_strPitch = new_strPitch;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetSprintEventName() const
+    {
+        return m_strSprint;
+    }
+    void FirstPersonControllerComponent::SetSprintEventName(AZStd::string new_strSprint)
+    {
+        m_strSprint = new_strSprint;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetCrouchEventName() const
+    {
+        return m_strCrouch;
+    }
+    void FirstPersonControllerComponent::SetCrouchEventName(AZStd::string new_strCrouch)
+    {
+        m_strCrouch = new_strCrouch;
+        AssignConnectInputEvents();
+    }
+    AZStd::string FirstPersonControllerComponent::GetJumpEventName() const
+    {
+        return m_strJump;
+    }
+    void FirstPersonControllerComponent::SetJumpEventName(AZStd::string new_strJump)
+    {
+        m_strJump = new_strJump;
+        AssignConnectInputEvents();
+    }
     AZ::EntityId FirstPersonControllerComponent::GetActiveCameraId() const
     {
         return m_activeCameraEntity->GetId();
@@ -1628,14 +1734,6 @@ namespace FirstPersonController
     {
         m_crouchPriorityWhenSprintPressed = new_crouchPriorityWhenSprintPressed;
     }
-    float FirstPersonControllerComponent::GetCameraPitchSensitivity() const
-    {
-        return m_pitchSensitivity;
-    }
-    void FirstPersonControllerComponent::SetCameraPitchSensitivity(const float& new_pitchSensitivity)
-    {
-        m_pitchSensitivity = new_pitchSensitivity;
-    }
     float FirstPersonControllerComponent::GetCameraYawSensitivity() const
     {
         return m_yawSensitivity;
@@ -1643,6 +1741,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCameraYawSensitivity(const float& new_yawSensitivity)
     {
         m_yawSensitivity = new_yawSensitivity;
+    }
+    float FirstPersonControllerComponent::GetCameraPitchSensitivity() const
+    {
+        return m_pitchSensitivity;
+    }
+    void FirstPersonControllerComponent::SetCameraPitchSensitivity(const float& new_pitchSensitivity)
+    {
+        m_pitchSensitivity = new_pitchSensitivity;
     }
     float FirstPersonControllerComponent::GetCameraRotationDampFactor() const
     {
@@ -1652,15 +1758,15 @@ namespace FirstPersonController
     {
         m_rotationDamp = new_rotationDamp;
     }
-    void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_cameraPitchAngle)
-    {
-        m_cameraRotationAngles[0] = new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity;
-        m_rotatingPitchViaScriptGamepad = true;
-    }
     void FirstPersonControllerComponent::UpdateCameraYaw(const float& new_cameraYawAngle)
     {
         m_cameraRotationAngles[2] = new_cameraYawAngle - m_yawValue * m_yawSensitivity;
         m_rotatingYawViaScriptGamepad = true;
+    }
+    void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_cameraPitchAngle)
+    {
+        m_cameraRotationAngles[0] = new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity;
+        m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const
     {
