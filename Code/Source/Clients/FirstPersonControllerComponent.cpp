@@ -428,7 +428,7 @@ namespace FirstPersonController
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
-                m_sprintValue = m_sprintAccelValue = 1.f;
+                m_sprintValue = 1.f;
         }
 
         for(auto& it_event : m_controlMap)
@@ -484,7 +484,7 @@ namespace FirstPersonController
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
-                m_sprintValue = m_sprintAccelValue = 1.f;
+                m_sprintValue = 1.f;
         }
     }
 
@@ -646,8 +646,8 @@ namespace FirstPersonController
             // and if it's greater than 90 degrees then decelerate even more
             if(targetVelocity.GetLength() != 0.f
                 && m_instantVelocityRotation ?
-                    (abs(applyVelocityLocal.Angle(targetVelocity)) > AZ::Constants::HalfPi)
-                    : (abs(m_applyVelocity.Angle(targetVelocity)) > AZ::Constants::HalfPi))
+                    (abs(applyVelocityLocal.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi)
+                    : (abs(m_applyVelocity.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi))
                 decelerationFactor = m_opposingDecel;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
@@ -673,11 +673,11 @@ namespace FirstPersonController
         if(m_sprintValue == 0.f
            || !m_standing
            || (!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
-           || ((m_sprintValue != 1.f || m_sprintAccelValue != 1.f)
+           || (m_sprintValue != 1.f
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
                    (!m_forwardValue && -m_leftValue == m_rightValue) ||
                    (targetVelocity.GetY() < 0.f)) ))
-            m_sprintValue = m_sprintAccelValue = 1.f;
+            m_sprintValue = 1.f;
 
         m_sprintPrevValue = m_sprintValue;
 
@@ -687,13 +687,13 @@ namespace FirstPersonController
 
         // Sprint adjustment factor based on the angle of the target velocity
         // with respect to their frame of reference
-        m_sprintVelocityAdjust = 1.f - targetVelocity.Angle(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
+        m_sprintVelocityAdjust = 1.f - targetVelocity.AngleSafe(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
         // If m_sprintVelocityAdjust is close to zero then set m_sprintValue to one
         if(AZ::IsClose(m_sprintVelocityAdjust, 0.f))
-            m_sprintValue = m_sprintAccelValue = 1.f;
+            m_sprintValue = 1.f;
 
         // If the sprint key is pressed then increment the sprint counter
-        if((m_sprintValue != 1.f || m_sprintAccelValue != 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
+        if(m_sprintValue != 1.f && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
         {
             m_sprintAccelAdjust = m_sprintVelocityAdjust;
 
@@ -709,12 +709,16 @@ namespace FirstPersonController
                 m_sprintIncrementTime = totalSprintTime;
         }
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
-        else if((m_sprintValue == 1.f && m_sprintAccelValue == 1.f) || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
+        else if(m_sprintValue == 1.f || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
         {
             // Set the sprint velocity adjust to 0
             m_sprintVelocityAdjust = 0.f;
 
-            m_sprintIncrementTime -= deltaTime;
+            // Set the sprint acceleration adjust according to the local direction we're moving
+            const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
+            m_sprintAccelAdjust = 1.f - applyVelocityLocal.AngleSafe(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
+
+            m_sprintIncrementTime -= deltaTime * m_decel;
             if(m_sprintIncrementTime < 0.f)
                 m_sprintIncrementTime = 0.f;
 
@@ -828,7 +832,7 @@ namespace FirstPersonController
                 && m_sprintValue != 1.f
                 && m_crouching
                 && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
-            m_sprintValue = m_sprintAccelValue = 1.f;
+            m_sprintValue = 1.f;
         // Otherwise if the crouch key does not take priority when the sprint key is held,
         // and we are attempting to crouch while the sprint key is held, then do not crouch
         else if(!m_crouchPriorityWhenSprintPressed
