@@ -271,15 +271,23 @@ namespace FirstPersonController
                 ->Event("Get Active Camera Id", &FirstPersonControllerComponentRequests::GetActiveCameraId)
                 ->Event("Get Forward Event Name", &FirstPersonControllerComponentRequests::GetForwardEventName)
                 ->Event("Set Forward Event Name", &FirstPersonControllerComponentRequests::SetForwardEventName)
+                ->Event("Get Forward Scale", &FirstPersonControllerComponentRequests::GetForwardScale)
+                ->Event("Set Forward Scale", &FirstPersonControllerComponentRequests::SetForwardScale)
                 ->Event("Get Forward Input Value", &FirstPersonControllerComponentRequests::GetForwardInputValue)
                 ->Event("Get Back Event Name", &FirstPersonControllerComponentRequests::GetBackEventName)
                 ->Event("Set Back Event Name", &FirstPersonControllerComponentRequests::SetBackEventName)
+                ->Event("Get Back Scale", &FirstPersonControllerComponentRequests::GetBackScale)
+                ->Event("Set Back Scale", &FirstPersonControllerComponentRequests::SetBackScale)
                 ->Event("Get Back Input Value", &FirstPersonControllerComponentRequests::GetBackInputValue)
                 ->Event("Get Left Event Name", &FirstPersonControllerComponentRequests::GetLeftEventName)
                 ->Event("Set Left Event Name", &FirstPersonControllerComponentRequests::SetLeftEventName)
+                ->Event("Get Left Scale", &FirstPersonControllerComponentRequests::GetLeftScale)
+                ->Event("Set Left Scale", &FirstPersonControllerComponentRequests::SetLeftScale)
                 ->Event("Get Left Input Value", &FirstPersonControllerComponentRequests::GetLeftInputValue)
                 ->Event("Get Right Event Name", &FirstPersonControllerComponentRequests::GetRightEventName)
                 ->Event("Set Right Event Name", &FirstPersonControllerComponentRequests::SetRightEventName)
+                ->Event("Get Right Scale", &FirstPersonControllerComponentRequests::GetRightScale)
+                ->Event("Set Right Scale", &FirstPersonControllerComponentRequests::SetRightScale)
                 ->Event("Get Right Input Value", &FirstPersonControllerComponentRequests::GetRightInputValue)
                 ->Event("Get Yaw Event Name", &FirstPersonControllerComponentRequests::GetYawEventName)
                 ->Event("Set Yaw Event Name", &FirstPersonControllerComponentRequests::SetYawEventName)
@@ -1423,14 +1431,26 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnSprintCooldown(){}
 
     // Request Bus getter and setter methods for use in scripts
+    AZ::EntityId FirstPersonControllerComponent::GetActiveCameraId() const
+    {
+        return m_activeCameraEntity->GetId();
+    }
     AZStd::string FirstPersonControllerComponent::GetForwardEventName() const
     {
         return m_strForward;
     }
-    void FirstPersonControllerComponent::SetForwardEventName(AZStd::string new_strForward)
+    void FirstPersonControllerComponent::SetForwardEventName(AZStd::string& new_strForward)
     {
         m_strForward = new_strForward;
         AssignConnectInputEvents();
+    }
+    float FirstPersonControllerComponent::GetForwardScale() const
+    {
+        return m_forwardScale;
+    }
+    void FirstPersonControllerComponent::SetForwardScale(const float& new_forwardScale)
+    {
+        m_forwardScale = new_forwardScale;
     }
     float FirstPersonControllerComponent::GetForwardInputValue() const
     {
@@ -1440,10 +1460,18 @@ namespace FirstPersonController
     {
         return m_strBack;
     }
-    void FirstPersonControllerComponent::SetBackEventName(AZStd::string new_strBack)
+    void FirstPersonControllerComponent::SetBackEventName(AZStd::string& new_strBack)
     {
         m_strBack = new_strBack;
         AssignConnectInputEvents();
+    }
+    float FirstPersonControllerComponent::GetBackScale() const
+    {
+        return m_backScale;
+    }
+    void FirstPersonControllerComponent::SetBackScale(const float& new_backScale)
+    {
+        m_backScale = new_backScale;
     }
     float FirstPersonControllerComponent::GetBackInputValue() const
     {
@@ -1453,10 +1481,18 @@ namespace FirstPersonController
     {
         return m_strLeft;
     }
-    void FirstPersonControllerComponent::SetLeftEventName(AZStd::string new_strLeft)
+    void FirstPersonControllerComponent::SetLeftEventName(AZStd::string& new_strLeft)
     {
         m_strLeft = new_strLeft;
         AssignConnectInputEvents();
+    }
+    float FirstPersonControllerComponent::GetLeftScale() const
+    {
+        return m_leftScale;
+    }
+    void FirstPersonControllerComponent::SetLeftScale(const float& new_leftScale)
+    {
+        m_leftScale = new_leftScale;
     }
     float FirstPersonControllerComponent::GetLeftInputValue() const
     {
@@ -1466,10 +1502,18 @@ namespace FirstPersonController
     {
         return m_strRight;
     }
-    void FirstPersonControllerComponent::SetRightEventName(AZStd::string new_strRight)
+    void FirstPersonControllerComponent::SetRightEventName(AZStd::string& new_strRight)
     {
         m_strRight = new_strRight;
         AssignConnectInputEvents();
+    }
+    float FirstPersonControllerComponent::GetRightScale() const
+    {
+        return m_rightScale;
+    }
+    void FirstPersonControllerComponent::SetRightScale(const float& new_rightScale)
+    {
+        m_rightScale = new_rightScale;
     }
     float FirstPersonControllerComponent::GetRightInputValue() const
     {
@@ -1479,7 +1523,7 @@ namespace FirstPersonController
     {
         return m_strYaw;
     }
-    void FirstPersonControllerComponent::SetYawEventName(AZStd::string new_strYaw)
+    void FirstPersonControllerComponent::SetYawEventName(AZStd::string& new_strYaw)
     {
         m_strYaw = new_strYaw;
         AssignConnectInputEvents();
@@ -1492,7 +1536,7 @@ namespace FirstPersonController
     {
         return m_strPitch;
     }
-    void FirstPersonControllerComponent::SetPitchEventName(AZStd::string new_strPitch)
+    void FirstPersonControllerComponent::SetPitchEventName(AZStd::string& new_strPitch)
     {
         m_strPitch = new_strPitch;
         AssignConnectInputEvents();
@@ -1505,7 +1549,7 @@ namespace FirstPersonController
     {
         return m_strSprint;
     }
-    void FirstPersonControllerComponent::SetSprintEventName(AZStd::string new_strSprint)
+    void FirstPersonControllerComponent::SetSprintEventName(AZStd::string& new_strSprint)
     {
         m_strSprint = new_strSprint;
         AssignConnectInputEvents();
@@ -1518,7 +1562,7 @@ namespace FirstPersonController
     {
         return m_strCrouch;
     }
-    void FirstPersonControllerComponent::SetCrouchEventName(AZStd::string new_strCrouch)
+    void FirstPersonControllerComponent::SetCrouchEventName(AZStd::string& new_strCrouch)
     {
         m_strCrouch = new_strCrouch;
         AssignConnectInputEvents();
@@ -1531,7 +1575,7 @@ namespace FirstPersonController
     {
         return m_strJump;
     }
-    void FirstPersonControllerComponent::SetJumpEventName(AZStd::string new_strJump)
+    void FirstPersonControllerComponent::SetJumpEventName(AZStd::string& new_strJump)
     {
         m_strJump = new_strJump;
         AssignConnectInputEvents();
@@ -1539,10 +1583,6 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetJumpInputValue() const
     {
         return m_jumpValue;
-    }
-    AZ::EntityId FirstPersonControllerComponent::GetActiveCameraId() const
-    {
-        return m_activeCameraEntity->GetId();
     }
     bool FirstPersonControllerComponent::GetGrounded() const
     {
