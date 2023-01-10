@@ -55,7 +55,7 @@ namespace FirstPersonController
               ->Field("Sprint Velocity Scale", &FirstPersonControllerComponent::m_sprintVelocityScale)
               ->Field("Sprint Acceleration Scale", &FirstPersonControllerComponent::m_sprintAccelScale)
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprintMaxTime)
-              ->Field("Sprint Cooldown (sec)", &FirstPersonControllerComponent::m_sprintCooldownTime)
+              ->Field("Sprint Cooldown Time (sec)", &FirstPersonControllerComponent::m_sprintCooldownTime)
 
               // Crouching group
               ->Field("Crouch Scale", &FirstPersonControllerComponent::m_crouchScale)
@@ -72,7 +72,7 @@ namespace FirstPersonController
               ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpInitialVelocity)
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jumpFallingGravityFactor)
-              ->Field("XY Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
+              ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
               ->Field("Jump Hold Offset (m)", &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset)
               ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_sphereCastRadiusPercentageIncrease)
@@ -183,7 +183,7 @@ namespace FirstPersonController
                         "Sprint Max Time (sec)", "The maximum consecutive sprinting time")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintCooldownTime,
-                        "Sprint Cooldown (sec)", "The time required to wait before sprinting again when the maximum consecutive sprint time has been reached")
+                        "Sprint Cooldown Time (sec)", "The time required to wait before sprinting again when the maximum consecutive sprint time has been reached")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -228,7 +228,7 @@ namespace FirstPersonController
                         "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the Z velocity is negative")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
-                        "XY Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
+                        "X&Y Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
                         "Grounded Offset (m)", "The sphere cast's ground detect offset in meters")
@@ -289,6 +289,22 @@ namespace FirstPersonController
                 ->Event("Get Jump Key Value", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
+                ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
+                ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
+                ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
+                ->Event("Set Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpFallingGravityFactor)
+                ->Event("Get X&Y Acceleration Jump Factor", &FirstPersonControllerComponentRequests::GetJumpAccelFactor)
+                ->Event("Set X&Y Acceleration Jump Factor", &FirstPersonControllerComponentRequests::SetJumpAccelFactor)
+                ->Event("Get Update X&Y Velocity When Ascending", &FirstPersonControllerComponentRequests::GetUpdateXYAscending)
+                ->Event("Set Update X&Y Velocity When Ascending", &FirstPersonControllerComponentRequests::SetUpdateXYAscending)
+                ->Event("Get Update X&Y Velocity When Descending", &FirstPersonControllerComponentRequests::GetUpdateXYDescending)
+                ->Event("Set Update X&Y Velocity When Descending", &FirstPersonControllerComponentRequests::SetUpdateXYDescending)
+                ->Event("Get Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::GetUpdateXYOnlyNearGround)
+                ->Event("Set Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::SetUpdateXYOnlyNearGround)
+                ->Event("Get Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetScriptSetsXYTargetVelocity)
+                ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
+                ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
+                ->Event("Set Target X&Y Velocity", &FirstPersonControllerComponentRequests::SetTargetXYVelocity)
                 ->Event("Get Z Velocity", &FirstPersonControllerComponentRequests::GetZVelocity)
                 ->Event("Set Z Velocity", &FirstPersonControllerComponentRequests::SetZVelocity)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
@@ -317,20 +333,22 @@ namespace FirstPersonController
                 ->Event("Set Sprint Velocity Scale", &FirstPersonControllerComponentRequests::SetSprintVelocityScale)
                 ->Event("Get Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::GetSprintAccelScale)
                 ->Event("Set Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::SetSprintAccelScale)
-                ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
-                ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
                 ->Event("Get Sprint Max Time", &FirstPersonControllerComponentRequests::GetSprintMaxTime)
                 ->Event("Set Sprint Max Time", &FirstPersonControllerComponentRequests::SetSprintMaxTime)
                 ->Event("Get Sprint Held Time", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
                 ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
                 ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
                 ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
+                ->Event("Get Sprint Cooldown Time", &FirstPersonControllerComponentRequests::GetSprintCooldownTime)
+                ->Event("Set Sprint Cooldown Time", &FirstPersonControllerComponentRequests::SetSprintCooldownTime)
                 ->Event("Get Sprint Cooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
                 ->Event("Set Sprint Cooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
                 ->Event("Get Sprint Pause Time", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
                 ->Event("Set Sprint Pause Time", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
+                ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
+                ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
                 ->Event("Get Crouch Distance", &FirstPersonControllerComponentRequests::GetCrouchDistance)
                 ->Event("Set Crouch Distance", &FirstPersonControllerComponentRequests::SetCrouchDistance)
                 ->Event("Get Crouch Time", &FirstPersonControllerComponentRequests::GetCrouchTime)
@@ -1021,6 +1039,14 @@ namespace FirstPersonController
         else
             targetVelocity *= m_speed * m_crouchScale;
 
+        if(m_scriptSetsXYTargetVelocity)
+        {
+            targetVelocity.SetX(m_scriptTargetXYVelocity.GetX());
+            targetVelocity.SetY(m_scriptTargetXYVelocity.GetY());
+        }
+        else
+            m_scriptTargetXYVelocity = targetVelocity;
+
         // Rotate the target velocity vector so that it can be compared against the applied velocity
         const AZ::Vector3 targetVelocityWorld = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(targetVelocity);
 
@@ -1491,12 +1517,78 @@ namespace FirstPersonController
         m_gravity = new_gravity;
         UpdateJumpMaxHoldTime();
     }
+    float FirstPersonControllerComponent::GetJumpHeldGravityFactor() const
+    {
+        return m_jumpHeldGravityFactor;
+    }
+    void FirstPersonControllerComponent::SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor)
+    {
+        m_jumpHeldGravityFactor = new_jumpHeldGravityFactor;
+        UpdateJumpMaxHoldTime();
+    }
+    float FirstPersonControllerComponent::GetJumpFallingGravityFactor() const
+    {
+        return m_jumpFallingGravityFactor;
+    }
+    void FirstPersonControllerComponent::SetJumpFallingGravityFactor(const float& new_jumpFallingGravityFactor)
+    {
+        m_jumpFallingGravityFactor = new_jumpFallingGravityFactor;
+    }
+    float FirstPersonControllerComponent::GetJumpAccelFactor() const
+    {
+        return m_jumpAccelFactor;
+    }
+    void FirstPersonControllerComponent::SetJumpAccelFactor(const float& new_jumpAccelFactor)
+    {
+        m_jumpAccelFactor = new_jumpAccelFactor;
+    }
+    bool FirstPersonControllerComponent::GetUpdateXYAscending() const
+    {
+        return m_updateXYAscending;
+    }
+    void FirstPersonControllerComponent::SetUpdateXYAscending(const bool& new_updateXYAscending)
+    {
+        m_updateXYAscending = new_updateXYAscending;
+    }
+    bool FirstPersonControllerComponent::GetUpdateXYDescending() const
+    {
+        return m_updateXYAscending;
+    }
+    void FirstPersonControllerComponent::SetUpdateXYDescending(const bool& new_updateXYDecending)
+    {
+        m_updateXYDecending = new_updateXYDecending;
+    }
+    bool FirstPersonControllerComponent::GetUpdateXYOnlyNearGround() const
+    {
+        return m_updateXYOnlyNearGround;
+    }
+    void FirstPersonControllerComponent::SetUpdateXYOnlyNearGround(const bool& new_updateXYOnlyNearGround)
+    {
+        m_updateXYOnlyNearGround = new_updateXYOnlyNearGround;
+    }
+    bool FirstPersonControllerComponent::GetScriptSetsXYTargetVelocity() const
+    {
+        return m_scriptSetsXYTargetVelocity;
+    }
+    void FirstPersonControllerComponent::SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity)
+    {
+        m_scriptSetsXYTargetVelocity = new_scriptSetsXYTargetVelocity;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetTargetXYVelocity() const
+    {
+        return m_scriptTargetXYVelocity;
+    }
+    void FirstPersonControllerComponent::SetTargetXYVelocity(const AZ::Vector3& new_scriptTargetXYVelocity)
+    {
+        m_scriptTargetXYVelocity = new_scriptTargetXYVelocity;
+    }
     float FirstPersonControllerComponent::GetZVelocity() const
     {
         return m_zVelocity;
     }
     void FirstPersonControllerComponent::SetZVelocity(const float& new_zVelocity)
     {
+        SetGroundedForTick(false);
         m_zVelocity = new_zVelocity;
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const
@@ -1605,14 +1697,6 @@ namespace FirstPersonController
     {
         m_sprintAccelScale = new_sprintAccelScale;
     }
-    float FirstPersonControllerComponent::GetCrouchScale() const
-    {
-        return m_crouchScale;
-    }
-    void FirstPersonControllerComponent::SetCrouchScale(const float& new_crouchScale)
-    {
-        m_crouchScale = new_crouchScale;
-    }
     float FirstPersonControllerComponent::GetSprintMaxTime() const
     {
         return m_sprintMaxTime;
@@ -1654,6 +1738,14 @@ namespace FirstPersonController
         if(m_staminaPercentage < prevStaminaPercentage)
             m_staminaIncrementing = false;
     }
+    float FirstPersonControllerComponent::GetSprintCooldownTime() const
+    {
+        return m_sprintCooldownTime;
+    }
+    void FirstPersonControllerComponent::SetSprintCooldownTime(const float& new_sprintCooldownTime)
+    {
+        m_sprintCooldownTime = new_sprintCooldownTime;
+    }
     float FirstPersonControllerComponent::GetSprintCooldown() const
     {
         return m_sprintCooldown;
@@ -1677,6 +1769,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouching(const bool& new_crouching)
     {
         m_crouching = new_crouching;
+    }
+    float FirstPersonControllerComponent::GetCrouchScale() const
+    {
+        return m_crouchScale;
+    }
+    void FirstPersonControllerComponent::SetCrouchScale(const float& new_crouchScale)
+    {
+        m_crouchScale = new_crouchScale;
     }
     float FirstPersonControllerComponent::GetCrouchDistance() const
     {

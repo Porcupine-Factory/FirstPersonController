@@ -76,6 +76,22 @@ namespace FirstPersonController
         float GetJumpKeyValue() const override;;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
+        float GetJumpHeldGravityFactor() const override;
+        void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
+        float GetJumpFallingGravityFactor() const override;
+        void SetJumpFallingGravityFactor(const float& new_jumpFallingGravityFactor) override;
+        float GetJumpAccelFactor() const override;
+        void SetJumpAccelFactor(const float& new_jumpAccelFactor) override;
+        bool GetUpdateXYAscending() const override;
+        void SetUpdateXYAscending(const bool& new_updateXYAscending) override;
+        bool GetUpdateXYDescending() const override;
+        void SetUpdateXYDescending(const bool& new_updateXYDecending) override;
+        bool GetUpdateXYOnlyNearGround() const override;
+        void SetUpdateXYOnlyNearGround(const bool& new_updateXYOnlyNearGround) override;
+        bool GetScriptSetsXYTargetVelocity() const override;
+        void SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity) override;
+        AZ::Vector3 GetTargetXYVelocity() const override;
+        void SetTargetXYVelocity(const AZ::Vector3& new_scriptTargetXYVelocity) override;
         float GetZVelocity() const override;
         void SetZVelocity(const float& new_zVelocity) override;
         float GetJumpInitialVelocity() const override;
@@ -104,20 +120,22 @@ namespace FirstPersonController
         void SetSprintVelocityScale(const float& new_sprintVelocityScale) override;
         float GetSprintAccelScale() const override;
         void SetSprintAccelScale(const float& new_sprintAccelScale) override;
-        float GetCrouchScale() const override;
-        void SetCrouchScale(const float& new_crouchScale) override;
         float GetSprintMaxTime() const override;
         void SetSprintMaxTime(const float& new_sprintMaxTime) override;
         float GetSprintHeldTime() const override;
         void SetSprintHeldTime(const float& new_sprintHeldDuration) override;
         float GetStaminaPercentage() const override;
         void SetStaminaPercentage(const float& new_staminaPercentage) override;
+        float GetSprintCooldownTime() const override;
+        void SetSprintCooldownTime(const float& new_sprintCooldown) override;
         float GetSprintCooldown() const override;
         void SetSprintCooldown(const float& new_sprintCooldown) override;
         float GetSprintPauseTime() const override;
         void SetSprintPauseTime(const float& new_sprintDecrementPause) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
+        float GetCrouchScale() const override;
+        void SetCrouchScale(const float& new_crouchScale) override;
         float GetCrouchDistance() const override;
         void SetCrouchDistance(const float& new_crouchDistance) override;
         float GetCrouchTime() const override;
@@ -180,9 +198,14 @@ namespace FirstPersonController
 
         // Velocity application variables
         AZ::Vector3 m_applyVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_scriptTargetXYVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_lastAppliedVelocity = AZ::Vector3::CreateZero();
         bool m_instantVelocityRotation = true;
+
+        // Determines whether the character's X&Y target velocity
+        // will be set the request bus (script), in effect the entire time this variable is true
+        bool m_scriptSetsXYTargetVelocity = false;
 
         // Angles used to rotate the camera
         float m_cameraRotationAngles[3] = {0.f, 0.f, 0.f};

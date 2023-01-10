@@ -2,6 +2,7 @@
 
 #include <AzCore/Component/ComponentBus.h>
 #include <AzCore/RTTI/BehaviorContext.h>
+#include <AzCore/Math/Vector3.h>
 
 namespace FirstPersonController
 {
@@ -37,6 +38,22 @@ namespace FirstPersonController
         virtual float GetJumpKeyValue() const = 0;
         virtual float GetGravity() const = 0;
         virtual void SetGravity(const float&) = 0;
+        virtual float GetJumpHeldGravityFactor() const = 0;
+        virtual void SetJumpHeldGravityFactor(const float&) = 0;
+        virtual float GetJumpFallingGravityFactor() const = 0;
+        virtual void SetJumpFallingGravityFactor(const float&) = 0;
+        virtual float GetJumpAccelFactor() const = 0;
+        virtual void SetJumpAccelFactor(const float&) = 0;
+        virtual bool GetUpdateXYAscending() const = 0;
+        virtual void SetUpdateXYAscending(const bool&) = 0;
+        virtual bool GetUpdateXYDescending() const = 0;
+        virtual void SetUpdateXYDescending(const bool&) = 0;
+        virtual bool GetUpdateXYOnlyNearGround() const = 0;
+        virtual void SetUpdateXYOnlyNearGround(const bool&) = 0;
+        virtual bool GetScriptSetsXYTargetVelocity() const = 0;
+        virtual void SetScriptSetsXYTargetVelocity(const bool&) = 0;
+        virtual AZ::Vector3 GetTargetXYVelocity() const = 0;
+        virtual void SetTargetXYVelocity(const AZ::Vector3&) = 0;
         virtual float GetZVelocity() const = 0;
         virtual void SetZVelocity(const float&) = 0;
         virtual float GetJumpInitialVelocity() const = 0;
@@ -65,20 +82,22 @@ namespace FirstPersonController
         virtual void SetSprintVelocityScale(const float&) = 0;
         virtual float GetSprintAccelScale() const = 0;
         virtual void SetSprintAccelScale(const float&) = 0;
-        virtual float GetCrouchScale() const = 0;
-        virtual void SetCrouchScale(const float&) = 0;
         virtual float GetSprintMaxTime() const = 0;
         virtual void SetSprintMaxTime(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;
         virtual void SetSprintHeldTime(const float&) = 0;
         virtual float GetStaminaPercentage() const = 0 ;
         virtual void SetStaminaPercentage(const float&) = 0;
+        virtual float GetSprintCooldownTime() const = 0;
+        virtual void SetSprintCooldownTime(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;
         virtual void SetSprintCooldown(const float&) = 0;
         virtual float GetSprintPauseTime() const = 0;
         virtual void SetSprintPauseTime(const float&) = 0;
         virtual bool GetCrouching() const = 0;
         virtual void SetCrouching(const bool&) = 0;
+        virtual float GetCrouchScale() const = 0;
+        virtual void SetCrouchScale(const float&) = 0;
         virtual float GetCrouchDistance() const = 0;
         virtual void SetCrouchDistance(const float&) = 0;
         virtual float GetCrouchTime() const = 0;
