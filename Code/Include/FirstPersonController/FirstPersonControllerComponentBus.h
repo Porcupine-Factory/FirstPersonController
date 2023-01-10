@@ -34,6 +34,8 @@ namespace FirstPersonController
         virtual void SetGroundedForTick(const bool&) = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;
+        virtual AZStd::string GetGroundedCollisionGroupName() const = 0;
+        virtual void SetGroundedCollisionGroup(const AZStd::string&) = 0;
         virtual float GetAirTime() const = 0;
         virtual float GetJumpKeyValue() const = 0;
         virtual float GetGravity() const = 0;

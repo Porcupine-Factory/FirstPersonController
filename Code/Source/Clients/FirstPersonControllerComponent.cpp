@@ -7,6 +7,8 @@
 
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Physics/PhysicsScene.h>
+#include <AzFramework/Physics/CollisionBus.h>
+#include <AzFramework/Physics/PhysicsSystem.h>
 #include <AzFramework/Components/CameraBus.h>
 #include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
 #include <AzFramework/Input/Devices/InputDeviceId.h>
@@ -68,6 +70,7 @@ namespace FirstPersonController
               ->Field("Crouch Priority When Sprint Pressed", &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed)
 
               // Jumping group
+              ->Field("Grounded Collision Group", &FirstPersonControllerComponent::m_groundedCollisionGroupId)
               ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
               ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpInitialVelocity)
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
@@ -215,6 +218,9 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_groundedCollisionGroupId,
+                        "Grounded Collision Group", "The collision group which will be used for the ground detection")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
                         "Gravity (m/s²)", "Z Acceleration due to gravity, set this to 0 if you prefer to use the PhysX Character Gameplay component's gravity instead")
                     ->DataElement(nullptr,
@@ -285,6 +291,8 @@ namespace FirstPersonController
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
+                ->Event("Get Grounded Collision Group Name", &FirstPersonControllerComponentRequests::GetGroundedCollisionGroupName)
+                ->Event("Set Grounded Collision Group Name", &FirstPersonControllerComponentRequests::SetGroundedCollisionGroup)
                 ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("Get Jump Key Value", &FirstPersonControllerComponentRequests::GetJumpKeyValue)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
@@ -385,6 +393,10 @@ namespace FirstPersonController
             &PhysX::CharacterControllerRequestBus::Events::GetRadius);
         Physics::CharacterRequestBus::EventResult(m_maxGroundedAngleDegrees, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
+
+        // Set the collision group based on the group Id that is selected
+        Physics::CollisionRequestBus::BroadcastResult(
+            m_groundedCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_groundedCollisionGroupId);
 
         if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
             m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
@@ -1128,7 +1140,7 @@ namespace FirstPersonController
             AZ::Vector3(0.f, 0.f, -1.f),
             m_groundedSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-            AzPhysics::CollisionGroup::All,
+            m_groundedCollisionGroup,
             nullptr);
 
         request.m_reportMultipleHits = true;
@@ -1208,7 +1220,7 @@ namespace FirstPersonController
                  AZ::Vector3(0.f, 0.f, -1.f),
                  m_sphereCastJumpHoldOffset,
                  AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                 AzPhysics::CollisionGroup::All,
+                 m_groundedCollisionGroup,
                  nullptr);
 
              request.m_reportMultipleHits = true;
@@ -1499,6 +1511,25 @@ namespace FirstPersonController
     {
         m_scriptGroundClose = new_groundClose;
         m_scriptSetGroundCloseTick = true;
+    }
+    AZStd::string FirstPersonControllerComponent::GetGroundedCollisionGroupName() const
+    {
+        AZStd::string groupName;
+        Physics::CollisionRequestBus::BroadcastResult(
+            groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_groundedCollisionGroup);
+        return groupName;
+    }
+    void FirstPersonControllerComponent::SetGroundedCollisionGroup(const AZStd::string& new_groundedCollisionGroupName)
+    {
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_groundedCollisionGroupName, collisionGroup);
+        if(success)
+        {
+            m_groundedCollisionGroup = collisionGroup;
+            const AzPhysics::CollisionConfiguration& configuration = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
+            m_groundedCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_groundedCollisionGroupName);
+        }
     }
     float FirstPersonControllerComponent::GetAirTime() const
     {
