@@ -289,6 +289,7 @@ namespace FirstPersonController
                 ->Event("Set Jump Event Name", &FirstPersonControllerComponentRequests::SetJumpEventName)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
+                ->Event("Get Ground Hit EntityIds", &FirstPersonControllerComponentRequests::GetGroundHitEntityIds)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
                 ->Event("Get Grounded Collision Group Name", &FirstPersonControllerComponentRequests::GetGroundedCollisionGroupName)
@@ -1184,6 +1185,11 @@ namespace FirstPersonController
         AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
         m_grounded = hits ? true : false;
 
+        m_groundHitEntityIds.clear();
+        if(m_grounded)
+            for(AzPhysics::SceneQueryHit hit: hits.m_hits)
+                m_groundHitEntityIds.push_back(hit.m_entityId);
+
         // Check to see if the sum of the steep angles is less than or equal to m_maxGroundedAngleDegrees
         if(!m_grounded && steepNormals.size() > 1)
         {
@@ -1502,6 +1508,10 @@ namespace FirstPersonController
     {
         m_scriptGrounded = new_grounded;
         m_scriptSetGroundTick = true;
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetGroundHitEntityIds() const
+    {
+        return m_groundHitEntityIds;
     }
     bool FirstPersonControllerComponent::GetGroundClose() const
     {

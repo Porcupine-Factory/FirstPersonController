@@ -32,6 +32,7 @@ namespace FirstPersonController
         virtual void SetJumpEventName(AZStd::string) = 0;
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
+        virtual AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;
         virtual AZStd::string GetGroundedCollisionGroupName() const = 0;

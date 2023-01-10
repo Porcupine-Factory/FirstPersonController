@@ -70,6 +70,7 @@ namespace FirstPersonController
         void SetJumpEventName(AZStd::string new_strJump) override;
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
+        AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const override;
         bool GetGroundClose() const override;
         void SetGroundCloseForTick(const bool& new_groundClose) override;
         AZStd::string GetGroundedCollisionGroupName() const override;
@@ -252,6 +253,7 @@ namespace FirstPersonController
         bool m_grounded = true;
         AzPhysics::CollisionGroups::Id m_groundedCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;
+        AZStd::vector<AZ::EntityId> m_groundHitEntityIds;
         float m_maxGroundedAngleDegrees = 30.0f;
         bool m_scriptGrounded = true;
         bool m_scriptSetGroundTick = false;
