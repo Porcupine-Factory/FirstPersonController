@@ -692,8 +692,8 @@ namespace FirstPersonController
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
 
-        float lerpDeltaTime = m_sprintIncrementTime > 0.f ? deltaTime * (1.f + (m_sprintAccelValue-1.f) * m_sprintAccelAdjust) : deltaTime;
-        if(m_sprintAccelValue < 1.f && m_sprintIncrementTime > 0.f)
+        float lerpDeltaTime = m_sprintAccumulateAccelTime > 0.f ? deltaTime * (1.f + (m_sprintAccelValue-1.f) * m_sprintAccelAdjust) : deltaTime;
+        if(m_sprintAccelValue < 1.f && m_sprintAccumulateAccelTime > 0.f)
             lerpDeltaTime = deltaTime * m_sprintAccelValue * m_sprintAccelAdjust;
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
@@ -755,7 +755,7 @@ namespace FirstPersonController
 
         // Reset the counter if there is no movement
         if(!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
-            m_sprintIncrementTime = 0.f;
+            m_sprintAccumulateAccelTime = 0.f;
 
         // Sprint adjustment factor based on the angle of the target velocity
         // with respect to their frame of reference
@@ -769,7 +769,10 @@ namespace FirstPersonController
         {
             m_sprintAccelAdjust = m_sprintVelocityAdjust;
 
-            m_sprintIncrementTime += deltaTime;
+            const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
+            if(!applyVelocityLocal.IsClose(targetVelocity))
+                m_sprintAccumulateAccelTime += deltaTime;
+
             m_sprintHeldDuration += deltaTime * m_sprintVelocityAdjust;
 
             m_sprintDecrementPause = 0.f;
@@ -777,8 +780,8 @@ namespace FirstPersonController
             m_staminaIncrementing = false;
 
             const float totalSprintTime = (m_sprintValue*m_speed)/(m_sprintAccelValue*m_accel);
-            if(m_sprintIncrementTime > totalSprintTime)
-                m_sprintIncrementTime = totalSprintTime;
+            if(m_sprintAccumulateAccelTime > totalSprintTime)
+                m_sprintAccumulateAccelTime = totalSprintTime;
         }
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
         else if(m_sprintValue == 1.f || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
@@ -790,9 +793,9 @@ namespace FirstPersonController
             const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
             m_sprintAccelAdjust = 1.f - applyVelocityLocal.AngleSafe(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
 
-            m_sprintIncrementTime -= deltaTime * m_decel;
-            if(m_sprintIncrementTime < 0.f)
-                m_sprintIncrementTime = 0.f;
+            m_sprintAccumulateAccelTime -= deltaTime * m_decel;
+            if(m_sprintAccumulateAccelTime < 0.f)
+                m_sprintAccumulateAccelTime = 0.f;
 
             // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
             if(m_sprintHeldDuration >= m_sprintMaxTime && m_sprintCooldown == 0.f)
@@ -1058,9 +1061,6 @@ namespace FirstPersonController
         else
             targetVelocity.SetX(targetVelocity.GetX() * m_leftScale);
 
-        // Call the sprint manager
-        SprintManager(targetVelocity, deltaTime);
-
         // Apply the speed and sprint factor
         if(m_standing)
             targetVelocity *= m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust);
@@ -1075,6 +1075,9 @@ namespace FirstPersonController
         }
         else
             m_scriptTargetXYVelocity = targetVelocity;
+
+        // Call the sprint manager
+        SprintManager(targetVelocity, deltaTime);
 
         // Rotate the target velocity vector so that it can be compared against the applied velocity
         const AZ::Vector3 targetVelocityWorld = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(targetVelocity);
@@ -1119,7 +1122,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_applyVelocity.GetX() = %.10f", m_applyVelocity.GetX());
         //AZ_Printf("", "m_applyVelocity.GetY() = %.10f", m_applyVelocity.GetY());
         //AZ_Printf("", "m_applyVelocity.GetZ() = %.10f", m_applyVelocity.GetZ());
-        //AZ_Printf("", "m_sprintIncrementTime = %.10f", m_sprintIncrementTime);
+        //AZ_Printf("", "m_sprintAccumulateAccelTime = %.10f", m_sprintAccumulateAccelTime);
         //AZ_Printf("", "m_sprintValue = %.10f", m_sprintValue);
         //AZ_Printf("", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
         //AZ_Printf("", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
