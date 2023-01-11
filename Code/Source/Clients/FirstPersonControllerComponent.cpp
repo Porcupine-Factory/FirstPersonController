@@ -728,7 +728,9 @@ namespace FirstPersonController
             if(m_lerpTime >= totalLerpTime)
                 m_lerpTime = totalLerpTime;
 
-            newVelocity = m_lastAppliedVelocity.Lerp(targetVelocity, m_lerpTime / totalLerpTime);
+            AZ::Vector3 newVelocityDecel =  m_lastAppliedVelocity.Lerp(targetVelocity, m_lerpTime / totalLerpTime);
+            if(newVelocityDecel.GetLength() < m_applyVelocity.GetLength())
+                newVelocity = newVelocityDecel;
         }
 
         return newVelocity;
