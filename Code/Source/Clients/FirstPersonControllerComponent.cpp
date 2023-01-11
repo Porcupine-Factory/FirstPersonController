@@ -773,6 +773,9 @@ namespace FirstPersonController
 
             m_sprintHeldDuration += deltaTime * m_sprintVelocityAdjust;
 
+            if(m_sprintHeldDuration > m_sprintMaxTime)
+                m_sprintHeldDuration = m_sprintMaxTime;
+
             m_sprintDecrementPause = 0.f;
 
             m_staminaIncrementing = false;
