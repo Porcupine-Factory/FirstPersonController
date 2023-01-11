@@ -240,7 +240,9 @@ namespace FirstPersonController
         float m_sprintPrevValue = 1.f;
         float m_sprintVelocityAdjust = 0.f;
         float m_sprintAccelAdjust = 0.f;
+        bool m_sprintStopAccelAdjustCaptured = false;
         float m_sprintAccumulateAccelTime = 0.f;
+        float m_sprintPrevVelocityLength = 0.f;
         float m_sprintHeldDuration = 0.f;
         float m_sprintDecrementPause = 0.f;
         float m_sprintPrevDecrementPause = 0.f;
@@ -326,6 +328,7 @@ namespace FirstPersonController
         // Deceleration factor
         float m_decel = 1.5f;
         float m_opposingDecel = 2.0f;
+        float m_decelerationFactor = m_decel;
 
         // Movement scale factors
         // assuming the event value multipliers are all +1.0

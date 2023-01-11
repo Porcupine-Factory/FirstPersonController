@@ -712,18 +712,18 @@ namespace FirstPersonController
             // Get the current velocity vector with respect to the character's local coordinate system
             const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
 
-            float decelerationFactor = m_decel;
-
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
             if(targetVelocity.GetLength() != 0.f
                 && m_instantVelocityRotation ?
                     (abs(applyVelocityLocal.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi)
                     : (abs(m_applyVelocity.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi))
-                decelerationFactor = m_opposingDecel;
+                m_decelerationFactor = m_opposingDecel;
+            else
+                m_decelerationFactor = m_decel;
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
-            m_lerpTime = lastLerpTime + lerpDeltaTime * decelerationFactor;
+            m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
 
             if(m_lerpTime >= totalLerpTime)
                 m_lerpTime = totalLerpTime;
@@ -763,15 +763,13 @@ namespace FirstPersonController
         // If m_sprintVelocityAdjust is close to zero then set m_sprintValue to one
         if(AZ::IsClose(m_sprintVelocityAdjust, 0.f))
             m_sprintValue = 1.f;
+        else if(m_sprintVelocityAdjust < 0)
+            m_sprintVelocityAdjust = 0;
 
         // If the sprint key is pressed then increment the sprint counter
         if(m_sprintValue != 1.f && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
         {
             m_sprintAccelAdjust = m_sprintVelocityAdjust;
-
-            const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
-            if(!applyVelocityLocal.IsClose(targetVelocity))
-                m_sprintAccumulateAccelTime += deltaTime;
 
             m_sprintHeldDuration += deltaTime * m_sprintVelocityAdjust;
 
@@ -779,23 +777,50 @@ namespace FirstPersonController
 
             m_staminaIncrementing = false;
 
-            const float totalSprintTime = (m_sprintValue*m_speed)/(m_sprintAccelValue*m_accel);
-            if(m_sprintAccumulateAccelTime > totalSprintTime)
-                m_sprintAccumulateAccelTime = totalSprintTime;
+            if(m_applyVelocity.GetLength() > m_sprintPrevVelocityLength)
+            {
+                m_sprintAccumulateAccelTime += deltaTime;
+
+                const float totalSprintTime = (m_sprintValue*m_speed)/(m_sprintAccelValue*m_accel);
+                if(m_sprintAccumulateAccelTime > totalSprintTime)
+                    m_sprintAccumulateAccelTime = totalSprintTime;
+            }
+            else if(m_applyVelocity.GetLength() < m_sprintPrevVelocityLength)
+            {
+                const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
+                if(applyVelocityLocal.AngleSafe(AZ::Vector3::CreateAxisY()) > AZ::Constants::HalfPi)
+                    m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
+                else
+                    m_sprintAccumulateAccelTime -= deltaTime;
+
+                if(m_sprintAccumulateAccelTime <= 0.f)
+                {
+                    m_sprintAccumulateAccelTime = 0.f;
+                    m_sprintPrevVelocityLength = 0.f;
+                }
+            }
+            m_sprintPrevVelocityLength = m_applyVelocity.GetLength();
         }
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
         else if(m_sprintValue == 1.f || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
         {
-            // Set the sprint velocity adjust to 0
-            m_sprintVelocityAdjust = 0.f;
-
             // Set the sprint acceleration adjust according to the local direction we're moving
-            const AZ::Vector3 applyVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_applyVelocity);
-            m_sprintAccelAdjust = 1.f - applyVelocityLocal.AngleSafe(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
+            if((m_instantVelocityRotation || !m_sprintStopAccelAdjustCaptured) && targetVelocity.IsZero())
+            {
+                m_sprintAccelAdjust = 1.f - m_applyVelocity.AngleSafe(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()))/(AZ::Constants::HalfPi);
+                if(m_sprintAccelAdjust < 0)
+                    m_sprintAccelAdjust = 0;
+                m_sprintStopAccelAdjustCaptured = true;
+            }
 
-            m_sprintAccumulateAccelTime -= deltaTime * m_decel;
-            if(m_sprintAccumulateAccelTime < 0.f)
+            m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
+
+            if(m_sprintAccumulateAccelTime <= 0.f)
+            {
                 m_sprintAccumulateAccelTime = 0.f;
+                m_sprintPrevVelocityLength = 0.f;
+                m_sprintStopAccelAdjustCaptured = false;
+            }
 
             // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
             if(m_sprintHeldDuration >= m_sprintMaxTime && m_sprintCooldown == 0.f)
