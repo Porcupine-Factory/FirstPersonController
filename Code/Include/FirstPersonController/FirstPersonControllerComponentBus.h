@@ -143,6 +143,8 @@ namespace FirstPersonController
         virtual void SetCameraYawSensitivity(const float&) = 0;
         virtual float GetCameraRotationDampFactor() const = 0;
         virtual void SetCameraRotationDampFactor(const float&) = 0;
+        virtual bool GetCameraSlerpInsteadOfLerpRotation() const = 0;;
+        virtual void SetCameraSlerpInsteadOfLerpRotation(const bool&) = 0;;
         virtual void UpdateCameraPitch(const float&) = 0;
         virtual void UpdateCameraYaw(const float&) = 0;
         virtual float GetHeading() const = 0;

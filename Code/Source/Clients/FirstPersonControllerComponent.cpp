@@ -39,6 +39,7 @@ namespace FirstPersonController
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yawSensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitchSensitivity)
               ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotationDamp)
+              ->Field("Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponent::m_cameraSlerpInsteadOfLerpRotation)
 
               // Direction Scale Factors group
               ->Field("Forward Scale", &FirstPersonControllerComponent::m_forwardScale)
@@ -138,7 +139,10 @@ namespace FirstPersonController
                         "Pitch Sensitivity", "Camera up/down rotation sensitivity")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rotationDamp,
-                        "Camera Rotation Damp Factor", "The damp factor applied to the camera rotation")
+                        "Camera Rotation Damp Factor", "The damp factor applied to the camera rotation, setting this to something greater than the framerate will effectively disable Slerp / Lerp rotation")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_cameraSlerpInsteadOfLerpRotation,
+                        "Camera Slerp Instead of Lerp Rotation", "Determines whether the camera rotation uses a Slerp or Lerp function for its rotation, turn this on if you want Slerp and turn it off if you want Lerp")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "X&Y Movement")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -410,6 +414,8 @@ namespace FirstPersonController
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
+                ->Event("Get Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponentRequests::GetCameraSlerpInsteadOfLerpRotation)
+                ->Event("Set Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponentRequests::SetCameraSlerpInsteadOfLerpRotation)
                 ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading);
@@ -645,7 +651,7 @@ namespace FirstPersonController
         return ca->FindEntity(activeCameraId);
     }
 
-    void FirstPersonControllerComponent::SlerpRotation(const float& deltaTime)
+    void FirstPersonControllerComponent::SmoothRotation(const float& deltaTime)
     {
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
@@ -664,17 +670,22 @@ namespace FirstPersonController
             AZ::Vector3::CreateFromFloat3(m_cameraRotationAngles));
 
         if(m_rotationDamp*deltaTime <= 1.f)
-            m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp*deltaTime);
+        {
+            if(m_cameraSlerpInsteadOfLerpRotation)
+                m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp*deltaTime);
+            else
+                m_newLookRotationDelta = m_newLookRotationDelta.Lerp(targetLookRotationDelta, m_rotationDamp*deltaTime);
+        }
         else
             m_newLookRotationDelta = targetLookRotationDelta;
     }
 
     void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime)
     {
-        AZ::TransformInterface* t = GetEntity()->GetTransform();
-
-        SlerpRotation(deltaTime);
+        SmoothRotation(deltaTime);
         const AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
+
+        AZ::TransformInterface* t = GetEntity()->GetTransform();
 
         t->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
@@ -2072,6 +2083,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCameraRotationDampFactor(const float& new_rotationDamp)
     {
         m_rotationDamp = new_rotationDamp;
+    }
+    bool FirstPersonControllerComponent::GetCameraSlerpInsteadOfLerpRotation() const
+    {
+        return m_cameraSlerpInsteadOfLerpRotation;
+    }
+    void FirstPersonControllerComponent::SetCameraSlerpInsteadOfLerpRotation(const bool& new_cameraSlerpInsteadOfLerpRotation)
+    {
+        m_cameraSlerpInsteadOfLerpRotation = new_cameraSlerpInsteadOfLerpRotation;
     }
     void FirstPersonControllerComponent::UpdateCameraYaw(const float& new_cameraYawAngle)
     {

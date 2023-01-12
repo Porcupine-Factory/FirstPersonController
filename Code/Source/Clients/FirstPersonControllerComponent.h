@@ -181,6 +181,8 @@ namespace FirstPersonController
         void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
+        bool GetCameraSlerpInsteadOfLerpRotation() const override;
+        void SetCameraSlerpInsteadOfLerpRotation(const bool& new_cameraSlerpInsteadOfLerpRotation) override;
         void UpdateCameraYaw(const float& new_cameraYawAngle) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
         float GetHeading() const override;
@@ -207,7 +209,7 @@ namespace FirstPersonController
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation(const float& deltaTime);
         AZ::Vector3 LerpVelocity(const AZ::Vector3& targetVelocity, const float& deltaTime);
-        void SlerpRotation(const float& deltaTime);
+        void SmoothRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
 
@@ -325,6 +327,7 @@ namespace FirstPersonController
         float m_currentHeading = 0.f;
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 20.f;
+        bool m_cameraSlerpInsteadOfLerpRotation = true;
 
         // Used when a script wants to update the camera angle via the Request Bus or a gamepad
         bool m_rotatingPitchViaScriptGamepad = false;
