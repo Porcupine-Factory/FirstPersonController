@@ -718,7 +718,23 @@ namespace FirstPersonController
                 && m_instantVelocityRotation ?
                     (abs(applyVelocityLocal.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi)
                     : (abs(m_applyVelocity.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi))
-                m_decelerationFactor = m_opposingDecel;
+            {
+                // Compute the deceleration factor based on the magnitude of the target velocity
+                const float scales[] = {m_forwardScale, m_backScale, m_leftScale, m_rightScale};
+                float greatestScale = m_forwardScale;
+                for(float scale: scales)
+                    if(greatestScale < abs(scale))
+                        greatestScale = abs(scale);
+
+                AZ::Vector3 targetVelocityLocal = targetVelocity;
+                if(!m_instantVelocityRotation)
+                    targetVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(targetVelocity);
+
+                if(m_standing)
+                    m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust) * greatestScale);
+                else
+                    m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * m_crouchScale * greatestScale);
+            }
             else
                 m_decelerationFactor = m_decel;
 
@@ -840,10 +856,6 @@ namespace FirstPersonController
                 if(m_sprintCooldown < 0.f)
                     m_sprintCooldown = 0.f;
             }
-            // If the sprint cooldown time is longer than the maximum sprint duration
-            // then apply a pause based on the difference between the two, times the ratio of
-            // how long sprint was held divided by the maximum sprint duration prior to
-            // decrementing the sprint held duration
             else if(m_sprintCooldownTime > m_sprintMaxTime)
             {
                 if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
@@ -1147,7 +1159,6 @@ namespace FirstPersonController
 
         // Debug print statements to observe the velocity, acceleration, and position
         //AZ_Printf("", "m_currentHeading = %.10f", m_currentHeading);
-        //AZ_Printf("", "atan(m_applyVelocity.GetY()/m_applyVelocity.GetX()) = %.10f", atan(m_applyVelocity.GetY()/m_applyVelocity.GetX()));
         //AZ_Printf("", "m_applyVelocity.GetLength() = %.10f", m_applyVelocity.GetLength());
         //AZ_Printf("", "m_applyVelocity.GetX() = %.10f", m_applyVelocity.GetX());
         //AZ_Printf("", "m_applyVelocity.GetY() = %.10f", m_applyVelocity.GetY());
@@ -1156,6 +1167,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprintValue = %.10f", m_sprintValue);
         //AZ_Printf("", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
         //AZ_Printf("", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
+        //AZ_Printf("", "m_decelerationFactor = %.10f", m_decelerationFactor);
         //AZ_Printf("", "m_sprintVelocityAdjust = %.10f", m_sprintVelocityAdjust);
         //AZ_Printf("", "m_sprintHeldDuration = %.10f", m_sprintHeldDuration);
         //AZ_Printf("", "m_sprintDecrementPause = %.10f", m_sprintDecrementPause);
