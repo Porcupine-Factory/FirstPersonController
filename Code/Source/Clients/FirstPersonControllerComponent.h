@@ -159,6 +159,8 @@ namespace FirstPersonController
         void SetSprintWhileCrouched(const bool& new_sprintWhileCrouched) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
+        bool GetCrouchScriptLocked() const override;
+        void SetCrouchScriptLocked(const bool& new_crouchScriptLocked) override;
         float GetCrouchScale() const override;
         void SetCrouchScale(const float& new_crouchScale) override;
         float GetCrouchDistance() const override;
@@ -187,6 +189,10 @@ namespace FirstPersonController
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
         bool GetCameraSlerpInsteadOfLerpRotation() const override;
         void SetCameraSlerpInsteadOfLerpRotation(const bool& new_cameraSlerpInsteadOfLerpRotation) override;
+        bool GetUpdateCameraYawIgnoresInput() const override;
+        void SetUpdateCameraYawIgnoresInput(const bool& new_updateCameraYawIgnoresInput) override;
+        bool GetUpdateCameraPitchIgnoresInput() const override;
+        void SetUpdateCameraPitchIgnoresInput(const bool& new_updateCameraPitchIgnoresInput) override;
         void UpdateCameraYaw(const float& new_cameraYawAngle) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
         float GetHeading() const override;
@@ -283,6 +289,7 @@ namespace FirstPersonController
         bool m_crouchJumpCausesStanding = true;
         bool m_crouchSprintCausesStanding = false;
         bool m_crouchPriorityWhenSprintPressed = true;
+        bool m_crouchScriptLocked = false;
 
         // Jumping and gravity
         float m_gravity = -9.81f;
@@ -335,6 +342,8 @@ namespace FirstPersonController
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 20.f;
         bool m_cameraSlerpInsteadOfLerpRotation = true;
+        bool m_updateCameraYawIgnoresInput = false;
+        bool m_updateCameraPitchIgnoresInput = false;
 
         // Used when a script wants to update the camera angle via the Request Bus or a gamepad
         bool m_rotatingPitchViaScriptGamepad = false;

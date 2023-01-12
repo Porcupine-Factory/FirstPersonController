@@ -398,6 +398,8 @@ namespace FirstPersonController
                 ->Event("Set Enable Disable Sprint", &FirstPersonControllerComponentRequests::SetSprintEnableDisableScript)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
+                ->Event("Get Crouch Script Locked", &FirstPersonControllerComponentRequests::GetCrouchScriptLocked)
+                ->Event("Set Crouch Script Locked", &FirstPersonControllerComponentRequests::SetCrouchScriptLocked)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
                 ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
                 ->Event("Get Crouch Distance", &FirstPersonControllerComponentRequests::GetCrouchDistance)
@@ -420,6 +422,10 @@ namespace FirstPersonController
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
                 ->Event("Get Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponentRequests::GetCameraSlerpInsteadOfLerpRotation)
                 ->Event("Set Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponentRequests::SetCameraSlerpInsteadOfLerpRotation)
+                ->Event("Get Update Camera Yaw Ignores Input", &FirstPersonControllerComponentRequests::GetUpdateCameraYawIgnoresInput)
+                ->Event("Set Update Camera Yaw Ignores Input", &FirstPersonControllerComponentRequests::SetUpdateCameraYawIgnoresInput)
+                ->Event("Get Update Camera Pitch Ignores Input", &FirstPersonControllerComponentRequests::GetUpdateCameraPitchIgnoresInput)
+                ->Event("Set Update Camera Pitch Ignores Input", &FirstPersonControllerComponentRequests::SetUpdateCameraPitchIgnoresInput)
                 ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading);
@@ -984,11 +990,11 @@ namespace FirstPersonController
     {
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
-        if(m_crouchEnableToggle && m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
+        if(m_crouchEnableToggle && !m_crouchScriptLocked && m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
         {
             m_crouching = !m_crouching;
         }
-        else if(!m_crouchEnableToggle)
+        else if(!m_crouchEnableToggle && !m_crouchScriptLocked)
         {
             if(m_crouchValue != 0.f)
                 m_crouching = true;
@@ -2036,6 +2042,14 @@ namespace FirstPersonController
     {
         m_crouching = new_crouching;
     }
+    bool FirstPersonControllerComponent::GetCrouchScriptLocked() const
+    {
+        return m_crouchScriptLocked;
+    }
+    void FirstPersonControllerComponent::SetCrouchScriptLocked(const bool& new_crouchScriptLocked)
+    {
+        m_crouchScriptLocked = new_crouchScriptLocked;
+    }
     float FirstPersonControllerComponent::GetCrouchScale() const
     {
         return m_crouchScale;
@@ -2132,14 +2146,36 @@ namespace FirstPersonController
     {
         m_cameraSlerpInsteadOfLerpRotation = new_cameraSlerpInsteadOfLerpRotation;
     }
+    bool FirstPersonControllerComponent::GetUpdateCameraYawIgnoresInput() const
+    {
+        return m_updateCameraYawIgnoresInput;
+    }
+    void FirstPersonControllerComponent::SetUpdateCameraYawIgnoresInput(const bool& new_updateCameraYawIgnoresInput)
+    {
+        m_updateCameraYawIgnoresInput = new_updateCameraYawIgnoresInput;
+    }
+    bool FirstPersonControllerComponent::GetUpdateCameraPitchIgnoresInput() const
+    {
+        return m_updateCameraPitchIgnoresInput;
+    }
+    void FirstPersonControllerComponent::SetUpdateCameraPitchIgnoresInput(const bool& new_updateCameraPitchIgnoresInput)
+    {
+        m_updateCameraPitchIgnoresInput = new_updateCameraPitchIgnoresInput;
+    }
     void FirstPersonControllerComponent::UpdateCameraYaw(const float& new_cameraYawAngle)
     {
-        m_cameraRotationAngles[2] = new_cameraYawAngle - m_yawValue * m_yawSensitivity;
+        if(m_updateCameraYawIgnoresInput)
+            m_cameraRotationAngles[2] = new_cameraYawAngle;
+        else
+            m_cameraRotationAngles[2] = new_cameraYawAngle - m_yawValue * m_yawSensitivity;
         m_rotatingYawViaScriptGamepad = true;
     }
     void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_cameraPitchAngle)
     {
-        m_cameraRotationAngles[0] = new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity;
+        if(m_updateCameraPitchIgnoresInput)
+            m_cameraRotationAngles[0] = new_cameraPitchAngle;
+        else
+            m_cameraRotationAngles[0] = new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity;
         m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const

@@ -121,6 +121,8 @@ namespace FirstPersonController
         virtual void SetSprintWhileCrouched(const bool&) = 0;
         virtual bool GetCrouching() const = 0;
         virtual void SetCrouching(const bool&) = 0;
+        virtual bool GetCrouchScriptLocked() const = 0;
+        virtual void SetCrouchScriptLocked(const bool&) = 0;
         virtual float GetCrouchScale() const = 0;
         virtual void SetCrouchScale(const float&) = 0;
         virtual float GetCrouchDistance() const = 0;
@@ -149,6 +151,10 @@ namespace FirstPersonController
         virtual void SetCameraRotationDampFactor(const float&) = 0;
         virtual bool GetCameraSlerpInsteadOfLerpRotation() const = 0;;
         virtual void SetCameraSlerpInsteadOfLerpRotation(const bool&) = 0;;
+        virtual bool GetUpdateCameraYawIgnoresInput() const = 0;
+        virtual void SetUpdateCameraYawIgnoresInput(const bool&) = 0;
+        virtual bool GetUpdateCameraPitchIgnoresInput() const = 0;
+        virtual void SetUpdateCameraPitchIgnoresInput(const bool&) = 0;
         virtual void UpdateCameraPitch(const float&) = 0;
         virtual void UpdateCameraYaw(const float&) = 0;
         virtual float GetHeading() const = 0;
