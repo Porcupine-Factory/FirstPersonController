@@ -175,6 +175,10 @@ namespace FirstPersonController
         void SetCrouchSprintCausesStanding(const bool& new_crouchSprintCausesStanding) override;
         bool GetCrouchPriorityWhenSprintPressed() const override;
         void SetCrouchPriorityWhenSprintPressed(const bool& new_crouchPriorityWhenSprintPressed) override;
+        bool GetSprintViaScript() const override;
+        void SetSprintViaScript(const bool& new_sprintViaScript) override;
+        bool GetSprintEnableDisableScript() const override;
+        void SetSprintEnableDisableScript(const bool& new_sprintEnableDisableScript) override;
         float GetCameraYawSensitivity() const override;
         void SetCameraYawSensitivity(const float& new_yawSensitivity) override;
         float GetCameraPitchSensitivity() const override;
@@ -260,6 +264,8 @@ namespace FirstPersonController
         bool m_sprintBackwards = false;
         bool m_sprintAdjustBasedOnAngle = true;
         bool m_sprintWhileCrouched = false;
+        bool m_sprintViaScript = false;
+        bool m_sprintEnableDisableScript = false;
         bool m_staminaIncrementing = false;
 
         // Stamina application variables
@@ -270,6 +276,7 @@ namespace FirstPersonController
         float m_crouchTime = 0.2f;
         float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
+        bool m_crouched = false;
         bool m_standing = true;
         float m_cameraLocalZTravelDistance = 0.f;
         bool m_crouchEnableToggle = true;

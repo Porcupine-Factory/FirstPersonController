@@ -392,6 +392,10 @@ namespace FirstPersonController
                 ->Event("Set Sprint Adjust Based On Angle", &FirstPersonControllerComponentRequests::SetSprintAdjustBasedOnAngle)
                 ->Event("Get Sprint While Crouched", &FirstPersonControllerComponentRequests::GetSprintWhileCrouched)
                 ->Event("Set Sprint While Crouched", &FirstPersonControllerComponentRequests::SetSprintWhileCrouched)
+                ->Event("Get Sprint Via Script", &FirstPersonControllerComponentRequests::GetSprintViaScript)
+                ->Event("Set Sprint Via Script", &FirstPersonControllerComponentRequests::SetSprintViaScript)
+                ->Event("Get Enable Disable Sprint", &FirstPersonControllerComponentRequests::GetSprintEnableDisableScript)
+                ->Event("Set Enable Disable Sprint", &FirstPersonControllerComponentRequests::SetSprintEnableDisableScript)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
@@ -714,6 +718,8 @@ namespace FirstPersonController
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
     }
 
+    // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
+    // and it's with respect to the world when m_instantVelocityRotation == true
     AZ::Vector3 FirstPersonControllerComponent::LerpVelocity(const AZ::Vector3& targetVelocity, const float& deltaTime)
     {
         float totalLerpTime = m_lastAppliedVelocity.GetDistance(targetVelocity)/m_accel;
@@ -781,10 +787,11 @@ namespace FirstPersonController
         return newVelocity;
     }
 
+    // Here target velocity is with respect to the character's frame of reference
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector3& targetVelocity, const float& deltaTime)
     {
         // Cause the character to stand if trying to sprint while crouched and the setting is enabled
-        if(m_crouchSprintCausesStanding && m_sprintValue != 1.f && m_crouching)
+        if(m_crouchSprintCausesStanding && m_sprintValue != 1.f && m_crouched)
             m_crouching = false;
 
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
@@ -797,6 +804,14 @@ namespace FirstPersonController
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
                    (!m_forwardValue && -m_leftValue == m_rightValue) ||
                    (targetVelocity.GetY() < 0.f)) ))
+            m_sprintValue = 1.f;
+
+        if((m_sprintViaScript && m_sprintEnableDisableScript) && (targetVelocity.GetY() > 0.f || (m_sprintBackwards && !m_sprintAdjustBasedOnAngle)))
+        {
+            m_sprintValue = m_sprintVelocityScale;
+            m_sprintAccelValue = m_sprintAccelScale;
+        }
+        else if(m_sprintViaScript && !m_sprintEnableDisableScript)
             m_sprintValue = 1.f;
 
         m_sprintPrevValue = m_sprintValue;
@@ -858,6 +873,8 @@ namespace FirstPersonController
         // Otherwise if the sprint key isn't pressed then decrement the sprint counter
         else if(m_sprintValue == 1.f || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
         {
+            m_sprintValue = 1.f;
+
             // Set the sprint acceleration adjust according to the local direction we're moving
             if((m_instantVelocityRotation || !m_sprintStopAccelAdjustCaptured) && targetVelocity.IsZero())
             {
@@ -982,6 +999,7 @@ namespace FirstPersonController
         // If the crouch key takes priority when the sprint key is held and we're attempting to crouch
         // while the sprint key is being pressed then stop the sprinting and continue crouching
         if(m_crouchPriorityWhenSprintPressed
+                && !m_sprintWhileCrouched
                 && m_sprintValue != 1.f
                 && m_crouching
                 && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
@@ -1009,6 +1027,7 @@ namespace FirstPersonController
             {
                 cameraTravelDelta += abs(m_cameraLocalZTravelDistance) - m_crouchDistance;
                 m_cameraLocalZTravelDistance = -1.f * m_crouchDistance;
+                m_crouched = true;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCrouched);
             }
 
@@ -1028,6 +1047,9 @@ namespace FirstPersonController
         // Stand up
         else if(!m_crouching && m_cameraLocalZTravelDistance != 0.f)
         {
+            if(m_crouched)
+                m_crouched = false;
+
             // Create a shapecast sphere that will be used to detect whether there is an obstruction
             // above the players head, and prevent them from fully standing up if there is
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
@@ -1140,7 +1162,8 @@ namespace FirstPersonController
             targetVelocity.SetX(targetVelocity.GetX() * m_leftScale);
 
         // Call the sprint manager
-        SprintManager(targetVelocity, deltaTime);
+        if(!m_scriptSetsXYTargetVelocity)
+            SprintManager(targetVelocity, deltaTime);
 
         // Apply the speed and sprint factor
         if(m_standing || m_sprintWhileCrouched)
@@ -1153,6 +1176,7 @@ namespace FirstPersonController
         {
             targetVelocity.SetX(m_scriptTargetXYVelocity.GetX());
             targetVelocity.SetY(m_scriptTargetXYVelocity.GetY());
+            SprintManager(targetVelocity, deltaTime);
         }
         else
             m_scriptTargetXYVelocity = targetVelocity;
@@ -1987,6 +2011,22 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintWhileCrouched(const bool& new_sprintWhileCrouched)
     {
         m_sprintWhileCrouched = new_sprintWhileCrouched;
+    }
+    bool FirstPersonControllerComponent::GetSprintViaScript() const
+    {
+        return m_sprintViaScript;
+    }
+    void FirstPersonControllerComponent::SetSprintViaScript(const bool& new_sprintViaScript)
+    {
+        m_sprintViaScript = new_sprintViaScript;
+    }
+    bool FirstPersonControllerComponent::GetSprintEnableDisableScript() const
+    {
+        return m_sprintEnableDisableScript;
+    }
+    void FirstPersonControllerComponent::SetSprintEnableDisableScript(const bool& new_sprintEnableDisableScript)
+    {
+        m_sprintEnableDisableScript = new_sprintEnableDisableScript;
     }
     bool FirstPersonControllerComponent::GetCrouching() const
     {
