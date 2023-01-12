@@ -151,6 +151,12 @@ namespace FirstPersonController
         void SetSprintCooldown(const float& new_sprintCooldown) override;
         float GetSprintPauseTime() const override;
         void SetSprintPauseTime(const float& new_sprintDecrementPause) override;
+        bool GetSprintBackwards() const override;
+        void SetSprintBackwards(const bool& new_sprintBackwards) override;
+        bool GetSprintAdjustBasedOnAngle() const override;
+        void SetSprintAdjustBasedOnAngle(const bool& new_sprintAdjustBasedOnAngle) override;
+        bool GetSprintWhileCrouched() const override;
+        void SetSprintWhileCrouched(const bool& new_sprintWhileCrouched) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
         float GetCrouchScale() const override;
@@ -249,6 +255,9 @@ namespace FirstPersonController
         float m_sprintMaxTime = 3.f;
         float m_sprintCooldown = 0.f;
         float m_sprintCooldownTime = 5.f;
+        bool m_sprintBackwards = false;
+        bool m_sprintAdjustBasedOnAngle = true;
+        bool m_sprintWhileCrouched = false;
         bool m_staminaIncrementing = false;
 
         // Stamina application variables

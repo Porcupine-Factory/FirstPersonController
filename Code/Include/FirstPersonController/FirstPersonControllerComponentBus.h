@@ -113,6 +113,12 @@ namespace FirstPersonController
         virtual void SetSprintCooldown(const float&) = 0;
         virtual float GetSprintPauseTime() const = 0;
         virtual void SetSprintPauseTime(const float&) = 0;
+        virtual bool GetSprintBackwards() const = 0;
+        virtual void SetSprintBackwards(const bool&) = 0;
+        virtual bool GetSprintAdjustBasedOnAngle() const = 0;
+        virtual void SetSprintAdjustBasedOnAngle(const bool&) = 0;
+        virtual bool GetSprintWhileCrouched() const = 0;
+        virtual void SetSprintWhileCrouched(const bool&) = 0;
         virtual bool GetCrouching() const = 0;
         virtual void SetCrouching(const bool&) = 0;
         virtual float GetCrouchScale() const = 0;
