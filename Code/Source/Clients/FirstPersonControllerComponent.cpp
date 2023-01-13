@@ -1171,10 +1171,11 @@ namespace FirstPersonController
         if(!m_scriptSetsXYTargetVelocity)
             SprintManager(targetVelocity, deltaTime);
 
-        // Apply the speed and sprint factor
-        if(m_standing || m_sprintWhileCrouched)
+        // Apply the speed, sprint factor, and crouch factor
+        if(m_standing)
             targetVelocity *= m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust);
-        // Don't apply the sprint factor when crouching
+        else if(m_sprintWhileCrouched && !m_standing)
+            targetVelocity *= m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust) * m_crouchScale;
         else
             targetVelocity *= m_speed * m_crouchScale;
 
