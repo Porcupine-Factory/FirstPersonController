@@ -1551,7 +1551,7 @@ namespace FirstPersonController
     {
         return m_strForward;
     }
-    void FirstPersonControllerComponent::SetForwardEventName(AZStd::string& new_strForward)
+    void FirstPersonControllerComponent::SetForwardEventName(const AZStd::string& new_strForward)
     {
         m_strForward = new_strForward;
         AssignConnectInputEvents();
@@ -1572,7 +1572,7 @@ namespace FirstPersonController
     {
         return m_strBack;
     }
-    void FirstPersonControllerComponent::SetBackEventName(AZStd::string& new_strBack)
+    void FirstPersonControllerComponent::SetBackEventName(const AZStd::string& new_strBack)
     {
         m_strBack = new_strBack;
         AssignConnectInputEvents();
@@ -1593,7 +1593,7 @@ namespace FirstPersonController
     {
         return m_strLeft;
     }
-    void FirstPersonControllerComponent::SetLeftEventName(AZStd::string& new_strLeft)
+    void FirstPersonControllerComponent::SetLeftEventName(const AZStd::string& new_strLeft)
     {
         m_strLeft = new_strLeft;
         AssignConnectInputEvents();
@@ -1614,7 +1614,7 @@ namespace FirstPersonController
     {
         return m_strRight;
     }
-    void FirstPersonControllerComponent::SetRightEventName(AZStd::string& new_strRight)
+    void FirstPersonControllerComponent::SetRightEventName(const AZStd::string& new_strRight)
     {
         m_strRight = new_strRight;
         AssignConnectInputEvents();
@@ -1635,7 +1635,7 @@ namespace FirstPersonController
     {
         return m_strYaw;
     }
-    void FirstPersonControllerComponent::SetYawEventName(AZStd::string& new_strYaw)
+    void FirstPersonControllerComponent::SetYawEventName(const AZStd::string& new_strYaw)
     {
         m_strYaw = new_strYaw;
         AssignConnectInputEvents();
@@ -1648,7 +1648,7 @@ namespace FirstPersonController
     {
         return m_strPitch;
     }
-    void FirstPersonControllerComponent::SetPitchEventName(AZStd::string& new_strPitch)
+    void FirstPersonControllerComponent::SetPitchEventName(const AZStd::string& new_strPitch)
     {
         m_strPitch = new_strPitch;
         AssignConnectInputEvents();
@@ -1661,7 +1661,7 @@ namespace FirstPersonController
     {
         return m_strSprint;
     }
-    void FirstPersonControllerComponent::SetSprintEventName(AZStd::string& new_strSprint)
+    void FirstPersonControllerComponent::SetSprintEventName(const AZStd::string& new_strSprint)
     {
         m_strSprint = new_strSprint;
         AssignConnectInputEvents();
@@ -1674,7 +1674,7 @@ namespace FirstPersonController
     {
         return m_strCrouch;
     }
-    void FirstPersonControllerComponent::SetCrouchEventName(AZStd::string& new_strCrouch)
+    void FirstPersonControllerComponent::SetCrouchEventName(const AZStd::string& new_strCrouch)
     {
         m_strCrouch = new_strCrouch;
         AssignConnectInputEvents();
@@ -1687,7 +1687,7 @@ namespace FirstPersonController
     {
         return m_strJump;
     }
-    void FirstPersonControllerComponent::SetJumpEventName(AZStd::string& new_strJump)
+    void FirstPersonControllerComponent::SetJumpEventName(const AZStd::string& new_strJump)
     {
         m_strJump = new_strJump;
         AssignConnectInputEvents();
