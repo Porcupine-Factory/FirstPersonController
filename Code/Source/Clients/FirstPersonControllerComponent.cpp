@@ -82,9 +82,9 @@ namespace FirstPersonController
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jumpFallingGravityFactor)
               ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
+              ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease)
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
               ->Field("Jump Hold Offset (m)", &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset)
-              ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease)
               ->Field("Jump Head Hit Detection Distance", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
               ->Field("Jump Head Hit Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
@@ -259,11 +259,11 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
                         "X&Y Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_groundedSphereCastOffset,
-                        "Grounded Offset (m)", "The sphere cast's ground detect offset in meters")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset,
                         "Jump Hold Offset (m)", "The sphere cast's jump hold offset in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_groundedSphereCastOffset,
+                        "Grounded Offset (m)", "The sphere cast's ground detect offset in meters")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease,
                         "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius")
