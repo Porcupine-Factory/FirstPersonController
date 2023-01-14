@@ -485,6 +485,8 @@ namespace FirstPersonController
         //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
         //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
 
+        UpdateJumpMaxHoldTime();
+
         AssignConnectInputEvents();
 
         AZ::TickBus::Handler::BusConnect();
