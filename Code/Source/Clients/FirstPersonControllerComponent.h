@@ -121,8 +121,17 @@ namespace FirstPersonController
         void SetGroundedOffset(const float& new_sphereCastJumpHoldOffset) override;
         float GetJumpHoldOffset() const override;
         void SetJumpHoldOffset(const float& new_groundedSphereCastOffset) override;
-        float GetSphereCastRadiusPercentageIncrease() const override;
-        void SetSphereCastRadiusPercentageIncrease(const float& new_sphereCastRadiusPercentageIncrease) override;
+        float GetJumpHeadSphereCastOffset() const override;
+        void SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset) override;
+        bool GetHeadHit() const override;
+        void SetHeadHit(const bool& new_headHit) override;
+        bool GetJumpHeadIgnoreNonKinematicRigidBodies() const override;
+        void SetJumpHeadIgnoreNonKinematicRigidBodies(const bool& new_jumpHeadIgnoreNonKinematicRigidBodies) override;
+        AZStd::string GetHeadCollisionGroupName() const override;
+        void SetHeadCollisionGroup(const AZStd::string& new_headCollisionGroupName) override;
+        AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const override;
+        float GetGroundedSphereCastRadiusPercentageIncrease() const override;
+        void SetGroundedSphereCastRadiusPercentageIncrease(const float& new_groundedSphereCastRadiusPercentageIncrease) override;
         float GetMaxGroundedAngleDegrees() const override;
         void SetMaxGroundedAngleDegrees(const float& new_maxGroundedAngleDegrees) override;
         float GetTopWalkSpeed() const override;
@@ -227,6 +236,7 @@ namespace FirstPersonController
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
+        void OnHeadHit();
         void OnCrouched();
         void OnStoodUp();
         void OnFirstJump();
@@ -319,13 +329,19 @@ namespace FirstPersonController
         // It is also used to determine when the ground is close
         float m_sphereCastJumpHoldOffset = 0.5f;
         // The value of 41.5% was determined to work well based on testing
-        float m_sphereCastRadiusPercentageIncrease = 41.5;
+        float m_groundedSphereCastRadiusPercentageIncrease = 41.5;
         float m_jumpMaxHoldTime = m_sphereCastJumpHoldOffset / m_jumpInitialVelocity;
         float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;
         float m_jumpFallingGravityFactor = 1.1f;
         bool m_doubleJumpEnabled = false;
         bool m_secondJump = false;
+        bool m_jumpHeadIgnoreNonKinematicRigidBodies = true;
+        bool m_headHit = false;
+        AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();
+        AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
+        AZStd::vector<AZ::EntityId> m_headHitEntityIds;
+        float m_jumpHeadSphereCastOffset = 0.1f;
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;

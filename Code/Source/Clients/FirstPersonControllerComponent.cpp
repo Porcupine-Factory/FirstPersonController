@@ -7,6 +7,7 @@
 
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Physics/PhysicsScene.h>
+#include <AzFramework/Physics/RigidBodyBus.h>
 #include <AzFramework/Physics/CollisionBus.h>
 #include <AzFramework/Physics/PhysicsSystem.h>
 #include <AzFramework/Components/CameraBus.h>
@@ -75,6 +76,7 @@ namespace FirstPersonController
 
               // Jumping group
               ->Field("Grounded Collision Group", &FirstPersonControllerComponent::m_groundedCollisionGroupId)
+              ->Field("Jump Head Hit Collision Group", &FirstPersonControllerComponent::m_headCollisionGroupId)
               ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
               ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpInitialVelocity)
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
@@ -82,7 +84,9 @@ namespace FirstPersonController
               ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
               ->Field("Jump Hold Offset (m)", &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset)
-              ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_sphereCastRadiusPercentageIncrease)
+              ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease)
+              ->Field("Jump Head Hit Detection Distance", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
+              ->Field("Jump Head Hit Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_updateXYDecending)
@@ -237,6 +241,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_groundedCollisionGroupId,
                         "Grounded Collision Group", "The collision group which will be used for the ground detection")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_headCollisionGroupId,
+                        "Jump Head Hit Collision Group", "The collision group which will be used for the jump head hit detection")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
                         "Gravity (m/s²)", "Z Acceleration due to gravity, set this to 0 if you prefer to use the PhysX Character Gameplay component's gravity instead")
                     ->DataElement(nullptr,
@@ -258,8 +265,17 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset,
                         "Jump Hold Offset (m)", "The sphere cast's jump hold offset in meters")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sphereCastRadiusPercentageIncrease,
+                        &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease,
                         "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset,
+                        "Jump Head Hit Detection Distance", "The distance above the character's head where an obstruction will be detected for jumping")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies,
+                        "Jump Head Hit Ignore Non-Kinematic Rigid Bodies", "Determines whether or not non-kinematic rigid bodies are ignored by the jump head collision detection system")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_doubleJumpEnabled,
+                        "Enable Double Jump", "")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
                         "Enable Double Jump", "Turn this on if you want to enable double jumping")
@@ -356,8 +372,17 @@ namespace FirstPersonController
                 ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
                 ->Event("Get Jump Hold Offset", &FirstPersonControllerComponentRequests::GetJumpHoldOffset)
                 ->Event("Set Jump Hold Offset", &FirstPersonControllerComponentRequests::SetJumpHoldOffset)
-                ->Event("Get Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetSphereCastRadiusPercentageIncrease)
-                ->Event("Set Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetSphereCastRadiusPercentageIncrease)
+                ->Event("Get Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
+                ->Event("Set Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::SetJumpHeadSphereCastOffset)
+                ->Event("Get Head Hit", &FirstPersonControllerComponentRequests::GetHeadHit)
+                ->Event("Set Head Hit", &FirstPersonControllerComponentRequests::SetHeadHit)
+                ->Event("Get Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::GetJumpHeadIgnoreNonKinematicRigidBodies)
+                ->Event("Set Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::SetJumpHeadIgnoreNonKinematicRigidBodies)
+                ->Event("Get Head Collision Group Name", &FirstPersonControllerComponentRequests::GetHeadCollisionGroupName)
+                ->Event("Set Head Collision Group Name", &FirstPersonControllerComponentRequests::SetHeadCollisionGroup)
+                ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
+                ->Event("Get Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetGroundedSphereCastRadiusPercentageIncrease)
+                ->Event("Set Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetGroundedSphereCastRadiusPercentageIncrease)
                 ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -1261,10 +1286,10 @@ namespace FirstPersonController
         AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
 
         // Move the sphere to the location of the character and apply the Z offset
-        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_sphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
+        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            (1.f + m_sphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
+            (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
             sphereIntersectionPose,
             AZ::Vector3(0.f, 0.f, -1.f),
             m_groundedSphereCastOffset,
@@ -1349,7 +1374,7 @@ namespace FirstPersonController
              m_airTime += deltaTime;
 
              request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                 (1.f + m_sphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
+                 (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
                  sphereIntersectionPose,
                  AZ::Vector3(0.f, 0.f, -1.f),
                  m_sphereCastJumpHoldOffset,
@@ -1400,6 +1425,74 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
     {
+        // Create a shapecast sphere that will be used to detect whether there is an obstruction
+        // above the players head, and prevent them from fully standing up if there is
+        auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+        AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
+
+        // Move the sphere to the location of the character and apply the Z offset
+        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
+
+        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+            m_capsuleRadius,
+            sphereIntersectionPose,
+            AZ::Vector3(0.f, 0.f, 1.f),
+            m_jumpHeadSphereCastOffset,
+            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+            m_headCollisionGroup,
+            nullptr);
+
+        request.m_reportMultipleHits = true;
+
+        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
+        // Disregard intersections with the character's collider and its child entities,
+        auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
+            {
+                if(hit.m_entityId == GetEntityId())
+                    return true;
+
+                // Obtain the child IDs if we don't already have them
+                if(!m_obtainedChildIds)
+                {
+                    AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                    m_obtainedChildIds = true;
+                }
+
+                for(AZ::EntityId id: m_children)
+                {
+                    if(hit.m_entityId == id)
+                        return true;
+                }
+
+                if(m_jumpHeadIgnoreNonKinematicRigidBodies)
+                {
+                    // Check to see if the entity hit is kinematic
+                    bool isKinematic = true;
+                    Physics::RigidBodyRequestBus::EventResult(isKinematic, hit.m_entityId,
+                        &Physics::RigidBodyRequests::IsKinematic);
+
+                    if(!isKinematic)
+                        return true;
+                }
+
+                return false;
+            };
+
+        AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
+
+        m_headHit = hits ? true : false;
+
+        m_groundHitEntityIds.clear();
+        if(m_headHit)
+            for(AzPhysics::SceneQueryHit hit: hits.m_hits)
+                m_headHitEntityIds.push_back(hit.m_entityId);
+
+        if(m_headHit)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
+
         AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
         Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
@@ -1409,7 +1502,7 @@ namespace FirstPersonController
 
         if(m_grounded && (m_jumpReqRepress || (currentVelocity.GetZ() <= 0.f && m_zVelocity <= 0.f)))
         {
-            if(m_jumpValue && !m_jumpHeld)
+            if(m_jumpValue && !m_jumpHeld && !m_headHit)
             {
                 if(!m_standing)
                 {
@@ -1487,9 +1580,12 @@ namespace FirstPersonController
         // as described by Verlet integration, which should reduce accumulated error
         m_zVelocity += (m_zVelocityCurrentDelta + m_zVelocityPrevDelta) / 2.f;
 
+        if(m_headHit && m_zVelocity > 0.f)
+            m_zVelocity = m_zVelocityCurrentDelta = 0.f;
+
         // Account for the case where the PhysX Character Gameplay component's gravity is used instead
         if(m_gravity == 0.f && m_grounded && currentVelocity.GetZ() < 0.f)
-            m_zVelocity = 0.f;
+            m_zVelocity = m_zVelocityCurrentDelta = 0.f;
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
@@ -1536,6 +1632,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
+    void FirstPersonControllerComponent::OnHeadHit(){}
     void FirstPersonControllerComponent::OnCrouched(){}
     void FirstPersonControllerComponent::OnStoodUp(){}
     void FirstPersonControllerComponent::OnFirstJump(){}
@@ -1858,13 +1955,60 @@ namespace FirstPersonController
         m_sphereCastJumpHoldOffset = new_sphereCastJumpHoldOffset;
         UpdateJumpMaxHoldTime();
     }
-    float FirstPersonControllerComponent::GetSphereCastRadiusPercentageIncrease() const
+    float FirstPersonControllerComponent::GetJumpHeadSphereCastOffset() const
     {
-        return m_sphereCastRadiusPercentageIncrease;
+        return m_jumpHeadSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetSphereCastRadiusPercentageIncrease(const float& new_sphereCastRadiusPercentageIncrease)
+    void FirstPersonControllerComponent::SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset)
     {
-        m_sphereCastRadiusPercentageIncrease = new_sphereCastRadiusPercentageIncrease;
+        m_jumpHeadSphereCastOffset = new_jumpHeadSphereCastOffset;
+    }
+    bool FirstPersonControllerComponent::GetHeadHit() const
+    {
+        return m_headHit;
+    }
+    void FirstPersonControllerComponent::SetHeadHit(const bool& new_headHit)
+    {
+        m_headHit = new_headHit;
+    }
+    bool FirstPersonControllerComponent::GetJumpHeadIgnoreNonKinematicRigidBodies() const
+    {
+        return m_jumpHeadIgnoreNonKinematicRigidBodies;
+    }
+    void FirstPersonControllerComponent::SetJumpHeadIgnoreNonKinematicRigidBodies(const bool& new_jumpHeadIgnoreNonKinematicRigidBodies)
+    {
+        m_jumpHeadIgnoreNonKinematicRigidBodies = new_jumpHeadIgnoreNonKinematicRigidBodies;
+    }
+    AZStd::string FirstPersonControllerComponent::GetHeadCollisionGroupName() const
+    {
+        AZStd::string groupName;
+        Physics::CollisionRequestBus::BroadcastResult(
+            groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_headCollisionGroup);
+        return groupName;
+    }
+    void FirstPersonControllerComponent::SetHeadCollisionGroup(const AZStd::string& new_headCollisionGroupName)
+    {
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_headCollisionGroupName, collisionGroup);
+        if(success)
+        {
+            m_headCollisionGroup = collisionGroup;
+            const AzPhysics::CollisionConfiguration& configuration = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
+            m_headCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_headCollisionGroupName);
+        }
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetHeadHitEntityIds() const
+    {
+        return m_headHitEntityIds;
+    }
+    float FirstPersonControllerComponent::GetGroundedSphereCastRadiusPercentageIncrease() const
+    {
+        return m_groundedSphereCastRadiusPercentageIncrease;
+    }
+    void FirstPersonControllerComponent::SetGroundedSphereCastRadiusPercentageIncrease(const float& new_groundedSphereCastRadiusPercentageIncrease)
+    {
+        m_groundedSphereCastRadiusPercentageIncrease = new_groundedSphereCastRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {
