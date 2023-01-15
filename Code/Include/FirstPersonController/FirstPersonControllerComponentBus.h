@@ -81,8 +81,10 @@ namespace FirstPersonController
         virtual void SetDoubleJump(const bool&) = 0;
         virtual float GetGroundedOffset() const = 0;
         virtual void SetGroundedOffset(const float&) = 0;
-        virtual float GetJumpHoldOffset() const = 0;
-        virtual void SetJumpHoldOffset(const float&) = 0;
+        virtual float GetGroundCloseOffset() const = 0;
+        virtual void SetGroundCloseOffset(const float&) = 0;
+        virtual float GetJumpHoldDistance() const = 0;
+        virtual void SetJumpHoldDistance(const float&) = 0;
         virtual float GetJumpHeadSphereCastOffset() const = 0;
         virtual void SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset) = 0;
         virtual bool GetHeadHit() const = 0;

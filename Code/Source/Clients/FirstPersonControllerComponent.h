@@ -118,9 +118,11 @@ namespace FirstPersonController
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_doubleJumpEnabled) override;
         float GetGroundedOffset() const override;
-        void SetGroundedOffset(const float& new_sphereCastJumpHoldOffset) override;
-        float GetJumpHoldOffset() const override;
-        void SetJumpHoldOffset(const float& new_groundedSphereCastOffset) override;
+        void SetGroundedOffset(const float& new_groundedSphereCastOffset) override;
+        float GetGroundCloseOffset() const override;
+        void SetGroundCloseOffset(const float& new_groundCloseSphereCastOffset) override;
+        float GetJumpHoldDistance() const override;
+        void SetJumpHoldDistance(const float& new_jumpHoldDistance) override;
         float GetJumpHeadSphereCastOffset() const override;
         void SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset) override;
         bool GetHeadHit() const override;
@@ -324,13 +326,14 @@ namespace FirstPersonController
         float m_capsuleHeight = 1.753f;
         // The grounded sphere cast offset determines how far below the character's feet the ground is detected
         float m_groundedSphereCastOffset = 0.001f;
+        // The ground close sphere cast offset determines how far below the character's feet the ground is considered to be close
+        float m_groundCloseSphereCastOffset = 0.5f;
         // The sphere cast jump hold offset is used to determine initial (ascending) distance of the of the jump
         // where the m_jumpHeldGravityFactor is applied to the gravity
-        // It is also used to determine when the ground is close
-        float m_sphereCastJumpHoldOffset = 0.5f;
+        float m_jumpHoldDistance = 0.5f;
         // The value of 41.5% was determined to work well based on testing
         float m_groundedSphereCastRadiusPercentageIncrease = 41.5;
-        float m_jumpMaxHoldTime = m_sphereCastJumpHoldOffset / m_jumpInitialVelocity;
+        float m_jumpMaxHoldTime = m_jumpHoldDistance / m_jumpInitialVelocity;
         float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;
         float m_jumpFallingGravityFactor = 1.1f;

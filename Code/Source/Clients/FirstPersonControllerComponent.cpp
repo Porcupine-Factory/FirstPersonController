@@ -84,7 +84,8 @@ namespace FirstPersonController
               ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
               ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease)
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
-              ->Field("Jump Hold Offset (m)", &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset)
+              ->Field("Ground Close Offset (m)", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
+              ->Field("Jump Hold Distance (m)", &FirstPersonControllerComponent::m_jumpHoldDistance)
               ->Field("Jump Head Hit Detection Distance", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
               ->Field("Jump Head Hit Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
@@ -259,11 +260,14 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
                         "X&Y Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sphereCastJumpHoldOffset,
-                        "Jump Hold Offset (m)", "The sphere cast's jump hold offset in meters")
+                        &FirstPersonControllerComponent::m_jumpHoldDistance,
+                        "Jump Hold Offset (m)", "Effectively determines the time that jump may be held.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
                         "Grounded Offset (m)", "The sphere cast's ground detect offset in meters")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_groundCloseSphereCastOffset,
+                        "Ground Close Offset (m)", "Determines the ground close detection distance, from the bottom of the character downward.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease,
                         "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius")
@@ -370,8 +374,10 @@ namespace FirstPersonController
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
                 ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
                 ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
-                ->Event("Get Jump Hold Offset", &FirstPersonControllerComponentRequests::GetJumpHoldOffset)
-                ->Event("Set Jump Hold Offset", &FirstPersonControllerComponentRequests::SetJumpHoldOffset)
+                ->Event("Get Ground Close Offset", &FirstPersonControllerComponentRequests::GetGroundCloseOffset)
+                ->Event("Set Ground Close Offset", &FirstPersonControllerComponentRequests::SetGroundCloseOffset)
+                ->Event("Get Jump Hold Offset", &FirstPersonControllerComponentRequests::GetJumpHoldDistance)
+                ->Event("Set Jump Hold Offset", &FirstPersonControllerComponentRequests::SetJumpHoldDistance)
                 ->Event("Get Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
                 ->Event("Set Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::SetJumpHeadSphereCastOffset)
                 ->Event("Get Head Hit", &FirstPersonControllerComponentRequests::GetHeadHit)
@@ -1369,8 +1375,7 @@ namespace FirstPersonController
             m_groundClose = true;
             m_airTime = 0.f;
         }
-        // Check to see if the character is still close to the ground after pressing and holding the jump key
-        // to allow them to jump higher based on the m_sphereCastJumpHoldOffset distance
+        // Check to see if the character is close to an acceptable ground
         else
         {
              m_airTime += deltaTime;
@@ -1379,7 +1384,7 @@ namespace FirstPersonController
                  (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
                  sphereIntersectionPose,
                  AZ::Vector3(0.f, 0.f, -1.f),
-                 m_sphereCastJumpHoldOffset,
+                 m_groundCloseSphereCastOffset,
                  AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                  m_groundedCollisionGroup,
                  nullptr);
@@ -1410,16 +1415,16 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateJumpMaxHoldTime()
     {
-        // Calculate the amount of time that the jump key can be held based on m_sphereCastJumpHoldOffset
+        // Calculate the amount of time that the jump key can be held based on m_jumpHoldDistance
         // divided by the average of the initial jump velocity and the velocity at the edge of the capsule
         const float jumpVelocityCapsuleEdgeSquared = m_jumpInitialVelocity*m_jumpInitialVelocity
-                                                         + 2.f*m_gravity*m_jumpHeldGravityFactor*m_sphereCastJumpHoldOffset;
+                                                         + 2.f*m_gravity*m_jumpHeldGravityFactor*m_jumpHoldDistance;
         // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
         // then compute how long the jump key is held while still inside the jump hold offset intersection capsule
         if(jumpVelocityCapsuleEdgeSquared >= 0.f)
-            m_jumpMaxHoldTime = m_sphereCastJumpHoldOffset / ((m_jumpInitialVelocity
+            m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity
                                                         + sqrt(jumpVelocityCapsuleEdgeSquared)) / 2.f);
-        // Otherwise the apogee will be reached inside m_sphereCastJumpHoldOffset
+        // Otherwise the apogee will be reached inside m_jumpHoldDistance
         // and the jump time needs to computed accordingly
         else
             m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity*m_jumpHeldGravityFactor));
@@ -1600,7 +1605,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_jumpCounter = %.10f", m_jumpCounter);
         //AZ_Printf("", "deltaTime = %.10f", deltaTime);
         //AZ_Printf("", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
-        //AZ_Printf("", "m_sphereCastJumpHoldOffset = %.10f", m_sphereCastJumpHoldOffset);
+        //AZ_Printf("", "m_jumpHoldDistance = %.10f", m_jumpHoldDistance);
         //static float prevZVelocity = m_zVelocity;
         //AZ_Printf("", "dvz/dt = %.10f", (m_zVelocity - prevZVelocity)/deltaTime);
         //AZ_Printf("","");
@@ -1948,13 +1953,21 @@ namespace FirstPersonController
     {
         m_groundedSphereCastOffset = new_groundedSphereCastOffset;
     }
-    float FirstPersonControllerComponent::GetJumpHoldOffset() const
+    float FirstPersonControllerComponent::GetGroundCloseOffset() const
     {
-        return m_sphereCastJumpHoldOffset;
+        return m_groundCloseSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetJumpHoldOffset(const float& new_sphereCastJumpHoldOffset)
+    void FirstPersonControllerComponent::SetGroundCloseOffset(const float& new_groundCloseSphereCastOffset)
     {
-        m_sphereCastJumpHoldOffset = new_sphereCastJumpHoldOffset;
+        m_groundCloseSphereCastOffset = new_groundCloseSphereCastOffset;
+    }
+    float FirstPersonControllerComponent::GetJumpHoldDistance() const
+    {
+        return m_jumpHoldDistance;
+    }
+    void FirstPersonControllerComponent::SetJumpHoldDistance(const float& new_jumpHoldDistance)
+    {
+        m_jumpHoldDistance = new_jumpHoldDistance;
         UpdateJumpMaxHoldTime();
     }
     float FirstPersonControllerComponent::GetJumpHeadSphereCastOffset() const
