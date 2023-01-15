@@ -1487,7 +1487,7 @@ namespace FirstPersonController
 
         m_headHit = hits ? true : false;
 
-        m_groundHitEntityIds.clear();
+        m_headHitEntityIds.clear();
         if(m_headHit)
             for(AzPhysics::SceneQueryHit hit: hits.m_hits)
                 m_headHitEntityIds.push_back(hit.m_entityId);
