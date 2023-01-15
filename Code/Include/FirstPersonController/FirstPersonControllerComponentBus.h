@@ -4,6 +4,8 @@
 #include <AzCore/RTTI/BehaviorContext.h>
 #include <AzCore/Math/Vector3.h>
 
+#include <AzFramework/Physics/PhysicsScene.h>
+
 namespace FirstPersonController
 {
     class FirstPersonControllerComponentRequests : public AZ::ComponentBus
@@ -49,7 +51,14 @@ namespace FirstPersonController
         virtual float GetJumpInputValue() const = 0;
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
-        virtual AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const = 0;
+        virtual AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit) const = 0;
+        virtual AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit) const = 0;
+        virtual AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit) const = 0;
+        virtual float GetSceneQueryHitDistance(AzPhysics::SceneQueryHit) const = 0;
+        virtual Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit) const = 0;
+        virtual Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit) const = 0;
+        virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit) const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;
         virtual AZStd::string GetGroundedCollisionGroupName() const = 0;
@@ -86,13 +95,14 @@ namespace FirstPersonController
         virtual float GetJumpHoldDistance() const = 0;
         virtual void SetJumpHoldDistance(const float&) = 0;
         virtual float GetJumpHeadSphereCastOffset() const = 0;
-        virtual void SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset) = 0;
+        virtual void SetJumpHeadSphereCastOffset(const float&) = 0;
         virtual bool GetHeadHit() const = 0;
-        virtual void SetHeadHit(const bool& new_headHit) = 0;
+        virtual void SetHeadHit(const bool&) = 0;
         virtual bool GetJumpHeadIgnoreNonKinematicRigidBodies() const = 0;
-        virtual void SetJumpHeadIgnoreNonKinematicRigidBodies(const bool& new_jumpHeadRejectNonKinematicRigidBodies) = 0;
+        virtual void SetJumpHeadIgnoreNonKinematicRigidBodies(const bool&) = 0;
         virtual AZStd::string GetHeadCollisionGroupName() const = 0;
-        virtual void SetHeadCollisionGroup(const AZStd::string& new_headCollisionGroupName) = 0;
+        virtual void SetHeadCollisionGroup(const AZStd::string&) = 0;
+        virtual AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit) const = 0;
         virtual AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const = 0;
         virtual float GetGroundedSphereCastRadiusPercentageIncrease() const = 0;
         virtual void SetGroundedSphereCastRadiusPercentageIncrease(const float&) = 0;

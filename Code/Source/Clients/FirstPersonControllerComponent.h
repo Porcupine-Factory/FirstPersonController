@@ -87,7 +87,15 @@ namespace FirstPersonController
         float GetJumpInputValue() const override;
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
-        AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const override;
+        AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const override;
+        AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit hit) const override;
+        AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit hit) const override;
+        AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit hit) const override;
+        float GetSceneQueryHitDistance(AzPhysics::SceneQueryHit hit) const override;
+        Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const override;
+        Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const override;
+        AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const override;
         bool GetGroundClose() const override;
         void SetGroundCloseForTick(const bool& new_groundClose) override;
         AZStd::string GetGroundedCollisionGroupName() const override;
@@ -308,6 +316,7 @@ namespace FirstPersonController
         bool m_grounded = true;
         AzPhysics::CollisionGroups::Id m_groundedCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;
+        AZStd::vector<AzPhysics::SceneQueryHit> m_groundHits;
         AZStd::vector<AZ::EntityId> m_groundHitEntityIds;
         float m_maxGroundedAngleDegrees = 30.0f;
         bool m_scriptGrounded = true;

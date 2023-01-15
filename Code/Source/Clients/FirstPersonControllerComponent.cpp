@@ -6,7 +6,6 @@
 #include <AzCore/Serialization/EditContext.h>
 
 #include <AzFramework/Physics/CharacterBus.h>
-#include <AzFramework/Physics/PhysicsScene.h>
 #include <AzFramework/Physics/RigidBodyBus.h>
 #include <AzFramework/Physics/CollisionBus.h>
 #include <AzFramework/Physics/PhysicsSystem.h>
@@ -342,7 +341,15 @@ namespace FirstPersonController
                 ->Event("Get Jump Input Value", &FirstPersonControllerComponentRequests::GetJumpInputValue)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
-                ->Event("Get Ground Hit EntityIds", &FirstPersonControllerComponentRequests::GetGroundHitEntityIds)
+                ->Event("Get Ground Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundSceneQueryHits)
+                ->Event("Get Scene Query Hit Result Flags", &FirstPersonControllerComponentRequests::GetSceneQueryHitResultFlags)
+                ->Event("Get Scene Query Hit EntityId", &FirstPersonControllerComponentRequests::GetSceneQueryHitEntityId)
+                ->Event("Get Scene Query Hit Normal", &FirstPersonControllerComponentRequests::GetSceneQueryHitNormal)
+                ->Event("Get Scene Query Hit Position", &FirstPersonControllerComponentRequests::GetSceneQueryHitPosition)
+                ->Event("Get Scene Query Hit Distance", &FirstPersonControllerComponentRequests::GetSceneQueryHitDistance)
+                ->Event("Get Scene Query Hit MaterialId", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialId)
+                ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
+                ->Event("Get Scene Query Hit Simulated Body Handle", &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
                 ->Event("Get Grounded Collision Group Name", &FirstPersonControllerComponentRequests::GetGroundedCollisionGroupName)
@@ -1332,6 +1339,8 @@ namespace FirstPersonController
                         return true;
                 }
 
+                m_groundHits.push_back(hit);
+
                 if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_maxGroundedAngleDegrees)
                 {
                     steepNormals.push_back(hit.m_normal);
@@ -1343,13 +1352,9 @@ namespace FirstPersonController
                 return false;
             };
 
+        m_groundHits.clear();
         AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
         m_grounded = hits ? true : false;
-
-        m_groundHitEntityIds.clear();
-        if(m_grounded)
-            for(AzPhysics::SceneQueryHit hit: hits.m_hits)
-                m_groundHitEntityIds.push_back(hit.m_entityId);
 
         // Check to see if the sum of the steep angles is less than or equal to m_maxGroundedAngleDegrees
         if(!m_grounded && steepNormals.size() > 1)
@@ -1809,9 +1814,41 @@ namespace FirstPersonController
         m_scriptGrounded = new_grounded;
         m_scriptSetGroundTick = true;
     }
-    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetGroundHitEntityIds() const
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundSceneQueryHits() const
     {
-        return m_groundHitEntityIds;
+        return m_groundHits;
+    }
+    AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_resultFlags;
+    }
+    AZ::EntityId FirstPersonControllerComponent::GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_entityId;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitNormal(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_normal;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitPosition(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_position;
+    }
+    float FirstPersonControllerComponent::GetSceneQueryHitDistance(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_distance;
+    }
+    Physics::MaterialId FirstPersonControllerComponent::GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_physicsMaterialId;
+    }
+    Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_shape;
+    }
+    AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_bodyHandle;
     }
     bool FirstPersonControllerComponent::GetGroundClose() const
     {
