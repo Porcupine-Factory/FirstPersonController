@@ -353,6 +353,10 @@ namespace FirstPersonController
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
                 ->Event("Get Velocity X×Y Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
                 ->Event("Set Velocity X×Y Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
+                ->Event("Get Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::GetVelocityZPosDirection)
+                ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
+                ->Event("Get Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
+                ->Event("Set Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::SetSphereCastsAxisDirectionPose)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
                 ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
@@ -1101,10 +1105,20 @@ namespace FirstPersonController
             // Move the sphere to the location of the character and apply the Z offset
             sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
 
+            AZ::Vector3 direction = AZ::Vector3::CreateAxisZ();
+
+            // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
+            if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
+            {
+                sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+                 direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
+            }
+
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+
                 m_capsuleRadius,
                 sphereIntersectionPose,
-                AZ::Vector3(0.f, 0.f, 1.f),
+                direction,
                 m_uncrouchHeadSphereCastOffset,
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                 AzPhysics::CollisionGroup::All,
@@ -1299,10 +1313,19 @@ namespace FirstPersonController
         // Move the sphere to the location of the character and apply the Z offset
         sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
 
+        AZ::Vector3 direction = AZ::Vector3::CreateAxisZ(-1.f);
+
+        // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
+        if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
+        {
+            sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(m_sphereCastsAxisDirectionPose, AZ::Vector3::CreateAxisZ()).TransformVector(AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
+             direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), -m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(-1.f));
+        }
+
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
             (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
             sphereIntersectionPose,
-            AZ::Vector3(0.f, 0.f, -1.f),
+            direction,
             m_groundedSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
             m_groundedCollisionGroup,
@@ -1384,7 +1407,7 @@ namespace FirstPersonController
              request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
                  (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
                  sphereIntersectionPose,
-                 AZ::Vector3(0.f, 0.f, -1.f),
+                 direction,
                  m_groundCloseSphereCastOffset,
                  AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                  m_groundedCollisionGroup,
@@ -1442,10 +1465,19 @@ namespace FirstPersonController
         // Move the sphere to the location of the character and apply the Z offset
         sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
 
+        AZ::Vector3 direction = AZ::Vector3::CreateAxisZ();
+
+        // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
+        if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
+        {
+            sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+             direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
+        }
+
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
             m_capsuleRadius,
             sphereIntersectionPose,
-            AZ::Vector3(0.f, 0.f, 1.f),
+            direction,
             m_jumpHeadSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
             m_headCollisionGroup,
@@ -1504,6 +1536,10 @@ namespace FirstPersonController
         AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
         Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
+
+        // Reorient the applied "Z" velocity to the true Z axis
+        if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
+             currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ()).TransformVector(currentVelocity);
 
         // Used for the Verlet integration averaging calculation
         m_zVelocityPrevDelta = m_zVelocityCurrentDelta;
@@ -1634,7 +1670,14 @@ namespace FirstPersonController
         AZ::Vector3 targetVelocity = m_applyVelocity;
         if(m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ())
             targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityXCrossYDirection).TransformVector(targetVelocity);
-        targetVelocity += AZ::Vector3::CreateAxisZ(m_zVelocity);
+        if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
+            targetVelocity += AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityZPosDirection).TransformVector(AZ::Vector3::CreateAxisZ(m_zVelocity));
+        else
+            targetVelocity += AZ::Vector3::CreateAxisZ(m_zVelocity);
+
+        // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
+        /* Physics::CharacterRequestBus::Event(GetEntityId(),
+              &Physics::CharacterRequestBus::Events::SetUpDirection, m_velocityZPosDirection); */
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick,
@@ -1899,6 +1942,28 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection)
     {
         m_velocityXCrossYDirection = new_velocityXCrossYDirection;
+        if(m_velocityXCrossYDirection == AZ::Vector3::CreateZero())
+            m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetVelocityZPosDirection() const
+    {
+        return m_velocityZPosDirection;
+    }
+    void FirstPersonControllerComponent::SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection)
+    {
+        m_velocityZPosDirection = new_velocityZPosDirection;
+        if(m_velocityZPosDirection == AZ::Vector3::CreateZero())
+            m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetSphereCastsAxisDirectionPose() const
+    {
+        return m_sphereCastsAxisDirectionPose;
+    }
+    void FirstPersonControllerComponent::SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose)
+    {
+        m_sphereCastsAxisDirectionPose = new_sphereCastsAxisDirectionPose;
+        if(m_sphereCastsAxisDirectionPose == AZ::Vector3::CreateZero())
+            m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
     }
     float FirstPersonControllerComponent::GetJumpHeldGravityFactor() const
     {
