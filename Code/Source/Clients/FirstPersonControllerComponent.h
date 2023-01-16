@@ -268,7 +268,7 @@ namespace FirstPersonController
         float m_cameraRotationAngles[3] = {0.f, 0.f, 0.f};
 
         // Top walk speed
-        float m_speed = 10.f;
+        float m_speed = 5.f;
 
         // Used to track where we are along lerping the velocity between the two values
         float m_lerpTime = 0.f;
@@ -284,12 +284,12 @@ namespace FirstPersonController
         float m_sprintHeldDuration = 0.f;
         float m_sprintDecrementPause = 0.f;
         float m_sprintPrevDecrementPause = 0.f;
-        float m_sprintMaxTime = 3.f;
+        float m_sprintMaxTime = 120.f;
         float m_sprintCooldown = 0.f;
-        float m_sprintCooldownTime = 5.f;
+        float m_sprintCooldownTime = 1.f;
         bool m_sprintBackwards = false;
-        bool m_sprintAdjustBasedOnAngle = true;
-        bool m_sprintWhileCrouched = false;
+        bool m_sprintAdjustBasedOnAngle = false;
+        bool m_sprintWhileCrouched = true;
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisableScript = false;
         bool m_staminaIncrementing = false;
@@ -325,7 +325,7 @@ namespace FirstPersonController
         bool m_scriptGroundClose = true;
         bool m_scriptSetGroundCloseTick = false;
         float m_airTime = 0.f;
-        float m_jumpInitialVelocity = 2.5f;
+        float m_jumpInitialVelocity = 6f;
         bool m_jumpHeld = false;
         bool m_jumpReqRepress = true;
         float m_zVelocity = 0.f;
@@ -345,7 +345,7 @@ namespace FirstPersonController
         float m_jumpMaxHoldTime = m_jumpHoldDistance / m_jumpInitialVelocity;
         float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;
-        float m_jumpFallingGravityFactor = 1.1f;
+        float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
         bool m_secondJump = false;
         bool m_jumpHeadIgnoreNonKinematicRigidBodies = true;
@@ -358,17 +358,17 @@ namespace FirstPersonController
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;
         bool m_updateXYDecending = true;
-        bool m_updateXYOnlyNearGround = true;
+        bool m_updateXYOnlyNearGround = false;
 
         // These default values work well, depending on OS mouse settings,
         // assuming the event value multiplier is 1.0
-        float m_pitchSensitivity = 0.005f;
-        float m_yawSensitivity = 0.005f;
+        float m_pitchSensitivity = 0.0035f;
+        float m_yawSensitivity = 0.0035f;
 
         // Rotation-related variables
         float m_currentHeading = 0.f;
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
-        float m_rotationDamp = 20.f;
+        float m_rotationDamp = 30.f;
         bool m_cameraSlerpInsteadOfLerpRotation = true;
         bool m_updateCameraYawIgnoresInput = false;
         bool m_updateCameraPitchIgnoresInput = false;
@@ -378,8 +378,8 @@ namespace FirstPersonController
         bool m_rotatingYawViaScriptGamepad = false;
 
         // Acceleration lerp movement
-        float m_accel = 1.f;
-        float m_jumpAccelFactor = 0.5f;
+        float m_accel = 30.f;
+        float m_jumpAccelFactor = 0.25f;
 
         // Deceleration factor
         float m_decel = 1.5f;
@@ -394,7 +394,7 @@ namespace FirstPersonController
         float m_rightScale = 1.f;
         float m_sprintVelocityScale = 1.5f;
         float m_sprintAccelScale = 1.5f;
-        float m_crouchScale = 0.65f;
+        float m_crouchScale = 0.5f;
         // This sphere cast determines how far above the charcter's head that an obstruction is detected
         // for allowing them to uncrouch
         float m_uncrouchHeadSphereCastOffset = 0.1f;
