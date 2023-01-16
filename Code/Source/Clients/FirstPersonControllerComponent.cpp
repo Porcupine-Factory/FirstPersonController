@@ -351,6 +351,8 @@ namespace FirstPersonController
                 ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
+                ->Event("Get Velocity X×Y Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
+                ->Event("Set Velocity X×Y Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
                 ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
@@ -1629,9 +1631,14 @@ namespace FirstPersonController
 
         UpdateVelocityZ(deltaTime);
 
+        AZ::Vector3 targetVelocity = m_applyVelocity;
+        if(m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ())
+            targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityXCrossYDirection).TransformVector(targetVelocity);
+        targetVelocity += AZ::Vector3::CreateAxisZ(m_zVelocity);
+
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick,
-            (m_applyVelocity + AZ::Vector3::CreateAxisZ(m_zVelocity)));
+            targetVelocity);
     }
 
     // Event Notification methods for use in scripts
@@ -1884,6 +1891,14 @@ namespace FirstPersonController
     {
         m_gravity = new_gravity;
         UpdateJumpMaxHoldTime();
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetVelocityXCrossYDirection() const
+    {
+        return m_velocityXCrossYDirection;
+    }
+    void FirstPersonControllerComponent::SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection)
+    {
+        m_velocityXCrossYDirection = new_velocityXCrossYDirection;
     }
     float FirstPersonControllerComponent::GetJumpHeldGravityFactor() const
     {

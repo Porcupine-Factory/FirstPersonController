@@ -103,6 +103,8 @@ namespace FirstPersonController
         float GetAirTime() const override;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
+        AZ::Vector3 GetVelocityXCrossYDirection() const override;
+        void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -314,6 +316,7 @@ namespace FirstPersonController
         // Jumping and gravity
         float m_gravity = -9.81f;
         bool m_grounded = true;
+        AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AzPhysics::CollisionGroups::Id m_groundedCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundHits;

@@ -66,6 +66,8 @@ namespace FirstPersonController
         virtual float GetAirTime() const = 0;
         virtual float GetGravity() const = 0;
         virtual void SetGravity(const float&) = 0;
+        virtual AZ::Vector3 GetVelocityXCrossYDirection() const = 0;
+        virtual void SetVelocityXCrossYDirection(const AZ::Vector3&) = 0;
         virtual float GetJumpHeldGravityFactor() const = 0;
         virtual void SetJumpHeldGravityFactor(const float&) = 0;
         virtual float GetJumpFallingGravityFactor() const = 0;
