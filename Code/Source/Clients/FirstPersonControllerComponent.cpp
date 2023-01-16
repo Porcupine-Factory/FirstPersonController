@@ -357,6 +357,7 @@ namespace FirstPersonController
                 ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
                 ->Event("Get Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
                 ->Event("Set Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::SetSphereCastsAxisDirectionPose)
+                ->Event("Get Vector Angles Between Vectors", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectors)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
                 ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
@@ -1111,7 +1112,7 @@ namespace FirstPersonController
             if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
             {
                 sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
-                 direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
+                direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
             }
 
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
@@ -1319,7 +1320,7 @@ namespace FirstPersonController
         if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
         {
             sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(m_sphereCastsAxisDirectionPose, AZ::Vector3::CreateAxisZ()).TransformVector(AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
-             direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), -m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(-1.f));
+            direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), -m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(-1.f));
         }
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
@@ -1471,7 +1472,7 @@ namespace FirstPersonController
         if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
         {
             sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
-             direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
+            direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
         }
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
@@ -1964,6 +1965,16 @@ namespace FirstPersonController
         m_sphereCastsAxisDirectionPose = new_sphereCastsAxisDirectionPose;
         if(m_sphereCastsAxisDirectionPose == AZ::Vector3::CreateZero())
             m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectors(AZ::Vector3 vector1, AZ::Vector3 vector2)
+    {
+        if(vector1 == vector2)
+            return AZ::Vector3::CreateZero();
+        AZ::Vector3 angle = AZ::Quaternion::CreateShortestArc(vector1, vector2).ConvertToScaledAxisAngle();
+        angle.SetX(angle.GetX() * 360.f/AZ::Constants::TwoPi);
+        angle.SetY(angle.GetY() * 360.f/AZ::Constants::TwoPi);
+        angle.SetZ(angle.GetZ() * 360.f/AZ::Constants::TwoPi);
+        return angle;
     }
     float FirstPersonControllerComponent::GetJumpHeldGravityFactor() const
     {

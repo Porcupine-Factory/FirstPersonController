@@ -72,6 +72,7 @@ namespace FirstPersonController
         virtual void SetVelocityZPosDirection(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetSphereCastsAxisDirectionPose() const = 0;
         virtual void SetSphereCastsAxisDirectionPose(const AZ::Vector3&) = 0;
+        virtual AZ::Vector3 GetVectorAnglesBetweenVectors(AZ::Vector3, AZ::Vector3) = 0;
         virtual float GetJumpHeldGravityFactor() const = 0;
         virtual void SetJumpHeldGravityFactor(const float&) = 0;
         virtual float GetJumpFallingGravityFactor() const = 0;

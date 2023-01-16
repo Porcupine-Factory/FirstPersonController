@@ -109,6 +109,7 @@ namespace FirstPersonController
         void SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection) override;
         AZ::Vector3 GetSphereCastsAxisDirectionPose() const override;
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
+        AZ::Vector3 GetVectorAnglesBetweenVectors(AZ::Vector3 vector1, AZ::Vector3 vector2) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
