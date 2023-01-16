@@ -107,31 +107,31 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strForward,
-                        "Forward Key", "Key for moving forward")
+                        "Forward Key", "Key for moving forward. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strBack,
-                        "Back Key", "Key for moving back")
+                        "Back Key", "Key for moving backward. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strLeft,
-                        "Left Key", "Key for moving left")
+                        "Left Key", "Key for moving left. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strRight,
-                        "Right Key", "Key for moving right")
+                        "Right Key", "Key for moving right. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strYaw,
-                        "Camera Yaw Rotate Input", "Camera yaw rotation control")
+                        "Camera Yaw Rotate Input", "Camera left/right rotation control. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strPitch,
-                        "Camera Pitch Rotate Input", "Camera pitch rotation control")
+                        "Camera Pitch Rotate Input", "Camera up/down rotation control. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strSprint,
-                        "Sprint Key", "Key for sprinting")
+                        "Sprint Key", "Key for sprinting. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strCrouch,
-                        "Crouch Key", "Key for crouching")
+                        "Crouch Key", "Key for crouching. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strJump,
-                        "Jump Key", "Key for jumping")
+                        "Jump Key", "Key for jumping. Must match an Event Name in the .inputbindings file.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Rotation")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -143,28 +143,28 @@ namespace FirstPersonController
                         "Pitch Sensitivity", "Camera up/down rotation sensitivity")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rotationDamp,
-                        "Camera Rotation Damp Factor", "The damp factor applied to the camera rotation, setting this to something greater than the framerate will effectively disable Slerp / Lerp rotation")
+                        "Camera Rotation Damp Factor", "The ‘smoothness’ of the camera rotation. Applies a damp factor to the camera rotation. Setting this to anything greater than the framerate will essentially disable this effect.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_cameraSlerpInsteadOfLerpRotation,
-                        "Camera Slerp Instead of Lerp Rotation", "Determines whether the camera rotation uses a Slerp or Lerp function for its rotation, turn this on if you want Slerp and turn it off if you want Lerp")
+                        "Camera Slerp Instead of Lerp Rotation", "Determines whether Camera Rotation Damp Factor uses Slerp or Lerp function. Enable for Slerp, and disable for Lerp.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "X&Y Movement")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_speed,
-                        "Top Walking Speed (m/s)", "Speed of the character")
+                        "Top Walking Speed (m/s)", "Determines maximum walking speed of the character.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_accel,
-                        "Walking Acceleration (m/s²)", "Acceleration")
+                        "Walking Acceleration (m/s²)", "Determines how quickly the character will reach maximum walking speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_decel,
-                        "Deceleration Factor", "Deceleration multiplier")
+                        "Deceleration Factor", "Determines how quickly the character will stop. The product of this number and Walking Acceleration determines the resulting deceleration.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_opposingDecel,
-                        "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion, the product of this number and Walking Acceleration creates the deceleration that's used")
+                        "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking Acceleration creates the deceleration that's used.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_instantVelocityRotation,
-                        "Instant Velocity Rotation", "Determines whether the velocity vector can rotate instantaneously with respect to the world coordinate system, if set to false then the acceleration and deceleration will apply when rotating the character")
+                        "Instant Velocity Rotation", "Determines whether the velocity vector can rotate instantaneously with respect to the world coordinate system, if set to false then the acceleration and deceleration will apply when rotating the character.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Direction Scale Factors")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -185,25 +185,22 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintVelocityScale,
-                        "Sprint Velocity Scale", "Sprint velocity scale factor")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprintVelocityScale,
-                        "Sprint Velocity Scale", "Sprint velocity scale factor")
+                        "Sprint Velocity Scale", "Sprint velocity scale factor. The maximum sprint velocity will be the product of the Sprint Velocity Scale times Top Walking Speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintAccelScale,
-                        "Sprint Acceleration Scale", "Sprint acceleration scale factor")
+                        "Sprint Acceleration Scale", "Determines how quickly the character will reach maximum sprinting speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintMaxTime,
-                        "Sprint Max Time (sec)", "The maximum consecutive sprinting time")
+                        "Sprint Max Time (sec)", "The maximum consecutive sprinting time before beginning Sprint Cooldown. The underlying quantity of Stamina is set by this number.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintCooldownTime,
-                        "Sprint Cooldown Time (sec)", "The time required to wait before sprinting again when the maximum consecutive sprint time has been reached")
+                        "Sprint Cooldown Time (sec)", "The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or Stamina hits 0%.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintBackwards,
-                        "Sprint Backwards", "Determines whether the character can sprint backwards")
+                        "Sprint Backwards", "Determines whether the character can sprint backwards.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintAdjustBasedOnAngle,
-                        "Sprint Angle Adjusted", "Determines if the sprint is adjusted based on the angle of the target velocity vector with respect to the local +Y axis, the application of sprint drops off to the point of not being applied when there is no +Y (forward) component to the target velocity, enabling this nullfies sprinting backwards")
+                        "Sprint Angle Adjusted", "Scales the Sprint Velocity such that there is no Sprint Velocity Scale applied for left/right, and full Sprint Scale Velocity applied forward. The application of sprint drops off to the point of not being applied when there is no forward movement. I.e. 50% of sprint will be applied when moving diagonally at 45 degrees. Enabling this nullifies sprinting backwards.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintWhileCrouched,
                         "Sprint While Crouched", "Determines whether the character can sprint while crouched")
@@ -212,25 +209,25 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchScale,
-                        "Crouch Scale", "Determines how much slow the character will move when crouched, the product of this number and the top walk speed is the crouch walk speed, it is suggested to make this <1")
+                        "Crouch Scale", "Determines how much slow the character will move when crouched. The product of this number and the top walk speed is the top crouch walk speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
-                        "Crouch Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height, this number cannot be greater than the capsule's height minus two times its radius")
+                        "Crouch Distance (m)", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchTime,
-                        "Crouch Time", "Determines the time it takes to complete the crouch")
+                        "Crouch Time (s)", "Determines the time it takes to complete the crouch")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
-                        "Crouch Standing Head Clearance", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is")
+                        "Crouch Standing Head Clearance", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchEnableToggle,
-                        "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching")
+                        "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching. Disabling this requires the crouch key to be held to maintain crouch.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchJumpCausesStanding,
-                        "Crouch Jump Causes Standing", "Determines whether pressing jump while crouched causes the character to stand up, and then jump once fully standing")
+                        "Crouch Jump Causes Standing", "Determines whether pressing jump while crouched causes the character to stand up, and then jump once fully standing if the jump key is held. Disabling this will prevent jumping while crouched.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchSprintCausesStanding,
-                        "Crouch Sprint Causes Standing", "Determines whether pressing sprint while crouched causes the character to stand up, and then sprint once fully standing")
+                        "Crouch Sprint Causes Standing", "Determines whether pressing sprint while crouched causes the character to stand up, and then sprint once fully standing.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed,
                         "Crouch Priority When Sprint Pressed", "Determines whether pressing crouch while sprint is held causes the character to crouch")
@@ -245,52 +242,49 @@ namespace FirstPersonController
                         "Jump Head Hit Collision Group", "The collision group which will be used for the jump head hit detection")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
-                        "Gravity (m/s²)", "Z Acceleration due to gravity, set this to 0 if you prefer to use the PhysX Character Gameplay component's gravity instead")
+                        "Gravity (m/s²)", "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay component's gravity instead.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpInitialVelocity,
-                        "Jump Initial Velocity (m/s)", "Initial jump velocity")
+                        "Jump Initial Velocity (m/s)", "The velocity used when initiating the jump.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeldGravityFactor,
-                        "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump")
+                        "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpFallingGravityFactor,
-                        "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the Z velocity is negative")
+                        "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the character is falling.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
-                        "X&Y Acceleration Jump Factor (m/s²)", "X & Y acceleration factor while jumping but still close to the ground")
+                        "X&Y Acceleration Jump Factor (m/s²)", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHoldDistance,
                         "Jump Hold Offset (m)", "Effectively determines the time that jump may be held.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
-                        "Grounded Offset (m)", "The sphere cast's ground detect offset in meters")
+                        "Grounded Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundCloseSphereCastOffset,
-                        "Ground Close Offset (m)", "Determines the ground close detection distance, from the bottom of the character downward.")
+                        "Ground Close Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease,
-                        "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius")
+                        "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset,
-                        "Jump Head Hit Detection Distance", "The distance above the character's head where an obstruction will be detected for jumping")
+                        "Jump Head Hit Detection Distance (m)", "The distance above the character's head where an obstruction will be detected for jumping. The apogee of the jump occurs when there is a collision.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies,
-                        "Jump Head Hit Ignore Non-Kinematic Rigid Bodies", "Determines whether or not non-kinematic rigid bodies are ignored by the jump head collision detection system")
+                        "Jump Head Hit Ignore Non-Kinematic Rigid Bodies", "Determines whether or not non-kinematic (dynamic) rigid bodies are ignored by the jump head collision detection system.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
-                        "Enable Double Jump", "")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_doubleJumpEnabled,
-                        "Enable Double Jump", "Turn this on if you want to enable double jumping")
+                        "Enable Double Jump", "Turn this on to enable double jumping.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYAscending,
-                        "Update X&Y Velocity When Ascending", "Determines if the X&Y velocity components will be updated when ascending")
+                        "Update X&Y Velocity When Ascending", "Allows movement in X&Y during a jump’s ascent.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYDecending,
-                        "Update X&Y Velocity When Descending", "Determines if the X&Y velocity components will be updated when descending")
+                        "Update X&Y Velocity When Descending", "Allows movement in X&Y during a jump’s descent.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYOnlyNearGround,
-                        "Update X&Y Velocity Only When Ground Close", "Determines if the X&Y velocity components will be updated only when the ground close sphere cast has an intersection, if the ascending and descending options are disabled then this will effectively do nothing");
+                        "Update X&Y Velocity Only When Ground Close", "Allows movement in X&Y only if close to an acceptable ground entity. According to the distance set in Jump Hold Offset. If the ascending and descending options are disabled, then this will effectively do nothing.");
             }
         }
 
