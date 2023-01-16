@@ -318,14 +318,14 @@ namespace FirstPersonController
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundHits;
         AZStd::vector<AZ::EntityId> m_groundHitEntityIds;
-        float m_maxGroundedAngleDegrees = 30.0f;
+        float m_maxGroundedAngleDegrees = 30.f;
         bool m_scriptGrounded = true;
         bool m_scriptSetGroundTick = false;
         bool m_groundClose = true;
         bool m_scriptGroundClose = true;
         bool m_scriptSetGroundCloseTick = false;
         float m_airTime = 0.f;
-        float m_jumpInitialVelocity = 6f;
+        float m_jumpInitialVelocity = 6.f;
         bool m_jumpHeld = false;
         bool m_jumpReqRepress = true;
         float m_zVelocity = 0.f;
@@ -383,7 +383,7 @@ namespace FirstPersonController
 
         // Deceleration factor
         float m_decel = 1.5f;
-        float m_opposingDecel = 2.0f;
+        float m_opposingDecel = 2.f;
         float m_decelerationFactor = m_decel;
 
         // Movement scale factors

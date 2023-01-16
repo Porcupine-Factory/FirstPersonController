@@ -85,7 +85,7 @@ namespace FirstPersonController
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
               ->Field("Ground Close Offset (m)", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
               ->Field("Jump Hold Distance (m)", &FirstPersonControllerComponent::m_jumpHoldDistance)
-              ->Field("Jump Head Hit Detection Distance", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
+              ->Field("Jump Head Hit Detection Distance (m)", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
               ->Field("Jump Head Hit Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
@@ -137,10 +137,10 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_yawSensitivity,
-                        "Yaw Sensitivity", "Camera left/right rotation sensitivity")
+                        "Yaw Sensitivity", "Camera left/right rotation sensitivity.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_pitchSensitivity,
-                        "Pitch Sensitivity", "Camera up/down rotation sensitivity")
+                        "Pitch Sensitivity", "Camera up/down rotation sensitivity.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rotationDamp,
                         "Camera Rotation Damp Factor", "The ‘smoothness’ of the camera rotation. Applies a damp factor to the camera rotation. Setting this to anything greater than the framerate will essentially disable this effect.")
@@ -170,16 +170,16 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_forwardScale,
-                        "Forward Scale", "Forward movement scale factor")
+                        "Forward Scale", "Forward movement scale factor.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_backScale,
-                        "Back Scale", "Back movement scale factor")
+                        "Back Scale", "Back movement scale factor.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_leftScale,
-                        "Left Scale", "Left movement scale factor")
+                        "Left Scale", "Left movement scale factor.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rightScale,
-                        "Right Scale", "Right movement scale factor")
+                        "Right Scale", "Right movement scale factor.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Sprinting")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -203,7 +203,7 @@ namespace FirstPersonController
                         "Sprint Angle Adjusted", "Scales the Sprint Velocity such that there is no Sprint Velocity Scale applied for left/right, and full Sprint Scale Velocity applied forward. The application of sprint drops off to the point of not being applied when there is no forward movement. I.e. 50% of sprint will be applied when moving diagonally at 45 degrees. Enabling this nullifies sprinting backwards.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintWhileCrouched,
-                        "Sprint While Crouched", "Determines whether the character can sprint while crouched")
+                        "Sprint While Crouched", "Determines whether the character can sprint while crouched.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -215,10 +215,10 @@ namespace FirstPersonController
                         "Crouch Distance (m)", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchTime,
-                        "Crouch Time (s)", "Determines the time it takes to complete the crouch")
+                        "Crouch Time (sec)", "Determines the time it takes to complete the crouch.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
-                        "Crouch Standing Head Clearance", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
+                        "Crouch Standing Head Clearance (m)", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchEnableToggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching. Disabling this requires the crouch key to be held to maintain crouch.")
@@ -230,16 +230,16 @@ namespace FirstPersonController
                         "Crouch Sprint Causes Standing", "Determines whether pressing sprint while crouched causes the character to stand up, and then sprint once fully standing.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed,
-                        "Crouch Priority When Sprint Pressed", "Determines whether pressing crouch while sprint is held causes the character to crouch")
+                        "Crouch Priority When Sprint Pressed", "Determines whether pressing crouch while sprint is held causes the character to crouch.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedCollisionGroupId,
-                        "Grounded Collision Group", "The collision group which will be used for the ground detection")
+                        "Grounded Collision Group", "The collision group which will be used for the ground detection.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_headCollisionGroupId,
-                        "Jump Head Hit Collision Group", "The collision group which will be used for the jump head hit detection")
+                        "Jump Head Hit Collision Group", "The collision group which will be used for the jump head hit detection.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
                         "Gravity (m/s²)", "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay component's gravity instead.")
