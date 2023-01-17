@@ -50,6 +50,7 @@ namespace FirstPersonController
 
         // FirstPersonControllerRequestBus
         AZ::EntityId GetActiveCameraId() const override;
+        void ReacquireChildEntityIds() override;
         AZStd::string GetForwardEventName() const override;
         void SetForwardEventName(const AZStd::string& new_strForward) override;
         float GetForwardScale() const override;

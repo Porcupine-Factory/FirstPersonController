@@ -14,6 +14,7 @@ namespace FirstPersonController
         ~FirstPersonControllerComponentRequests() override = default;
 
         virtual AZ::EntityId GetActiveCameraId() const = 0;
+        virtual void ReacquireChildEntityIds() = 0;
         virtual AZStd::string GetForwardEventName() const = 0;
         virtual void SetForwardEventName(const AZStd::string&) = 0;
         virtual float GetForwardScale() const = 0;

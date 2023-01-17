@@ -302,6 +302,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
                 ->Event("Get Active Camera Id", &FirstPersonControllerComponentRequests::GetActiveCameraId)
+                ->Event("Reacquire Child Entity Ids", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
                 ->Event("Get Forward Event Name", &FirstPersonControllerComponentRequests::GetForwardEventName)
                 ->Event("Set Forward Event Name", &FirstPersonControllerComponentRequests::SetForwardEventName)
                 ->Event("Get Forward Scale", &FirstPersonControllerComponentRequests::GetForwardScale)
@@ -1765,6 +1766,10 @@ namespace FirstPersonController
     AZ::EntityId FirstPersonControllerComponent::GetActiveCameraId() const
     {
         return m_activeCameraEntity->GetId();
+    }
+    void FirstPersonControllerComponent::ReacquireChildEntityIds()
+    {
+        AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
     }
     AZStd::string FirstPersonControllerComponent::GetForwardEventName() const
     {
