@@ -108,6 +108,8 @@ namespace FirstPersonController
         void SetGravity(const float& new_gravity) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
         void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
+        bool GetVelocityXCrossYTracksNormal() const override;
+        void SetVelocityXCrossYTracksNormal(const bool& new_velocityXCrossYTracksNormal) override;
         AZ::Vector3 GetVelocityZPosDirection() const override;
         void SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection) override;
         AZ::Vector3 GetSphereCastsAxisDirectionPose() const override;
@@ -328,6 +330,7 @@ namespace FirstPersonController
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
+        bool m_velocityXCrossYTracksNormal = true;
         AZ::Vector3 m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
         AzPhysics::CollisionGroups::Id m_groundedCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;

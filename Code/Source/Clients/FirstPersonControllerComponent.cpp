@@ -52,6 +52,7 @@ namespace FirstPersonController
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
+              ->Field("X&Y Movement Tracks Surface Inclines", &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal)
               ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
               // Sprinting group
@@ -162,6 +163,9 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_opposingDecel,
                         "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking Acceleration creates the deceleration that's used.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal,
+                        "X&Y Movement Tracks Surface Inclines", "Determines whether the character's XY movement will be tilted in order to follow inclines. This will apply up to the max angle that is specified in the PhysX Character Controller component.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_instantVelocityRotation,
                         "Instant Velocity Rotation", "Determines whether the velocity vector can rotate instantaneously with respect to the world coordinate system, if set to false then the acceleration and deceleration will apply when rotating the character.")
@@ -356,6 +360,8 @@ namespace FirstPersonController
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
                 ->Event("Get Velocity X×Y Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
                 ->Event("Set Velocity X×Y Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
+                ->Event("Get Velocity X×Y Tracks Normal", &FirstPersonControllerComponentRequests::GetVelocityXCrossYTracksNormal)
+                ->Event("Set Velocity X×Y Tracks Normal", &FirstPersonControllerComponentRequests::SetVelocityXCrossYTracksNormal)
                 ->Event("Get Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::GetVelocityZPosDirection)
                 ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
                 ->Event("Get Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
@@ -1346,7 +1352,7 @@ namespace FirstPersonController
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
-        AZStd::vector<AZ::Vector3> steepNormals;
+        AZStd::vector<AzPhysics::SceneQueryHit> steepNormals;
 
         bool groundedOtherwiseGroundClose = true;
         // Disregard intersections with the character's collider, its child entities,
@@ -1369,18 +1375,18 @@ namespace FirstPersonController
                         return true;
                 }
 
-                if(groundedOtherwiseGroundClose)
-                    m_groundHits.push_back(hit);
-                else
-                    m_groundCloseHits.push_back(hit);
-
                 if(abs(hit.m_normal.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) > m_maxGroundedAngleDegrees)
                 {
-                    steepNormals.push_back(hit.m_normal);
+                    steepNormals.push_back(hit);
                     //AZ_Printf("", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
                     //AZ_Printf("", "Steep Angle = %.10f", hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
                     return true;
                 }
+
+                if(groundedOtherwiseGroundClose)
+                    m_groundHits.push_back(hit);
+                else
+                    m_groundCloseHits.push_back(hit);
 
                 return false;
             };
@@ -1389,17 +1395,27 @@ namespace FirstPersonController
         AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
         m_grounded = hits ? true : false;
 
+        bool normalsSumNotSteep = false;
+
         // Check to see if the sum of the steep angles is less than or equal to m_maxGroundedAngleDegrees
         if(!m_grounded && steepNormals.size() > 1)
         {
             AZ::Vector3 sumNormals = AZ::Vector3::CreateZero();
-            for(AZ::Vector3 normal: steepNormals)
-                sumNormals += normal;
+            for(AzPhysics::SceneQueryHit normal: steepNormals)
+                sumNormals += normal.m_normal;
 
             //AZ_Printf("", "Sum of Steep Angles = %.10f", sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose));
             if(abs(sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) <= m_maxGroundedAngleDegrees)
+            {
+                normalsSumNotSteep = true;
                 m_grounded = true;
+            }
         }
+
+        if(normalsSumNotSteep)
+            for(AzPhysics::SceneQueryHit normal: steepNormals)
+                m_groundHits.push_back(normal);
+
         steepNormals.clear();
 
         if(m_scriptSetGroundTick)
@@ -1671,6 +1687,10 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateXYVelocityPlaneTilt(AZ::Vector3& targetVelocity)
     {
+        // Track the sum of the normal vectors for the velocity's XY plane if its set
+        if(m_velocityXCrossYTracksNormal)
+            SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+
         if(m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ())
         {
             if(m_velocityXCrossYDirection.GetZ() >= 0.f)
@@ -2032,6 +2052,14 @@ namespace FirstPersonController
         m_sphereCastsAxisDirectionPose = new_sphereCastsAxisDirectionPose;
         if(m_sphereCastsAxisDirectionPose == AZ::Vector3::CreateZero())
             m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
+    }
+    bool FirstPersonControllerComponent::GetVelocityXCrossYTracksNormal() const
+    {
+        return m_velocityXCrossYTracksNormal;
+    }
+    void FirstPersonControllerComponent::SetVelocityXCrossYTracksNormal(const bool& new_velocityXCrossYTracksNormal)
+    {
+        m_velocityXCrossYTracksNormal = new_velocityXCrossYTracksNormal;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectors(AZ::Vector3 v1, AZ::Vector3 v2)
     {

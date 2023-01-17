@@ -71,6 +71,8 @@ namespace FirstPersonController
         virtual void SetGravity(const float&) = 0;
         virtual AZ::Vector3 GetVelocityXCrossYDirection() const = 0;
         virtual void SetVelocityXCrossYDirection(const AZ::Vector3&) = 0;
+        virtual bool GetVelocityXCrossYTracksNormal() const = 0;
+        virtual void SetVelocityXCrossYTracksNormal(const bool& new_velocityXCrossYDirectionTracksNormal) = 0;
         virtual AZ::Vector3 GetVelocityZPosDirection() const = 0;
         virtual void SetVelocityZPosDirection(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetSphereCastsAxisDirectionPose() const = 0;
