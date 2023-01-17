@@ -88,6 +88,9 @@ namespace FirstPersonController
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
         AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseSceneQueryHits() const override;
+        AZ::Vector3 GetGroundSumNormalsDirection() const override;
+        AZ::Vector3 GetGroundCloseSumNormalsDirection() const override;
         AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const override;
         AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit hit) const override;
         AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit hit) const override;
@@ -109,7 +112,7 @@ namespace FirstPersonController
         void SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection) override;
         AZ::Vector3 GetSphereCastsAxisDirectionPose() const override;
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
-        AZ::Vector3 GetVectorAnglesBetweenVectors(AZ::Vector3 vector1, AZ::Vector3 vector2) override;
+        AZ::Vector3 GetVectorAnglesBetweenVectors(AZ::Vector3 v1, AZ::Vector3 v2) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -248,6 +251,8 @@ namespace FirstPersonController
         void SmoothRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector3& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
+        void UpdateXYVelocityPlaneTilt(AZ::Vector3& targetVelocity);
+        void UpdateZVelocityPosDirection(AZ::Vector3& targetVelocity);
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();
@@ -327,7 +332,7 @@ namespace FirstPersonController
         AzPhysics::CollisionGroups::Id m_groundedCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundHits;
-        AZStd::vector<AZ::EntityId> m_groundHitEntityIds;
+        AZStd::vector<AzPhysics::SceneQueryHit> m_groundCloseHits;
         float m_maxGroundedAngleDegrees = 30.f;
         bool m_scriptGrounded = true;
         bool m_scriptSetGroundTick = false;

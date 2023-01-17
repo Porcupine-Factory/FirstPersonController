@@ -336,6 +336,9 @@ namespace FirstPersonController
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Ground Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundSceneQueryHits)
+                ->Event("Get Ground Close Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundCloseSceneQueryHits)
+                ->Event("Get Ground Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundSumNormalsDirection)
+                ->Event("Get Ground Close Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundCloseSumNormalsDirection)
                 ->Event("Get Scene Query Hit Result Flags", &FirstPersonControllerComponentRequests::GetSceneQueryHitResultFlags)
                 ->Event("Get Scene Query Hit EntityId", &FirstPersonControllerComponentRequests::GetSceneQueryHitEntityId)
                 ->Event("Get Scene Query Hit Normal", &FirstPersonControllerComponentRequests::GetSceneQueryHitNormal)
@@ -1101,25 +1104,28 @@ namespace FirstPersonController
             // above the players head, and prevent them from fully standing up if there is
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
+            AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
             // Move the sphere to the location of the character and apply the Z offset
-            sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
+            sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
 
-            AZ::Vector3 direction = AZ::Vector3::CreateAxisZ();
+            AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ();
 
             // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
             if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
             {
-                sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
-                direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
+                sphereCastDirection = m_sphereCastsAxisDirectionPose;
+                if(m_sphereCastsAxisDirectionPose.GetZ() >= 0.f)
+                    sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+                else
+                    sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
             }
 
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
 
                 m_capsuleRadius,
-                sphereIntersectionPose,
-                direction,
+                sphereCastPose,
+                sphereCastDirection,
                 m_uncrouchHeadSphereCastOffset,
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                 AzPhysics::CollisionGroup::All,
@@ -1309,24 +1315,27 @@ namespace FirstPersonController
         const bool prevGrounded = m_grounded;
         const bool prevGroundClose = m_groundClose;
 
-        AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
+        AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
         // Move the sphere to the location of the character and apply the Z offset
-        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
+        sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
 
-        AZ::Vector3 direction = AZ::Vector3::CreateAxisZ(-1.f);
+        AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ(-1.f);
 
         // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
         if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
         {
-            sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(m_sphereCastsAxisDirectionPose, AZ::Vector3::CreateAxisZ()).TransformVector(AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
-            direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), -m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(-1.f));
+            sphereCastDirection = -m_sphereCastsAxisDirectionPose;
+            if(m_sphereCastsAxisDirectionPose.GetZ() > 0.f)
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
+            else
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
         }
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
             (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
-            sphereIntersectionPose,
-            direction,
+            sphereCastPose,
+            sphereCastDirection,
             m_groundedSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
             m_groundedCollisionGroup,
@@ -1339,9 +1348,10 @@ namespace FirstPersonController
 
         AZStd::vector<AZ::Vector3> steepNormals;
 
+        bool groundedOtherwiseGroundClose = true;
         // Disregard intersections with the character's collider, its child entities,
         // and if the slope angle of the thing that's intersecting is greater than the max grounded angle
-        auto selfChildSlopeEntityCheck = [this, &steepNormals](AzPhysics::SceneQueryHit& hit)
+        auto selfChildSlopeEntityCheck = [this, &steepNormals, &groundedOtherwiseGroundClose](AzPhysics::SceneQueryHit& hit)
             {
                 if(hit.m_entityId == GetEntityId())
                     return true;
@@ -1359,9 +1369,12 @@ namespace FirstPersonController
                         return true;
                 }
 
-                m_groundHits.push_back(hit);
+                if(groundedOtherwiseGroundClose)
+                    m_groundHits.push_back(hit);
+                else
+                    m_groundCloseHits.push_back(hit);
 
-                if(abs(hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) > m_maxGroundedAngleDegrees)
+                if(abs(hit.m_normal.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) > m_maxGroundedAngleDegrees)
                 {
                     steepNormals.push_back(hit.m_normal);
                     //AZ_Printf("", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
@@ -1383,8 +1396,8 @@ namespace FirstPersonController
             for(AZ::Vector3 normal: steepNormals)
                 sumNormals += normal;
 
-            //AZ_Printf("", "Sum of Steep Angles = %.10f", sumNormals.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
-            if(abs(sumNormals.AngleSafeDeg(AZ::Vector3::CreateAxisZ())) <= m_maxGroundedAngleDegrees)
+            //AZ_Printf("", "Sum of Steep Angles = %.10f", sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose));
+            if(abs(sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) <= m_maxGroundedAngleDegrees)
                 m_grounded = true;
         }
         steepNormals.clear();
@@ -1396,37 +1409,35 @@ namespace FirstPersonController
         }
 
         if(m_grounded)
-        {
-            m_groundClose = true;
             m_airTime = 0.f;
-        }
+
         // Check to see if the character is close to an acceptable ground
-        else
+        m_airTime += deltaTime;
+
+        request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+            (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
+            sphereCastPose,
+            sphereCastDirection,
+            m_groundCloseSphereCastOffset,
+            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+            m_groundedCollisionGroup,
+            nullptr);
+
+        request.m_reportMultipleHits = true;
+
+        groundedOtherwiseGroundClose = false;
+
+        hits = sceneInterface->QueryScene(sceneHandle, &request);
+        m_groundCloseHits.clear();
+        AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
+        m_groundClose = hits ? true : false;
+
+        if(m_scriptSetGroundCloseTick)
         {
-             m_airTime += deltaTime;
-
-             request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                 (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
-                 sphereIntersectionPose,
-                 direction,
-                 m_groundCloseSphereCastOffset,
-                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                 m_groundedCollisionGroup,
-                 nullptr);
-
-             request.m_reportMultipleHits = true;
-
-             hits = sceneInterface->QueryScene(sceneHandle, &request);
-             AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
-             m_groundClose = hits ? true : false;
-
-             if(m_scriptSetGroundCloseTick)
-             {
-                 m_groundClose = m_scriptGroundClose;
-                 m_scriptSetGroundCloseTick = false;
-             }
-             //AZ_Printf("", "m_groundClose = %s", m_groundClose ? "true" : "false");
+            m_groundClose = m_scriptGroundClose;
+            m_scriptSetGroundCloseTick = false;
         }
+        //AZ_Printf("", "m_groundClose = %s", m_groundClose ? "true" : "false");
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
@@ -1461,24 +1472,27 @@ namespace FirstPersonController
         // above the players head, and prevent them from fully standing up if there is
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-        AZ::Transform sphereIntersectionPose = AZ::Transform::CreateIdentity();
+        AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
         // Move the sphere to the location of the character and apply the Z offset
-        sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
+        sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
 
-        AZ::Vector3 direction = AZ::Vector3::CreateAxisZ();
+        AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ();
 
         // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
         if(m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
         {
-            sphereIntersectionPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
-            direction = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ());
+            sphereCastDirection = m_sphereCastsAxisDirectionPose;
+            if(m_sphereCastsAxisDirectionPose.GetZ() >= 0.f)
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+            else
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
         }
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
             m_capsuleRadius,
-            sphereIntersectionPose,
-            direction,
+            sphereCastPose,
+            sphereCastDirection,
             m_jumpHeadSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
             m_headCollisionGroup,
@@ -1540,7 +1554,12 @@ namespace FirstPersonController
 
         // Reorient the applied "Z" velocity to the true Z axis
         if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
-             currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ()).TransformVector(currentVelocity);
+        {
+            if(m_velocityZPosDirection.GetZ() >= 0.f)
+                currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ()).TransformVector(currentVelocity);
+            else
+                currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ(-1.f)).TransformVector(-currentVelocity);
+        }
 
         // Used for the Verlet integration averaging calculation
         m_zVelocityPrevDelta = m_zVelocityCurrentDelta;
@@ -1650,6 +1669,33 @@ namespace FirstPersonController
         //prevZVelocity = m_zVelocity;
     }
 
+    void FirstPersonControllerComponent::UpdateXYVelocityPlaneTilt(AZ::Vector3& targetVelocity)
+    {
+        if(m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ())
+        {
+            if(m_velocityXCrossYDirection.GetZ() >= 0.f)
+                targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityXCrossYDirection).TransformVector(targetVelocity);
+            else
+            {
+                targetVelocity.SetY(-targetVelocity.GetY());
+                targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_velocityXCrossYDirection).TransformVector(targetVelocity);
+            }
+        }
+    }
+
+    void FirstPersonControllerComponent::UpdateZVelocityPosDirection(AZ::Vector3& targetVelocity)
+    {
+        if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
+        {
+            if(m_velocityZPosDirection.GetZ() >= 0.f)
+                targetVelocity += AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityZPosDirection).TransformVector(AZ::Vector3::CreateAxisZ(m_zVelocity));
+            else
+                targetVelocity += AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_velocityZPosDirection).TransformVector(AZ::Vector3::CreateAxisZ(-m_zVelocity));
+        }
+        else
+            targetVelocity += AZ::Vector3::CreateAxisZ(m_zVelocity);
+    }
+
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
     {
         UpdateRotation(deltaTime);
@@ -1669,12 +1715,11 @@ namespace FirstPersonController
         UpdateVelocityZ(deltaTime);
 
         AZ::Vector3 targetVelocity = m_applyVelocity;
-        if(m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ())
-            targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityXCrossYDirection).TransformVector(targetVelocity);
-        if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
-            targetVelocity += AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityZPosDirection).TransformVector(AZ::Vector3::CreateAxisZ(m_zVelocity));
-        else
-            targetVelocity += AZ::Vector3::CreateAxisZ(m_zVelocity);
+
+        // Tilt the XY velocity plane based on m_velocityXCrossYDirection
+        UpdateXYVelocityPlaneTilt(targetVelocity);
+        // Change the +Z direction based on m_velocityZPosDirection
+        UpdateZVelocityPosDirection(targetVelocity);
 
         // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
         /* Physics::CharacterRequestBus::Event(GetEntityId(),
@@ -1863,6 +1908,28 @@ namespace FirstPersonController
     {
         return m_groundHits;
     }
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundCloseSceneQueryHits() const
+    {
+        return m_groundCloseHits;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetGroundSumNormalsDirection() const
+    {
+        if(m_groundHits.empty())
+            return AZ::Vector3::CreateAxisZ();
+        AZ::Vector3 sumNormals = AZ::Vector3::CreateZero();
+        for(AzPhysics::SceneQueryHit hit : m_groundHits)
+            sumNormals += hit.m_normal;
+        return sumNormals.GetNormalized();
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetGroundCloseSumNormalsDirection() const
+    {
+        if(m_groundCloseHits.empty())
+            return AZ::Vector3::CreateAxisZ();
+        AZ::Vector3 sumNormals = AZ::Vector3::CreateZero();
+        for(AzPhysics::SceneQueryHit hit : m_groundCloseHits)
+            sumNormals += hit.m_normal;
+        return sumNormals.GetNormalized();
+    }
     AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const
     {
         return hit.m_resultFlags;
@@ -1966,11 +2033,11 @@ namespace FirstPersonController
         if(m_sphereCastsAxisDirectionPose == AZ::Vector3::CreateZero())
             m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectors(AZ::Vector3 vector1, AZ::Vector3 vector2)
+    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectors(AZ::Vector3 v1, AZ::Vector3 v2)
     {
-        if(vector1 == vector2)
+        if(v1 == v2)
             return AZ::Vector3::CreateZero();
-        AZ::Vector3 angle = AZ::Quaternion::CreateShortestArc(vector1, vector2).ConvertToScaledAxisAngle();
+        AZ::Vector3 angle = AZ::Quaternion::CreateShortestArc(v1, v2).ConvertToScaledAxisAngle();
         angle.SetX(angle.GetX() * 360.f/AZ::Constants::TwoPi);
         angle.SetY(angle.GetY() * 360.f/AZ::Constants::TwoPi);
         angle.SetZ(angle.GetZ() * 360.f/AZ::Constants::TwoPi);

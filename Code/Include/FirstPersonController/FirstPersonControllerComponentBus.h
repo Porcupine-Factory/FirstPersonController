@@ -52,6 +52,9 @@ namespace FirstPersonController
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
         virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseSceneQueryHits() const = 0;
+        virtual AZ::Vector3 GetGroundSumNormalsDirection() const = 0;
+        virtual AZ::Vector3 GetGroundCloseSumNormalsDirection() const = 0;
         virtual AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit) const = 0;
