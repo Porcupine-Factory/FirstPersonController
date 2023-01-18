@@ -99,6 +99,8 @@ namespace FirstPersonController
         virtual void SetZVelocity(const float&) = 0;
         virtual float GetJumpInitialVelocity() const = 0;
         virtual void SetJumpInitialVelocity(const float&) = 0;
+        virtual float GetJumpSecondInitialVelocity() const = 0;
+        virtual void SetJumpSecondInitialVelocity(const float&) = 0;
         virtual bool GetDoubleJump() const = 0;
         virtual void SetDoubleJump(const bool&) = 0;
         virtual float GetGroundedOffset() const = 0;

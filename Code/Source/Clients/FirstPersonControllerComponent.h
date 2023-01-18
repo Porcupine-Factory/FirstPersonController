@@ -136,6 +136,8 @@ namespace FirstPersonController
         void SetZVelocity(const float& new_zVelocity) override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
+        float GetJumpSecondInitialVelocity() const override;
+        void SetJumpSecondInitialVelocity(const float& new_jumpInitialVelocity) override;
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_doubleJumpEnabled) override;
         float GetGroundedOffset() const override;
@@ -345,6 +347,7 @@ namespace FirstPersonController
         bool m_scriptSetGroundCloseTick = false;
         float m_airTime = 0.f;
         float m_jumpInitialVelocity = 6.f;
+        float m_jumpSecondInitialVelocity = 6.f;
         bool m_jumpHeld = false;
         bool m_jumpReqRepress = true;
         float m_zVelocity = 0.f;

@@ -388,6 +388,8 @@ namespace FirstPersonController
                 ->Event("Set Z Velocity", &FirstPersonControllerComponentRequests::SetZVelocity)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
+                ->Event("Get Initial Second Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
+                ->Event("Set Initial Second Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpSecondInitialVelocity)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
                 ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
@@ -1324,6 +1326,18 @@ namespace FirstPersonController
 
         AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
+        AZ::Vector3 basePosition = AZ::Vector3::CreateZero();
+        Physics::CharacterRequestBus::EventResult(basePosition, GetEntityId(),
+            &Physics::CharacterRequestBus::Events::GetBasePosition);
+        AZ::Vector3 actualPosition = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
+
+        AZ_Printf("", "basePosition.GetX() = %.10f", basePosition.GetX());
+        AZ_Printf("", "basePosition.GetY() = %.10f", basePosition.GetY());
+        AZ_Printf("", "basePosition.GetZ() = %.10f", basePosition.GetZ());
+        AZ_Printf("", "actualPosition.GetX() = %.10f", actualPosition.GetX());
+        AZ_Printf("", "actualPosition.GetY() = %.10f", actualPosition.GetY());
+        AZ_Printf("", "actualPosition.GetZ() = %.10f", actualPosition.GetZ());
+
         // Move the sphere to the location of the character and apply the Z offset
         sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
 
@@ -1649,7 +1663,7 @@ namespace FirstPersonController
                         m_crouching = false;
                     return;
                 }
-                m_zVelocity = m_jumpInitialVelocity;
+                m_zVelocity = m_jumpSecondInitialVelocity;
                 m_zVelocityCurrentDelta = 0.f;
                 m_secondJump = true;
                 m_jumpHeld = true;
@@ -1671,7 +1685,7 @@ namespace FirstPersonController
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
-        //AZ_Printf("", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
+        AZ_Printf("", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
         //AZ_Printf("", "m_zVelocityPrevDelta = %.10f", m_zVelocityPrevDelta);
         //AZ_Printf("", "m_zVelocityCurrentDelta = %.10f", m_zVelocityCurrentDelta);
         //AZ_Printf("", "m_zVelocity = %.10f", m_zVelocity);
@@ -2158,6 +2172,14 @@ namespace FirstPersonController
     {
         m_jumpInitialVelocity = new_jumpInitialVelocity;
         UpdateJumpMaxHoldTime();
+    }
+    float FirstPersonControllerComponent::GetJumpSecondInitialVelocity() const
+    {
+        return m_jumpSecondInitialVelocity;
+    }
+    void FirstPersonControllerComponent::SetJumpSecondInitialVelocity(const float& new_jumpSecondInitialVelocity)
+    {
+        m_jumpSecondInitialVelocity = new_jumpSecondInitialVelocity;
     }
     bool FirstPersonControllerComponent::GetDoubleJump() const
     {
