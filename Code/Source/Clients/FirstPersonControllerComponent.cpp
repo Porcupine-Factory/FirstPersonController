@@ -469,10 +469,14 @@ namespace FirstPersonController
                 ->Event("Set Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
-                ->Event("Get Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngle)
-                ->Event("Set Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngle)
-                ->Event("Get Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngle)
-                ->Event("Set Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngle)
+                ->Event("Get Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleRadians)
+                ->Event("Set Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngleRadians)
+                ->Event("Get Camera Pitch Max Angle (Degrees)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleDegrees)
+                ->Event("Set Camera Pitch Max Angle (Degrees)", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngleDegrees)
+                ->Event("Get Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngleRadians)
+                ->Event("Set Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleRadians)
+                ->Event("Get Camera Pitch Min Angle (Degrees)", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngleDegrees)
+                ->Event("Set Camera Pitch Min Angle (Degrees)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleDegrees)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
                 ->Event("Get Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponentRequests::GetCameraSlerpInsteadOfLerpRotation)
@@ -2535,21 +2539,37 @@ namespace FirstPersonController
     {
         m_pitchSensitivity = new_pitchSensitivity;
     }
-    float FirstPersonControllerComponent::GetCameraPitchMaxAngle() const
+    float FirstPersonControllerComponent::GetCameraPitchMaxAngleRadians() const
     {
         return m_cameraPitchMaxAngle;
     }
-    void FirstPersonControllerComponent::SetCameraPitchMaxAngle(const float& new_cameraPitchMaxAngle)
+    void FirstPersonControllerComponent::SetCameraPitchMaxAngleRadians(const float& new_cameraPitchMaxAngleRadians)
     {
-        m_cameraPitchMaxAngle = new_cameraPitchMaxAngle;
+        m_cameraPitchMaxAngle = new_cameraPitchMaxAngleRadians;
     }
-    float FirstPersonControllerComponent::GetCameraPitchMinAngle() const
+    float FirstPersonControllerComponent::GetCameraPitchMaxAngleDegrees() const
+    {
+        return (m_cameraPitchMaxAngle * 360.f/AZ::Constants::TwoPi);
+    }
+    void FirstPersonControllerComponent::SetCameraPitchMaxAngleDegrees(const float& new_cameraPitchMaxAngleDegrees)
+    {
+        m_cameraPitchMaxAngle = (new_cameraPitchMaxAngleDegrees * AZ::Constants::TwoPi/360.f);
+    }
+    float FirstPersonControllerComponent::GetCameraPitchMinAngleRadians() const
     {
         return m_cameraPitchMinAngle;
     }
-    void FirstPersonControllerComponent::SetCameraPitchMinAngle(const float& new_cameraPitchMinAngle)
+    void FirstPersonControllerComponent::SetCameraPitchMinAngleRadians(const float& new_cameraPitchMinAngleRadians)
     {
-        m_cameraPitchMinAngle = new_cameraPitchMinAngle;
+        m_cameraPitchMinAngle = new_cameraPitchMinAngleRadians;
+    }
+    float FirstPersonControllerComponent::GetCameraPitchMinAngleDegrees() const
+    {
+        return (m_cameraPitchMinAngle * 360.f/AZ::Constants::TwoPi);
+    }
+    void FirstPersonControllerComponent::SetCameraPitchMinAngleDegrees(const float& new_cameraPitchMinAngleDegrees)
+    {
+        m_cameraPitchMinAngle = (new_cameraPitchMinAngleDegrees * AZ::Constants::TwoPi/360.f);
     }
     float FirstPersonControllerComponent::GetCameraRotationDampFactor() const
     {

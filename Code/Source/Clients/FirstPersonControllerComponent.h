@@ -219,10 +219,14 @@ namespace FirstPersonController
         void SetCameraYawSensitivity(const float& new_yawSensitivity) override;
         float GetCameraPitchSensitivity() const override;
         void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
-        float GetCameraPitchMaxAngle() const override;
-        void SetCameraPitchMaxAngle(const float& new_pitchMaxAngle) override;
-        float GetCameraPitchMinAngle() const override;
-        void SetCameraPitchMinAngle(const float& new_pitchMinAngle) override;
+        float GetCameraPitchMaxAngleRadians() const override;
+        void SetCameraPitchMaxAngleRadians(const float& new_pitchMaxAngleRadians) override;
+        float GetCameraPitchMaxAngleDegrees() const override;
+        void SetCameraPitchMaxAngleDegrees(const float& new_pitchMaxAngleDegrees) override;
+        float GetCameraPitchMinAngleRadians() const override;
+        void SetCameraPitchMinAngleRadians(const float& new_pitchMinAngleRadians) override;
+        float GetCameraPitchMinAngleDegrees() const override;
+        void SetCameraPitchMinAngleDegrees(const float& new_pitchMinAngleDegrees) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
         bool GetCameraSlerpInsteadOfLerpRotation() const override;
