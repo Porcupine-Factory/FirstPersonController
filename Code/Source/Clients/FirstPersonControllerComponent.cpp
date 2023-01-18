@@ -430,6 +430,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Max Time", &FirstPersonControllerComponentRequests::SetSprintMaxTime)
                 ->Event("Get Sprint Held Time", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
                 ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
+                ->Event("Get Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::GetSprintRegenRate)
+                ->Event("Set Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::SetSprintRegenRate)
                 ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
                 ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
                 ->Event("Get Sprint Cooldown Time", &FirstPersonControllerComponentRequests::GetSprintCooldownTime)
@@ -997,7 +999,7 @@ namespace FirstPersonController
                     // just wait through the cooldown time.
                     // Decrement this value by only deltaTime if you wish to instead use m_sprintDecrementPause
                     // to achieve the same timing but instead through the use of a pause.
-                    m_sprintHeldDuration -= deltaTime * (m_sprintMaxTime / m_sprintCooldownTime);
+                    m_sprintHeldDuration -= deltaTime * (m_sprintMaxTime / m_sprintCooldownTime) * m_sprintRegenRate;
                     m_sprintDecrementPause = 0.f;
                     if(m_sprintHeldDuration <= 0.f)
                     {
@@ -1030,7 +1032,7 @@ namespace FirstPersonController
                     // so there is not an incentive to elapse it.
                     // This makes it so that the held duration decrements and gets back to 0 at the same rate
                     // as if you were to just allow it to elapse.
-                    m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPrevDecrementPause)/m_sprintCooldownTime);
+                    m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPrevDecrementPause)/m_sprintCooldownTime) * m_sprintRegenRate;
                     m_sprintDecrementPause = 0.f;
                     if(m_sprintHeldDuration <= 0.f)
                     {
@@ -2086,14 +2088,14 @@ namespace FirstPersonController
     {
         m_velocityXCrossYTracksNormal = new_velocityXCrossYTracksNormal;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsRadians(AZ::Vector3 v1, AZ::Vector3 v2)
+    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2)
     {
         if(v1 == v2)
             return AZ::Vector3::CreateZero();
         AZ::Vector3 angle = AZ::Quaternion::CreateShortestArc(v1, v2).ConvertToScaledAxisAngle();
         return angle;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsDegrees(AZ::Vector3 v1, AZ::Vector3 v2)
+    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2)
     {
         AZ::Vector3 angle = GetVectorAnglesBetweenVectorsRadians(v1, v2);
         if(angle.IsZero())
@@ -2369,6 +2371,14 @@ namespace FirstPersonController
         m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
         if(m_sprintHeldDuration > prevSprintHeldDuration)
             m_staminaIncrementing = false;
+    }
+    float FirstPersonControllerComponent::GetSprintRegenRate() const
+    {
+        return m_sprintRegenRate;
+    }
+    void FirstPersonControllerComponent::SetSprintRegenRate(const float& new_sprintRegenRate)
+    {
+        m_sprintRegenRate = new_sprintRegenRate;
     }
     float FirstPersonControllerComponent::GetStaminaPercentage() const
     {

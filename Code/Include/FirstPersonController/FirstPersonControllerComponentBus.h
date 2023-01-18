@@ -78,8 +78,8 @@ namespace FirstPersonController
         virtual void SetVelocityZPosDirection(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetSphereCastsAxisDirectionPose() const = 0;
         virtual void SetSphereCastsAxisDirectionPose(const AZ::Vector3&) = 0;
-        virtual AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(AZ::Vector3, AZ::Vector3) = 0;
-        virtual AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(AZ::Vector3, AZ::Vector3) = 0;
+        virtual AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3&, const AZ::Vector3&) = 0;
+        virtual AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3&, const AZ::Vector3&) = 0;
         virtual float GetJumpHeldGravityFactor() const = 0;
         virtual void SetJumpHeldGravityFactor(const float&) = 0;
         virtual float GetJumpFallingGravityFactor() const = 0;
@@ -142,6 +142,8 @@ namespace FirstPersonController
         virtual void SetSprintMaxTime(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;
         virtual void SetSprintHeldTime(const float&) = 0;
+        virtual float GetSprintRegenRate() const = 0;
+        virtual void SetSprintRegenRate(const float& new_sprintRegenRate) = 0;
         virtual float GetStaminaPercentage() const = 0 ;
         virtual void SetStaminaPercentage(const float&) = 0;
         virtual float GetSprintCooldownTime() const = 0;

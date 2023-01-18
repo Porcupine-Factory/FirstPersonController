@@ -115,8 +115,8 @@ namespace FirstPersonController
         void SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection) override;
         AZ::Vector3 GetSphereCastsAxisDirectionPose() const override;
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
-        AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(AZ::Vector3 v1, AZ::Vector3 v2) override;
-        AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(AZ::Vector3 v1, AZ::Vector3 v2) override;
+        AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
+        AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -178,6 +178,8 @@ namespace FirstPersonController
         void SetSprintMaxTime(const float& new_sprintMaxTime) override;
         float GetSprintHeldTime() const override;
         void SetSprintHeldTime(const float& new_sprintHeldDuration) override;
+        float GetSprintRegenRate() const override;
+        void SetSprintRegenRate(const float& new_sprintRegenRate) override;
         float GetStaminaPercentage() const override;
         void SetStaminaPercentage(const float& new_staminaPercentage) override;
         float GetSprintCooldownTime() const override;
@@ -308,6 +310,7 @@ namespace FirstPersonController
         float m_sprintAccumulateAccelTime = 0.f;
         float m_sprintPrevVelocityLength = 0.f;
         float m_sprintHeldDuration = 0.f;
+        float m_sprintRegenRate = 1.f;
         float m_sprintDecrementPause = 0.f;
         float m_sprintPrevDecrementPause = 0.f;
         float m_sprintMaxTime = 120.f;
