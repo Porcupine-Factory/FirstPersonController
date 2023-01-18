@@ -179,10 +179,14 @@ namespace FirstPersonController
         virtual void SetSprintViaScript(const bool&) = 0;
         virtual bool GetSprintEnableDisableScript() const = 0;
         virtual void SetSprintEnableDisableScript(const bool&) = 0;
-        virtual float GetCameraPitchSensitivity() const = 0;
-        virtual void SetCameraPitchSensitivity(const float&) = 0;
         virtual float GetCameraYawSensitivity() const = 0;
         virtual void SetCameraYawSensitivity(const float&) = 0;
+        virtual float GetCameraPitchSensitivity() const = 0;
+        virtual void SetCameraPitchSensitivity(const float&) = 0;
+        virtual float GetCameraPitchMaxAngle() const = 0;
+        virtual void SetCameraPitchMaxAngle(const float&) = 0;
+        virtual float GetCameraPitchMinAngle() const = 0;
+        virtual void SetCameraPitchMinAngle(const float&) = 0;
         virtual float GetCameraRotationDampFactor() const = 0;
         virtual void SetCameraRotationDampFactor(const float&) = 0;
         virtual bool GetCameraSlerpInsteadOfLerpRotation() const = 0;;

@@ -219,6 +219,10 @@ namespace FirstPersonController
         void SetCameraYawSensitivity(const float& new_yawSensitivity) override;
         float GetCameraPitchSensitivity() const override;
         void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
+        float GetCameraPitchMaxAngle() const override;
+        void SetCameraPitchMaxAngle(const float& new_pitchMaxAngle) override;
+        float GetCameraPitchMinAngle() const override;
+        void SetCameraPitchMinAngle(const float& new_pitchMinAngle) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
         bool GetCameraSlerpInsteadOfLerpRotation() const override;
@@ -394,6 +398,8 @@ namespace FirstPersonController
         bool m_cameraSlerpInsteadOfLerpRotation = true;
         bool m_updateCameraYawIgnoresInput = false;
         bool m_updateCameraPitchIgnoresInput = false;
+        float m_cameraPitchMaxAngle = AZ::Constants::HalfPi;
+        float m_cameraPitchMinAngle = -AZ::Constants::HalfPi;
 
         // Used when a script wants to update the camera angle via the Request Bus or a gamepad
         bool m_rotatingPitchViaScriptGamepad = false;

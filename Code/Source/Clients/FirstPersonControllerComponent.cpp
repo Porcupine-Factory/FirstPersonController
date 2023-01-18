@@ -469,6 +469,10 @@ namespace FirstPersonController
                 ->Event("Set Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
+                ->Event("Get Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngle)
+                ->Event("Set Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngle)
+                ->Event("Get Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngle)
+                ->Event("Set Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngle)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
                 ->Event("Get Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponentRequests::GetCameraSlerpInsteadOfLerpRotation)
@@ -758,20 +762,17 @@ namespace FirstPersonController
         float currentPitch = t->GetLocalRotation().GetX();
 
         using namespace AZ::Constants;
-        if(abs(currentPitch) <= HalfPi ||
+        if(currentPitch <= m_cameraPitchMaxAngle && currentPitch >= m_cameraPitchMinAngle ||
            currentPitch >= HalfPi && newLookRotationDelta.GetX() < 0.f ||
            currentPitch <= -HalfPi && newLookRotationDelta.GetX() > 0.f)
         {
             t->RotateAroundLocalX(newLookRotationDelta.GetX());
             currentPitch = t->GetLocalRotation().GetX();
         }
-        if(abs(currentPitch) > HalfPi)
-        {
-            if(currentPitch > HalfPi)
-                t->RotateAroundLocalX(HalfPi - currentPitch);
-            else
-                t->RotateAroundLocalX(-HalfPi - currentPitch);
-        }
+        if(currentPitch > m_cameraPitchMaxAngle)
+            t->RotateAroundLocalX(m_cameraPitchMaxAngle - currentPitch);
+        else if(currentPitch < m_cameraPitchMinAngle)
+            t->RotateAroundLocalX(m_cameraPitchMinAngle - currentPitch);
 
         m_currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
@@ -2533,6 +2534,22 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCameraPitchSensitivity(const float& new_pitchSensitivity)
     {
         m_pitchSensitivity = new_pitchSensitivity;
+    }
+    float FirstPersonControllerComponent::GetCameraPitchMaxAngle() const
+    {
+        return m_cameraPitchMaxAngle;
+    }
+    void FirstPersonControllerComponent::SetCameraPitchMaxAngle(const float& new_cameraPitchMaxAngle)
+    {
+        m_cameraPitchMaxAngle = new_cameraPitchMaxAngle;
+    }
+    float FirstPersonControllerComponent::GetCameraPitchMinAngle() const
+    {
+        return m_cameraPitchMinAngle;
+    }
+    void FirstPersonControllerComponent::SetCameraPitchMinAngle(const float& new_cameraPitchMinAngle)
+    {
+        m_cameraPitchMinAngle = new_cameraPitchMinAngle;
     }
     float FirstPersonControllerComponent::GetCameraRotationDampFactor() const
     {
