@@ -367,7 +367,8 @@ namespace FirstPersonController
                 ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
                 ->Event("Get Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
                 ->Event("Set Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::SetSphereCastsAxisDirectionPose)
-                ->Event("Get Vector Angles Between Vectors", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectors)
+                ->Event("Get Vector Angles Between Vectors (Radians)", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsRadians)
+                ->Event("Get Vector Angles Between Vectors (Degrees)", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsDegrees)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
                 ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
@@ -409,8 +410,8 @@ namespace FirstPersonController
                 ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
                 ->Event("Get Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetGroundedSphereCastRadiusPercentageIncrease)
                 ->Event("Set Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetGroundedSphereCastRadiusPercentageIncrease)
-                ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
-                ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
+                ->Event("Get Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
+                ->Event("Set Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
                 ->Event("Set Top Walk Speed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
                 ->Event("Get Walk Acceleration", &FirstPersonControllerComponentRequests::GetWalkAcceleration)
@@ -2054,7 +2055,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection)
     {
         m_velocityXCrossYDirection = new_velocityXCrossYDirection;
-        if(m_velocityXCrossYDirection == AZ::Vector3::CreateZero())
+        if(m_velocityXCrossYDirection.IsZero())
             m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVelocityZPosDirection() const
@@ -2064,7 +2065,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection)
     {
         m_velocityZPosDirection = new_velocityZPosDirection;
-        if(m_velocityZPosDirection == AZ::Vector3::CreateZero())
+        if(m_velocityZPosDirection.IsZero())
             m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
     }
     AZ::Vector3 FirstPersonControllerComponent::GetSphereCastsAxisDirectionPose() const
@@ -2074,7 +2075,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose)
     {
         m_sphereCastsAxisDirectionPose = new_sphereCastsAxisDirectionPose;
-        if(m_sphereCastsAxisDirectionPose == AZ::Vector3::CreateZero())
+        if(m_sphereCastsAxisDirectionPose.IsZero())
             m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
     }
     bool FirstPersonControllerComponent::GetVelocityXCrossYTracksNormal() const
@@ -2085,11 +2086,18 @@ namespace FirstPersonController
     {
         m_velocityXCrossYTracksNormal = new_velocityXCrossYTracksNormal;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectors(AZ::Vector3 v1, AZ::Vector3 v2)
+    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsRadians(AZ::Vector3 v1, AZ::Vector3 v2)
     {
         if(v1 == v2)
             return AZ::Vector3::CreateZero();
         AZ::Vector3 angle = AZ::Quaternion::CreateShortestArc(v1, v2).ConvertToScaledAxisAngle();
+        return angle;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsDegrees(AZ::Vector3 v1, AZ::Vector3 v2)
+    {
+        AZ::Vector3 angle = GetVectorAnglesBetweenVectorsRadians(v1, v2);
+        if(angle.IsZero())
+            return angle;
         angle.SetX(angle.GetX() * 360.f/AZ::Constants::TwoPi);
         angle.SetY(angle.GetY() * 360.f/AZ::Constants::TwoPi);
         angle.SetZ(angle.GetZ() * 360.f/AZ::Constants::TwoPi);
