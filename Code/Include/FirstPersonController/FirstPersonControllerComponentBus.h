@@ -152,6 +152,8 @@ namespace FirstPersonController
         virtual void SetSprintCooldown(const float&) = 0;
         virtual float GetSprintPauseTime() const = 0;
         virtual void SetSprintPauseTime(const float&) = 0;
+        virtual float GetSprintPause() const = 0;
+        virtual void SetSprintPause(const float&) = 0;
         virtual bool GetSprintBackwards() const = 0;
         virtual void SetSprintBackwards(const bool&) = 0;
         virtual bool GetSprintAdjustBasedOnAngle() const = 0;

@@ -440,6 +440,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Cooldown", &FirstPersonControllerComponentRequests::SetSprintCooldown)
                 ->Event("Get Sprint Pause Time", &FirstPersonControllerComponentRequests::GetSprintPauseTime)
                 ->Event("Set Sprint Pause Time", &FirstPersonControllerComponentRequests::SetSprintPauseTime)
+                ->Event("Get Sprint Pause", &FirstPersonControllerComponentRequests::GetSprintPause)
+                ->Event("Set Sprint Pause", &FirstPersonControllerComponentRequests::SetSprintPause)
                 ->Event("Get Sprint Backwards", &FirstPersonControllerComponentRequests::GetSprintBackwards)
                 ->Event("Set Sprint Backwards", &FirstPersonControllerComponentRequests::SetSprintBackwards)
                 ->Event("Get Sprint Adjust Based On Angle", &FirstPersonControllerComponentRequests::GetSprintAdjustBasedOnAngle)
@@ -517,6 +519,10 @@ namespace FirstPersonController
         // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
         // maximum slope angle value
         m_maxGroundedAngleDegrees += 0.01f;
+
+        // Set the sprint pause time based on whether the cooldown time or the max consecutive sprint time is longer
+        // This number can be altered using the RequestBus
+        m_sprintPauseTime = (m_sprintCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintCooldownTime;
 
         //AZ_Printf("", "m_capsuleHeight = %.10f", m_capsuleHeight);
         //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
@@ -909,7 +915,7 @@ namespace FirstPersonController
             if(m_sprintHeldDuration > m_sprintMaxTime)
                 m_sprintHeldDuration = m_sprintMaxTime;
 
-            m_sprintDecrementPause = 0.f;
+            m_sprintPause = m_sprintPauseTime;
 
             m_staminaIncrementing = false;
 
@@ -976,69 +982,31 @@ namespace FirstPersonController
                 if(m_sprintCooldown < 0.f)
                     m_sprintCooldown = 0.f;
             }
-            else if(m_sprintCooldownTime > m_sprintMaxTime)
+
+            if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintPause == 0.f)
             {
-                if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
-                {
-                    m_sprintDecrementPause = deltaTime;
-                    // Here is an option to apply a pause instead of incrementing m_sprintHeldDuration at a
-                    // rate that results in the same waiting period for the stamina to regenerate to its full
-                    // value when nearly depleted as compared to waiting the cooldown time
-                    //m_sprintDecrementPause = (m_sprintCooldownTime - m_sprintMaxTime)*(m_sprintHeldDuration/m_sprintMaxTime) + deltaTime;
-                    // m_sprintPrevDecrementPause is not used here, but setting it for potential future use
-                    m_sprintPrevDecrementPause = m_sprintDecrementPause;
-                    m_staminaIncrementing = true;
-                }
-
-                m_sprintDecrementPause -= deltaTime;
-
-                if(m_sprintDecrementPause <= 0.f)
-                {
-                    // Decrement the sprint held duration at a rate which makes it so that the stamina
-                    // will regenerate when nearly depleted at the same time it would take if you were
-                    // just wait through the cooldown time.
-                    // Decrement this value by only deltaTime if you wish to instead use m_sprintDecrementPause
-                    // to achieve the same timing but instead through the use of a pause.
-                    m_sprintHeldDuration -= deltaTime * (m_sprintMaxTime / m_sprintCooldownTime) * m_sprintRegenRate;
-                    m_sprintDecrementPause = 0.f;
-                    if(m_sprintHeldDuration <= 0.f)
-                    {
-                        m_sprintHeldDuration = 0.f;
-                        m_staminaIncrementing = false;
-                    }
-                }
+                // Here is an option to apply a pause instead of incrementing m_sprintHeldDuration at a
+                // rate that results in the same waiting period for the stamina to regenerate to its full
+                // value when nearly depleted as compared to waiting the cooldown time
+                //m_sprintPause = (m_sprintCooldownTime - m_sprintMaxTime)*(m_sprintHeldDuration/m_sprintMaxTime) + deltaTime;
+                m_staminaIncrementing = true;
             }
-            else if(m_sprintCooldownTime <= m_sprintMaxTime)
+
+            m_sprintPause -= deltaTime;
+
+            if(m_sprintPause <= 0.f)
             {
-                if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintDecrementPause == 0.f)
+                // Decrement the sprint held duration at a rate which makes it so that the stamina
+                // will regenerate when nearly depleted at the same time it would take if you were
+                // just wait through the cooldown time.
+                // Decrement this value by only deltaTime if you wish to instead use m_sprintPause
+                // to achieve the same timing but instead through the use of a pause.
+                m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPauseTime)/m_sprintCooldownTime) * m_sprintRegenRate;
+                m_sprintPause = 0.f;
+                if(m_sprintHeldDuration <= 0.f)
                 {
-                    // Making the m_sprintDecrementPause a factor of 0.1 here is somewhat arbitrary,
-                    // this can be set to any other desired number if you have
-                    // m_sprintCooldownTime <= m_sprintMaxTime.
-                    // The decrement time here is also set based on the cooldown time and the ratio of the
-                    // held duration divided by the maximum consecutive sprint time so that the pause is longer
-                    // if you recently sprinted for a while.
-                    m_sprintDecrementPause = 0.1f * m_sprintCooldownTime * m_sprintHeldDuration / m_sprintMaxTime + deltaTime;
-                    m_sprintPrevDecrementPause = m_sprintDecrementPause;
-                    m_staminaIncrementing = true;
-                }
-
-                m_sprintDecrementPause -= deltaTime;
-
-                if(m_sprintDecrementPause <= 0.f)
-                {
-                    // Decrement the held duration by a factor of the ratio of the max sprint time plus the
-                    // previous decrement pause time, divided by the cooldown time
-                    // so there is not an incentive to elapse it.
-                    // This makes it so that the held duration decrements and gets back to 0 at the same rate
-                    // as if you were to just allow it to elapse.
-                    m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPrevDecrementPause)/m_sprintCooldownTime) * m_sprintRegenRate;
-                    m_sprintDecrementPause = 0.f;
-                    if(m_sprintHeldDuration <= 0.f)
-                    {
-                        m_sprintHeldDuration = 0.f;
-                        m_staminaIncrementing = false;
-                    }
+                    m_sprintHeldDuration = 0.f;
+                    m_staminaIncrementing = false;
                 }
             }
         }
@@ -1311,8 +1279,8 @@ namespace FirstPersonController
         //AZ_Printf("", "m_decelerationFactor = %.10f", m_decelerationFactor);
         //AZ_Printf("", "m_sprintVelocityAdjust = %.10f", m_sprintVelocityAdjust);
         //AZ_Printf("", "m_sprintHeldDuration = %.10f", m_sprintHeldDuration);
-        //AZ_Printf("", "m_sprintDecrementPause = %.10f", m_sprintDecrementPause);
-        //AZ_Printf("", "m_sprintPrevDecrementPause = %.10f", m_sprintPrevDecrementPause);
+        //AZ_Printf("", "m_sprintPause = %.10f", m_sprintPause);
+        //AZ_Printf("", "m_sprintPauseTime = %.10f", m_sprintPauseTime);
         //AZ_Printf("", "m_sprintCooldown = %.10f", m_sprintCooldown);
         //static AZ::Vector3 prevVelocity = m_applyVelocity;
         //AZ_Printf("", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocity)/deltaTime);
@@ -1333,18 +1301,6 @@ namespace FirstPersonController
         const bool prevGroundClose = m_groundClose;
 
         AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
-
-        AZ::Vector3 basePosition = AZ::Vector3::CreateZero();
-        Physics::CharacterRequestBus::EventResult(basePosition, GetEntityId(),
-            &Physics::CharacterRequestBus::Events::GetBasePosition);
-        AZ::Vector3 actualPosition = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-
-        AZ_Printf("", "basePosition.GetX() = %.10f", basePosition.GetX());
-        AZ_Printf("", "basePosition.GetY() = %.10f", basePosition.GetY());
-        AZ_Printf("", "basePosition.GetZ() = %.10f", basePosition.GetZ());
-        AZ_Printf("", "actualPosition.GetX() = %.10f", actualPosition.GetX());
-        AZ_Printf("", "actualPosition.GetY() = %.10f", actualPosition.GetY());
-        AZ_Printf("", "actualPosition.GetZ() = %.10f", actualPosition.GetZ());
 
         // Move the sphere to the location of the character and apply the Z offset
         sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
@@ -2415,11 +2371,19 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetSprintPauseTime() const
     {
-        return m_sprintDecrementPause;
+        return m_sprintPauseTime;
     }
-    void FirstPersonControllerComponent::SetSprintPauseTime(const float& new_sprintDecrementPause)
+    void FirstPersonControllerComponent::SetSprintPauseTime(const float& new_sprintPauseTime)
     {
-        m_sprintDecrementPause = m_sprintPrevDecrementPause = new_sprintDecrementPause;
+        m_sprintPauseTime = new_sprintPauseTime;
+    }
+    float FirstPersonControllerComponent::GetSprintPause() const
+    {
+        return m_sprintPause;
+    }
+    void FirstPersonControllerComponent::SetSprintPause(const float& new_sprintPause)
+    {
+        m_sprintPause = new_sprintPause;
     }
     bool FirstPersonControllerComponent::GetSprintBackwards() const
     {
