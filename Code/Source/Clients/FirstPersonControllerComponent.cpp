@@ -505,7 +505,8 @@ namespace FirstPersonController
                 ->Event("Set Update Camera Pitch Ignores Input", &FirstPersonControllerComponentRequests::SetUpdateCameraPitchIgnoresInput)
                 ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
-                ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading);
+                ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
+                ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -802,6 +803,8 @@ namespace FirstPersonController
 
         m_currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+        m_currentPitch = GetActiveCamera()->GetTransform()->
+            GetWorldRotationQuaternion().GetEulerRadians().GetX();
     }
 
     // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
@@ -2677,5 +2680,9 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetHeading() const
     {
         return m_currentHeading;
+    }
+    float FirstPersonControllerComponent::GetPitch() const
+    {
+        return m_currentPitch;
     }
 }
