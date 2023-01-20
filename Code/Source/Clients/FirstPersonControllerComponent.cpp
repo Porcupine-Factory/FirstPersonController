@@ -851,9 +851,9 @@ namespace FirstPersonController
                     targetVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(targetVelocity)));
 
                 if(m_standing || m_sprintWhileCrouched)
-                    m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale);
+                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale)) * m_sprintAccelAdjust;
                 else
-                    m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * m_crouchScale * greatestScale);
+                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * m_crouchScale * greatestScale)) * m_sprintAccelAdjust;
             }
             else
                 m_decelerationFactor = m_decel;
@@ -1030,6 +1030,7 @@ namespace FirstPersonController
                 m_sprintAccumulateAccelTime = 0.f;
                 m_sprintPrevVelocityLength = 0.f;
                 m_sprintStopAccelAdjustCaptured = false;
+                m_sprintAccelAdjust = 1.f;
             }
 
             // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
