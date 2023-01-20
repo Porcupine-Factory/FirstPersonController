@@ -80,6 +80,7 @@ namespace FirstPersonController
         virtual void SetSphereCastsAxisDirectionPose(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3&, const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3&, const AZ::Vector3&) = 0;
+        virtual AZ::Vector3 CreateScaledVector(const AZ::Vector3&, float, float, float, float) = 0;
         virtual float GetJumpHeldGravityFactor() const = 0;
         virtual void SetJumpHeldGravityFactor(const float&) = 0;
         virtual float GetJumpFallingGravityFactor() const = 0;
@@ -134,8 +135,14 @@ namespace FirstPersonController
         virtual void SetOpposingDecel(const float&) = 0;
         virtual bool GetInstantVelocityRotation() const = 0;
         virtual void SetInstantVelocityRotation(const bool&) = 0;
-        virtual float GetSprintVelocityScale() const = 0;
-        virtual void SetSprintVelocityScale(const float&) = 0;
+        virtual float GetSprintScaleForward() const = 0;
+        virtual void SetSprintScaleForward(const float&) = 0;
+        virtual float GetSprintScaleBack() const = 0;
+        virtual void SetSprintScaleBack(const float&) = 0;
+        virtual float GetSprintScaleLeft() const = 0;
+        virtual void SetSprintScaleLeft(const float&) = 0;
+        virtual float GetSprintScaleRight() const = 0;
+        virtual void SetSprintScaleRight(const float&) = 0;
         virtual float GetSprintAccelScale() const = 0;
         virtual void SetSprintAccelScale(const float&) = 0;
         virtual float GetSprintMaxTime() const = 0;
@@ -156,8 +163,6 @@ namespace FirstPersonController
         virtual void SetSprintPause(const float&) = 0;
         virtual bool GetSprintBackwards() const = 0;
         virtual void SetSprintBackwards(const bool&) = 0;
-        virtual bool GetSprintAdjustBasedOnAngle() const = 0;
-        virtual void SetSprintAdjustBasedOnAngle(const bool&) = 0;
         virtual bool GetSprintWhileCrouched() const = 0;
         virtual void SetSprintWhileCrouched(const bool&) = 0;
         virtual bool GetCrouching() const = 0;

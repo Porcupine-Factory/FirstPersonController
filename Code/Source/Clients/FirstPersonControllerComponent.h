@@ -117,6 +117,7 @@ namespace FirstPersonController
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
+        AZ::Vector3 CreateScaledVector(const AZ::Vector3& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -170,8 +171,14 @@ namespace FirstPersonController
         void SetOpposingDecel(const float& new_opposingDecel) override;
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
-        float GetSprintVelocityScale() const override;
-        void SetSprintVelocityScale(const float& new_sprintVelocityScale) override;
+        float GetSprintScaleForward() const override;
+        void SetSprintScaleForward(const float& new_sprintScaleForward) override;
+        float GetSprintScaleBack() const override;
+        void SetSprintScaleBack(const float& new_sprintScaleBack) override;
+        float GetSprintScaleLeft() const override;
+        void SetSprintScaleLeft(const float& new_sprintScaleLeft) override;
+        float GetSprintScaleRight() const override;
+        void SetSprintScaleRight(const float& new_sprintScaleRight) override;
         float GetSprintAccelScale() const override;
         void SetSprintAccelScale(const float& new_sprintAccelScale) override;
         float GetSprintMaxTime() const override;
@@ -192,8 +199,6 @@ namespace FirstPersonController
         void SetSprintPause(const float& new_sprintPause) override;
         bool GetSprintBackwards() const override;
         void SetSprintBackwards(const bool& new_sprintBackwards) override;
-        bool GetSprintAdjustBasedOnAngle() const override;
-        void SetSprintAdjustBasedOnAngle(const bool& new_sprintAdjustBasedOnAngle) override;
         bool GetSprintWhileCrouched() const override;
         void SetSprintWhileCrouched(const bool& new_sprintWhileCrouched) override;
         bool GetCrouching() const override;
@@ -307,6 +312,10 @@ namespace FirstPersonController
         float m_sprintAccelValue = 1.f;
         float m_sprintPrevValue = 1.f;
         float m_sprintVelocityAdjust = 0.f;
+        float m_sprintScaleForward = 1.5f;
+        float m_sprintScaleBack = 1.f;
+        float m_sprintScaleLeft = 1.25f;
+        float m_sprintScaleRight = 1.25f;
         float m_sprintAccelAdjust = 0.f;
         bool m_sprintStopAccelAdjustCaptured = false;
         float m_sprintAccumulateAccelTime = 0.f;
@@ -319,7 +328,6 @@ namespace FirstPersonController
         float m_sprintPauseTime = (m_sprintCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintCooldownTime;
         float m_sprintPause = 0.f;
         bool m_sprintBackwards = false;
-        bool m_sprintAdjustBasedOnAngle = false;
         bool m_sprintWhileCrouched = true;
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisableScript = false;
@@ -430,7 +438,6 @@ namespace FirstPersonController
         float m_backScale = 0.75f;
         float m_leftScale = 1.f;
         float m_rightScale = 1.f;
-        float m_sprintVelocityScale = 1.5f;
         float m_sprintAccelScale = 1.5f;
         float m_crouchScale = 0.5f;
         // This sphere cast determines how far above the charcter's head that an obstruction is detected

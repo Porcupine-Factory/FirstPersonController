@@ -56,12 +56,14 @@ namespace FirstPersonController
               ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
               // Sprinting group
-              ->Field("Sprint Velocity Scale", &FirstPersonControllerComponent::m_sprintVelocityScale)
+              ->Field("Sprint Forward Scale", &FirstPersonControllerComponent::m_sprintScaleForward)
+              ->Field("Sprint Back Scale", &FirstPersonControllerComponent::m_sprintScaleBack)
+              ->Field("Sprint Left Scale", &FirstPersonControllerComponent::m_sprintScaleLeft)
+              ->Field("Sprint Right Scale", &FirstPersonControllerComponent::m_sprintScaleRight)
               ->Field("Sprint Acceleration Scale", &FirstPersonControllerComponent::m_sprintAccelScale)
               ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprintMaxTime)
               ->Field("Sprint Cooldown Time (sec)", &FirstPersonControllerComponent::m_sprintCooldownTime)
               ->Field("Sprint Backwards", &FirstPersonControllerComponent::m_sprintBackwards)
-              ->Field("Sprint Angle Adjusted", &FirstPersonControllerComponent::m_sprintAdjustBasedOnAngle)
               ->Field("Sprint While Crouched", &FirstPersonControllerComponent::m_sprintWhileCrouched)
 
               // Crouching group
@@ -188,8 +190,17 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Sprinting")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprintVelocityScale,
-                        "Sprint Velocity Scale", "Sprint velocity scale factor. The maximum sprint velocity will be the product of the Sprint Velocity Scale times Top Walking Speed.")
+                        &FirstPersonControllerComponent::m_sprintScaleForward,
+                        "Sprint Forward Scale", "Determines the sprint factor applied in the forward direction.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprintScaleBack,
+                        "Sprint Back Scale", "Determines the sprint factor applied in the back direction.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprintScaleLeft,
+                        "Sprint Left Scale", "Determines the sprint factor applied in the left direction.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_sprintScaleRight,
+                        "Sprint Right Scale", "Determines the sprint factor applied in the right direction.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintAccelScale,
                         "Sprint Acceleration Scale", "Determines how quickly the character will reach maximum sprinting speed.")
@@ -202,9 +213,6 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintBackwards,
                         "Sprint Backwards", "Determines whether the character can sprint backwards.")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_sprintAdjustBasedOnAngle,
-                        "Sprint Angle Adjusted", "Scales the Sprint Velocity such that there is no Sprint Velocity Scale applied for left/right, and full Sprint Scale Velocity applied forward. The application of sprint drops off to the point of not being applied when there is no forward movement. I.e. 50% of sprint will be applied when moving diagonally at 45 degrees. Enabling this nullifies sprinting backwards.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintWhileCrouched,
                         "Sprint While Crouched", "Determines whether the character can sprint while crouched.")
@@ -369,6 +377,7 @@ namespace FirstPersonController
                 ->Event("Set Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::SetSphereCastsAxisDirectionPose)
                 ->Event("Get Vector Angles Between Vectors (Radians)", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsRadians)
                 ->Event("Get Vector Angles Between Vectors (Degrees)", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsDegrees)
+                ->Event("Create Scaled Vector", &FirstPersonControllerComponentRequests::CreateScaledVector)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
                 ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
@@ -422,8 +431,14 @@ namespace FirstPersonController
                 ->Event("Set Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::SetOpposingDecel)
                 ->Event("Get Instant Velocity Rotation", &FirstPersonControllerComponentRequests::GetInstantVelocityRotation)
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
-                ->Event("Get Sprint Velocity Scale", &FirstPersonControllerComponentRequests::GetSprintVelocityScale)
-                ->Event("Set Sprint Velocity Scale", &FirstPersonControllerComponentRequests::SetSprintVelocityScale)
+                ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
+                ->Event("Set Sprint Scale Forward", &FirstPersonControllerComponentRequests::SetSprintScaleForward)
+                ->Event("Get Sprint Scale Back", &FirstPersonControllerComponentRequests::GetSprintScaleBack)
+                ->Event("Set Sprint Scale Back", &FirstPersonControllerComponentRequests::SetSprintScaleBack)
+                ->Event("Get Sprint Scale Left", &FirstPersonControllerComponentRequests::GetSprintScaleLeft)
+                ->Event("Set Sprint Scale Left", &FirstPersonControllerComponentRequests::SetSprintScaleLeft)
+                ->Event("Get Sprint Scale Right", &FirstPersonControllerComponentRequests::GetSprintScaleRight)
+                ->Event("Set Sprint Scale Right", &FirstPersonControllerComponentRequests::SetSprintScaleRight)
                 ->Event("Get Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::GetSprintAccelScale)
                 ->Event("Set Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::SetSprintAccelScale)
                 ->Event("Get Sprint Max Time", &FirstPersonControllerComponentRequests::GetSprintMaxTime)
@@ -444,8 +459,6 @@ namespace FirstPersonController
                 ->Event("Set Sprint Pause", &FirstPersonControllerComponentRequests::SetSprintPause)
                 ->Event("Get Sprint Backwards", &FirstPersonControllerComponentRequests::GetSprintBackwards)
                 ->Event("Set Sprint Backwards", &FirstPersonControllerComponentRequests::SetSprintBackwards)
-                ->Event("Get Sprint Adjust Based On Angle", &FirstPersonControllerComponentRequests::GetSprintAdjustBasedOnAngle)
-                ->Event("Set Sprint Adjust Based On Angle", &FirstPersonControllerComponentRequests::SetSprintAdjustBasedOnAngle)
                 ->Event("Get Sprint While Crouched", &FirstPersonControllerComponentRequests::GetSprintWhileCrouched)
                 ->Event("Set Sprint While Crouched", &FirstPersonControllerComponentRequests::SetSprintWhileCrouched)
                 ->Event("Get Sprint Via Script", &FirstPersonControllerComponentRequests::GetSprintViaScript)
@@ -600,11 +613,11 @@ namespace FirstPersonController
         {
             if(m_grounded)
             {
-                m_sprintValue = value * m_sprintVelocityScale;
+                m_sprintValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
-                m_sprintValue = 1.f;
+                m_sprintValue = 0.f;
         }
 
         for(auto& it_event : m_controlMap)
@@ -656,11 +669,11 @@ namespace FirstPersonController
         {
             if(m_grounded || m_sprintPrevValue != 1.f)
             {
-                m_sprintValue = value * m_sprintVelocityScale;
+                m_sprintValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
-                m_sprintValue = 1.f;
+                m_sprintValue = 0.f;
         }
     }
 
@@ -800,9 +813,9 @@ namespace FirstPersonController
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
 
-        float lerpDeltaTime = m_sprintAccumulateAccelTime > 0.f ? deltaTime * (1.f + (m_sprintAccelValue-1.f) * m_sprintAccelAdjust) : deltaTime;
+        float lerpDeltaTime = m_sprintAccumulateAccelTime > 0.f ? deltaTime * m_sprintAccelAdjust : deltaTime;
         if(m_sprintAccelValue < 1.f && m_sprintAccumulateAccelTime > 0.f)
-            lerpDeltaTime = deltaTime * m_sprintAccelValue * m_sprintAccelAdjust;
+            lerpDeltaTime = deltaTime *  m_sprintAccelAdjust;
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
 
@@ -828,9 +841,8 @@ namespace FirstPersonController
                     : (abs(m_applyVelocity.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi))
             {
                 // Compute the deceleration factor based on the magnitude of the target velocity
-                const float scales[] = {m_forwardScale, m_backScale, m_leftScale, m_rightScale};
                 float greatestScale = m_forwardScale;
-                for(float scale: scales)
+                for(float scale: {m_forwardScale, m_backScale, m_leftScale, m_rightScale})
                     if(greatestScale < abs(scale))
                         greatestScale = abs(scale);
 
@@ -839,7 +851,7 @@ namespace FirstPersonController
                     targetVelocityLocal = AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(targetVelocity);
 
                 if(m_standing || m_sprintWhileCrouched)
-                    m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust) * greatestScale);
+                    m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale);
                 else
                     m_decelerationFactor = m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * m_crouchScale * greatestScale);
             }
@@ -860,32 +872,78 @@ namespace FirstPersonController
         return newVelocity;
     }
 
+    AZ::Vector3 FirstPersonControllerComponent::CreateScaledVector(const AZ::Vector3& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale)
+    {
+        AZ::Vector3 scaledVector = AZ::Vector3::CreateZero();
+
+        if(unscaledVector.IsZero())
+            return AZ::Vector3::CreateZero();
+
+        // If the input vector isn't normalized then scale the scale factors accordingly
+        if(!unscaledVector.IsNormalized())
+        {
+            forwardScale *= unscaledVector.GetLength();
+            backScale *= unscaledVector.GetLength();
+            leftScale *= unscaledVector.GetLength();
+            rightScale *= unscaledVector.GetLength();
+        }
+
+        // Quadrant I
+        if(unscaledVector.GetY() >= 0.f && unscaledVector.GetX() >= 0.f)
+        {
+            scaledVector.SetX((forwardScale * rightScale) /
+                sqrt(forwardScale*forwardScale + rightScale*rightScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX())), 2.f)));
+            scaledVector.SetY(scaledVector.GetX()*tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX())));
+        }
+        // Quadrant II
+        else if(unscaledVector.GetY() >= 0.f && unscaledVector.GetX() < 0.f)
+        {
+            scaledVector.SetX(-1.f*(forwardScale * leftScale) /
+                sqrt(forwardScale*forwardScale + leftScale*leftScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX(-1.f))), 2.f)));
+            scaledVector.SetY(-1.f*scaledVector.GetX()*tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX(-1.f))));
+        }
+        // Quadrant III
+        else if(unscaledVector.GetY() < 0.f && unscaledVector.GetX() < 0.f)
+        {
+            scaledVector.SetX(-1.f*(backScale * leftScale) /
+                sqrt(backScale*backScale + leftScale*leftScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX(-1.f))), 2.f)));
+            scaledVector.SetY(scaledVector.GetX()*tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX(-1.f))));
+        }
+        // Quadrant IV
+        else
+        {
+            scaledVector.SetX((backScale * rightScale) /
+                sqrt(backScale*backScale + rightScale*rightScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX())), 2.f)));
+            scaledVector.SetY(-1.f*scaledVector.GetX()*tan(unscaledVector.AngleSafe(AZ::Vector3::CreateAxisX())));
+        }
+
+        return scaledVector;
+    }
+
     // Here target velocity is with respect to the character's frame of reference
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector3& targetVelocity, const float& deltaTime)
     {
-        // Cause the character to stand if trying to sprint while crouched and the setting is enabled
-        if(m_crouchSprintCausesStanding && m_sprintValue != 1.f && m_crouched)
-            m_crouching = false;
-
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
         // and it shouldn't be applied if you're crouching
         if(m_sprintValue == 0.f
            || (!m_sprintWhileCrouched && !m_standing)
            || (!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
-           || (m_sprintValue != 1.f
-               && (!m_sprintBackwards || m_sprintAdjustBasedOnAngle)
+           || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue)
+           || (targetVelocity.IsZero())
+           || (m_sprintValue != 0.f
+               && !m_sprintBackwards
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
                    (!m_forwardValue && -m_leftValue == m_rightValue) ||
                    (targetVelocity.GetY() < 0.f)) ))
-            m_sprintValue = 1.f;
+            m_sprintValue = 0.f;
 
-        if((m_sprintViaScript && m_sprintEnableDisableScript) && (targetVelocity.GetY() > 0.f || (m_sprintBackwards && !m_sprintAdjustBasedOnAngle)))
+        if((m_sprintViaScript && m_sprintEnableDisableScript) && (targetVelocity.GetY() > 0.f || m_sprintBackwards))
         {
-            m_sprintValue = m_sprintVelocityScale;
+            m_sprintValue = 1.f;
             m_sprintAccelValue = m_sprintAccelScale;
         }
         else if(m_sprintViaScript && !m_sprintEnableDisableScript)
-            m_sprintValue = 1.f;
+            m_sprintValue = 0.f;
 
         m_sprintPrevValue = m_sprintValue;
 
@@ -893,24 +951,27 @@ namespace FirstPersonController
         if(!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
             m_sprintAccumulateAccelTime = 0.f;
 
-        // Sprint adjustment factor based on the angle of the target velocity
-        // with respect to their frame of reference
-        if(m_sprintAdjustBasedOnAngle)
-            m_sprintVelocityAdjust = 1.f - targetVelocity.AngleSafe(AZ::Vector3::CreateAxisY())/(AZ::Constants::HalfPi);
-        else
+        if(m_sprintValue == 0.f)
             m_sprintVelocityAdjust = 1.f;
-        // If m_sprintVelocityAdjust is close to zero then set m_sprintValue to one
-        if(AZ::IsClose(m_sprintVelocityAdjust, 0.f))
-            m_sprintValue = 1.f;
-        else if(m_sprintVelocityAdjust < 0)
-            m_sprintVelocityAdjust = 0;
+        else
+            m_sprintVelocityAdjust = CreateScaledVector(targetVelocity.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
 
-        // If the sprint key is pressed then increment the sprint counter
-        if(m_sprintValue != 1.f && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
+        // If sprint is to be applied then increment the sprint counter
+        if(!AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
         {
-            m_sprintAccelAdjust = m_sprintVelocityAdjust;
+            // Cause the character to stand if trying to sprint while crouched and the setting is enabled
+            if(m_crouchSprintCausesStanding && m_crouched)
+                m_crouching = false;
 
-            m_sprintHeldDuration += deltaTime * m_sprintVelocityAdjust;
+            // Figure out which of the scaled sprint velocity directions is the greatest
+            float greatestSprintScale = 1.f;
+            for(const float scale : {m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight})
+                if(abs(scale) > abs(greatestSprintScale))
+                        greatestSprintScale = scale;
+
+            m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (m_sprintVelocityAdjust - 1) + 1.f;
+
+            m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust-1.f)/(greatestSprintScale-1.f);
 
             if(m_sprintHeldDuration > m_sprintMaxTime)
                 m_sprintHeldDuration = m_sprintMaxTime;
@@ -919,11 +980,11 @@ namespace FirstPersonController
 
             m_staminaIncrementing = false;
 
-            if(m_applyVelocity.GetLength() > m_sprintPrevVelocityLength)
+            if(m_applyVelocity.GetLength() > m_sprintPrevVelocityLength && m_sprintVelocityAdjust != 1.f)
             {
                 m_sprintAccumulateAccelTime += deltaTime;
 
-                const float totalSprintTime = (m_sprintValue*m_speed)/(m_sprintAccelValue*m_accel);
+                const float totalSprintTime = (abs(greatestSprintScale)*m_speed)/(m_sprintAccelValue*m_accel);
                 if(m_sprintAccumulateAccelTime > totalSprintTime)
                     m_sprintAccumulateAccelTime = totalSprintTime;
             }
@@ -943,20 +1004,22 @@ namespace FirstPersonController
             }
             m_sprintPrevVelocityLength = m_applyVelocity.GetLength();
         }
-        // Otherwise if the sprint key isn't pressed then decrement the sprint counter
-        else if(m_sprintValue == 1.f || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
+        // Otherwise if the sprint velocity isn't applied then decrement the sprint counter
+        else if(AZ::IsClose(m_sprintVelocityAdjust, 1.f) || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
         {
-            m_sprintValue = 1.f;
+            m_sprintValue = 0.f;
 
             // Set the sprint acceleration adjust according to the local direction we're moving
             if((m_instantVelocityRotation || !m_sprintStopAccelAdjustCaptured) && targetVelocity.IsZero())
             {
-                if(m_sprintAdjustBasedOnAngle)
-                    m_sprintAccelAdjust = 1.f - m_applyVelocity.AngleSafe(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()))/(AZ::Constants::HalfPi);
-                else
-                    m_sprintAccelAdjust = 1.f;
-                if(m_sprintAccelAdjust < 0)
-                    m_sprintAccelAdjust = 0;
+                // Figure out which of the scaled sprint velocity directions is the greatest
+                float greatestSprintScale = 0.f;
+                for(const float scale : {m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight})
+                    if(abs(scale) > abs(greatestSprintScale))
+                            greatestSprintScale = scale;
+
+                float lastAdjustScale = CreateScaledVector(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()).GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (lastAdjustScale - 1) + 1.f;
                 m_sprintStopAccelAdjustCaptured = true;
             }
 
@@ -1011,7 +1074,10 @@ namespace FirstPersonController
             }
         }
 
-        m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        if(m_sprintMaxTime != 0.f)
+            m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        else
+            m_staminaPercentage = 0.f;
         //AZ_Printf("", "Stamina = %.10f\%", m_staminaPercentage);
     }
 
@@ -1035,14 +1101,14 @@ namespace FirstPersonController
         // while the sprint key is being pressed then stop the sprinting and continue crouching
         if(m_crouchPriorityWhenSprintPressed
                 && !m_sprintWhileCrouched
-                && m_sprintValue != 1.f
+                && m_sprintValue != 0.f
                 && m_crouching
                 && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
-            m_sprintValue = 1.f;
+            m_sprintValue = 0.f;
         // Otherwise if the crouch key does not take priority when the sprint key is held,
         // and we are attempting to crouch while the sprint key is held, then do not crouch
         else if(!m_crouchPriorityWhenSprintPressed
-            && m_sprintValue != 1.f
+            && m_sprintValue != 0.f
             && m_crouching
             && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
            m_crouching = false;
@@ -1199,15 +1265,7 @@ namespace FirstPersonController
         if((forwardBack || leftRight) && sqrt(forwardBack*forwardBack + leftRight*leftRight) > 1.f)
             targetVelocity.Normalize();
 
-        if(targetVelocity.GetY() >= 0.f)
-            targetVelocity.SetY(targetVelocity.GetY() * m_forwardScale);
-        else
-            targetVelocity.SetY(targetVelocity.GetY() * m_backScale);
-
-        if(targetVelocity.GetX() >= 0.f)
-            targetVelocity.SetX(targetVelocity.GetX() * m_rightScale);
-        else
-            targetVelocity.SetX(targetVelocity.GetX() * m_leftScale);
+        targetVelocity = CreateScaledVector(targetVelocity, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
 
         // Call the sprint manager
         if(!m_scriptSetsXYTargetVelocity)
@@ -1215,9 +1273,9 @@ namespace FirstPersonController
 
         // Apply the speed, sprint factor, and crouch factor
         if(m_standing)
-            targetVelocity *= m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust);
+            targetVelocity *= m_speed * m_sprintVelocityAdjust;
         else if(m_sprintWhileCrouched && !m_standing)
-            targetVelocity *= m_speed * (1.f + (m_sprintValue-1.f) * m_sprintVelocityAdjust) * m_crouchScale;
+            targetVelocity *= m_speed * m_sprintVelocityAdjust * m_crouchScale;
         else
             targetVelocity *= m_speed * m_crouchScale;
 
@@ -1237,7 +1295,6 @@ namespace FirstPersonController
         if(m_instantVelocityRotation ? (m_prevTargetVelocity != targetVelocity)
                                         : (m_prevTargetVelocity != targetVelocityWorld))
         {
-
             if(m_instantVelocityRotation)
             {
                 // Set the previous target velocity to the new one
@@ -1649,7 +1706,7 @@ namespace FirstPersonController
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
-        AZ_Printf("", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
+        //AZ_Printf("", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
         //AZ_Printf("", "m_zVelocityPrevDelta = %.10f", m_zVelocityPrevDelta);
         //AZ_Printf("", "m_zVelocityCurrentDelta = %.10f", m_zVelocityCurrentDelta);
         //AZ_Printf("", "m_zVelocity = %.10f", m_zVelocity);
@@ -2288,13 +2345,37 @@ namespace FirstPersonController
     {
         m_instantVelocityRotation = new_instantVelocityRotation;
     }
-    float FirstPersonControllerComponent::GetSprintVelocityScale() const
+    float FirstPersonControllerComponent::GetSprintScaleForward() const
     {
-        return m_sprintVelocityScale;
+        return m_sprintScaleForward;
     }
-    void FirstPersonControllerComponent::SetSprintVelocityScale(const float& new_sprintVelocityScale)
+    void FirstPersonControllerComponent::SetSprintScaleForward(const float& new_sprintScaleForward)
     {
-        m_sprintVelocityScale = new_sprintVelocityScale;
+        m_sprintScaleForward = new_sprintScaleForward;
+    }
+    float FirstPersonControllerComponent::GetSprintScaleBack() const
+    {
+        return m_sprintScaleBack;
+    }
+    void FirstPersonControllerComponent::SetSprintScaleBack(const float& new_sprintScaleBack)
+    {
+        m_sprintScaleBack = new_sprintScaleBack;
+    }
+    float FirstPersonControllerComponent::GetSprintScaleLeft() const
+    {
+        return m_sprintScaleLeft;
+    }
+    void FirstPersonControllerComponent::SetSprintScaleLeft(const float& new_sprintScaleLeft)
+    {
+        m_sprintScaleLeft = new_sprintScaleLeft;
+    }
+    float FirstPersonControllerComponent::GetSprintScaleRight() const
+    {
+        return m_sprintScaleRight;
+    }
+    void FirstPersonControllerComponent::SetSprintScaleRight(const float& new_sprintScaleRight)
+    {
+        m_sprintScaleRight = new_sprintScaleRight;
     }
     float FirstPersonControllerComponent::GetSprintAccelScale() const
     {
@@ -2392,14 +2473,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintBackwards(const bool& new_sprintBackwards)
     {
         m_sprintBackwards = new_sprintBackwards;
-    }
-    bool FirstPersonControllerComponent::GetSprintAdjustBasedOnAngle() const
-    {
-        return m_sprintAdjustBasedOnAngle;
-    }
-    void FirstPersonControllerComponent::SetSprintAdjustBasedOnAngle(const bool& new_sprintAdjustBasedOnAngle)
-    {
-        m_sprintAdjustBasedOnAngle = new_sprintAdjustBasedOnAngle;
     }
     bool FirstPersonControllerComponent::GetSprintWhileCrouched() const
     {
