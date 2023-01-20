@@ -135,7 +135,7 @@ namespace FirstPersonController
         AZ::Vector2 GetTargetXYVelocity() const override;
         void SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity) override;
         float GetZVelocity() const override;
-        void SetZVelocity(const float& new_zVelocity) override;
+        void SetZVelocity(const float& new_applyVelocityZ) override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         float GetJumpSecondInitialVelocity() const override;
@@ -275,8 +275,7 @@ namespace FirstPersonController
         void SmoothRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
-        void UpdateXYVelocityPlaneTilt(AZ::Vector3& targetVelocity);
-        void UpdateZVelocityPosDirection(AZ::Vector3& targetVelocity);
+        AZ::Vector3 TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection);
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();
@@ -290,7 +289,7 @@ namespace FirstPersonController
         void OnSprintCooldown();
 
         // Velocity application variables
-        AZ::Vector2 m_applyVelocity = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_scriptTargetXYVelocity = AZ::Vector2::CreateZero();
         AZ::Vector2 m_prevTargetVelocity = AZ::Vector2::CreateZero();
         AZ::Vector2 m_lastAppliedVelocity = AZ::Vector2::CreateZero();
@@ -373,9 +372,9 @@ namespace FirstPersonController
         float m_jumpSecondInitialVelocity = 6.f;
         bool m_jumpHeld = false;
         bool m_jumpReqRepress = true;
-        float m_zVelocity = 0.f;
-        float m_zVelocityCurrentDelta = 0.f;
-        float m_zVelocityPrevDelta = 0.f;
+        float m_applyVelocityZ = 0.f;
+        float m_applyVelocityZCurrentDelta = 0.f;
+        float m_applyVelocityZPrevDelta = 0.f;
         float m_capsuleRadius = 0.25f;
         float m_capsuleHeight = 1.753f;
         // The grounded sphere cast offset determines how far below the character's feet the ground is detected

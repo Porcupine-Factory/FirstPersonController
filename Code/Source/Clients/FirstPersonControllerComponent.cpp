@@ -809,9 +809,9 @@ namespace FirstPersonController
 
     // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
     // and it's with respect to the world when m_instantVelocityRotation == true
-    AZ::Vector2 FirstPersonControllerComponent::LerpVelocity(const AZ::Vector2& targetVelocity, const float& deltaTime)
+    AZ::Vector2 FirstPersonControllerComponent::LerpVelocity(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
-        float totalLerpTime = m_lastAppliedVelocity.GetDistance(targetVelocity)/m_accel;
+        float totalLerpTime = m_lastAppliedVelocity.GetDistance(targetVelocityXY)/m_accel;
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
@@ -828,20 +828,20 @@ namespace FirstPersonController
             m_lerpTime = totalLerpTime;
 
         // Lerp the velocity from the last applied velocity to the target velocity
-        AZ::Vector2 newVelocity = m_lastAppliedVelocity.Lerp(targetVelocity, m_lerpTime / totalLerpTime);
+        AZ::Vector2 newVelocityXY = m_lastAppliedVelocity.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
 
         // Decelerate at a different rate than the acceleration
-        if(newVelocity.GetLength() < m_applyVelocity.GetLength())
+        if(newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
         {
             // Get the current velocity vector with respect to the character's local coordinate system
-            const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocity)));
+            const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
 
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
-            if(targetVelocity.GetLength() != 0.f
+            if(targetVelocityXY.GetLength() != 0.f
                 && m_instantVelocityRotation ?
-                    (abs(applyVelocityLocal.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi)
-                    : (abs(m_applyVelocity.AngleSafe(targetVelocity)) > AZ::Constants::HalfPi))
+                    (abs(applyVelocityLocal.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi)
+                    : (abs(m_applyVelocityXY.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi))
             {
                 // Compute the deceleration factor based on the magnitude of the target velocity
                 float greatestScale = m_forwardScale;
@@ -849,14 +849,14 @@ namespace FirstPersonController
                     if(greatestScale < abs(scale))
                         greatestScale = abs(scale);
 
-                AZ::Vector2 targetVelocityLocal = targetVelocity;
+                AZ::Vector2 targetVelocityXYLocal = targetVelocityXY;
                 if(!m_instantVelocityRotation)
-                    targetVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(targetVelocity)));
+                    targetVelocityXYLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
                 if(m_standing || m_sprintWhileCrouched)
-                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale)) * m_sprintAccelAdjust;
+                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale)) * m_sprintAccelAdjust;
                 else
-                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityLocal.GetLength() / (m_speed * m_crouchScale * greatestScale)) * m_sprintAccelAdjust;
+                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * m_crouchScale * greatestScale)) * m_sprintAccelAdjust;
             }
             else
                 m_decelerationFactor = m_decel;
@@ -867,12 +867,12 @@ namespace FirstPersonController
             if(m_lerpTime >= totalLerpTime)
                 m_lerpTime = totalLerpTime;
 
-            AZ::Vector2 newVelocityDecel =  m_lastAppliedVelocity.Lerp(targetVelocity, m_lerpTime / totalLerpTime);
-            if(newVelocityDecel.GetLength() < m_applyVelocity.GetLength())
-                newVelocity = newVelocityDecel;
+            AZ::Vector2 newVelocityXYDecel =  m_lastAppliedVelocity.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+            if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
+                newVelocityXY = newVelocityXYDecel;
         }
 
-        return newVelocity;
+        return newVelocityXY;
     }
 
     AZ::Vector2 FirstPersonControllerComponent::CreateEllipseScaledVector(const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale)
@@ -924,23 +924,23 @@ namespace FirstPersonController
     }
 
     // Here target velocity is with respect to the character's frame of reference
-    void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime)
+    void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
         // and it shouldn't be applied if you're crouching
         if(m_sprintValue == 0.f
            || (!m_sprintWhileCrouched && !m_standing)
-           || (!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
+           || (!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX())
            || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue)
-           || (targetVelocity.IsZero())
+           || (targetVelocityXY.IsZero())
            || (m_sprintValue != 0.f
                && !m_sprintBackwards
                && ((!m_forwardValue && !m_leftValue && !m_rightValue) ||
                    (!m_forwardValue && -m_leftValue == m_rightValue) ||
-                   (targetVelocity.GetY() < 0.f)) ))
+                   (targetVelocityXY.GetY() < 0.f)) ))
             m_sprintValue = 0.f;
 
-        if((m_sprintViaScript && m_sprintEnableDisableScript) && (targetVelocity.GetY() > 0.f || m_sprintBackwards))
+        if((m_sprintViaScript && m_sprintEnableDisableScript) && (targetVelocityXY.GetY() > 0.f || m_sprintBackwards))
         {
             m_sprintValue = 1.f;
             m_sprintAccelValue = m_sprintAccelScale;
@@ -951,13 +951,13 @@ namespace FirstPersonController
         m_sprintPrevValue = m_sprintValue;
 
         // Reset the counter if there is no movement
-        if(!m_applyVelocity.GetY() && !m_applyVelocity.GetX())
+        if(!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX())
             m_sprintAccumulateAccelTime = 0.f;
 
         if(m_sprintValue == 0.f)
             m_sprintVelocityAdjust = 1.f;
         else
-            m_sprintVelocityAdjust = CreateEllipseScaledVector(targetVelocity.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+            m_sprintVelocityAdjust = CreateEllipseScaledVector(targetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
 
         // If sprint is to be applied then increment the sprint counter
         if(!AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
@@ -983,7 +983,7 @@ namespace FirstPersonController
 
             m_staminaIncrementing = false;
 
-            if(m_applyVelocity.GetLength() > m_sprintPrevVelocityLength && m_sprintVelocityAdjust != 1.f)
+            if(m_applyVelocityXY.GetLength() > m_sprintPrevVelocityLength && m_sprintVelocityAdjust != 1.f)
             {
                 m_sprintAccumulateAccelTime += deltaTime;
 
@@ -991,9 +991,9 @@ namespace FirstPersonController
                 if(m_sprintAccumulateAccelTime > totalSprintTime)
                     m_sprintAccumulateAccelTime = totalSprintTime;
             }
-            else if(m_applyVelocity.GetLength() < m_sprintPrevVelocityLength)
+            else if(m_applyVelocityXY.GetLength() < m_sprintPrevVelocityLength)
             {
-                const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocity)));
+                const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
                 if(applyVelocityLocal.AngleSafe(AZ::Vector2::CreateAxisY()) > AZ::Constants::HalfPi)
                     m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
                 else
@@ -1005,7 +1005,7 @@ namespace FirstPersonController
                     m_sprintPrevVelocityLength = 0.f;
                 }
             }
-            m_sprintPrevVelocityLength = m_applyVelocity.GetLength();
+            m_sprintPrevVelocityLength = m_applyVelocityXY.GetLength();
         }
         // Otherwise if the sprint velocity isn't applied then decrement the sprint counter
         else if(AZ::IsClose(m_sprintVelocityAdjust, 1.f) || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
@@ -1013,7 +1013,7 @@ namespace FirstPersonController
             m_sprintValue = 0.f;
 
             // Set the sprint acceleration adjust according to the local direction we're moving
-            if((m_instantVelocityRotation || !m_sprintStopAccelAdjustCaptured) && targetVelocity.IsZero())
+            if((m_instantVelocityRotation || !m_sprintStopAccelAdjustCaptured) && targetVelocityXY.IsZero())
             {
                 // Figure out which of the scaled sprint velocity directions is the greatest
                 float greatestSprintScale = 0.f;
@@ -1263,55 +1263,55 @@ namespace FirstPersonController
         else
             leftRight /= m_leftScale;
 
-        AZ::Vector2 targetVelocity = AZ::Vector2(leftRight, forwardBack);
+        AZ::Vector2 targetVelocityXY = AZ::Vector2(leftRight, forwardBack);
 
         // Normalize the vector if its magnitude is greater than 1 and then scale it
         if((forwardBack || leftRight) && sqrt(forwardBack*forwardBack + leftRight*leftRight) > 1.f)
-            targetVelocity.Normalize();
+            targetVelocityXY.Normalize();
 
-        targetVelocity = CreateEllipseScaledVector(targetVelocity, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
+        targetVelocityXY = CreateEllipseScaledVector(targetVelocityXY, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
 
         // Call the sprint manager
         if(!m_scriptSetsXYTargetVelocity)
-            SprintManager(targetVelocity, deltaTime);
+            SprintManager(targetVelocityXY, deltaTime);
 
         // Apply the speed, sprint factor, and crouch factor
         if(m_standing)
-            targetVelocity *= m_speed * m_sprintVelocityAdjust;
+            targetVelocityXY *= m_speed * m_sprintVelocityAdjust;
         else if(m_sprintWhileCrouched && !m_standing)
-            targetVelocity *= m_speed * m_sprintVelocityAdjust * m_crouchScale;
+            targetVelocityXY *= m_speed * m_sprintVelocityAdjust * m_crouchScale;
         else
-            targetVelocity *= m_speed * m_crouchScale;
+            targetVelocityXY *= m_speed * m_crouchScale;
 
         if(m_scriptSetsXYTargetVelocity)
         {
-            targetVelocity.SetX(m_scriptTargetXYVelocity.GetX());
-            targetVelocity.SetY(m_scriptTargetXYVelocity.GetY());
-            SprintManager(targetVelocity, deltaTime);
+            targetVelocityXY.SetX(m_scriptTargetXYVelocity.GetX());
+            targetVelocityXY.SetY(m_scriptTargetXYVelocity.GetY());
+            SprintManager(targetVelocityXY, deltaTime);
         }
         else
-            m_scriptTargetXYVelocity = targetVelocity;
+            m_scriptTargetXYVelocity = targetVelocityXY;
 
         // Rotate the target velocity vector so that it can be compared against the applied velocity
-        const AZ::Vector2 targetVelocityWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocity)));
+        const AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
         // Obtain the last applied velocity if the target velocity changed
-        if(m_instantVelocityRotation ? (m_prevTargetVelocity != targetVelocity)
-                                        : (m_prevTargetVelocity != targetVelocityWorld))
+        if(m_instantVelocityRotation ? (m_prevTargetVelocity != targetVelocityXY)
+                                        : (m_prevTargetVelocity != targetVelocityXYWorld))
         {
             if(m_instantVelocityRotation)
             {
                 // Set the previous target velocity to the new one
-                m_prevTargetVelocity = targetVelocity;
+                m_prevTargetVelocity = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
-                m_lastAppliedVelocity = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocity)));
+                m_lastAppliedVelocity = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
             }
             else
             {
                 // Set the previous target velocity to the new one
-                m_prevTargetVelocity = targetVelocityWorld;
+                m_prevTargetVelocity = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
-                m_lastAppliedVelocity = m_applyVelocity;
+                m_lastAppliedVelocity = m_applyVelocityXY;
             }
 
             // Reset the lerp time since the target velocity changed
@@ -1319,19 +1319,19 @@ namespace FirstPersonController
         }
 
         // Lerp to the velocity if we're not already there
-        if(m_applyVelocity != targetVelocityWorld)
+        if(m_applyVelocityXY != targetVelocityXYWorld)
         {
             if(m_instantVelocityRotation)
-                m_applyVelocity = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(LerpVelocity(targetVelocity, deltaTime))));
+                m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(LerpVelocity(targetVelocityXY, deltaTime))));
             else
-                m_applyVelocity = LerpVelocity(targetVelocityWorld, deltaTime);
+                m_applyVelocityXY = LerpVelocity(targetVelocityXYWorld, deltaTime);
         }
 
         // Debug print statements to observe the velocity, acceleration, and position
         //AZ_Printf("", "m_currentHeading = %.10f", m_currentHeading);
-        //AZ_Printf("", "m_applyVelocity.GetLength() = %.10f", m_applyVelocity.GetLength());
-        //AZ_Printf("", "m_applyVelocity.GetX() = %.10f", m_applyVelocity.GetX());
-        //AZ_Printf("", "m_applyVelocity.GetY() = %.10f", m_applyVelocity.GetY());
+        //AZ_Printf("", "m_applyVelocityXY.GetLength() = %.10f", m_applyVelocityXY.GetLength());
+        //AZ_Printf("", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
+        //AZ_Printf("", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
         //AZ_Printf("", "m_sprintAccumulateAccelTime = %.10f", m_sprintAccumulateAccelTime);
         //AZ_Printf("", "m_sprintValue = %.10f", m_sprintValue);
         //AZ_Printf("", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
@@ -1342,9 +1342,9 @@ namespace FirstPersonController
         //AZ_Printf("", "m_sprintPause = %.10f", m_sprintPause);
         //AZ_Printf("", "m_sprintPauseTime = %.10f", m_sprintPauseTime);
         //AZ_Printf("", "m_sprintCooldown = %.10f", m_sprintCooldown);
-        //static AZ::Vector2 prevVelocity = m_applyVelocity;
-        //AZ_Printf("", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocity)/deltaTime);
-        //prevVelocity = m_applyVelocity;
+        //static AZ::Vector2 prevVelocity = m_applyVelocityXY;
+        //AZ_Printf("", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocityXY)/deltaTime);
+        //prevVelocity = m_applyVelocityXY;
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "X Position = %.10f", pos.GetX());
         //AZ_Printf("", "Y Position = %.10f", pos.GetY());
@@ -1617,9 +1617,9 @@ namespace FirstPersonController
         }
 
         // Used for the Verlet integration averaging calculation
-        m_zVelocityPrevDelta = m_zVelocityCurrentDelta;
+        m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
 
-        if(m_grounded && (m_jumpReqRepress || (currentVelocity.GetZ() <= 0.f && m_zVelocity <= 0.f)))
+        if(m_grounded && (m_jumpReqRepress || (currentVelocity.GetZ() <= 0.f && m_applyVelocityZ <= 0.f)))
         {
             if(m_jumpValue && !m_jumpHeld && !m_headHit)
             {
@@ -1629,15 +1629,15 @@ namespace FirstPersonController
                         m_crouching = false;
                     return;
                 }
-                m_zVelocityCurrentDelta = m_jumpInitialVelocity;
+                m_applyVelocityZCurrentDelta = m_jumpInitialVelocity;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnFirstJump);
             }
             else
             {
-                m_zVelocity = 0.f;
-                m_zVelocityCurrentDelta = 0.f;
+                m_applyVelocityZ = 0.f;
+                m_applyVelocityZCurrentDelta = 0.f;
                 m_jumpCounter = 0.f;
 
                 if(m_jumpValue == 0.f && m_jumpHeld)
@@ -1653,12 +1653,12 @@ namespace FirstPersonController
             {
                 m_jumpHeld = false;
                 m_jumpCounter = 0.f;
-                m_zVelocityCurrentDelta = m_gravity * deltaTime;
+                m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
             }
             else
             {
                 m_jumpCounter += deltaTime;
-                m_zVelocityCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
+                m_applyVelocityZCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
             }
         }
         else
@@ -1670,9 +1670,9 @@ namespace FirstPersonController
                 m_jumpCounter = 0.f;
 
             if(currentVelocity.GetZ() <= 0.f)
-                m_zVelocityCurrentDelta = m_gravity * m_jumpFallingGravityFactor * deltaTime;
+                m_applyVelocityZCurrentDelta = m_gravity * m_jumpFallingGravityFactor * deltaTime;
             else
-                m_zVelocityCurrentDelta = m_gravity * deltaTime;
+                m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
 
             if(!m_doubleJumpEnabled && !m_jumpHeld)
                 m_jumpHeld = true;
@@ -1687,8 +1687,8 @@ namespace FirstPersonController
                         m_crouching = false;
                     return;
                 }
-                m_zVelocity = m_jumpSecondInitialVelocity;
-                m_zVelocityCurrentDelta = 0.f;
+                m_applyVelocityZ = m_jumpSecondInitialVelocity;
+                m_applyVelocityZCurrentDelta = 0.f;
                 m_secondJump = true;
                 m_jumpHeld = true;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSecondJump);
@@ -1697,62 +1697,49 @@ namespace FirstPersonController
 
         // Perform an average of the current and previous Z velocity delta
         // as described by Verlet integration, which should reduce accumulated error
-        m_zVelocity += (m_zVelocityCurrentDelta + m_zVelocityPrevDelta) / 2.f;
+        m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
 
-        if(m_headHit && m_zVelocity > 0.f)
-            m_zVelocity = m_zVelocityCurrentDelta = 0.f;
+        if(m_headHit && m_applyVelocityZ > 0.f)
+            m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
 
         // Account for the case where the PhysX Character Gameplay component's gravity is used instead
         if(m_gravity == 0.f && m_grounded && currentVelocity.GetZ() < 0.f)
-            m_zVelocity = m_zVelocityCurrentDelta = 0.f;
+            m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
         //AZ_Printf("", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
-        //AZ_Printf("", "m_zVelocityPrevDelta = %.10f", m_zVelocityPrevDelta);
-        //AZ_Printf("", "m_zVelocityCurrentDelta = %.10f", m_zVelocityCurrentDelta);
-        //AZ_Printf("", "m_zVelocity = %.10f", m_zVelocity);
+        //AZ_Printf("", "m_applyVelocityZPrevDelta = %.10f", m_applyVelocityZPrevDelta);
+        //AZ_Printf("", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
+        //AZ_Printf("", "m_applyVelocityZ = %.10f", m_applyVelocityZ);
         //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
         //AZ_Printf("", "m_jumpCounter = %.10f", m_jumpCounter);
         //AZ_Printf("", "deltaTime = %.10f", deltaTime);
         //AZ_Printf("", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
         //AZ_Printf("", "m_jumpHoldDistance = %.10f", m_jumpHoldDistance);
-        //static float prevZVelocity = m_zVelocity;
-        //AZ_Printf("", "dvz/dt = %.10f", (m_zVelocity - prevZVelocity)/deltaTime);
+        //static float prevZVelocity = m_applyVelocityZ;
+        //AZ_Printf("", "dvz/dt = %.10f", (m_applyVelocityZ - prevZVelocity)/deltaTime);
         //AZ_Printf("","");
-        //prevZVelocity = m_zVelocity;
+        //prevZVelocity = m_applyVelocityZ;
     }
 
-    void FirstPersonControllerComponent::UpdateXYVelocityPlaneTilt(AZ::Vector3& targetVelocity)
+    AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
     {
-        // Track the sum of the normal vectors for the velocity's XY plane if its set
-        if(m_velocityXCrossYTracksNormal)
-            SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+        AZ::Vector3 tiltedVectorXY = AZ::Vector3(vXY);
 
-        if(m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ())
+        if(newXCrossYDirection != AZ::Vector3::CreateAxisZ())
         {
-            if(m_velocityXCrossYDirection.GetZ() >= 0.f)
-                targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityXCrossYDirection).TransformVector(targetVelocity);
+            if(newXCrossYDirection.GetZ() >= 0.f)
+                tiltedVectorXY = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), newXCrossYDirection).TransformVector(AZ::Vector3(vXY));
             else
             {
-                targetVelocity.SetY(-targetVelocity.GetY());
-                targetVelocity = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_velocityXCrossYDirection).TransformVector(targetVelocity);
+                vXY.SetY(-vXY.GetY());
+                tiltedVectorXY = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), newXCrossYDirection).TransformVector(AZ::Vector3(vXY));
             }
         }
-    }
 
-    void FirstPersonControllerComponent::UpdateZVelocityPosDirection(AZ::Vector3& targetVelocity)
-    {
-        if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
-        {
-            if(m_velocityZPosDirection.GetZ() >= 0.f)
-                targetVelocity += AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_velocityZPosDirection).TransformVector(AZ::Vector3::CreateAxisZ(m_zVelocity));
-            else
-                targetVelocity += AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_velocityZPosDirection).TransformVector(AZ::Vector3::CreateAxisZ(-m_zVelocity));
-        }
-        else
-            targetVelocity += AZ::Vector3::CreateAxisZ(m_zVelocity);
+        return tiltedVectorXY;
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
@@ -1767,22 +1754,24 @@ namespace FirstPersonController
         // So long as the character is grounded or depending on how the update X&Y velocity while jumping
         // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
         if(m_grounded || (m_updateXYAscending && m_updateXYDecending && !m_updateXYOnlyNearGround)
-           || ((m_updateXYAscending && m_zVelocity >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
-           || ((m_updateXYDecending && m_zVelocity <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
+           || ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
+           || ((m_updateXYDecending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
             UpdateVelocityXY(deltaTime);
 
         UpdateVelocityZ(deltaTime);
 
-        AZ::Vector3 targetVelocity = AZ::Vector3(m_applyVelocity);
+        // Track the sum of the normal vectors for the velocity's XY plane if its set
+        if(m_velocityXCrossYTracksNormal)
+            SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
 
         // Tilt the XY velocity plane based on m_velocityXCrossYDirection
-        UpdateXYVelocityPlaneTilt(targetVelocity);
+        AZ::Vector3 targetVelocity = TiltVectorXCrossY(m_applyVelocityXY, m_velocityXCrossYDirection);
         // Change the +Z direction based on m_velocityZPosDirection
-        UpdateZVelocityPosDirection(targetVelocity);
+        targetVelocity += m_applyVelocityZ * m_velocityZPosDirection;
 
         // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
         /* Physics::CharacterRequestBus::Event(GetEntityId(),
-              &Physics::CharacterRequestBus::Events::SetUpDirection, m_velocityZPosDirection); */
+              &Physics::CharacterRequestBus::Events::SetUpDirection, m_sphereCastsAxisDirectionPose); */
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick,
@@ -2072,7 +2061,7 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection)
     {
-        m_velocityXCrossYDirection = new_velocityXCrossYDirection;
+        m_velocityXCrossYDirection = new_velocityXCrossYDirection.GetNormalized();
         if(m_velocityXCrossYDirection.IsZero())
             m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
     }
@@ -2082,7 +2071,7 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection)
     {
-        m_velocityZPosDirection = new_velocityZPosDirection;
+        m_velocityZPosDirection = new_velocityZPosDirection.GetNormalized();
         if(m_velocityZPosDirection.IsZero())
             m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
     }
@@ -2192,12 +2181,12 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetZVelocity() const
     {
-        return m_zVelocity;
+        return m_applyVelocityZ;
     }
-    void FirstPersonControllerComponent::SetZVelocity(const float& new_zVelocity)
+    void FirstPersonControllerComponent::SetZVelocity(const float& new_applyVelocityZ)
     {
         SetGroundedForTick(false);
-        m_zVelocity = new_zVelocity;
+        m_applyVelocityZ = new_applyVelocityZ;
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const
     {
