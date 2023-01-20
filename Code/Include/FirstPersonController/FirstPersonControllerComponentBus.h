@@ -80,7 +80,7 @@ namespace FirstPersonController
         virtual void SetSphereCastsAxisDirectionPose(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3&, const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3&, const AZ::Vector3&) = 0;
-        virtual AZ::Vector3 CreateScaledVector(const AZ::Vector3&, float, float, float, float) = 0;
+        virtual AZ::Vector2 CreateEllipseScaledVector(const AZ::Vector2&, float, float, float, float) = 0;
         virtual float GetJumpHeldGravityFactor() const = 0;
         virtual void SetJumpHeldGravityFactor(const float&) = 0;
         virtual float GetJumpFallingGravityFactor() const = 0;
@@ -95,8 +95,8 @@ namespace FirstPersonController
         virtual void SetUpdateXYOnlyNearGround(const bool&) = 0;
         virtual bool GetScriptSetsXYTargetVelocity() const = 0;
         virtual void SetScriptSetsXYTargetVelocity(const bool&) = 0;
-        virtual AZ::Vector3 GetTargetXYVelocity() const = 0;
-        virtual void SetTargetXYVelocity(const AZ::Vector3&) = 0;
+        virtual AZ::Vector2 GetTargetXYVelocity() const = 0;
+        virtual void SetTargetXYVelocity(const AZ::Vector2&) = 0;
         virtual float GetZVelocity() const = 0;
         virtual void SetZVelocity(const float&) = 0;
         virtual float GetJumpInitialVelocity() const = 0;

@@ -117,7 +117,7 @@ namespace FirstPersonController
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
-        AZ::Vector3 CreateScaledVector(const AZ::Vector3& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) override;
+        AZ::Vector2 CreateEllipseScaledVector(const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -132,8 +132,8 @@ namespace FirstPersonController
         void SetUpdateXYOnlyNearGround(const bool& new_updateXYOnlyNearGround) override;
         bool GetScriptSetsXYTargetVelocity() const override;
         void SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity) override;
-        AZ::Vector3 GetTargetXYVelocity() const override;
-        void SetTargetXYVelocity(const AZ::Vector3& new_scriptTargetXYVelocity) override;
+        AZ::Vector2 GetTargetXYVelocity() const override;
+        void SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity) override;
         float GetZVelocity() const override;
         void SetZVelocity(const float& new_zVelocity) override;
         float GetJumpInitialVelocity() const override;
@@ -270,9 +270,9 @@ namespace FirstPersonController
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation(const float& deltaTime);
-        AZ::Vector3 LerpVelocity(const AZ::Vector3& targetVelocity, const float& deltaTime);
+        AZ::Vector2 LerpVelocity(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void SmoothRotation(const float& deltaTime);
-        void SprintManager(const AZ::Vector3& targetVelocity, const float& deltaTime);
+        void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
         void UpdateXYVelocityPlaneTilt(AZ::Vector3& targetVelocity);
         void UpdateZVelocityPosDirection(AZ::Vector3& targetVelocity);
@@ -289,10 +289,10 @@ namespace FirstPersonController
         void OnSprintCooldown();
 
         // Velocity application variables
-        AZ::Vector3 m_applyVelocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_scriptTargetXYVelocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_lastAppliedVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector2 m_applyVelocity = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_scriptTargetXYVelocity = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_prevTargetVelocity = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_lastAppliedVelocity = AZ::Vector2::CreateZero();
         bool m_instantVelocityRotation = true;
 
         // Determines whether the character's X&Y target velocity
