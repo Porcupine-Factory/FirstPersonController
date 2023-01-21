@@ -101,10 +101,10 @@ namespace FirstPersonController
         virtual void SetScriptSetsXYTargetVelocity(const bool&) = 0;
         virtual AZ::Vector2 GetTargetXYVelocity() const = 0;
         virtual void SetTargetXYVelocity(const AZ::Vector2&) = 0;
-        virtual bool GetAddVelocityHeading() const = 0;
-        virtual void SetAddVelocityHeading(const bool&) = 0;
-        virtual AZ::Vector3 GetAddVelocity() const = 0;
-        virtual void SetAddVelocity(const AZ::Vector3&) = 0;
+        virtual AZ::Vector3 GetAddVelocityWorld() const = 0;
+        virtual void SetAddVelocityWorld(const AZ::Vector3&) = 0;
+        virtual AZ::Vector3 GetAddVelocityHeading() const = 0;
+        virtual void SetAddVelocityHeading(const AZ::Vector3&) = 0;
         virtual float GetZVelocity() const = 0;
         virtual void SetZVelocity(const float&) = 0;
         virtual float GetJumpInitialVelocity() const = 0;
