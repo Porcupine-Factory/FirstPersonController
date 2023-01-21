@@ -398,6 +398,10 @@ namespace FirstPersonController
                 ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
                 ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
                 ->Event("Set Target X&Y Velocity", &FirstPersonControllerComponentRequests::SetTargetXYVelocity)
+                ->Event("Get Add Velocity Follows Heading", &FirstPersonControllerComponentRequests::GetAddVelocityHeading)
+                ->Event("Set Add Velocity Follows Heading", &FirstPersonControllerComponentRequests::SetAddVelocityHeading)
+                ->Event("Get Add Velocity", &FirstPersonControllerComponentRequests::GetAddVelocity)
+                ->Event("Set Add Velocity", &FirstPersonControllerComponentRequests::SetAddVelocity)
                 ->Event("Get Z Velocity", &FirstPersonControllerComponentRequests::GetZVelocity)
                 ->Event("Set Z Velocity", &FirstPersonControllerComponentRequests::SetZVelocity)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
@@ -1780,10 +1784,14 @@ namespace FirstPersonController
         if(m_velocityXCrossYTracksNormal)
             SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
 
+        AZ::Vector3 addVelocity = m_addVelocity;
+        // If enabled, rotate addVelocity so that it's with repect to the character's heading
+        if(m_addVelocityHeading)
+            addVelocity = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocity);
         // Tilt the XY velocity plane based on m_velocityXCrossYDirection
-        AZ::Vector3 targetVelocity = TiltVectorXCrossY(m_applyVelocityXY, m_velocityXCrossYDirection);
+        AZ::Vector3 targetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(addVelocity)), m_velocityXCrossYDirection);
         // Change the +Z direction based on m_velocityZPosDirection
-        targetVelocity += m_applyVelocityZ * m_velocityZPosDirection;
+        targetVelocity += (m_applyVelocityZ + addVelocity.GetZ()) * m_velocityZPosDirection;
 
         // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
         /* Physics::CharacterRequestBus::Event(GetEntityId(),
@@ -2206,6 +2214,22 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity)
     {
         m_scriptTargetXYVelocity = new_scriptTargetXYVelocity;
+    }
+    bool FirstPersonControllerComponent::GetAddVelocityHeading() const
+    {
+        return m_addVelocityHeading;
+    }
+    void FirstPersonControllerComponent::SetAddVelocityHeading(const bool& new_addVelocityHeading)
+    {
+        m_addVelocityHeading = new_addVelocityHeading;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetAddVelocity() const
+    {
+        return m_addVelocity;
+    }
+    void FirstPersonControllerComponent::SetAddVelocity(const AZ::Vector3& new_addVelocity)
+    {
+        m_addVelocity = new_addVelocity;
     }
     float FirstPersonControllerComponent::GetZVelocity() const
     {
