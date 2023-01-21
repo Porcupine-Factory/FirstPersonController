@@ -49,8 +49,11 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // FirstPersonControllerRequestBus
-        AZ::EntityId GetActiveCameraId() const override;
+        AZ::Entity* GetActiveCameraEntityPtr() const override;
+        AZ::EntityId GetActiveCameraEntityId() const override;
         void ReacquireChildEntityIds() override;
+        void ReacquireCapsuleDimensions() override;
+        void ReacquireMaxSlopeAngle() override;
         AZStd::string GetForwardEventName() const override;
         void SetForwardEventName(const AZStd::string& new_strForward) override;
         float GetForwardScale() const override;
@@ -107,6 +110,7 @@ namespace FirstPersonController
         float GetAirTime() const override;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
+        AZ::Vector3 TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
         void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
         bool GetVelocityXCrossYTracksNormal() const override;
@@ -203,6 +207,8 @@ namespace FirstPersonController
         void SetSprintWhileCrouched(const bool& new_sprintWhileCrouched) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
+        bool GetCrouched() const override;
+        bool GetStanding() const override;
         bool GetCrouchScriptLocked() const override;
         void SetCrouchScriptLocked(const bool& new_crouchScriptLocked) override;
         float GetCrouchScale() const override;
@@ -256,7 +262,6 @@ namespace FirstPersonController
 
         // Active camera entity
         AZ::Entity* m_activeCameraEntity = nullptr;
-        AZ::Entity* GetActiveCamera() const;
 
         // Child entity IDs
         bool m_obtainedChildIds = false;
@@ -275,7 +280,6 @@ namespace FirstPersonController
         void SmoothRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
-        AZ::Vector3 TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection);
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();

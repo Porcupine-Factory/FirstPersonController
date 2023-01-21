@@ -309,8 +309,11 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
-                ->Event("Get Active Camera Id", &FirstPersonControllerComponentRequests::GetActiveCameraId)
-                ->Event("Reacquire Child Entity Ids", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
+                ->Event("Get Pointer To Active Camera Entity", &FirstPersonControllerComponentRequests::GetActiveCameraEntityPtr)
+                ->Event("Get Active Camera EntityId", &FirstPersonControllerComponentRequests::GetActiveCameraEntityId)
+                ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
+                ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
+                ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
                 ->Event("Get Forward Event Name", &FirstPersonControllerComponentRequests::GetForwardEventName)
                 ->Event("Set Forward Event Name", &FirstPersonControllerComponentRequests::SetForwardEventName)
                 ->Event("Get Forward Scale", &FirstPersonControllerComponentRequests::GetForwardScale)
@@ -367,6 +370,7 @@ namespace FirstPersonController
                 ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
+                ->Event("Tilt Vector2 Using X×Y Direction", &FirstPersonControllerComponentRequests::TiltVectorXCrossY)
                 ->Event("Get Velocity X×Y Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
                 ->Event("Set Velocity X×Y Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
                 ->Event("Get Velocity X×Y Tracks Normal", &FirstPersonControllerComponentRequests::GetVelocityXCrossYTracksNormal)
@@ -467,6 +471,8 @@ namespace FirstPersonController
                 ->Event("Set Enable Disable Sprint", &FirstPersonControllerComponentRequests::SetSprintEnableDisableScript)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
+                ->Event("Get Crouched", &FirstPersonControllerComponentRequests::GetCrouching)
+                ->Event("Get Standing", &FirstPersonControllerComponentRequests::GetStanding)
                 ->Event("Get Crouch Script Locked", &FirstPersonControllerComponentRequests::GetCrouchScriptLocked)
                 ->Event("Set Crouch Script Locked", &FirstPersonControllerComponentRequests::SetCrouchScriptLocked)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
@@ -735,7 +741,7 @@ namespace FirstPersonController
         ProcessInput(deltaTime);
     }
 
-    AZ::Entity* FirstPersonControllerComponent::GetActiveCamera() const
+    AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
     {
         AZ::EntityId activeCameraId;
         Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId,
@@ -783,7 +789,7 @@ namespace FirstPersonController
 
         t->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
-        m_activeCameraEntity = GetActiveCamera();
+        m_activeCameraEntity = GetActiveCameraEntityPtr();
         t = m_activeCameraEntity->GetTransform();
 
         float currentPitch = t->GetLocalRotation().GetX();
@@ -803,7 +809,7 @@ namespace FirstPersonController
 
         m_currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
-        m_currentPitch = GetActiveCamera()->GetTransform()->
+        m_currentPitch = GetActiveCameraEntityPtr()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetX();
     }
 
@@ -1800,13 +1806,25 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnSprintCooldown(){}
 
     // Request Bus getter and setter methods for use in scripts
-    AZ::EntityId FirstPersonControllerComponent::GetActiveCameraId() const
+    AZ::EntityId FirstPersonControllerComponent::GetActiveCameraEntityId() const
     {
         return m_activeCameraEntity->GetId();
     }
     void FirstPersonControllerComponent::ReacquireChildEntityIds()
     {
         AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+    }
+    void FirstPersonControllerComponent::ReacquireCapsuleDimensions()
+    {
+        PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
+            &PhysX::CharacterControllerRequestBus::Events::GetHeight);
+        PhysX::CharacterControllerRequestBus::EventResult(m_capsuleRadius, GetEntityId(),
+            &PhysX::CharacterControllerRequestBus::Events::GetRadius);
+    }
+    void FirstPersonControllerComponent::ReacquireMaxSlopeAngle()
+    {
+        Physics::CharacterRequestBus::EventResult(m_maxGroundedAngleDegrees, GetEntityId(),
+            &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
     }
     AZStd::string FirstPersonControllerComponent::GetForwardEventName() const
     {
@@ -2511,6 +2529,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouching(const bool& new_crouching)
     {
         m_crouching = new_crouching;
+    }
+    bool FirstPersonControllerComponent::GetCrouched() const
+    {
+        return m_crouched;
+    }
+    bool FirstPersonControllerComponent::GetStanding() const
+    {
+        return m_standing;
     }
     bool FirstPersonControllerComponent::GetCrouchScriptLocked() const
     {

@@ -13,8 +13,11 @@ namespace FirstPersonController
     public:
         ~FirstPersonControllerComponentRequests() override = default;
 
-        virtual AZ::EntityId GetActiveCameraId() const = 0;
+        virtual AZ::Entity* GetActiveCameraEntityPtr() const = 0;
+        virtual AZ::EntityId GetActiveCameraEntityId() const = 0;
         virtual void ReacquireChildEntityIds() = 0;
+        virtual void ReacquireCapsuleDimensions() = 0;
+        virtual void ReacquireMaxSlopeAngle() = 0;
         virtual AZStd::string GetForwardEventName() const = 0;
         virtual void SetForwardEventName(const AZStd::string&) = 0;
         virtual float GetForwardScale() const = 0;
@@ -70,6 +73,7 @@ namespace FirstPersonController
         virtual float GetAirTime() const = 0;
         virtual float GetGravity() const = 0;
         virtual void SetGravity(const float&) = 0;
+        virtual AZ::Vector3 TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection) = 0;
         virtual AZ::Vector3 GetVelocityXCrossYDirection() const = 0;
         virtual void SetVelocityXCrossYDirection(const AZ::Vector3&) = 0;
         virtual bool GetVelocityXCrossYTracksNormal() const = 0;
@@ -167,6 +171,8 @@ namespace FirstPersonController
         virtual void SetSprintWhileCrouched(const bool&) = 0;
         virtual bool GetCrouching() const = 0;
         virtual void SetCrouching(const bool&) = 0;
+        virtual bool GetCrouched() const = 0;
+        virtual bool GetStanding() const = 0;
         virtual bool GetCrouchScriptLocked() const = 0;
         virtual void SetCrouchScriptLocked(const bool&) = 0;
         virtual float GetCrouchScale() const = 0;
