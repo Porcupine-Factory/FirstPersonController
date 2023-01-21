@@ -1137,15 +1137,23 @@ namespace FirstPersonController
             }
 
             // Adjust the height of the collider capsule based on the crouching height
-            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
+            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleCurrentHeight, GetEntityId(),
                 &PhysX::CharacterControllerRequestBus::Events::GetHeight);
 
+            float stepHeight = 0.f;
+            Physics::CharacterRequestBus::EventResult(stepHeight, GetEntityId(),
+                &Physics::CharacterRequestBus::Events::GetStepHeight);
+
             // Subtract the distance to get down to the crouching height
-            m_capsuleHeight += cameraTravelDelta;
-            //AZ_Printf("", "Crouching capsule height = %.10f", m_capsuleHeight);
+            m_capsuleCurrentHeight += cameraTravelDelta;
+            if(m_capsuleCurrentHeight < (2.f*m_capsuleRadius + 0.00001f))
+                m_capsuleCurrentHeight = 2.f*m_capsuleRadius + 0.00001f;
+            if(m_capsuleCurrentHeight < (stepHeight + 0.00001f))
+                m_capsuleCurrentHeight = stepHeight + 0.00001f;
+            //AZ_Printf("", "Crouching capsule height = %.10f", m_capsuleCurrentHeight);
 
             PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
-                &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleHeight);
+                &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
 
             cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
         }
@@ -1162,7 +1170,7 @@ namespace FirstPersonController
             AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
             // Move the sphere to the location of the character and apply the Z offset
-            sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
+            sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius));
 
             AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ();
 
@@ -1171,9 +1179,9 @@ namespace FirstPersonController
             {
                 sphereCastDirection = m_sphereCastsAxisDirectionPose;
                 if(m_sphereCastsAxisDirectionPose.GetZ() >= 0.f)
-                    sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+                    sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius)));
                 else
-                    sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+                    sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius)));
             }
 
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
@@ -1231,15 +1239,17 @@ namespace FirstPersonController
             }
 
             // Adjust the height of the collider capsule based on the standing height
-            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
+            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleCurrentHeight, GetEntityId(),
                 &PhysX::CharacterControllerRequestBus::Events::GetHeight);
 
             // Add the distance to get back to the standing height
-            m_capsuleHeight += cameraTravelDelta;
-            //AZ_Printf("", "Standing capsule height = %.10f", m_capsuleHeight);
+            m_capsuleCurrentHeight += cameraTravelDelta;
+            if(m_capsuleCurrentHeight > m_capsuleHeight)
+                m_capsuleCurrentHeight = m_capsuleHeight;
+            //AZ_Printf("", "Standing capsule height = %.10f", m_capsuleCurrentHeight);
 
             PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
-                &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleHeight);
+                &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
 
             cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
         }

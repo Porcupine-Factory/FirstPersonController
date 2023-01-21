@@ -377,6 +377,7 @@ namespace FirstPersonController
         float m_applyVelocityZPrevDelta = 0.f;
         float m_capsuleRadius = 0.25f;
         float m_capsuleHeight = 1.753f;
+        float m_capsuleCurrentHeight = 1.753f;
         // The grounded sphere cast offset determines how far below the character's feet the ground is detected
         float m_groundedSphereCastOffset = 0.001f;
         // The ground close sphere cast offset determines how far below the character's feet the ground is considered to be close
