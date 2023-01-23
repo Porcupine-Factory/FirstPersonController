@@ -81,6 +81,7 @@ namespace FirstPersonController
               ->Field("Jump Head Hit Collision Group", &FirstPersonControllerComponent::m_headCollisionGroupId)
               ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
               ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpInitialVelocity)
+              ->Field("Second Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpSecondInitialVelocity)
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jumpFallingGravityFactor)
               ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
@@ -259,6 +260,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jumpInitialVelocity,
                         "Jump Initial Velocity (m/s)", "The velocity used when initiating the jump.")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jumpSecondInitialVelocity,
+                        "Second Jump Initial Velocity (m/s)", "The initial velocity that's used for the second jump.")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeldGravityFactor,
                         "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump.")
                     ->DataElement(nullptr,
@@ -408,8 +412,8 @@ namespace FirstPersonController
                 ->Event("Set Z Velocity", &FirstPersonControllerComponentRequests::SetZVelocity)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
-                ->Event("Get Initial Second Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
-                ->Event("Set Initial Second Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpSecondInitialVelocity)
+                ->Event("Get Second Jump InitialVelocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
+                ->Event("Set Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::SetJumpSecondInitialVelocity)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
                 ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
