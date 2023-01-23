@@ -143,6 +143,9 @@ namespace FirstPersonController
         virtual void SetOpposingDecel(const float&) = 0;
         virtual bool GetInstantVelocityRotation() const = 0;
         virtual void SetInstantVelocityRotation(const bool&) = 0;
+        virtual bool GetVelocityXYIgnoresObstacles() const =0 ;
+        virtual void SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles) =0 ;
+        virtual bool GetHitSomethingOnXY() const =0 ;
         virtual float GetSprintScaleForward() const = 0;
         virtual void SetSprintScaleForward(const float&) = 0;
         virtual float GetSprintScaleBack() const = 0;
@@ -236,6 +239,7 @@ namespace FirstPersonController
         virtual void OnGroundSoonHit() = 0;
         virtual void OnUngrounded() = 0;
         virtual void OnHeadHit() = 0;
+        virtual void OnHitSomethingOnXY() = 0;
         virtual void OnCrouched() = 0;
         virtual void OnStoodUp() = 0;
         virtual void OnFirstJump() = 0;
@@ -252,7 +256,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnHeadHit, OnCrouched, OnStoodUp, OnFirstJump, OnSecondJump, OnSprintCooldown);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnFirstJump, OnSecondJump, OnSprintCooldown);
 
         void OnGroundHit() override
         {
@@ -269,6 +273,10 @@ namespace FirstPersonController
         void OnHeadHit() override
         {
             Call(FN_OnHeadHit);
+        }
+        void OnHitSomethingOnXY() override
+        {
+            Call(FN_OnHitSomethingOnXY);
         }
         void OnCrouched() override
         {

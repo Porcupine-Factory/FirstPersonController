@@ -179,6 +179,9 @@ namespace FirstPersonController
         void SetOpposingDecel(const float& new_opposingDecel) override;
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
+        bool GetVelocityXYIgnoresObstacles() const override;
+        void SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles) override;
+        bool GetHitSomethingOnXY() const override;
         float GetSprintScaleForward() const override;
         void SetSprintScaleForward(const float& new_sprintScaleForward) override;
         float GetSprintScaleBack() const override;
@@ -291,6 +294,7 @@ namespace FirstPersonController
         void OnGroundSoonHit();
         void OnUngrounded();
         void OnHeadHit();
+        void OnHitSomethingOnXY();
         void OnCrouched();
         void OnStoodUp();
         void OnFirstJump();
@@ -305,6 +309,8 @@ namespace FirstPersonController
         AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_lastAppliedVelocityXY = AZ::Vector2::CreateZero();
         bool m_instantVelocityRotation = true;
+        bool m_velocityXYIgnoresObstacles = false;
+        bool m_hitSomethingOnXY = false;
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true
@@ -365,7 +371,7 @@ namespace FirstPersonController
         float m_gravity = -9.81f;
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
-        float m_prevVelocityXCrossYDirectionZComp = 1.f;
+        AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
         bool m_velocityXCrossYTracksNormal = true;
         AZ::Vector3 m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
