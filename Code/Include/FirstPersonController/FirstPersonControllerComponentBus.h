@@ -251,7 +251,11 @@ namespace FirstPersonController
         virtual void OnStoodUp() = 0;
         virtual void OnFirstJump() = 0;
         virtual void OnSecondJump() = 0;
+        virtual void OnStaminaCapped() = 0;
+        virtual void OnStaminaReachedZero() = 0;
+        virtual void OnSprintStarted() = 0;
         virtual void OnSprintCooldown() = 0;
+        virtual void OnCooldownDone() = 0;
     };
 
     using FirstPersonControllerNotificationBus = AZ::EBus<FirstPersonControllerNotifications>;
@@ -263,7 +267,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnFirstJump, OnSecondJump, OnSprintCooldown);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintCooldown, OnCooldownDone);
 
         void OnGroundHit() override
         {
@@ -301,9 +305,25 @@ namespace FirstPersonController
         {
             Call(FN_OnSecondJump);
         }
+        void OnStaminaCapped() override
+        {
+            Call(FN_OnStaminaCapped);
+        }
+        void OnStaminaReachedZero() override
+        {
+            Call(FN_OnStaminaReachedZero);
+        }
+        void OnSprintStarted() override
+        {
+            Call(FN_OnSprintStarted);
+        }
         void OnSprintCooldown() override
         {
             Call(FN_OnSprintCooldown);
+        }
+        void OnCooldownDone() override
+        {
+            Call(FN_OnCooldownDone);
         }
     };
 } // namespace FirstPersonController

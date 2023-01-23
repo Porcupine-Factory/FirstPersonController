@@ -306,7 +306,11 @@ namespace FirstPersonController
         void OnStoodUp();
         void OnFirstJump();
         void OnSecondJump();
+        void OnStaminaCapped();
+        void OnStaminaReachedZero();
+        void OnSprintStarted();
         void OnSprintCooldown();
+        void OnCooldownDone();
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();

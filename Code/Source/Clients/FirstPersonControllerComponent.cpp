@@ -972,8 +972,6 @@ namespace FirstPersonController
         else if(m_sprintViaScript && !m_sprintEnableDisableScript)
             m_sprintValue = 0.f;
 
-        m_sprintPrevValue = m_sprintValue;
-
         // Reset the counter if there is no movement
         if(m_applyVelocityXY.IsZero())
             m_sprintAccumulateAccelTime = 0.f;
@@ -982,6 +980,11 @@ namespace FirstPersonController
             m_sprintVelocityAdjust = 1.f;
         else
             m_sprintVelocityAdjust = CreateEllipseScaledVector(targetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+
+        if(m_sprintPrevValue == 0.f && !AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintStarted);
+
+        m_sprintPrevValue = m_sprintValue;
 
         // If sprint is to be applied then increment the sprint counter
         if(!AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
@@ -1001,8 +1004,11 @@ namespace FirstPersonController
             if(m_sprintUsesStamina)
                 m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust-1.f)/(greatestSprintScale-1.f);
 
-            if(m_sprintHeldDuration > m_sprintMaxTime)
+            if(m_sprintHeldDuration >= m_sprintMaxTime)
+            {
                 m_sprintHeldDuration = m_sprintMaxTime;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaReachedZero);
+            }
 
             m_sprintPause = m_sprintPauseTime;
 
@@ -1064,49 +1070,53 @@ namespace FirstPersonController
             // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
             if(m_sprintHeldDuration >= m_sprintMaxTime && m_sprintCooldown == 0.f)
             {
-                m_sprintHeldDuration = 0.f;
                 m_sprintCooldown = m_sprintCooldownTime;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintCooldown);
             }
             else if(m_sprintCooldown != 0.f)
             {
                 m_sprintCooldown -= deltaTime;
-                if(m_sprintCooldown < 0.f)
+                if(m_sprintCooldown <= 0.f)
+                {
                     m_sprintCooldown = 0.f;
+                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownDone);
+                    if(m_regenerateStaminaAutomatically)
+                    {
+                        m_sprintHeldDuration = 0.f;
+                        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
+                    }
+                }
             }
 
-            if(m_sprintHeldDuration > 0.f && !m_staminaIncrementing && m_sprintPause == 0.f)
-            {
-                // Here is an option to apply a pause instead of incrementing m_sprintHeldDuration at a
-                // rate that results in the same waiting period for the stamina to regenerate to its full
-                // value when nearly depleted as compared to waiting the cooldown time
-                //m_sprintPause = (m_sprintCooldownTime - m_sprintMaxTime)*(m_sprintHeldDuration/m_sprintMaxTime) + deltaTime;
+            if(m_sprintHeldDuration > 0.f && m_sprintCooldown == 0.f && !m_staminaIncrementing && m_sprintPause == 0.f)
                 m_staminaIncrementing = true;
-            }
 
             m_sprintPause -= deltaTime;
 
-            if(m_sprintPause <= 0.f)
+            if(m_sprintPause <= 0.f && m_sprintCooldown == 0.f)
             {
                 // Decrement the sprint held duration at a rate which makes it so that the stamina
                 // will regenerate when nearly depleted at the same time it would take if you were
                 // just wait through the cooldown time.
                 // Decrement this value by only deltaTime if you wish to instead use m_sprintPause
                 // to achieve the same timing but instead through the use of a pause.
-                if(m_regenerateStaminaAutomatically)
+                if(m_regenerateStaminaAutomatically && m_sprintHeldDuration > 0.f)
+                {
                     m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPauseTime)/m_sprintCooldownTime) * m_sprintRegenRate;
 
-                m_sprintPause = 0.f;
-                if(m_sprintHeldDuration <= 0.f)
-                {
-                    m_sprintHeldDuration = 0.f;
-                    m_staminaIncrementing = false;
+                    m_sprintPause = 0.f;
+                    if(m_sprintHeldDuration <= 0.f)
+                    {
+                        m_sprintHeldDuration = 0.f;
+                        m_staminaIncrementing = false;
+                        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
+                    }
                 }
             }
         }
 
         if(m_sprintMaxTime != 0.f)
-            m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+            m_staminaPercentage = 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime;
         else
             m_staminaPercentage = 0.f;
         //AZ_Printf("", "Stamina = %.10f\%", m_staminaPercentage);
@@ -1919,7 +1929,11 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnStoodUp(){}
     void FirstPersonControllerComponent::OnFirstJump(){}
     void FirstPersonControllerComponent::OnSecondJump(){}
+    void FirstPersonControllerComponent::OnStaminaCapped(){}
+    void FirstPersonControllerComponent::OnStaminaReachedZero(){}
+    void FirstPersonControllerComponent::OnSprintStarted(){}
     void FirstPersonControllerComponent::OnSprintCooldown(){}
+    void FirstPersonControllerComponent::OnCooldownDone(){}
 
     // Request Bus getter and setter methods for use in scripts
     AZ::EntityId FirstPersonControllerComponent::GetActiveCameraEntityId() const
