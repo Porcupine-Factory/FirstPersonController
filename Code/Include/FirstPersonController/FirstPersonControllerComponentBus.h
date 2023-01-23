@@ -145,9 +145,9 @@ namespace FirstPersonController
         virtual void SetOpposingDecel(const float&) = 0;
         virtual bool GetInstantVelocityRotation() const = 0;
         virtual void SetInstantVelocityRotation(const bool&) = 0;
-        virtual bool GetVelocityXYIgnoresObstacles() const =0 ;
-        virtual void SetVelocityXYIgnoresObstacles(const bool&) =0 ;
-        virtual bool GetHitSomethingOnXY() const =0 ;
+        virtual bool GetVelocityXYIgnoresObstacles() const =0;
+        virtual void SetVelocityXYIgnoresObstacles(const bool&) =0;
+        virtual bool GetHitSomethingOnXY() const =0;
         virtual float GetSprintScaleForward() const = 0;
         virtual void SetSprintScaleForward(const float&) = 0;
         virtual float GetSprintScaleBack() const = 0;
@@ -164,8 +164,13 @@ namespace FirstPersonController
         virtual void SetSprintHeldTime(const float&) = 0;
         virtual float GetSprintRegenRate() const = 0;
         virtual void SetSprintRegenRate(const float&) = 0;
-        virtual float GetStaminaPercentage() const = 0 ;
+        virtual float GetStaminaPercentage() const = 0;
         virtual void SetStaminaPercentage(const float&) = 0;
+        virtual bool GetStaminaIncrementing() const = 0;
+        virtual bool GetSprintUsesStamina() const = 0;
+        virtual void SetSprintUsesStamina(const bool&) = 0;
+        virtual bool GetRegenerateStaminaAutomatically() const = 0;
+        virtual void SetRegenerateStaminaAutomatically(const bool&) = 0;
         virtual float GetSprintCooldownTime() const = 0;
         virtual void SetSprintCooldownTime(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;

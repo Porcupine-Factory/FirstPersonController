@@ -462,6 +462,11 @@ namespace FirstPersonController
                 ->Event("Set Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::SetSprintRegenRate)
                 ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
                 ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
+                ->Event("Get Stamina Incrementing", &FirstPersonControllerComponentRequests::GetStaminaIncrementing)
+                ->Event("Get Sprint Uses Stamina", &FirstPersonControllerComponentRequests::GetSprintUsesStamina)
+                ->Event("Set Sprint Uses Stamina", &FirstPersonControllerComponentRequests::SetSprintUsesStamina)
+                ->Event("Get Regenerate Stamina Automatically", &FirstPersonControllerComponentRequests::GetRegenerateStaminaAutomatically)
+                ->Event("Set Regenerate Stamina Automatically", &FirstPersonControllerComponentRequests::SetRegenerateStaminaAutomatically)
                 ->Event("Get Sprint Cooldown Time", &FirstPersonControllerComponentRequests::GetSprintCooldownTime)
                 ->Event("Set Sprint Cooldown Time", &FirstPersonControllerComponentRequests::SetSprintCooldownTime)
                 ->Event("Get Sprint Cooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
@@ -993,7 +998,8 @@ namespace FirstPersonController
 
             m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (m_sprintVelocityAdjust - 1) + 1.f;
 
-            m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust-1.f)/(greatestSprintScale-1.f);
+            if(m_sprintUsesStamina)
+                m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust-1.f)/(greatestSprintScale-1.f);
 
             if(m_sprintHeldDuration > m_sprintMaxTime)
                 m_sprintHeldDuration = m_sprintMaxTime;
@@ -1087,7 +1093,9 @@ namespace FirstPersonController
                 // just wait through the cooldown time.
                 // Decrement this value by only deltaTime if you wish to instead use m_sprintPause
                 // to achieve the same timing but instead through the use of a pause.
-                m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPauseTime)/m_sprintCooldownTime) * m_sprintRegenRate;
+                if(m_regenerateStaminaAutomatically)
+                    m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPauseTime)/m_sprintCooldownTime) * m_sprintRegenRate;
+
                 m_sprintPause = 0.f;
                 if(m_sprintHeldDuration <= 0.f)
                 {
@@ -2605,6 +2613,26 @@ namespace FirstPersonController
         m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
         if(m_staminaPercentage < prevStaminaPercentage)
             m_staminaIncrementing = false;
+    }
+    bool FirstPersonControllerComponent::GetStaminaIncrementing() const
+    {
+        return m_staminaIncrementing;
+    }
+    bool FirstPersonControllerComponent::GetSprintUsesStamina() const
+    {
+        return m_sprintUsesStamina;
+    }
+    void FirstPersonControllerComponent::SetSprintUsesStamina(const bool& new_sprintUsesStamina)
+    {
+        m_sprintUsesStamina = new_sprintUsesStamina;
+    }
+    bool FirstPersonControllerComponent::GetRegenerateStaminaAutomatically() const
+    {
+        return m_regenerateStaminaAutomatically;
+    }
+    void FirstPersonControllerComponent::SetRegenerateStaminaAutomatically(const bool& new_regenerateStaminaAutomatically)
+    {
+        m_regenerateStaminaAutomatically = new_regenerateStaminaAutomatically;
     }
     float FirstPersonControllerComponent::GetSprintCooldownTime() const
     {

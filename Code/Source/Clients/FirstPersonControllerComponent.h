@@ -202,6 +202,11 @@ namespace FirstPersonController
         void SetSprintRegenRate(const float& new_sprintRegenRate) override;
         float GetStaminaPercentage() const override;
         void SetStaminaPercentage(const float& new_staminaPercentage) override;
+        bool GetStaminaIncrementing() const override;
+        bool GetSprintUsesStamina() const override;
+        void SetSprintUsesStamina(const bool& new_sprintUsesStamina) override;
+        bool GetRegenerateStaminaAutomatically() const override;
+        void SetRegenerateStaminaAutomatically(const bool& new_regenerateStaminaAutomatically) override;
         float GetSprintCooldownTime() const override;
         void SetSprintCooldownTime(const float& new_sprintCooldownTime) override;
         float GetSprintCooldown() const override;
@@ -351,6 +356,8 @@ namespace FirstPersonController
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisableScript = false;
         bool m_staminaIncrementing = false;
+        bool m_sprintUsesStamina = true;
+        bool m_regenerateStaminaAutomatically = true;
 
         // Stamina application variables
         float m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
