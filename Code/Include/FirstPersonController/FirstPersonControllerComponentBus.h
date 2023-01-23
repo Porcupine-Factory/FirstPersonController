@@ -101,6 +101,8 @@ namespace FirstPersonController
         virtual void SetScriptSetsXYTargetVelocity(const bool&) = 0;
         virtual AZ::Vector2 GetTargetXYVelocity() const = 0;
         virtual void SetTargetXYVelocity(const AZ::Vector2&) = 0;
+        virtual AZ::Vector2 GetApplyVelocityXY() const = 0;
+        virtual void SetApplyVelocityXY(const AZ::Vector2&) = 0;
         virtual AZ::Vector3 GetAddVelocityWorld() const = 0;
         virtual void SetAddVelocityWorld(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetAddVelocityHeading() const = 0;
@@ -144,7 +146,7 @@ namespace FirstPersonController
         virtual bool GetInstantVelocityRotation() const = 0;
         virtual void SetInstantVelocityRotation(const bool&) = 0;
         virtual bool GetVelocityXYIgnoresObstacles() const =0 ;
-        virtual void SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles) =0 ;
+        virtual void SetVelocityXYIgnoresObstacles(const bool&) =0 ;
         virtual bool GetHitSomethingOnXY() const =0 ;
         virtual float GetSprintScaleForward() const = 0;
         virtual void SetSprintScaleForward(const float&) = 0;
@@ -161,7 +163,7 @@ namespace FirstPersonController
         virtual float GetSprintHeldTime() const = 0;
         virtual void SetSprintHeldTime(const float&) = 0;
         virtual float GetSprintRegenRate() const = 0;
-        virtual void SetSprintRegenRate(const float& new_sprintRegenRate) = 0;
+        virtual void SetSprintRegenRate(const float&) = 0;
         virtual float GetStaminaPercentage() const = 0 ;
         virtual void SetStaminaPercentage(const float&) = 0;
         virtual float GetSprintCooldownTime() const = 0;

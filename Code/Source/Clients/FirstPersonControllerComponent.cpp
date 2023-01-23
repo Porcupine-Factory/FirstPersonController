@@ -398,6 +398,8 @@ namespace FirstPersonController
                 ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
                 ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
                 ->Event("Set Target X&Y Velocity", &FirstPersonControllerComponentRequests::SetTargetXYVelocity)
+                ->Event("Get Apply Velocity XY", &FirstPersonControllerComponentRequests::GetApplyVelocityXY)
+                ->Event("Set Apply Velocity XY", &FirstPersonControllerComponentRequests::SetApplyVelocityXY)
                 ->Event("Get Add Velocity Using World", &FirstPersonControllerComponentRequests::GetAddVelocityWorld)
                 ->Event("Set Add Velocity Using World", &FirstPersonControllerComponentRequests::SetAddVelocityWorld)
                 ->Event("Get Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetAddVelocityHeading)
@@ -2312,6 +2314,18 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity)
     {
         m_scriptTargetXYVelocity = new_scriptTargetXYVelocity;
+    }
+    AZ::Vector2 FirstPersonControllerComponent::GetApplyVelocityXY() const
+    {
+        return m_applyVelocityXY;
+    }
+    void FirstPersonControllerComponent::SetApplyVelocityXY(const AZ::Vector2& new_applyVelocityXY)
+    {
+        m_applyVelocityXY = new_applyVelocityXY;
+        if(m_instantVelocityRotation)
+            m_lastAppliedVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
+        else
+            m_lastAppliedVelocityXY = m_applyVelocityXY;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetAddVelocityWorld() const
     {

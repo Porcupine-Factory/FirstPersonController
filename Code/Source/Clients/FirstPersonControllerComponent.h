@@ -138,6 +138,8 @@ namespace FirstPersonController
         void SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity) override;
         AZ::Vector2 GetTargetXYVelocity() const override;
         void SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity) override;
+        AZ::Vector2 GetApplyVelocityXY() const override;
+        void SetApplyVelocityXY(const AZ::Vector2& new_applyVelocityXY) override;
         AZ::Vector3 GetAddVelocityWorld() const override;
         void SetAddVelocityWorld(const AZ::Vector3& new_addVelocityWorld) override;
         AZ::Vector3 GetAddVelocityHeading() const override;
