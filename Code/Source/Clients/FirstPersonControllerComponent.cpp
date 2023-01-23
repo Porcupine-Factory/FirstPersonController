@@ -818,10 +818,13 @@ namespace FirstPersonController
     }
 
     // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
-    // and it's with respect to the world when m_instantVelocityRotation == true
-    AZ::Vector2 FirstPersonControllerComponent::LerpVelocity(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
+    // and it's with respect to the world when m_instantVelocityRotation == false
+    AZ::Vector2 FirstPersonControllerComponent::LerpVelocityXY(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
-        float totalLerpTime = m_lastAppliedVelocity.GetDistance(targetVelocityXY)/m_accel;
+        const float totalLerpTime = m_lastAppliedVelocityXY.GetDistance(targetVelocityXY)/m_accel;
+
+        if(totalLerpTime == 0.f)
+            return m_lastAppliedVelocityXY;
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
@@ -838,7 +841,7 @@ namespace FirstPersonController
             m_lerpTime = totalLerpTime;
 
         // Lerp the velocity from the last applied velocity to the target velocity
-        AZ::Vector2 newVelocityXY = m_lastAppliedVelocity.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+        AZ::Vector2 newVelocityXY = m_lastAppliedVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
 
         // Decelerate at a different rate than the acceleration
         if(newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
@@ -877,7 +880,7 @@ namespace FirstPersonController
             if(m_lerpTime >= totalLerpTime)
                 m_lerpTime = totalLerpTime;
 
-            AZ::Vector2 newVelocityXYDecel =  m_lastAppliedVelocity.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+            AZ::Vector2 newVelocityXYDecel =  m_lastAppliedVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
             if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
         }
@@ -1272,6 +1275,13 @@ namespace FirstPersonController
         float forwardBack = m_forwardValue * m_forwardScale + -1.f * m_backValue * m_backScale;
         float leftRight = -1.f * m_leftValue * m_leftScale + m_rightValue * m_rightScale;
 
+        // If the character is being flipped upside-down then flip the X&Y movement
+        if(m_velocityXCrossYDirection.GetZ() < 0.f)
+        {
+            forwardBack *= -1.f;
+            leftRight *= -1.f;
+        }
+
         // Remove the scale factor since it's going to be applied after the normalization
         if(forwardBack >= 0.f)
             forwardBack /= m_forwardScale;
@@ -1313,38 +1323,46 @@ namespace FirstPersonController
             m_scriptTargetXYVelocity = targetVelocityXY;
 
         // Rotate the target velocity vector so that it can be compared against the applied velocity
-        const AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
+        AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
         // Obtain the last applied velocity if the target velocity changed
-        if(m_instantVelocityRotation ? (m_prevTargetVelocity != targetVelocityXY)
-                                        : (m_prevTargetVelocity != targetVelocityXYWorld))
+        if((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
+                                        : (m_prevTargetVelocityXY != targetVelocityXYWorld))
+            || (AZ::GetSign(m_prevVelocityXCrossYDirectionZComp) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
         {
             if(m_instantVelocityRotation)
             {
                 // Set the previous target velocity to the new one
-                m_prevTargetVelocity = targetVelocityXY;
+                m_prevTargetVelocityXY = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
-                m_lastAppliedVelocity = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
+                m_lastAppliedVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
             }
             else
             {
                 // Set the previous target velocity to the new one
-                m_prevTargetVelocity = targetVelocityXYWorld;
+                m_prevTargetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
-                m_lastAppliedVelocity = m_applyVelocityXY;
+                m_lastAppliedVelocityXY = m_applyVelocityXY;
             }
+
+            // Once the character's movement gets flipped on Z, m_lastAppliedVelocityXY needs to be flipped,
+            // so long as it hasn't occured around the world's X axis
+            if(AZ::GetSign(m_prevVelocityXCrossYDirectionZComp) != AZ::GetSign(m_velocityXCrossYDirection.GetZ()) && !AZ::IsClose(m_velocityXCrossYDirection.GetY(), 0.f))
+                m_lastAppliedVelocityXY *= -1.f;
 
             // Reset the lerp time since the target velocity changed
             m_lerpTime = 0.f;
         }
 
+        m_prevVelocityXCrossYDirectionZComp = m_velocityXCrossYDirection.GetZ();
+
         // Lerp to the velocity if we're not already there
         if(m_applyVelocityXY != targetVelocityXYWorld)
         {
             if(m_instantVelocityRotation)
-                m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(LerpVelocity(targetVelocityXY, deltaTime))));
+                m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(LerpVelocityXY(targetVelocityXY, deltaTime))));
             else
-                m_applyVelocityXY = LerpVelocity(targetVelocityXYWorld, deltaTime);
+                m_applyVelocityXY = LerpVelocityXY(targetVelocityXYWorld, deltaTime);
         }
 
         // Debug print statements to observe the velocity, acceleration, and position
@@ -1744,22 +1762,72 @@ namespace FirstPersonController
         //prevZVelocity = m_applyVelocityZ;
     }
 
-    AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
+    // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
+    // with the vector 3 that's provided. This is intentionally done without any rotation about the Z axis.
+    AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
     {
-        AZ::Vector3 tiltedVectorXY = AZ::Vector3(vXY);
+        if(newXCrossYDirection.IsZero())
+            return AZ::Vector3::CreateAxisZ();
+
+        AZ::Vector3 tiltedXY = AZ::Vector3(vXY);
 
         if(newXCrossYDirection != AZ::Vector3::CreateAxisZ())
         {
-            if(newXCrossYDirection.GetZ() >= 0.f)
-                tiltedVectorXY = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), newXCrossYDirection).TransformVector(AZ::Vector3(vXY));
+            if(newXCrossYDirection.GetZ() > 0.f)
+            {
+                AZ::Vector3 tiltedX = AZ::Vector3::CreateZero();
+                if(newXCrossYDirection.GetX() >= 0.f)
+                    tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
+                else
+                    tiltedX = AZ::Quaternion::CreateRotationY(-AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
+
+                AZ::Vector3 tiltedY = AZ::Vector3::CreateZero();
+                if(newXCrossYDirection.GetY() >= 0.f)
+                    tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+                else
+                   tiltedY = AZ::Quaternion::CreateRotationX(AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+                tiltedXY = tiltedX + tiltedY;
+            }
+            else if(newXCrossYDirection.GetZ() < 0.f)
+            {
+                AZ::Vector3 tiltedX = AZ::Vector3::CreateZero();
+                if(newXCrossYDirection.GetX() >= 0.f)
+                    tiltedX = AZ::Quaternion::CreateRotationY(-AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisX(-vXY.GetX()));
+                else
+                    tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisX(-vXY.GetX()));
+
+                AZ::Vector3 tiltedY = AZ::Vector3::CreateZero();
+                if(newXCrossYDirection.GetY() >= 0.f)
+                    tiltedY = AZ::Quaternion::CreateRotationX(AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+                else
+                   tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+                tiltedXY = tiltedX + tiltedY;
+            }
             else
             {
-                vXY.SetY(-vXY.GetY());
-                tiltedVectorXY = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), newXCrossYDirection).TransformVector(AZ::Vector3(vXY));
+                AZ::Vector3 tiltedX = AZ::Vector3::CreateAxisX(vXY.GetX());
+                if(newXCrossYDirection.GetX() != 0.f)
+                {
+                    if(newXCrossYDirection.GetX() > 0.f)
+                        tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, 0.f))).TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
+                    else
+                        tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, 0.f))).TransformVector(AZ::Vector3::CreateAxisX(-vXY.GetX()));
+                }
+
+                AZ::Vector3 tiltedY = AZ::Vector3::CreateAxisY(vXY.GetY());
+                if(newXCrossYDirection.GetY() != 0.f)
+                {
+                    if(newXCrossYDirection.GetY() > 0.f)
+                        tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), 0.f))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+                    else
+                        tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), 0.f))).TransformVector(AZ::Vector3::CreateAxisY(-vXY.GetY()));
+                }
+
+                tiltedXY = tiltedX + tiltedY;
             }
         }
 
-        return tiltedVectorXY;
+        return tiltedXY;
     }
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)

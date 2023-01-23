@@ -110,7 +110,7 @@ namespace FirstPersonController
         float GetAirTime() const override;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
-        AZ::Vector3 TiltVectorXCrossY(AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection) override;
+        AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
         void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
         bool GetVelocityXCrossYTracksNormal() const override;
@@ -280,7 +280,7 @@ namespace FirstPersonController
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation(const float& deltaTime);
-        AZ::Vector2 LerpVelocity(const AZ::Vector2& targetVelocity, const float& deltaTime);
+        AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void SmoothRotation(const float& deltaTime);
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
@@ -301,8 +301,8 @@ namespace FirstPersonController
         AZ::Vector2 m_scriptTargetXYVelocity = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
         AZ::Vector3 m_addVelocityHeading = AZ::Vector3::CreateZero();
-        AZ::Vector2 m_prevTargetVelocity = AZ::Vector2::CreateZero();
-        AZ::Vector2 m_lastAppliedVelocity = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_lastAppliedVelocityXY = AZ::Vector2::CreateZero();
         bool m_instantVelocityRotation = true;
 
         // Determines whether the character's X&Y target velocity
@@ -364,6 +364,7 @@ namespace FirstPersonController
         float m_gravity = -9.81f;
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
+        float m_prevVelocityXCrossYDirectionZComp = 1.f;
         AZ::Vector3 m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
         bool m_velocityXCrossYTracksNormal = true;
         AZ::Vector3 m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
