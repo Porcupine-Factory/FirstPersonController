@@ -213,6 +213,7 @@ namespace FirstPersonController
         void SetCrouching(const bool& new_crouching) override;
         bool GetCrouched() const override;
         bool GetStanding() const override;
+        float GetCrouchedPercentage() const override;
         bool GetCrouchScriptLocked() const override;
         void SetCrouchScriptLocked(const bool& new_crouchScriptLocked) override;
         float GetCrouchScale() const override;

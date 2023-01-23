@@ -477,6 +477,7 @@ namespace FirstPersonController
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
                 ->Event("Get Crouched", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Get Standing", &FirstPersonControllerComponentRequests::GetStanding)
+                ->Event("Get Crouched Percentage", &FirstPersonControllerComponentRequests::GetCrouchedPercentage)
                 ->Event("Get Crouch Script Locked", &FirstPersonControllerComponentRequests::GetCrouchScriptLocked)
                 ->Event("Set Crouch Script Locked", &FirstPersonControllerComponentRequests::SetCrouchScriptLocked)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
@@ -2629,6 +2630,10 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetStanding() const
     {
         return m_standing;
+    }
+    float FirstPersonControllerComponent::GetCrouchedPercentage() const
+    {
+        return abs(m_cameraLocalZTravelDistance) / m_crouchDistance * 100.f;
     }
     bool FirstPersonControllerComponent::GetCrouchScriptLocked() const
     {

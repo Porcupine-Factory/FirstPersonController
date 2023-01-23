@@ -177,6 +177,7 @@ namespace FirstPersonController
         virtual void SetCrouching(const bool&) = 0;
         virtual bool GetCrouched() const = 0;
         virtual bool GetStanding() const = 0;
+        virtual float GetCrouchedPercentage() const = 0;
         virtual bool GetCrouchScriptLocked() const = 0;
         virtual void SetCrouchScriptLocked(const bool&) = 0;
         virtual float GetCrouchScale() const = 0;
