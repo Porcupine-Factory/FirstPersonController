@@ -269,7 +269,7 @@ namespace FirstPersonController
                         "X&Y Acceleration Jump Factor (m/s²)", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHoldDistance,
-                        "Jump Hold Offset (m)", "Effectively determines the time that jump may be held.")
+                        "Jump Hold Distance (m)", "Effectively determines the time that jump may be held.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
                         "Grounded Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
@@ -296,7 +296,7 @@ namespace FirstPersonController
                         "Update X&Y Velocity When Descending", "Allows movement in X&Y during a jump’s descent.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYOnlyNearGround,
-                        "Update X&Y Velocity Only When Ground Close", "Allows movement in X&Y only if close to an acceptable ground entity. According to the distance set in Jump Hold Offset. If the ascending and descending options are disabled, then this will effectively do nothing.");
+                        "Update X&Y Velocity Only When Ground Close", "Allows movement in X&Y only if close to an acceptable ground entity. According to the distance set in Jump Hold Distance. If the ascending and descending options are disabled, then this will effectively do nothing.");
             }
         }
 
@@ -416,8 +416,8 @@ namespace FirstPersonController
                 ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
                 ->Event("Get Ground Close Offset", &FirstPersonControllerComponentRequests::GetGroundCloseOffset)
                 ->Event("Set Ground Close Offset", &FirstPersonControllerComponentRequests::SetGroundCloseOffset)
-                ->Event("Get Jump Hold Offset", &FirstPersonControllerComponentRequests::GetJumpHoldDistance)
-                ->Event("Set Jump Hold Offset", &FirstPersonControllerComponentRequests::SetJumpHoldDistance)
+                ->Event("Get Jump Hold Distance", &FirstPersonControllerComponentRequests::GetJumpHoldDistance)
+                ->Event("Set Jump Hold Distance", &FirstPersonControllerComponentRequests::SetJumpHoldDistance)
                 ->Event("Get Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
                 ->Event("Set Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::SetJumpHeadSphereCastOffset)
                 ->Event("Get Head Hit", &FirstPersonControllerComponentRequests::GetHeadHit)
@@ -611,8 +611,7 @@ namespace FirstPersonController
 
         if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
         {
-            AZ_Printf("FirstPersonControllerComponent",
-                      "ERROR: Number of input IDs not equal to number of input names!");
+            AZ_Error("FirstPersonController", false, "Number of input IDs not equal to number of input names!")
         }
         else
         {
@@ -1605,7 +1604,10 @@ namespace FirstPersonController
         // Otherwise the apogee will be reached inside m_jumpHoldDistance
         // and the jump time needs to computed accordingly
         else
+        {
+            AZ_Warning("FirstPersonController", false, "Jump Hold Distance is higher than the max apogee of the jump.")
             m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity*m_jumpHeldGravityFactor));
+        }
     }
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)

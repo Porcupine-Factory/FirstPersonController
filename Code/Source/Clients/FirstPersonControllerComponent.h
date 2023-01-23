@@ -508,7 +508,7 @@ namespace FirstPersonController
         StartingPointInput::InputEventNotificationId m_JumpEventId;
         AZStd::string m_strJump = "Jump";
 
-        // list of action names
+        // Array of action names
         AZStd::string* m_inputNames[9] = {
             &m_strForward, &m_strBack,
             &m_strLeft, &m_strRight,
@@ -517,7 +517,7 @@ namespace FirstPersonController
             &m_strJump
         };
 
-        // map of event IDs and event value multipliers
+        // Map of event IDs and event value multipliers
         AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
             {&m_MoveForwardEventId, &m_forwardValue},
             {&m_MoveBackEventId, &m_backValue},
