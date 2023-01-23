@@ -1008,7 +1008,7 @@ namespace FirstPersonController
             else if(m_applyVelocityXY.GetLength() < m_sprintPrevVelocityLength)
             {
                 const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
-                if(applyVelocityLocal.AngleSafe(AZ::Vector2::CreateAxisY()) > AZ::Constants::HalfPi)
+                if(applyVelocityLocal.AngleSafe(targetVelocityXY) > AZ::Constants::HalfPi)
                     m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
                 else
                     m_sprintAccumulateAccelTime -= deltaTime;
