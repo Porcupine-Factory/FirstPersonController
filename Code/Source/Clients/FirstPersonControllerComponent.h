@@ -310,6 +310,8 @@ namespace FirstPersonController
         void OnHitSomethingOnXY();
         void OnCrouched();
         void OnStoodUp();
+        void OnStartedCrouching();
+        void OnStartedStanding();
         void OnFirstJump();
         void OnSecondJump();
         void OnStaminaCapped();

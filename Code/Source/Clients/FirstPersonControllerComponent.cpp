@@ -1179,6 +1179,9 @@ namespace FirstPersonController
             if(m_standing)
                 m_standing = false;
 
+            if(m_cameraLocalZTravelDistance == 0.f)
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedCrouching);
+
             float cameraTravelDelta = -1.f * m_crouchDistance * deltaTime / m_crouchTime;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
@@ -1216,6 +1219,9 @@ namespace FirstPersonController
         {
             if(m_crouched)
                 m_crouched = false;
+
+            if(m_cameraLocalZTravelDistance == -1.f * m_crouchDistance)
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedStanding);
 
             // Create a shapecast sphere that will be used to detect whether there is an obstruction
             // above the players head, and prevent them from fully standing up if there is
@@ -1956,6 +1962,8 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnHitSomethingOnXY(){}
     void FirstPersonControllerComponent::OnCrouched(){}
     void FirstPersonControllerComponent::OnStoodUp(){}
+    void FirstPersonControllerComponent::OnStartedCrouching(){}
+    void FirstPersonControllerComponent::OnStartedStanding(){}
     void FirstPersonControllerComponent::OnFirstJump(){}
     void FirstPersonControllerComponent::OnSecondJump(){}
     void FirstPersonControllerComponent::OnStaminaCapped(){}
