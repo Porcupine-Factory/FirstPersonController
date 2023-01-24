@@ -245,6 +245,11 @@ namespace FirstPersonController
         virtual void OnGroundHit() = 0;
         virtual void OnGroundSoonHit() = 0;
         virtual void OnUngrounded() = 0;
+        virtual void OnStartedMoving() = 0;
+        virtual void OnTargetVelocityReached() = 0;
+        virtual void OnStopped() = 0;
+        virtual void OnTopWalkSpeedReached() = 0;
+        virtual void OnTopSprintSpeedReached() = 0;
         virtual void OnHeadHit() = 0;
         virtual void OnHitSomethingOnXY() = 0;
         virtual void OnCrouched() = 0;
@@ -267,7 +272,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintCooldown, OnCooldownDone);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintCooldown, OnCooldownDone);
 
         void OnGroundHit() override
         {
@@ -280,6 +285,26 @@ namespace FirstPersonController
         void OnUngrounded() override
         {
             Call(FN_OnUngrounded);
+        }
+        void OnStartedMoving()
+        {
+            Call(FN_OnStartedMoving);
+        }
+        void OnTargetVelocityReached()
+        {
+            Call(FN_OnTargetVelocityReached);
+        }
+        void OnStopped()
+        {
+            Call(FN_OnStopped);
+        }
+        void OnTopWalkSpeedReached()
+        {
+            Call(FN_OnTopWalkSpeedReached);
+        }
+        void OnTopSprintSpeedReached()
+        {
+            Call(FN_OnTopSprintSpeedReached);
         }
         void OnHeadHit() override
         {

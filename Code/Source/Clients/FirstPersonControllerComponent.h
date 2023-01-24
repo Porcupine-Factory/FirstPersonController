@@ -300,6 +300,11 @@ namespace FirstPersonController
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
+        void OnStartedMoving();
+        void OnTargetVelocityReached();
+        void OnStopped();
+        void OnTopWalkSpeedReached();
+        void OnTopSprintSpeedReached();
         void OnHeadHit();
         void OnHitSomethingOnXY();
         void OnCrouched();

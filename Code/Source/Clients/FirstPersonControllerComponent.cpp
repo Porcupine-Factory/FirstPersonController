@@ -899,6 +899,20 @@ namespace FirstPersonController
                 newVelocityXY = newVelocityXYDecel;
         }
 
+        if(m_applyVelocityXY == AZ::Vector2::CreateZero())
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedMoving);
+
+        if(newVelocityXY == targetVelocityXY)
+        {
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTargetVelocityReached);
+            if(newVelocityXY.GetLength() == 0.f)
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStopped);
+            else if((newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength()))
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
+            else if(newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
+        }
+
         return newVelocityXY;
     }
 
@@ -1929,6 +1943,11 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
+    void FirstPersonControllerComponent::OnStartedMoving(){}
+    void FirstPersonControllerComponent::OnTargetVelocityReached(){}
+    void FirstPersonControllerComponent::OnStopped(){}
+    void FirstPersonControllerComponent::OnTopWalkSpeedReached(){}
+    void FirstPersonControllerComponent::OnTopSprintSpeedReached(){}
     void FirstPersonControllerComponent::OnHeadHit(){}
     void FirstPersonControllerComponent::OnHitSomethingOnXY(){}
     void FirstPersonControllerComponent::OnCrouched(){}
