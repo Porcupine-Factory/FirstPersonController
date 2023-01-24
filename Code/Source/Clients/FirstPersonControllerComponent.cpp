@@ -1723,6 +1723,8 @@ namespace FirstPersonController
                 currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ(-1.f)).TransformVector(-currentVelocity);
         }
 
+        const float prevApplyVelocityZ = m_applyVelocityZ;
+
         // Used for the Verlet integration averaging calculation
         m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
 
@@ -1813,6 +1815,9 @@ namespace FirstPersonController
         if(m_gravity == 0.f && m_grounded && currentVelocity.GetZ() < 0.f)
             m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
 
+        if(prevApplyVelocityZ >= 0.f && m_applyVelocityZ < 0.f)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedFalling);
+
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
@@ -1825,10 +1830,8 @@ namespace FirstPersonController
         //AZ_Printf("", "deltaTime = %.10f", deltaTime);
         //AZ_Printf("", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
         //AZ_Printf("", "m_jumpHoldDistance = %.10f", m_jumpHoldDistance);
-        //static float prevZVelocity = m_applyVelocityZ;
-        //AZ_Printf("", "dvz/dt = %.10f", (m_applyVelocityZ - prevZVelocity)/deltaTime);
+        //AZ_Printf("", "dvz/dt = %.10f", (m_applyVelocityZ - prevApplyVelocityZ)/deltaTime);
         //AZ_Printf("","");
-        //prevZVelocity = m_applyVelocityZ;
     }
 
     // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
@@ -1943,6 +1946,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
+    void FirstPersonControllerComponent::OnStartedFalling(){}
     void FirstPersonControllerComponent::OnStartedMoving(){}
     void FirstPersonControllerComponent::OnTargetVelocityReached(){}
     void FirstPersonControllerComponent::OnStopped(){}
