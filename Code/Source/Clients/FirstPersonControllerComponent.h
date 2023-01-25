@@ -179,6 +179,9 @@ namespace FirstPersonController
         void SetWalkDeceleration(const float& new_decel) override;
         float GetOpposingDecel() const override;
         void SetOpposingDecel(const float& new_opposingDecel) override;
+        bool GetAccelerating() const override;
+        bool GetDecelerationFactorApplied() const override;
+        bool GetOpposingDecelFactorApplied() const override;
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
         bool GetVelocityXYIgnoresObstacles() const override;
@@ -470,11 +473,14 @@ namespace FirstPersonController
         // Acceleration lerp movement
         float m_accel = 30.f;
         float m_jumpAccelFactor = 0.25f;
+        bool m_accelerating = false;
 
         // Deceleration factor
         float m_decel = 1.5f;
         float m_opposingDecel = 2.f;
         float m_decelerationFactor = m_decel;
+        bool m_decelerationFactorApplied = false;
+        bool m_opposingDecelFactorApplied = false;
 
         // Movement scale factors
         // assuming the event value multipliers are all +1.0

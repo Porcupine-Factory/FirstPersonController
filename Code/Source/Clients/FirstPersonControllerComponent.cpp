@@ -443,6 +443,9 @@ namespace FirstPersonController
                 ->Event("Set Walk Deceleration", &FirstPersonControllerComponentRequests::SetWalkDeceleration)
                 ->Event("Get Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::GetOpposingDecel)
                 ->Event("Set Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::SetOpposingDecel)
+                ->Event("Get Accelerating Via First Person Controller", &FirstPersonControllerComponentRequests::GetAccelerating)
+                ->Event("Get Deceleration Factor Applied", &FirstPersonControllerComponentRequests::GetDecelerationFactorApplied)
+                ->Event("Get Opposing Direction Deceleration Factor Applied", &FirstPersonControllerComponentRequests::GetOpposingDecelFactorApplied)
                 ->Event("Get Instant Velocity Rotation", &FirstPersonControllerComponentRequests::GetInstantVelocityRotation)
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
                 ->Event("Get Velocity On X&Y Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityXYIgnoresObstacles)
@@ -840,7 +843,12 @@ namespace FirstPersonController
         const float totalLerpTime = m_lastAppliedVelocityXY.GetDistance(targetVelocityXY)/m_accel;
 
         if(totalLerpTime == 0.f)
+        {
+            m_accelerating = false;
+            m_decelerationFactorApplied = false;
+            m_opposingDecelFactorApplied = false;
             return m_lastAppliedVelocityXY;
+        }
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
@@ -862,6 +870,8 @@ namespace FirstPersonController
         // Decelerate at a different rate than the acceleration
         if(newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
         {
+            m_accelerating = false;
+            m_decelerationFactorApplied = true;
             // Get the current velocity vector with respect to the character's local coordinate system
             const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
 
@@ -872,6 +882,8 @@ namespace FirstPersonController
                     (abs(applyVelocityLocal.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi)
                     : (abs(m_applyVelocityXY.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi))
             {
+                m_opposingDecelFactorApplied = true;
+                m_decelerationFactorApplied = false;
                 // Compute the deceleration factor based on the magnitude of the target velocity
                 float greatestScale = m_forwardScale;
                 for(float scale: {m_forwardScale, m_backScale, m_leftScale, m_rightScale})
@@ -888,7 +900,10 @@ namespace FirstPersonController
                     m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * m_crouchScale * greatestScale)) * m_sprintAccelAdjust;
             }
             else
+            {
                 m_decelerationFactor = m_decel;
+                m_opposingDecelFactorApplied = false;
+            }
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
             m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
@@ -899,6 +914,12 @@ namespace FirstPersonController
             AZ::Vector2 newVelocityXYDecel =  m_lastAppliedVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
             if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
+        }
+        else
+        {
+            m_accelerating = true;
+            m_decelerationFactorApplied = false;
+            m_opposingDecelFactorApplied = false;
         }
 
         if(m_applyVelocityXY == AZ::Vector2::CreateZero())
@@ -1443,6 +1464,12 @@ namespace FirstPersonController
                 m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(LerpVelocityXY(targetVelocityXY, deltaTime))));
             else
                 m_applyVelocityXY = LerpVelocityXY(targetVelocityXYWorld, deltaTime);
+        }
+        else
+        {
+            m_accelerating = false;
+            m_decelerationFactorApplied = false;
+            m_opposingDecelFactorApplied = false;
         }
 
         // Debug print statements to observe the velocity, acceleration, and position
@@ -2563,6 +2590,18 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetOpposingDecel(const float& new_opposingDecel)
     {
         m_opposingDecel = new_opposingDecel;
+    }
+    bool FirstPersonControllerComponent::GetAccelerating() const
+    {
+        return m_accelerating;
+    }
+    bool FirstPersonControllerComponent::GetDecelerationFactorApplied() const
+    {
+        return m_decelerationFactorApplied;
+    }
+    bool FirstPersonControllerComponent::GetOpposingDecelFactorApplied() const
+    {
+        return m_opposingDecelFactorApplied;
     }
     bool FirstPersonControllerComponent::GetInstantVelocityRotation() const
     {
