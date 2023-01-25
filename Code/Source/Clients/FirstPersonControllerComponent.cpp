@@ -67,7 +67,7 @@ namespace FirstPersonController
               ->Field("Sprint While Crouched", &FirstPersonControllerComponent::m_sprintWhileCrouched)
 
               // Crouching group
-              ->Field("Crouch Scale", &FirstPersonControllerComponent::m_crouchScale)
+              ->Field("Crouch Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
               ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
@@ -222,7 +222,7 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchScale,
-                        "Crouch Scale", "Determines how much slow the character will move when crouched. The product of this number and the top walk speed is the top crouch walk speed.")
+                        "Crouch Speed Scale", "Determines how much slow the character will move when crouched. The product of this number and the top walk speed is the top crouch walk speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
                         "Crouch Distance (m)", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
@@ -466,7 +466,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::SetSprintRegenRate)
                 ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
                 ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
-                ->Event("Get Stamina Incrementing", &FirstPersonControllerComponentRequests::GetStaminaIncrementing)
+                ->Event("Get Stamina Increasing", &FirstPersonControllerComponentRequests::GetStaminaIncreasing)
+                ->Event("Get Stamina Decreasing", &FirstPersonControllerComponentRequests::GetStaminaDecreasing)
                 ->Event("Get Sprint Uses Stamina", &FirstPersonControllerComponentRequests::GetSprintUsesStamina)
                 ->Event("Set Sprint Uses Stamina", &FirstPersonControllerComponentRequests::SetSprintUsesStamina)
                 ->Event("Get Regenerate Stamina Automatically", &FirstPersonControllerComponentRequests::GetRegenerateStaminaAutomatically)
@@ -1006,6 +1007,8 @@ namespace FirstPersonController
         // If sprint is to be applied then increment the sprint counter
         if(!AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
         {
+            m_staminaIncreasing = false;
+
             // Cause the character to stand if trying to sprint while crouched and the setting is enabled
             if(m_crouchSprintCausesStanding && m_crouched)
                 m_crouching = false;
@@ -1019,7 +1022,10 @@ namespace FirstPersonController
             m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (m_sprintVelocityAdjust - 1) + 1.f;
 
             if(m_sprintUsesStamina)
+            {
+                m_staminaDecreasing = true;
                 m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust-1.f)/(greatestSprintScale-1.f);
+            }
 
             if(m_sprintHeldDuration >= m_sprintMaxTime)
             {
@@ -1028,8 +1034,6 @@ namespace FirstPersonController
             }
 
             m_sprintPause = m_sprintPauseTime;
-
-            m_staminaIncrementing = false;
 
             if(m_applyVelocityXY.GetLength() > m_sprintPrevVelocityLength && m_sprintVelocityAdjust != 1.f)
             {
@@ -1056,8 +1060,10 @@ namespace FirstPersonController
             m_sprintPrevVelocityLength = m_applyVelocityXY.GetLength();
         }
         // Otherwise if the sprint velocity isn't applied then decrement the sprint counter
-        else if(AZ::IsClose(m_sprintVelocityAdjust, 1.f) || m_sprintHeldDuration >= m_sprintMaxTime || m_sprintCooldown != 0.f)
+        else
         {
+            m_staminaDecreasing = false;
+
             m_sprintValue = 0.f;
 
             // Set the sprint acceleration adjust according to the local direction we're moving
@@ -1088,44 +1094,44 @@ namespace FirstPersonController
             if(m_sprintHeldDuration >= m_sprintMaxTime && m_sprintCooldown == 0.f)
             {
                 m_sprintCooldown = m_sprintCooldownTime;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintCooldown);
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownStarted);
             }
-            else if(m_sprintCooldown != 0.f)
-            {
-                m_sprintCooldown -= deltaTime;
-                if(m_sprintCooldown <= 0.f)
-                {
-                    m_sprintCooldown = 0.f;
-                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownDone);
-                    if(m_regenerateStaminaAutomatically)
-                    {
-                        m_sprintHeldDuration = 0.f;
-                        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
-                    }
-                }
-            }
-
-            if(m_sprintHeldDuration > 0.f && m_sprintCooldown == 0.f && !m_staminaIncrementing && m_sprintPause == 0.f)
-                m_staminaIncrementing = true;
 
             m_sprintPause -= deltaTime;
+            if(m_sprintPause < 0.f)
+                m_sprintPause = 0.f;
 
-            if(m_sprintPause <= 0.f && m_sprintCooldown == 0.f)
+            if(m_sprintPause == 0.f && m_sprintCooldown == 0.f && m_regenerateStaminaAutomatically && m_sprintHeldDuration > 0.f)
             {
                 // Decrement the sprint held duration at a rate which makes it so that the stamina
                 // will regenerate when nearly depleted at the same time it would take if you were
                 // just wait through the cooldown time.
                 // Decrement this value by only deltaTime if you wish to instead use m_sprintPause
                 // to achieve the same timing but instead through the use of a pause.
-                if(m_regenerateStaminaAutomatically && m_sprintHeldDuration > 0.f)
-                {
-                    m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPauseTime)/m_sprintCooldownTime) * m_sprintRegenRate;
+                m_sprintHeldDuration -= deltaTime * ((m_sprintMaxTime+m_sprintPauseTime)/m_sprintCooldownTime) * m_sprintRegenRate;
+                m_staminaIncreasing = true;
 
+                if(m_sprintHeldDuration <= 0.f)
+                {
+                    m_sprintHeldDuration = 0.f;
+                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
+                }
+            }
+            else
+                m_staminaIncreasing = false;
+
+            if(m_sprintCooldown != 0.f)
+            {
+                m_sprintCooldown -= deltaTime;
+                if(m_sprintCooldown <= 0.f)
+                {
+                    m_sprintCooldown = 0.f;
                     m_sprintPause = 0.f;
-                    if(m_sprintHeldDuration <= 0.f)
+                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownDone);
+                    if(m_regenerateStaminaAutomatically)
                     {
                         m_sprintHeldDuration = 0.f;
-                        m_staminaIncrementing = false;
+                        m_staminaIncreasing = true;
                         FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
                     }
                 }
@@ -1969,7 +1975,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnStaminaCapped(){}
     void FirstPersonControllerComponent::OnStaminaReachedZero(){}
     void FirstPersonControllerComponent::OnSprintStarted(){}
-    void FirstPersonControllerComponent::OnSprintCooldown(){}
+    void FirstPersonControllerComponent::OnCooldownStarted(){}
     void FirstPersonControllerComponent::OnCooldownDone(){}
 
     // Request Bus getter and setter methods for use in scripts
@@ -2638,7 +2644,15 @@ namespace FirstPersonController
             m_sprintHeldDuration = m_sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
         if(m_sprintHeldDuration > prevSprintHeldDuration)
-            m_staminaIncrementing = false;
+        {
+            m_staminaDecreasing = true;
+            m_staminaIncreasing = false;
+        }
+        else if(m_sprintHeldDuration < prevSprintHeldDuration)
+        {
+            m_staminaDecreasing = false;
+            m_staminaIncreasing = true;
+        }
     }
     float FirstPersonControllerComponent::GetSprintRegenRate() const
     {
@@ -2663,11 +2677,23 @@ namespace FirstPersonController
             m_staminaPercentage = 100.f;
         m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
         if(m_staminaPercentage < prevStaminaPercentage)
-            m_staminaIncrementing = false;
+        {
+            m_staminaDecreasing = true;
+            m_staminaIncreasing = false;
+        }
+        else if(m_staminaPercentage > prevStaminaPercentage)
+        {
+            m_staminaDecreasing = false;
+            m_staminaIncreasing = true;
+        }
     }
-    bool FirstPersonControllerComponent::GetStaminaIncrementing() const
+    bool FirstPersonControllerComponent::GetStaminaIncreasing() const
     {
-        return m_staminaIncrementing;
+        return m_staminaIncreasing;
+    }
+    bool FirstPersonControllerComponent::GetStaminaDecreasing() const
+    {
+        return m_staminaDecreasing;
     }
     bool FirstPersonControllerComponent::GetSprintUsesStamina() const
     {

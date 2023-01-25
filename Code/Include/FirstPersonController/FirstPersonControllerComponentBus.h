@@ -166,7 +166,8 @@ namespace FirstPersonController
         virtual void SetSprintRegenRate(const float&) = 0;
         virtual float GetStaminaPercentage() const = 0;
         virtual void SetStaminaPercentage(const float&) = 0;
-        virtual bool GetStaminaIncrementing() const = 0;
+        virtual bool GetStaminaIncreasing() const = 0;
+        virtual bool GetStaminaDecreasing() const = 0;
         virtual bool GetSprintUsesStamina() const = 0;
         virtual void SetSprintUsesStamina(const bool&) = 0;
         virtual bool GetRegenerateStaminaAutomatically() const = 0;
@@ -262,7 +263,7 @@ namespace FirstPersonController
         virtual void OnStaminaCapped() = 0;
         virtual void OnStaminaReachedZero() = 0;
         virtual void OnSprintStarted() = 0;
-        virtual void OnSprintCooldown() = 0;
+        virtual void OnCooldownStarted() = 0;
         virtual void OnCooldownDone() = 0;
     };
 
@@ -275,7 +276,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintCooldown, OnCooldownDone);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomethingOnXY, OnCrouched, OnStoodUp, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
 
         void OnGroundHit() override
         {
@@ -357,9 +358,9 @@ namespace FirstPersonController
         {
             Call(FN_OnSprintStarted);
         }
-        void OnSprintCooldown() override
+        void OnCooldownStarted() override
         {
-            Call(FN_OnSprintCooldown);
+            Call(FN_OnCooldownStarted);
         }
         void OnCooldownDone() override
         {

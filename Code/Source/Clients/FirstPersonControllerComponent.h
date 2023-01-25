@@ -202,7 +202,8 @@ namespace FirstPersonController
         void SetSprintRegenRate(const float& new_sprintRegenRate) override;
         float GetStaminaPercentage() const override;
         void SetStaminaPercentage(const float& new_staminaPercentage) override;
-        bool GetStaminaIncrementing() const override;
+        bool GetStaminaIncreasing() const override;
+        bool GetStaminaDecreasing() const override;
         bool GetSprintUsesStamina() const override;
         void SetSprintUsesStamina(const bool& new_sprintUsesStamina) override;
         bool GetRegenerateStaminaAutomatically() const override;
@@ -317,7 +318,7 @@ namespace FirstPersonController
         void OnStaminaCapped();
         void OnStaminaReachedZero();
         void OnSprintStarted();
-        void OnSprintCooldown();
+        void OnCooldownStarted();
         void OnCooldownDone();
 
         // Velocity application variables
@@ -367,7 +368,8 @@ namespace FirstPersonController
         bool m_sprintWhileCrouched = true;
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisableScript = false;
-        bool m_staminaIncrementing = false;
+        bool m_staminaIncreasing = false;
+        bool m_staminaDecreasing = false;
         bool m_sprintUsesStamina = true;
         bool m_regenerateStaminaAutomatically = true;
 
@@ -389,7 +391,7 @@ namespace FirstPersonController
         bool m_crouchScriptLocked = false;
 
         // Jumping and gravity
-        float m_gravity = -9.81f;
+        float m_gravity = -30.0f;
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
@@ -423,7 +425,7 @@ namespace FirstPersonController
         float m_groundCloseSphereCastOffset = 0.5f;
         // The sphere cast jump hold offset is used to determine initial (ascending) distance of the of the jump
         // where the m_jumpHeldGravityFactor is applied to the gravity
-        float m_jumpHoldDistance = 0.5f;
+        float m_jumpHoldDistance = 0.8f;
         // The value of 41.5% was determined to work well based on testing
         float m_groundedSphereCastRadiusPercentageIncrease = 41.5;
         float m_jumpMaxHoldTime = m_jumpHoldDistance / m_jumpInitialVelocity;
