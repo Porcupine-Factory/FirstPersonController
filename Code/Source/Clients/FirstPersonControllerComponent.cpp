@@ -162,10 +162,10 @@ namespace FirstPersonController
                         "Walking Acceleration (m/s²)", "Determines how quickly the character will reach maximum walking speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_decel,
-                        "Deceleration Factor", "Determines how quickly the character will stop. The product of this number and Walking Acceleration determines the resulting deceleration.")
+                        "Deceleration Factor", "Determines how quickly the character will stop. The product of this number and Walking Acceleration determines the resulting deceleration. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_opposingDecel,
-                        "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking Acceleration creates the deceleration that's used.")
+                        "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking Acceleration creates the deceleration that's used. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal,
                         "X&Y Movement Tracks Surface Inclines", "Determines whether the character's X&Y movement will be tilted in order to follow inclines. This will apply up to the max angle that is specified in the PhysX Character Controller component.")
@@ -192,19 +192,19 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintScaleForward,
-                        "Sprint Forward Scale", "Determines the sprint factor applied in the forward direction.")
+                        "Sprint Forward Scale", "Determines the sprint factor applied in the forward direction. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintScaleBack,
-                        "Sprint Back Scale", "Determines the sprint factor applied in the back direction.")
+                        "Sprint Back Scale", "Determines the sprint factor applied in the back direction. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintScaleLeft,
-                        "Sprint Left Scale", "Determines the sprint factor applied in the left direction.")
+                        "Sprint Left Scale", "Determines the sprint factor applied in the left direction. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintScaleRight,
-                        "Sprint Right Scale", "Determines the sprint factor applied in the right direction.")
+                        "Sprint Right Scale", "Determines the sprint factor applied in the right direction. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintAccelScale,
-                        "Sprint Acceleration Scale", "Determines how quickly the character will reach maximum sprinting speed.")
+                        "Sprint Acceleration Scale", "Determines how quickly the character will reach maximum sprinting speed. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintMaxTime,
                         "Sprint Max Time (sec)", "The maximum consecutive sprinting time before beginning Sprint Cooldown. The underlying quantity of Stamina is set by this number.")
