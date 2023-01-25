@@ -208,6 +208,7 @@ namespace FirstPersonController
         void SetSprintUsesStamina(const bool& new_sprintUsesStamina) override;
         bool GetRegenerateStaminaAutomatically() const override;
         void SetRegenerateStaminaAutomatically(const bool& new_regenerateStaminaAutomatically) override;
+        bool GetSprinting() const override;
         float GetSprintCooldownTime() const override;
         void SetSprintCooldownTime(const float& new_sprintCooldownTime) override;
         float GetSprintCooldown() const override;

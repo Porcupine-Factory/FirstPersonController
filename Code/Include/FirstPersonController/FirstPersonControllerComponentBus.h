@@ -172,6 +172,7 @@ namespace FirstPersonController
         virtual void SetSprintUsesStamina(const bool&) = 0;
         virtual bool GetRegenerateStaminaAutomatically() const = 0;
         virtual void SetRegenerateStaminaAutomatically(const bool&) = 0;
+        virtual bool GetSprinting() const = 0;
         virtual float GetSprintCooldownTime() const = 0;
         virtual void SetSprintCooldownTime(const float&) = 0;
         virtual float GetSprintCooldown() const = 0;

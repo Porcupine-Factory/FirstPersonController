@@ -472,6 +472,7 @@ namespace FirstPersonController
                 ->Event("Set Sprint Uses Stamina", &FirstPersonControllerComponentRequests::SetSprintUsesStamina)
                 ->Event("Get Regenerate Stamina Automatically", &FirstPersonControllerComponentRequests::GetRegenerateStaminaAutomatically)
                 ->Event("Set Regenerate Stamina Automatically", &FirstPersonControllerComponentRequests::SetRegenerateStaminaAutomatically)
+                ->Event("Get Sprinting", &FirstPersonControllerComponentRequests::GetSprinting)
                 ->Event("Get Sprint Cooldown Time", &FirstPersonControllerComponentRequests::GetSprintCooldownTime)
                 ->Event("Set Sprint Cooldown Time", &FirstPersonControllerComponentRequests::SetSprintCooldownTime)
                 ->Event("Get Sprint Cooldown", &FirstPersonControllerComponentRequests::GetSprintCooldown)
@@ -994,7 +995,7 @@ namespace FirstPersonController
         if(m_applyVelocityXY.IsZero())
             m_sprintAccumulateAccelTime = 0.f;
 
-        if(m_sprintValue == 0.f)
+        if(m_sprintValue == 0.f || m_sprintCooldown != 0.f)
             m_sprintVelocityAdjust = 1.f;
         else
             m_sprintVelocityAdjust = CreateEllipseScaledVector(targetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
@@ -1093,6 +1094,7 @@ namespace FirstPersonController
             // When the sprint held duration exceeds the maximum sprint time then initiate the cooldown period
             if(m_sprintHeldDuration >= m_sprintMaxTime && m_sprintCooldown == 0.f)
             {
+                m_sprintVelocityAdjust = 1.f;
                 m_sprintCooldown = m_sprintCooldownTime;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownStarted);
             }
@@ -2710,6 +2712,12 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetRegenerateStaminaAutomatically(const bool& new_regenerateStaminaAutomatically)
     {
         m_regenerateStaminaAutomatically = new_regenerateStaminaAutomatically;
+    }
+    bool FirstPersonControllerComponent::GetSprinting() const
+    {
+        if(m_sprintVelocityAdjust != 1.f && (m_standing || m_sprintWhileCrouched))
+            return true;
+        return false;
     }
     float FirstPersonControllerComponent::GetSprintCooldownTime() const
     {
