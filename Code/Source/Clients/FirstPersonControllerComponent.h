@@ -110,6 +110,10 @@ namespace FirstPersonController
         float GetAirTime() const override;
         float GetGravity() const override;
         void SetGravity(const float& new_gravity) override;
+        AZ::Vector3 GetPrevTargetVelocityWorld() const override;
+        AZ::Vector3 GetPrevTargetVelocityHeading() const override;
+        float GetVelocityCloseTolerance() const override;
+        void SetVelocityCloseTolerance(const float& new_velocityCloseTolerance) override;
         AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
         void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
@@ -144,8 +148,8 @@ namespace FirstPersonController
         void SetAddVelocityWorld(const AZ::Vector3& new_addVelocityWorld) override;
         AZ::Vector3 GetAddVelocityHeading() const override;
         void SetAddVelocityHeading(const AZ::Vector3& new_addVelocityHeading) override;
-        float GetZVelocity() const override;
-        void SetZVelocity(const float& new_applyVelocityZ) override;
+        float GetApplyVelocityZ() const override;
+        void SetApplyVelocityZ(const float& new_applyVelocityZ) override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         float GetJumpSecondInitialVelocity() const override;
@@ -333,6 +337,7 @@ namespace FirstPersonController
         AZ::Vector3 m_addVelocityHeading = AZ::Vector3::CreateZero();
         AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
+        float m_velocityCloseTolerance = 0.01f;
         bool m_instantVelocityRotation = true;
         bool m_velocityXYIgnoresObstacles = false;
         bool m_hitSomethingOnXY = false;

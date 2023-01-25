@@ -374,6 +374,10 @@ namespace FirstPersonController
                 ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
+                ->Event("Get Previous Target Velocity Using World", &FirstPersonControllerComponentRequests::GetPrevTargetVelocityWorld)
+                ->Event("Get Previous Target Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetPrevTargetVelocityHeading)
+                ->Event("Get Velocity Close Tolerance", &FirstPersonControllerComponentRequests::GetVelocityCloseTolerance)
+                ->Event("Set Velocity Close Tolerance", &FirstPersonControllerComponentRequests::SetVelocityCloseTolerance)
                 ->Event("Tilt Vector2 Using X×Y Direction", &FirstPersonControllerComponentRequests::TiltVectorXCrossY)
                 ->Event("Get Velocity X×Y Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
                 ->Event("Set Velocity X×Y Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
@@ -408,11 +412,11 @@ namespace FirstPersonController
                 ->Event("Set Add Velocity Using World", &FirstPersonControllerComponentRequests::SetAddVelocityWorld)
                 ->Event("Get Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetAddVelocityHeading)
                 ->Event("Set Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::SetAddVelocityHeading)
-                ->Event("Get Z Velocity", &FirstPersonControllerComponentRequests::GetZVelocity)
-                ->Event("Set Z Velocity", &FirstPersonControllerComponentRequests::SetZVelocity)
+                ->Event("Get Apply Velocity Z", &FirstPersonControllerComponentRequests::GetApplyVelocityZ)
+                ->Event("Set Apply Velocity Z", &FirstPersonControllerComponentRequests::SetApplyVelocityZ)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
-                ->Event("Get Second Jump InitialVelocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
+                ->Event("Get Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
                 ->Event("Set Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::SetJumpSecondInitialVelocity)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
@@ -1406,7 +1410,7 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        if(!m_prevTargetVelocity.IsClose(currentVelocity))
+        if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
         {
             // If enabled, cause the character's applied velocity to match the current velocity from Physics
             if(!m_velocityXYIgnoresObstacles)
@@ -2280,6 +2284,22 @@ namespace FirstPersonController
         m_gravity = new_gravity;
         UpdateJumpMaxHoldTime();
     }
+    AZ::Vector3 FirstPersonControllerComponent::GetPrevTargetVelocityWorld() const
+    {
+        return m_prevTargetVelocity;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetPrevTargetVelocityHeading() const
+    {
+        return AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_prevTargetVelocity);
+    }
+    float FirstPersonControllerComponent::GetVelocityCloseTolerance() const
+    {
+        return m_velocityCloseTolerance;
+    }
+    void FirstPersonControllerComponent::SetVelocityCloseTolerance(const float& new_velocityCloseTolerance)
+    {
+        m_velocityCloseTolerance = new_velocityCloseTolerance;
+    }
     AZ::Vector3 FirstPersonControllerComponent::GetVelocityXCrossYDirection() const
     {
         return m_velocityXCrossYDirection;
@@ -2432,11 +2452,11 @@ namespace FirstPersonController
     {
         m_addVelocityHeading = new_addVelocityHeading;
     }
-    float FirstPersonControllerComponent::GetZVelocity() const
+    float FirstPersonControllerComponent::GetApplyVelocityZ() const
     {
         return m_applyVelocityZ;
     }
-    void FirstPersonControllerComponent::SetZVelocity(const float& new_applyVelocityZ)
+    void FirstPersonControllerComponent::SetApplyVelocityZ(const float& new_applyVelocityZ)
     {
         SetGroundedForTick(false);
         m_applyVelocityZ = new_applyVelocityZ;

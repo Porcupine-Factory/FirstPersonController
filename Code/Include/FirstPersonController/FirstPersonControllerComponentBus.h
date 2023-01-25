@@ -73,6 +73,10 @@ namespace FirstPersonController
         virtual float GetAirTime() const = 0;
         virtual float GetGravity() const = 0;
         virtual void SetGravity(const float&) = 0;
+        virtual AZ::Vector3 GetPrevTargetVelocityWorld() const = 0;
+        virtual AZ::Vector3 GetPrevTargetVelocityHeading() const = 0;
+        virtual float GetVelocityCloseTolerance() const = 0;
+        virtual void SetVelocityCloseTolerance(const float&) = 0;
         virtual AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2, const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetVelocityXCrossYDirection() const = 0;
         virtual void SetVelocityXCrossYDirection(const AZ::Vector3&) = 0;
@@ -107,8 +111,8 @@ namespace FirstPersonController
         virtual void SetAddVelocityWorld(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetAddVelocityHeading() const = 0;
         virtual void SetAddVelocityHeading(const AZ::Vector3&) = 0;
-        virtual float GetZVelocity() const = 0;
-        virtual void SetZVelocity(const float&) = 0;
+        virtual float GetApplyVelocityZ() const = 0;
+        virtual void SetApplyVelocityZ(const float&) = 0;
         virtual float GetJumpInitialVelocity() const = 0;
         virtual void SetJumpInitialVelocity(const float&) = 0;
         virtual float GetJumpSecondInitialVelocity() const = 0;
