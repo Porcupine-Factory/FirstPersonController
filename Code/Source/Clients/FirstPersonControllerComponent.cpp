@@ -840,14 +840,14 @@ namespace FirstPersonController
     // and it's with respect to the world when m_instantVelocityRotation == false
     AZ::Vector2 FirstPersonControllerComponent::LerpVelocityXY(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
-        const float totalLerpTime = m_lastAppliedVelocityXY.GetDistance(targetVelocityXY)/m_accel;
+        const float totalLerpTime = m_prevApplyVelocityXY.GetDistance(targetVelocityXY)/m_accel;
 
         if(totalLerpTime == 0.f)
         {
             m_accelerating = false;
             m_decelerationFactorApplied = false;
             m_opposingDecelFactorApplied = false;
-            return m_lastAppliedVelocityXY;
+            return m_prevApplyVelocityXY;
         }
 
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
@@ -865,7 +865,7 @@ namespace FirstPersonController
             m_lerpTime = totalLerpTime;
 
         // Lerp the velocity from the last applied velocity to the target velocity
-        AZ::Vector2 newVelocityXY = m_lastAppliedVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+        AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
 
         // Decelerate at a different rate than the acceleration
         if(newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
@@ -911,7 +911,7 @@ namespace FirstPersonController
             if(m_lerpTime >= totalLerpTime)
                 m_lerpTime = totalLerpTime;
 
-            AZ::Vector2 newVelocityXYDecel =  m_lastAppliedVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+            AZ::Vector2 newVelocityXYDecel =  m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
             if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
         }
@@ -1406,14 +1406,9 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        // If enabled, cause the character's applied velocity to match the current velocity from Physics
-        if(((m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ()
-                    || m_velocityXCrossYDirection.IsZero())
-                && !m_applyVelocityXY.IsClose(AZ::Vector2(currentVelocity)))
-            || ((m_velocityXCrossYDirection != AZ::Vector3::CreateAxisZ()
-                    || !m_velocityXCrossYDirection.IsZero())
-                && !TiltVectorXCrossY(m_applyVelocityXY, m_prevVelocityXCrossYDirection).IsClose(currentVelocity)))
+        if(!m_prevTargetVelocity.IsClose(currentVelocity))
         {
+            // If enabled, cause the character's applied velocity to match the current velocity from Physics
             if(!m_velocityXYIgnoresObstacles)
                 m_hitSomethingOnXY = true;
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
@@ -1434,7 +1429,7 @@ namespace FirstPersonController
                 // Store the last applied velocity to be used for the lerping
                 if(m_hitSomethingOnXY)
                     m_applyVelocityXY = AZ::Vector2(currentVelocity);
-                m_lastAppliedVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
+                m_prevApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
             }
             else
             {
@@ -1443,13 +1438,13 @@ namespace FirstPersonController
                 // Store the last applied velocity to be used for the lerping
                 if(m_hitSomethingOnXY)
                     m_applyVelocityXY = AZ::Vector2(currentVelocity);
-                m_lastAppliedVelocityXY = m_applyVelocityXY;
+                m_prevApplyVelocityXY = m_applyVelocityXY;
             }
 
-            // Once the character's movement gets flipped on Z, m_lastAppliedVelocityXY needs to be flipped,
+            // Once the character's movement gets flipped on Z, m_prevApplyVelocityXY needs to be flipped,
             // so long as it hasn't occured around the world's X axis
             if(AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ()) && !AZ::IsClose(m_velocityXCrossYDirection.GetY(), 0.f))
-                m_lastAppliedVelocityXY *= -1.f;
+                m_prevApplyVelocityXY *= -1.f;
 
             // Reset the lerp time since the target velocity changed
             m_lerpTime = 0.f;
@@ -1970,9 +1965,9 @@ namespace FirstPersonController
         if(!addVelocityHeading.IsZero())
             addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
         // Tilt the XY velocity plane based on m_velocityXCrossYDirection
-        AZ::Vector3 targetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
+        m_prevTargetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
         // Change the +Z direction based on m_velocityZPosDirection
-        targetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+        m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
         // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
         /* Physics::CharacterRequestBus::Event(GetEntityId(),
@@ -1980,7 +1975,7 @@ namespace FirstPersonController
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::AddVelocityForTick,
-            targetVelocity);
+            m_prevTargetVelocity);
     }
 
     // Event Notification methods for use in scripts
@@ -2417,9 +2412,9 @@ namespace FirstPersonController
     {
         m_applyVelocityXY = new_applyVelocityXY;
         if(m_instantVelocityRotation)
-            m_lastAppliedVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
+            m_prevApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
         else
-            m_lastAppliedVelocityXY = m_applyVelocityXY;
+            m_prevApplyVelocityXY = m_applyVelocityXY;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetAddVelocityWorld() const
     {

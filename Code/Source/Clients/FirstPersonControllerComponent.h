@@ -327,11 +327,12 @@ namespace FirstPersonController
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
+        AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetXYVelocity = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
         AZ::Vector3 m_addVelocityHeading = AZ::Vector3::CreateZero();
         AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
-        AZ::Vector2 m_lastAppliedVelocityXY = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         bool m_instantVelocityRotation = true;
         bool m_velocityXYIgnoresObstacles = false;
         bool m_hitSomethingOnXY = false;
@@ -432,9 +433,10 @@ namespace FirstPersonController
         float m_jumpHoldDistance = 0.8f;
         // The value of 41.5% was determined to work well based on testing
         float m_groundedSphereCastRadiusPercentageIncrease = 41.5;
-        float m_jumpMaxHoldTime = m_jumpHoldDistance / m_jumpInitialVelocity;
-        float m_jumpCounter = 0.f;
         float m_jumpHeldGravityFactor = 0.1f;
+        // The m_jumpMaxHoldTime is computed inside UpdateJumpMaxHoldTime()
+        float m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity + sqrt(m_jumpInitialVelocity*m_jumpInitialVelocity + 2.f*m_gravity*m_jumpHeldGravityFactor*m_jumpHoldDistance)) / 2.f);
+        float m_jumpCounter = 0.f;
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
         bool m_secondJump = false;
