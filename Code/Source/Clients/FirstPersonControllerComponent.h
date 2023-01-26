@@ -339,7 +339,7 @@ namespace FirstPersonController
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 0.01f;
         bool m_instantVelocityRotation = true;
-        bool m_velocityXYIgnoresObstacles = false;
+        bool m_velocityXYIgnoresObstacles = true;
         bool m_hitSomethingOnXY = false;
 
         // Determines whether the character's X&Y target velocity
