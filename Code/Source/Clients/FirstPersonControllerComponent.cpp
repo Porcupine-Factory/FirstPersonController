@@ -877,13 +877,13 @@ namespace FirstPersonController
             m_accelerating = false;
             m_decelerationFactorApplied = true;
             // Get the current velocity vector with respect to the character's local coordinate system
-            const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
+            const AZ::Vector2 applyVelocityHeading = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
 
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
             if(targetVelocityXY.GetLength() != 0.f
                 && m_instantVelocityRotation ?
-                    (abs(applyVelocityLocal.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi)
+                    (abs(applyVelocityHeading.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi)
                     : (abs(m_applyVelocityXY.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi))
             {
                 m_opposingDecelFactorApplied = true;
@@ -1071,8 +1071,8 @@ namespace FirstPersonController
             }
             else if(m_applyVelocityXY.GetLength() < m_sprintPrevVelocityLength)
             {
-                const AZ::Vector2 applyVelocityLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
-                if(applyVelocityLocal.AngleSafe(targetVelocityXY) > AZ::Constants::HalfPi)
+                const AZ::Vector2 applyVelocityHeading = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
+                if(applyVelocityHeading.AngleSafe(targetVelocityXY) > AZ::Constants::HalfPi)
                     m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
                 else
                     m_sprintAccumulateAccelTime -= deltaTime;
