@@ -12,6 +12,8 @@
 
 #include <StartingPointInput/InputEventNotificationBus.h>
 
+#include <PhysXCharacters/API/CharacterController.h>
+
 namespace FirstPersonController
 {
     class FirstPersonControllerComponent
@@ -138,6 +140,8 @@ namespace FirstPersonController
         void SetUpdateXYDescending(const bool& new_updateXYDecending) override;
         bool GetUpdateXYOnlyNearGround() const override;
         void SetUpdateXYOnlyNearGround(const bool& new_updateXYOnlyNearGround) override;
+        bool GetAddVelocityForTickVsTimestep() const override;
+        void SetAddVelocityForTickVsTimestep(const bool& new_addVelocityForTickVsTimestep) override;
         bool GetScriptSetsXYTargetVelocity() const override;
         void SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity) override;
         AZ::Vector2 GetTargetXYVelocity() const override;
@@ -188,9 +192,9 @@ namespace FirstPersonController
         bool GetOpposingDecelFactorApplied() const override;
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
-        bool GetVelocityXYIgnoresObstacles() const override;
-        void SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles) override;
-        bool GetHitSomethingOnXY() const override;
+        bool GetVelocityIgnoresObstacles() const override;
+        void SetVelocityIgnoresObstacles(const bool& new_velocityIgnoreObstacles) override;
+        bool GetHitSomething() const override;
         float GetSprintScaleForward() const override;
         void SetSprintScaleForward(const float& new_sprintScaleForward) override;
         float GetSprintScaleBack() const override;
@@ -292,7 +296,7 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick
-        void ProcessInput(const float& deltaTime);
+        void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);
 
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float& deltaTime);
@@ -339,8 +343,19 @@ namespace FirstPersonController
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 0.01f;
         bool m_instantVelocityRotation = true;
-        bool m_velocityXYIgnoresObstacles = true;
-        bool m_hitSomethingOnXY = false;
+        bool m_velocityIgnoreObstacles = true;
+        bool m_hitSomething = false;
+
+        // Provides the functionality when AddVelocityForPhysicsTimestep is used
+        AzPhysics::SystemEvents::OnPostsimulateEvent::Handler m_postSimulateHandler;
+        AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
+        AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+        AzPhysics::SimulatedBodyHandle m_controllerBodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
+        void OnPostSimulate([[maybe_unused]] float deltaTime);
+        void OnSceneSimulationStart(float physicsTimestep);
+        const PhysX::CharacterController* GetControllerConst() const;
+        PhysX::CharacterController* GetController();
+        bool m_addVelocityForTickVsTimestep = true;
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true

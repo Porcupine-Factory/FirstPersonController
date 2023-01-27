@@ -8,12 +8,14 @@
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Physics/RigidBodyBus.h>
 #include <AzFramework/Physics/CollisionBus.h>
-#include <AzFramework/Physics/PhysicsSystem.h>
+#include <AzFramework/Physics/SystemBus.h>
+#include <AzFramework/Physics/Components/SimulatedBodyComponentBus.h>
 #include <AzFramework/Components/CameraBus.h>
 #include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
 #include <AzFramework/Input/Devices/InputDeviceId.h>
 
 #include <PhysX/CharacterControllerBus.h>
+#include <System/PhysXSystem.h>
 
 namespace FirstPersonController
 {
@@ -52,6 +54,7 @@ namespace FirstPersonController
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
+              ->Field("Add Velocity For Tick Instead Of Physics Timestep", &FirstPersonControllerComponent::m_addVelocityForTickVsTimestep)
               ->Field("X&Y Movement Tracks Surface Inclines", &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal)
               ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
@@ -166,6 +169,9 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_opposingDecel,
                         "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking Acceleration creates the deceleration that's used. It is suggested to use a number greater than or equal to 1.0 for this.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_addVelocityForTickVsTimestep,
+                        "Add Velocity For Tick Instead Of Physics Timestep", "If this is enabled then the velocity will be applied on each tick (frame), if it is disabled then the velocity will be applied on each physics timestep.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal,
                         "X&Y Movement Tracks Surface Inclines", "Determines whether the character's X&Y movement will be tilted in order to follow inclines. This will apply up to the max angle that is specified in the PhysX Character Controller component.")
@@ -402,6 +408,8 @@ namespace FirstPersonController
                 ->Event("Set Update X&Y Velocity When Descending", &FirstPersonControllerComponentRequests::SetUpdateXYDescending)
                 ->Event("Get Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::GetUpdateXYOnlyNearGround)
                 ->Event("Set Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::SetUpdateXYOnlyNearGround)
+                ->Event("Get Add Velocity For Tick Vs Physics Timestpe", &FirstPersonControllerComponentRequests::GetAddVelocityForTickVsTimestep)
+                ->Event("Set Add Velocity For Tick Vs Physics Timestep", &FirstPersonControllerComponentRequests::SetAddVelocityForTickVsTimestep)
                 ->Event("Get Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetScriptSetsXYTargetVelocity)
                 ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
                 ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
@@ -452,9 +460,9 @@ namespace FirstPersonController
                 ->Event("Get Opposing Direction Deceleration Factor Applied", &FirstPersonControllerComponentRequests::GetOpposingDecelFactorApplied)
                 ->Event("Get Instant Velocity Rotation", &FirstPersonControllerComponentRequests::GetInstantVelocityRotation)
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
-                ->Event("Get Velocity On X&Y Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityXYIgnoresObstacles)
-                ->Event("Set Velocity On X&Y Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityXYIgnoresObstacles)
-                ->Event("Get Something Hit On X or Y", &FirstPersonControllerComponentRequests::GetHitSomethingOnXY)
+                ->Event("Get Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityIgnoresObstacles)
+                ->Event("Set Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityIgnoresObstacles)
+                ->Event("Get Something Hit", &FirstPersonControllerComponentRequests::GetHitSomething)
                 ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
                 ->Event("Set Sprint Scale Forward", &FirstPersonControllerComponentRequests::SetSprintScaleForward)
                 ->Event("Get Sprint Scale Back", &FirstPersonControllerComponentRequests::GetSprintScaleBack)
@@ -548,6 +556,47 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
+        if(!m_addVelocityForTickVsTimestep)
+        {
+            Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
+            if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
+            {
+                AZ_Error("First Person Controller Component", false, "Failed to retrieve default scene.");
+                return;
+            }
+
+            m_sceneSimulationStartHandler = AzPhysics::SceneEvents::OnSceneSimulationStartHandler(
+                [this]([[maybe_unused]] AzPhysics::SceneHandle sceneHandle, float fixedDeltaTime)
+                {
+                    OnSceneSimulationStart(fixedDeltaTime);
+                }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
+
+            m_postSimulateHandler = AzPhysics::SystemEvents::OnPostsimulateEvent::Handler(
+                [this](float deltaTime)
+                {
+                    OnPostSimulate(deltaTime);
+                }
+            );
+
+            AzPhysics::SimulatedBodyComponentRequestsBus::EventResult(m_controllerBodyHandle, GetEntityId(),
+                &AzPhysics::SimulatedBodyComponentRequestsBus::Events::GetSimulatedBodyHandle);
+
+            auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+            if(auto* physXSystem = PhysX::GetPhysXSystem())
+            {
+                physXSystem->RegisterPostSimulateEvent(m_postSimulateHandler);
+            }
+
+            if(auto* controller = GetController())
+            {
+                if(sceneInterface != nullptr)
+                {
+                    sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
+                }
+            }
+        }
+
         // Obtain the PhysX Character Controller's capsule height and radius
         // and use those dimensions for the ground detection shapecast capsule
         PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
@@ -597,12 +646,28 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusDisconnect();
         InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
+
+        if(!m_addVelocityForTickVsTimestep)
+        {
+            if(auto* controller = GetController())
+            {
+                if (auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get())
+                {
+                    sceneInterface->RemoveSimulatedBody(m_attachedSceneHandle, controller->m_bodyHandle);
+                }
+                m_controllerBodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
+                m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+                m_sceneSimulationStartHandler.Disconnect();
+                m_postSimulateHandler.Disconnect();
+            }
+        }
     }
 
     void FirstPersonControllerComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
         required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("PhysicsCharacterControllerService"));
+        required.push_back(AZ_CRC_CE("PhysicsWorldBodyService"));
         required.push_back(AZ_CRC_CE("TransformService"));
     }
 
@@ -624,7 +689,7 @@ namespace FirstPersonController
 
         if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
         {
-            AZ_Error("FirstPersonController", false, "Number of input IDs not equal to number of input names!")
+            AZ_Error("First Person Controller Component", false, "Number of input IDs not equal to number of input names!");
         }
         else
         {
@@ -765,7 +830,51 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(deltaTime);
+        ProcessInput(deltaTime, true);
+    }
+
+    void FirstPersonControllerComponent::OnPostSimulate([[maybe_unused]] float deltaTime)
+    {
+        if(auto* controller = GetController())
+        {
+            const AZ::Vector3 newPosition = controller->GetBasePosition();
+            AZ::TransformBus::Event(GetEntityId(), &AZ::TransformBus::Events::SetWorldTranslation, newPosition);
+            controller->ResetRequestedVelocityForTick();
+        }
+    }
+
+    void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
+    {
+        ProcessInput(physicsTimestep, false);
+        if(auto* controller = GetController())
+        {
+            controller->ApplyRequestedVelocity(physicsTimestep);
+            controller->ResetRequestedVelocityForPhysicsTimestep();
+        }
+    }
+
+    const PhysX::CharacterController* FirstPersonControllerComponent::GetControllerConst() const
+    {
+        if(m_controllerBodyHandle == AzPhysics::InvalidSimulatedBodyHandle || m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
+        {
+            if(m_controllerBodyHandle == AzPhysics::InvalidSimulatedBodyHandle)
+                AZ_Printf("", "Body Handle Fail");
+            if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
+                AZ_Printf("", "Scene Handle Fail");
+            return nullptr;
+        }
+
+        if(auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get())
+        {
+            return azdynamic_cast<PhysX::CharacterController*>(
+                sceneInterface->GetSimulatedBodyFromHandle(m_attachedSceneHandle, m_controllerBodyHandle));
+        }
+        return nullptr;
+    }
+
+    PhysX::CharacterController* FirstPersonControllerComponent::GetController()
+    {
+        return const_cast<PhysX::CharacterController*>(static_cast<const FirstPersonControllerComponent&>(*this).GetControllerConst());
     }
 
     AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
@@ -1405,25 +1514,29 @@ namespace FirstPersonController
         // Rotate the target velocity vector so that it can be compared against the applied velocity
         AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
-        // Get the current velocity to determine if something was hit on X or Y
+        // Get the current velocity to determine if something was hit
         AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
-        Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
-            &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
+        if(m_addVelocityForTickVsTimestep)
         {
-            // If enabled, cause the character's applied velocity to match the current velocity from Physics
-            if(!m_velocityXYIgnoresObstacles)
-                m_hitSomethingOnXY = true;
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
+            Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
+                &Physics::CharacterRequestBus::Events::GetVelocity);
+
+            if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
+            {
+                // If enabled, cause the character's applied velocity to match the current velocity from Physics
+                if(!m_velocityIgnoreObstacles)
+                    m_hitSomething = true;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
+            }
+            else
+                m_hitSomething = false;
         }
-        else
-            m_hitSomethingOnXY = false;
 
         // Obtain the last applied velocity if the target velocity changed
         if((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
                                         : (m_prevTargetVelocityXY != targetVelocityXYWorld))
-            || m_hitSomethingOnXY
+            || m_hitSomething
             || (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
         {
             if(m_instantVelocityRotation)
@@ -1431,7 +1544,7 @@ namespace FirstPersonController
                 // Set the previous target velocity to the new one
                 m_prevTargetVelocityXY = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
-                if(m_hitSomethingOnXY)
+                if(m_hitSomething)
                     m_applyVelocityXY = AZ::Vector2(currentVelocity);
                 m_prevApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
             }
@@ -1440,7 +1553,7 @@ namespace FirstPersonController
                 // Set the previous target velocity to the new one
                 m_prevTargetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
-                if(m_hitSomethingOnXY)
+                if(m_hitSomething)
                     m_applyVelocityXY = AZ::Vector2(currentVelocity);
                 m_prevApplyVelocityXY = m_applyVelocityXY;
             }
@@ -1663,7 +1776,7 @@ namespace FirstPersonController
         // and the jump time needs to computed accordingly
         else
         {
-            AZ_Warning("FirstPersonController", false, "Jump Hold Distance is higher than the max apogee of the jump.")
+            AZ_Warning("First Person Controller Component", false, "Jump Hold Distance is higher than the max apogee of the jump.")
             m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity*m_jumpHeldGravityFactor));
         }
     }
@@ -1942,44 +2055,73 @@ namespace FirstPersonController
         return tiltedXY;
     }
 
-    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime)
+    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& tickElseTimestep)
     {
-        UpdateRotation(deltaTime);
+        if(tickElseTimestep)
+        {
+            UpdateRotation(deltaTime);
+        }
 
-        CheckGrounded(deltaTime);
+        if(!m_addVelocityForTickVsTimestep && tickElseTimestep)
+        {
+            // Get the current velocity to determine if something was hit
+            AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
+            Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
+                &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        if(m_grounded)
-            CrouchManager(deltaTime);
+            if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
+            {
+                // If enabled, cause the character's applied velocity to match the current velocity from Physics
+                if(!m_velocityIgnoreObstacles)
+                    m_hitSomething = true;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
+            }
+            else
+                m_hitSomething = false;
+        }
 
-        // So long as the character is grounded or depending on how the update X&Y velocity while jumping
-        // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
-        if(m_grounded || (m_updateXYAscending && m_updateXYDecending && !m_updateXYOnlyNearGround)
-           || ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
-           || ((m_updateXYDecending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
-            UpdateVelocityXY(deltaTime);
+        if(m_addVelocityForTickVsTimestep || !tickElseTimestep)
+        {
+            CheckGrounded(deltaTime);
 
-        UpdateVelocityZ(deltaTime);
+            if(m_grounded)
+                CrouchManager(deltaTime);
 
-        // Track the sum of the normal vectors for the velocity's XY plane if its set
-        if(m_velocityXCrossYTracksNormal)
-            SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+            // So long as the character is grounded or depending on how the update X&Y velocity while jumping
+            // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
+            if(m_grounded || (m_updateXYAscending && m_updateXYDecending && !m_updateXYOnlyNearGround)
+               || ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
+               || ((m_updateXYDecending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
+                UpdateVelocityXY(deltaTime);
 
-        AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
-        // Rotate addVelocityHeading so it's with respect to the character's heading
-        if(!addVelocityHeading.IsZero())
-            addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
-        // Tilt the XY velocity plane based on m_velocityXCrossYDirection
-        m_prevTargetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
-        // Change the +Z direction based on m_velocityZPosDirection
-        m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+            UpdateVelocityZ(deltaTime);
 
-        // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
-        /* Physics::CharacterRequestBus::Event(GetEntityId(),
-              &Physics::CharacterRequestBus::Events::SetUpDirection, m_sphereCastsAxisDirectionPose); */
+            // Track the sum of the normal vectors for the velocity's XY plane if its set
+            if(m_velocityXCrossYTracksNormal)
+                SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
 
-        Physics::CharacterRequestBus::Event(GetEntityId(),
-            &Physics::CharacterRequestBus::Events::AddVelocityForTick,
-            m_prevTargetVelocity);
+            AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
+            // Rotate addVelocityHeading so it's with respect to the character's heading
+            if(!addVelocityHeading.IsZero())
+                addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
+            // Tilt the XY velocity plane based on m_velocityXCrossYDirection
+            m_prevTargetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
+            // Change the +Z direction based on m_velocityZPosDirection
+            m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+
+            // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
+            /* Physics::CharacterRequestBus::Event(GetEntityId(),
+                  &Physics::CharacterRequestBus::Events::SetUpDirection, m_sphereCastsAxisDirectionPose); */
+
+            if(m_addVelocityForTickVsTimestep)
+                Physics::CharacterRequestBus::Event(GetEntityId(),
+                    &Physics::CharacterRequestBus::Events::AddVelocityForTick,
+                    m_prevTargetVelocity);
+            else
+                Physics::CharacterRequestBus::Event(GetEntityId(),
+                    &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep,
+                    m_prevTargetVelocity);
+        }
     }
 
     // Event Notification methods for use in scripts
@@ -2408,6 +2550,69 @@ namespace FirstPersonController
     {
         m_updateXYOnlyNearGround = new_updateXYOnlyNearGround;
     }
+    bool FirstPersonControllerComponent::GetAddVelocityForTickVsTimestep() const
+    {
+        return m_addVelocityForTickVsTimestep;
+    }
+    void FirstPersonControllerComponent::SetAddVelocityForTickVsTimestep(const bool& new_addVelocityForTickVsTimestep)
+    {
+        m_addVelocityForTickVsTimestep = new_addVelocityForTickVsTimestep;
+
+        if(!m_addVelocityForTickVsTimestep)
+        {
+            Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
+            if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
+            {
+                AZ_Error("First Person Controller Component", false, "Failed to retrieve default scene.");
+                return;
+            }
+
+            m_sceneSimulationStartHandler = AzPhysics::SceneEvents::OnSceneSimulationStartHandler(
+                [this]([[maybe_unused]] AzPhysics::SceneHandle sceneHandle, float fixedDeltaTime)
+                {
+                    OnSceneSimulationStart(fixedDeltaTime);
+                }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
+
+            m_postSimulateHandler = AzPhysics::SystemEvents::OnPostsimulateEvent::Handler(
+                [this](float deltaTime)
+                {
+                    OnPostSimulate(deltaTime);
+                }
+            );
+
+            AzPhysics::SimulatedBodyComponentRequestsBus::EventResult(m_controllerBodyHandle, GetEntityId(),
+                &AzPhysics::SimulatedBodyComponentRequestsBus::Events::GetSimulatedBodyHandle);
+
+            auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+            if(auto* physXSystem = PhysX::GetPhysXSystem())
+            {
+                physXSystem->RegisterPostSimulateEvent(m_postSimulateHandler);
+            }
+
+            if(auto* controller = GetController())
+            {
+                if(sceneInterface != nullptr)
+                {
+                    sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
+                }
+            }
+        }
+        else
+        {
+            if(auto* controller = GetController())
+            {
+                if (auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get())
+                {
+                    sceneInterface->RemoveSimulatedBody(m_attachedSceneHandle, controller->m_bodyHandle);
+                }
+                m_controllerBodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
+                m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+                m_sceneSimulationStartHandler.Disconnect();
+                m_postSimulateHandler.Disconnect();
+            }
+        }
+    }
     bool FirstPersonControllerComponent::GetScriptSetsXYTargetVelocity() const
     {
         return m_scriptSetsXYTargetVelocity;
@@ -2626,17 +2831,17 @@ namespace FirstPersonController
     {
         m_instantVelocityRotation = new_instantVelocityRotation;
     }
-    bool FirstPersonControllerComponent::GetVelocityXYIgnoresObstacles() const
+    bool FirstPersonControllerComponent::GetVelocityIgnoresObstacles() const
     {
-        return m_velocityXYIgnoresObstacles;
+        return m_velocityIgnoreObstacles;
     }
-    void FirstPersonControllerComponent::SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles)
+    void FirstPersonControllerComponent::SetVelocityIgnoresObstacles(const bool& new_velocityIgnoreObstacles)
     {
-        m_velocityXYIgnoresObstacles = new_velocityXYIgnoresObstacles;
+        m_velocityIgnoreObstacles = new_velocityIgnoreObstacles;
     }
-    bool FirstPersonControllerComponent::GetHitSomethingOnXY() const
+    bool FirstPersonControllerComponent::GetHitSomething() const
     {
-        return m_hitSomethingOnXY;
+        return m_hitSomething;
     }
     float FirstPersonControllerComponent::GetSprintScaleForward() const
     {
