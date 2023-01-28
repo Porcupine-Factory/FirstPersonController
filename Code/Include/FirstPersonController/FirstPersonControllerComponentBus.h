@@ -105,10 +105,14 @@ namespace FirstPersonController
         virtual void SetAddVelocityForTimestepVsTick(const bool&) = 0;
         virtual float GetPhysicsTimestepScaleFactor() const = 0;
         virtual void SetPhysicsTimestepScaleFactor(const float&) = 0;
-        virtual bool GetScriptSetsXYTargetVelocity() const = 0;
-        virtual void SetScriptSetsXYTargetVelocity(const bool&) = 0;
-        virtual AZ::Vector2 GetTargetXYVelocity() const = 0;
-        virtual void SetTargetXYVelocity(const AZ::Vector2&) = 0;
+        virtual bool GetScriptSetsTargetVelocityXY() const = 0;
+        virtual void SetScriptSetsTargetVelocityXY(const bool&) = 0;
+        virtual AZ::Vector2 GetTargetVelocityXY() const = 0;
+        virtual void SetTargetVelocityXY(const AZ::Vector2&) = 0;
+        virtual AZ::Vector2 GetCorrectedVelocityXY() const = 0;
+        virtual void SetCorrectedVelocityXY(const AZ::Vector2&) = 0;
+        virtual float GetCorrectedVelocityZ() const = 0;
+        virtual void SetCorrectedVelocityZ(const float&) = 0;
         virtual AZ::Vector2 GetApplyVelocityXY() const = 0;
         virtual void SetApplyVelocityXY(const AZ::Vector2&) = 0;
         virtual AZ::Vector3 GetAddVelocityWorld() const = 0;
@@ -131,6 +135,8 @@ namespace FirstPersonController
         virtual void SetJumpHoldDistance(const float&) = 0;
         virtual float GetJumpHeadSphereCastOffset() const = 0;
         virtual void SetJumpHeadSphereCastOffset(const float&) = 0;
+        virtual bool GetHeadHitSetsApogee() const = 0;
+        virtual void SetHeadHitSetsApogee(const bool&) = 0;
         virtual bool GetHeadHit() const = 0;
         virtual void SetHeadHit(const bool&) = 0;
         virtual bool GetJumpHeadIgnoreNonKinematicRigidBodies() const = 0;
@@ -159,6 +165,7 @@ namespace FirstPersonController
         virtual bool GetVelocityIgnoresObstacles() const = 0;
         virtual void SetVelocityIgnoresObstacles(const bool&) = 0;
         virtual bool GetHitSomething() const = 0;
+        virtual void SetHitSomething(const bool&) = 0;
         virtual float GetSprintScaleForward() const = 0;
         virtual void SetSprintScaleForward(const float&) = 0;
         virtual float GetSprintScaleBack() const = 0;

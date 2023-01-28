@@ -144,10 +144,14 @@ namespace FirstPersonController
         void SetAddVelocityForTimestepVsTick(const bool& new_addVelocityForTimestepVsTick) override;
         float GetPhysicsTimestepScaleFactor() const override;
         void SetPhysicsTimestepScaleFactor(const float& new_physicsTimestepScaleFactor) override;
-        bool GetScriptSetsXYTargetVelocity() const override;
-        void SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity) override;
-        AZ::Vector2 GetTargetXYVelocity() const override;
-        void SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity) override;
+        bool GetScriptSetsTargetVelocityXY() const override;
+        void SetScriptSetsTargetVelocityXY(const bool& new_scriptSetsTargetVelocityXY) override;
+        AZ::Vector2 GetTargetVelocityXY() const override;
+        void SetTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY) override;
+        AZ::Vector2 GetCorrectedVelocityXY() const override;
+        void SetCorrectedVelocityXY(const AZ::Vector2& new_correctedVelocityXY) override;
+        float GetCorrectedVelocityZ() const override;
+        void SetCorrectedVelocityZ(const float& new_correctedVelocityZ) override;
         AZ::Vector2 GetApplyVelocityXY() const override;
         void SetApplyVelocityXY(const AZ::Vector2& new_applyVelocityXY) override;
         AZ::Vector3 GetAddVelocityWorld() const override;
@@ -170,6 +174,8 @@ namespace FirstPersonController
         void SetJumpHoldDistance(const float& new_jumpHoldDistance) override;
         float GetJumpHeadSphereCastOffset() const override;
         void SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset) override;
+        bool GetHeadHitSetsApogee() const override;
+        void SetHeadHitSetsApogee(const bool& new_headHitSetsApogee) override;
         bool GetHeadHit() const override;
         void SetHeadHit(const bool& new_headHit) override;
         bool GetJumpHeadIgnoreNonKinematicRigidBodies() const override;
@@ -197,6 +203,7 @@ namespace FirstPersonController
         bool GetVelocityIgnoresObstacles() const override;
         void SetVelocityIgnoresObstacles(const bool& new_velocityIgnoreObstacles) override;
         bool GetHitSomething() const override;
+        void SetHitSomething(const bool& new_hitSomething) override;
         float GetSprintScaleForward() const override;
         void SetSprintScaleForward(const float& new_sprintScaleForward) override;
         float GetSprintScaleBack() const override;
@@ -338,11 +345,12 @@ namespace FirstPersonController
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
-        AZ::Vector2 m_scriptTargetXYVelocity = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
         AZ::Vector3 m_addVelocityHeading = AZ::Vector3::CreateZero();
         AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_correctedVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 0.01f;
         bool m_instantVelocityRotation = true;
         bool m_velocityIgnoreObstacles = true;
@@ -357,7 +365,7 @@ namespace FirstPersonController
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true
-        bool m_scriptSetsXYTargetVelocity = false;
+        bool m_scriptSetsTargetVelocityXY = false;
 
         // Angles used to rotate the camera
         float m_cameraRotationAngles[3] = {0.f, 0.f, 0.f};
@@ -439,6 +447,7 @@ namespace FirstPersonController
         float m_applyVelocityZ = 0.f;
         float m_applyVelocityZCurrentDelta = 0.f;
         float m_applyVelocityZPrevDelta = 0.f;
+        float m_correctedVelocityZ = 0.f;
         float m_capsuleRadius = 0.25f;
         float m_capsuleHeight = 1.753f;
         float m_capsuleCurrentHeight = 1.753f;
@@ -460,6 +469,7 @@ namespace FirstPersonController
         bool m_secondJump = false;
         bool m_jumpHeadIgnoreNonKinematicRigidBodies = true;
         bool m_headHit = false;
+        bool m_headHitSetsApogee = true;
         AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;

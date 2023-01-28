@@ -94,6 +94,7 @@ namespace FirstPersonController
               ->Field("Ground Close Offset (m)", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
               ->Field("Jump Hold Distance (m)", &FirstPersonControllerComponent::m_jumpHoldDistance)
               ->Field("Jump Head Hit Detection Distance (m)", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
+              ->Field("Jump Head Hit Sets Apogee", &FirstPersonControllerComponent::m_headHitSetsApogee)
               ->Field("Jump Head Hit Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
@@ -294,6 +295,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset,
                         "Jump Head Hit Detection Distance (m)", "The distance above the character's head where an obstruction will be detected for jumping. The apogee of the jump occurs when there is a collision.")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_headHitSetsApogee,
+                        "Jump Head Hit Sets Apogee", "Determines whether a collision with the head hit sphere cast causes the character's jump velocity to imminently stop, defining that point as the apogee of a jump.")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies,
                         "Jump Head Hit Ignore Non-Kinematic Rigid Bodies", "Determines whether or not non-kinematic (dynamic) rigid bodies are ignored by the jump head collision detection system.")
                     ->DataElement(nullptr,
@@ -413,12 +417,16 @@ namespace FirstPersonController
                 ->Event("Set Add Velocity For Physics Timestep Vs Tick", &FirstPersonControllerComponentRequests::SetAddVelocityForTimestepVsTick)
                 ->Event("Get Physics Timestep Scale Factor", &FirstPersonControllerComponentRequests::GetPhysicsTimestepScaleFactor)
                 ->Event("Set Physics Timestep Scale Factor", &FirstPersonControllerComponentRequests::SetPhysicsTimestepScaleFactor)
-                ->Event("Get Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetScriptSetsXYTargetVelocity)
-                ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
-                ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
-                ->Event("Set Target X&Y Velocity", &FirstPersonControllerComponentRequests::SetTargetXYVelocity)
-                ->Event("Get Apply Velocity XY", &FirstPersonControllerComponentRequests::GetApplyVelocityXY)
-                ->Event("Set Apply Velocity XY", &FirstPersonControllerComponentRequests::SetApplyVelocityXY)
+                ->Event("Get Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetScriptSetsTargetVelocityXY)
+                ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsTargetVelocityXY)
+                ->Event("Get X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetTargetVelocityXY)
+                ->Event("Set X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetTargetVelocityXY)
+                ->Event("Get Corrected X&Y Velocity", &FirstPersonControllerComponentRequests::GetCorrectedVelocityXY)
+                ->Event("Set Corrected X&Y Velocity", &FirstPersonControllerComponentRequests::SetCorrectedVelocityXY)
+                ->Event("Get Corrected Z Velocity", &FirstPersonControllerComponentRequests::GetCorrectedVelocityZ)
+                ->Event("Set Corrected Z Velocity", &FirstPersonControllerComponentRequests::SetCorrectedVelocityZ)
+                ->Event("Get Apply X&Y Velocity", &FirstPersonControllerComponentRequests::GetApplyVelocityXY)
+                ->Event("Set Apply X&Y Velocity", &FirstPersonControllerComponentRequests::SetApplyVelocityXY)
                 ->Event("Get Add Velocity Using World", &FirstPersonControllerComponentRequests::GetAddVelocityWorld)
                 ->Event("Set Add Velocity Using World", &FirstPersonControllerComponentRequests::SetAddVelocityWorld)
                 ->Event("Get Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetAddVelocityHeading)
@@ -437,8 +445,10 @@ namespace FirstPersonController
                 ->Event("Set Ground Close Offset", &FirstPersonControllerComponentRequests::SetGroundCloseOffset)
                 ->Event("Get Jump Hold Distance", &FirstPersonControllerComponentRequests::GetJumpHoldDistance)
                 ->Event("Set Jump Hold Distance", &FirstPersonControllerComponentRequests::SetJumpHoldDistance)
-                ->Event("Get Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
-                ->Event("Set Jump Head Sphere Cast Offset", &FirstPersonControllerComponentRequests::SetJumpHeadSphereCastOffset)
+                ->Event("Get Jump Head Hit Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
+                ->Event("Set Jump Head Hit Sphere Cast Offset", &FirstPersonControllerComponentRequests::SetJumpHeadSphereCastOffset)
+                ->Event("Get Head Hit Sets Apogee", &FirstPersonControllerComponentRequests::GetHeadHitSetsApogee)
+                ->Event("Set Head Hit Sets Apogee", &FirstPersonControllerComponentRequests::SetHeadHitSetsApogee)
                 ->Event("Get Head Hit", &FirstPersonControllerComponentRequests::GetHeadHit)
                 ->Event("Set Head Hit", &FirstPersonControllerComponentRequests::SetHeadHit)
                 ->Event("Get Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::GetJumpHeadIgnoreNonKinematicRigidBodies)
@@ -466,6 +476,7 @@ namespace FirstPersonController
                 ->Event("Get Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityIgnoresObstacles)
                 ->Event("Set Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityIgnoresObstacles)
                 ->Event("Get Something Hit", &FirstPersonControllerComponentRequests::GetHitSomething)
+                ->Event("Set Something Hit", &FirstPersonControllerComponentRequests::SetHitSomething)
                 ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
                 ->Event("Set Sprint Scale Forward", &FirstPersonControllerComponentRequests::SetSprintScaleForward)
                 ->Event("Get Sprint Scale Back", &FirstPersonControllerComponentRequests::GetSprintScaleBack)
@@ -669,7 +680,7 @@ namespace FirstPersonController
         }
         else
         {
-            for(auto& it_event : m_controlMap)
+            for(auto& it_event: m_controlMap)
             {
                 *(it_event.first) = StartingPointInput::InputEventNotificationId(
                     (m_inputNames[std::distance(m_controlMap.begin(), m_controlMap.find(it_event.first))])->c_str());
@@ -695,7 +706,7 @@ namespace FirstPersonController
                 m_sprintValue = 0.f;
         }
 
-        for(auto& it_event : m_controlMap)
+        for(auto& it_event: m_controlMap)
         {
             if(*inputId == *(it_event.first) && !(*(it_event.first) == m_SprintEventId))
             {
@@ -712,7 +723,7 @@ namespace FirstPersonController
         if(inputId == nullptr)
             return;
 
-        for(auto& it_event : m_controlMap)
+        for(auto& it_event: m_controlMap)
         {
             if(*inputId == *(it_event.first))
             {
@@ -806,12 +817,12 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(deltaTime, true);
+        ProcessInput(deltaTime, false);
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
-        ProcessInput(physicsTimestep*m_physicsTimestepScaleFactor, false);
+        ProcessInput(physicsTimestep*m_physicsTimestepScaleFactor, true);
     }
 
     AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
@@ -1087,7 +1098,7 @@ namespace FirstPersonController
 
             // Figure out which of the scaled sprint velocity directions is the greatest
             float greatestSprintScale = 1.f;
-            for(const float scale : {m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight})
+            for(const float scale: {m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight})
                 if(abs(scale) > abs(greatestSprintScale))
                         greatestSprintScale = scale;
 
@@ -1143,7 +1154,7 @@ namespace FirstPersonController
             {
                 // Figure out which of the scaled sprint velocity directions is the greatest
                 float greatestSprintScale = 0.f;
-                for(const float scale : {m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight})
+                for(const float scale: {m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight})
                     if(abs(scale) > abs(greatestSprintScale))
                             greatestSprintScale = scale;
 
@@ -1431,7 +1442,7 @@ namespace FirstPersonController
         targetVelocityXY = CreateEllipseScaledVector(targetVelocityXY, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
 
         // Call the sprint manager
-        if(!m_scriptSetsXYTargetVelocity)
+        if(!m_scriptSetsTargetVelocityXY)
             SprintManager(targetVelocityXY, deltaTime);
 
         // Apply the speed, sprint factor, and crouch factor
@@ -1442,36 +1453,17 @@ namespace FirstPersonController
         else
             targetVelocityXY *= m_speed * m_crouchScale;
 
-        if(m_scriptSetsXYTargetVelocity)
+        if(m_scriptSetsTargetVelocityXY)
         {
-            targetVelocityXY.SetX(m_scriptTargetXYVelocity.GetX());
-            targetVelocityXY.SetY(m_scriptTargetXYVelocity.GetY());
+            targetVelocityXY.SetX(m_scriptTargetVelocityXY.GetX());
+            targetVelocityXY.SetY(m_scriptTargetVelocityXY.GetY());
             SprintManager(targetVelocityXY, deltaTime);
         }
         else
-            m_scriptTargetXYVelocity = targetVelocityXY;
+            m_scriptTargetVelocityXY = targetVelocityXY;
 
         // Rotate the target velocity vector so that it can be compared against the applied velocity
         AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
-
-        // Get the current velocity to determine if something was hit
-        AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
-
-        if(!m_addVelocityForTimestepVsTick)
-        {
-            Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
-                &Physics::CharacterRequestBus::Events::GetVelocity);
-
-            if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
-            {
-                // If enabled, cause the character's applied velocity to match the current velocity from Physics
-                if(!m_velocityIgnoreObstacles)
-                    m_hitSomething = true;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
-            }
-            else
-                m_hitSomething = false;
-        }
 
         // Obtain the last applied velocity if the target velocity changed
         if((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
@@ -1485,7 +1477,11 @@ namespace FirstPersonController
                 m_prevTargetVelocityXY = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
                 if(m_hitSomething)
-                    m_applyVelocityXY = AZ::Vector2(currentVelocity);
+                {
+                    m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
+                    m_hitSomething = false;
+                    m_correctedVelocityXY = AZ::Vector2::CreateZero();
+                }
                 m_prevApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
             }
             else
@@ -1494,7 +1490,10 @@ namespace FirstPersonController
                 m_prevTargetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
                 if(m_hitSomething)
-                    m_applyVelocityXY = AZ::Vector2(currentVelocity);
+                {
+                    m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
+                    m_hitSomething = false;
+                }
                 m_prevApplyVelocityXY = m_applyVelocityXY;
             }
 
@@ -1803,6 +1802,9 @@ namespace FirstPersonController
         if(m_headHit)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
+        if(m_hitSomething)
+            m_applyVelocityZ = m_correctedVelocityZ;
+
         const float prevApplyVelocityZ = m_applyVelocityZ;
 
         // Used for the Verlet integration averaging calculation
@@ -1888,7 +1890,7 @@ namespace FirstPersonController
         // as described by Verlet integration, which should reduce accumulated error
         m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
 
-        if(m_headHit && m_applyVelocityZ > 0.f)
+        if(m_headHit && m_applyVelocityZ > 0.f && m_headHitSetsApogee)
             m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
 
         // Account for the case where the PhysX Character Gameplay component's gravity is used instead
@@ -1998,15 +2000,13 @@ namespace FirstPersonController
         return tiltedXY;
     }
 
-    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& tickElseTimestep)
+    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
     {
-        if(tickElseTimestep)
+        // Only update the rotation on each tick
+        if(!timestepElseTick)
         {
             UpdateRotation(deltaTime);
-        }
 
-        if(m_addVelocityForTimestepVsTick && tickElseTimestep)
-        {
             // Get the current velocity to determine if something was hit
             AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
             Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
@@ -2014,16 +2014,24 @@ namespace FirstPersonController
 
             if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
             {
+                m_correctedVelocityXY = AZ::Vector2(currentVelocity);
+                m_correctedVelocityZ = currentVelocity.GetZ();
+
                 // If enabled, cause the character's applied velocity to match the current velocity from Physics
                 if(!m_velocityIgnoreObstacles)
                     m_hitSomething = true;
+
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
             }
             else
+            {
+                m_correctedVelocityXY = AZ::Vector2(currentVelocity);
+                m_correctedVelocityZ = currentVelocity.GetZ();
                 m_hitSomething = false;
+            }
         }
 
-        if(!m_addVelocityForTimestepVsTick || !tickElseTimestep)
+        if(!m_addVelocityForTimestepVsTick || timestepElseTick)
         {
             CheckGrounded(deltaTime);
 
@@ -2283,7 +2291,7 @@ namespace FirstPersonController
         if(m_groundHits.empty())
             return AZ::Vector3::CreateAxisZ();
         AZ::Vector3 sumNormals = AZ::Vector3::CreateZero();
-        for(AzPhysics::SceneQueryHit hit : m_groundHits)
+        for(AzPhysics::SceneQueryHit hit: m_groundHits)
             sumNormals += hit.m_normal;
         return sumNormals.GetNormalized();
     }
@@ -2292,7 +2300,7 @@ namespace FirstPersonController
         if(m_groundCloseHits.empty())
             return AZ::Vector3::CreateAxisZ();
         AZ::Vector3 sumNormals = AZ::Vector3::CreateZero();
-        for(AzPhysics::SceneQueryHit hit : m_groundCloseHits)
+        for(AzPhysics::SceneQueryHit hit: m_groundCloseHits)
             sumNormals += hit.m_normal;
         return sumNormals.GetNormalized();
     }
@@ -2537,21 +2545,39 @@ namespace FirstPersonController
     {
         m_physicsTimestepScaleFactor = new_physicsTimestepScaleFactor;
     }
-    bool FirstPersonControllerComponent::GetScriptSetsXYTargetVelocity() const
+    bool FirstPersonControllerComponent::GetScriptSetsTargetVelocityXY() const
     {
-        return m_scriptSetsXYTargetVelocity;
+        return m_scriptSetsTargetVelocityXY;
     }
-    void FirstPersonControllerComponent::SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity)
+    void FirstPersonControllerComponent::SetScriptSetsTargetVelocityXY(const bool& new_scriptSetsTargetVelocityXY)
     {
-        m_scriptSetsXYTargetVelocity = new_scriptSetsXYTargetVelocity;
+        m_scriptSetsTargetVelocityXY = new_scriptSetsTargetVelocityXY;
     }
-    AZ::Vector2 FirstPersonControllerComponent::GetTargetXYVelocity() const
+    AZ::Vector2 FirstPersonControllerComponent::GetTargetVelocityXY() const
     {
-        return m_scriptTargetXYVelocity;
+        return m_scriptTargetVelocityXY;
     }
-    void FirstPersonControllerComponent::SetTargetXYVelocity(const AZ::Vector2& new_scriptTargetXYVelocity)
+    void FirstPersonControllerComponent::SetTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY)
     {
-        m_scriptTargetXYVelocity = new_scriptTargetXYVelocity;
+        m_scriptTargetVelocityXY = new_scriptTargetVelocityXY;
+    }
+    AZ::Vector2 FirstPersonControllerComponent::GetCorrectedVelocityXY() const
+    {
+        return m_correctedVelocityXY;
+    }
+    void FirstPersonControllerComponent::SetCorrectedVelocityXY(const AZ::Vector2& new_correctedVelocityXY)
+    {
+        m_hitSomething = true;
+        m_correctedVelocityXY = new_correctedVelocityXY;
+    }
+    float FirstPersonControllerComponent::GetCorrectedVelocityZ() const
+    {
+        return m_correctedVelocityZ;
+    }
+    void FirstPersonControllerComponent::SetCorrectedVelocityZ(const float& new_correctedVelocityZ)
+    {
+        m_hitSomething = true;
+        m_correctedVelocityZ = new_correctedVelocityZ;
     }
     AZ::Vector2 FirstPersonControllerComponent::GetApplyVelocityXY() const
     {
@@ -2647,6 +2673,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset)
     {
         m_jumpHeadSphereCastOffset = new_jumpHeadSphereCastOffset;
+    }
+    bool FirstPersonControllerComponent::GetHeadHitSetsApogee() const
+    {
+        return m_headHitSetsApogee;
+    }
+    void FirstPersonControllerComponent::SetHeadHitSetsApogee(const bool& new_headHitSetsApogee)
+    {
+        m_headHitSetsApogee = new_headHitSetsApogee;
     }
     bool FirstPersonControllerComponent::GetHeadHit() const
     {
@@ -2766,6 +2800,10 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetHitSomething() const
     {
         return m_hitSomething;
+    }
+    void FirstPersonControllerComponent::SetHitSomething(const bool& new_hitSomething)
+    {
+        m_hitSomething = new_hitSomething;
     }
     float FirstPersonControllerComponent::GetSprintScaleForward() const
     {
