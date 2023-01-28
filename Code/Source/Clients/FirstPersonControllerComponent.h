@@ -175,8 +175,8 @@ namespace FirstPersonController
         AZStd::string GetHeadCollisionGroupName() const override;
         void SetHeadCollisionGroup(const AZStd::string& new_headCollisionGroupName) override;
         AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const override;
-        float GetGroundedSphereCastRadiusPercentageIncrease() const override;
-        void SetGroundedSphereCastRadiusPercentageIncrease(const float& new_groundedSphereCastRadiusPercentageIncrease) override;
+        float GetGroundSphereCastsRadiusPercentageIncrease() const override;
+        void SetGroundSphereCastsRadiusPercentageIncrease(const float& new_groundSphereCastsRadiusPercentageIncrease) override;
         float GetMaxGroundedAngleDegrees() const override;
         void SetMaxGroundedAngleDegrees(const float& new_maxGroundedAngleDegrees) override;
         float GetTopWalkSpeed() const override;
@@ -447,7 +447,7 @@ namespace FirstPersonController
         // where the m_jumpHeldGravityFactor is applied to the gravity
         float m_jumpHoldDistance = 0.8f;
         // The value of 41.5% was determined to work well based on testing
-        float m_groundedSphereCastRadiusPercentageIncrease = 41.5;
+        float m_groundSphereCastsRadiusPercentageIncrease = 41.5;
         float m_jumpHeldGravityFactor = 0.1f;
         // The m_jumpMaxHoldTime is computed inside UpdateJumpMaxHoldTime()
         float m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity + sqrt(m_jumpInitialVelocity*m_jumpInitialVelocity + 2.f*m_gravity*m_jumpHeldGravityFactor*m_jumpHoldDistance)) / 2.f);

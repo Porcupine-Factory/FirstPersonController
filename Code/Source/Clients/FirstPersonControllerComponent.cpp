@@ -88,7 +88,8 @@ namespace FirstPersonController
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jumpFallingGravityFactor)
               ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
-              ->Field("Grounded Sphere Cast Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease)
+              ->Field("Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundSphereCastsRadiusPercentageIncrease)
+                ->Attribute(AZ::Edit::Attributes::Suffix, "%")
               ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
               ->Field("Ground Close Offset (m)", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
               ->Field("Jump Hold Distance (m)", &FirstPersonControllerComponent::m_jumpHoldDistance)
@@ -287,8 +288,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_groundCloseSphereCastOffset,
                         "Ground Close Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_groundedSphereCastRadiusPercentageIncrease,
-                        "Grounded Sphere Cast Radius Percentage Increase (%)", "The percentage increase in the ground detection sphere cast over the PhysX Character Controller's capsule radius.")
+                        &FirstPersonControllerComponent::m_groundSphereCastsRadiusPercentageIncrease,
+                        "Ground Sphere Casts' Radius Percentage Increase (%)", "The percentage increase in the radius of the ground and ground close sphere casts over the PhysX Character Controller's capsule radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset,
                         "Jump Head Hit Detection Distance (m)", "The distance above the character's head where an obstruction will be detected for jumping. The apogee of the jump occurs when there is a collision.")
@@ -443,8 +444,8 @@ namespace FirstPersonController
                 ->Event("Get Head Collision Group Name", &FirstPersonControllerComponentRequests::GetHeadCollisionGroupName)
                 ->Event("Set Head Collision Group Name", &FirstPersonControllerComponentRequests::SetHeadCollisionGroup)
                 ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
-                ->Event("Get Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetGroundedSphereCastRadiusPercentageIncrease)
-                ->Event("Set Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetGroundedSphereCastRadiusPercentageIncrease)
+                ->Event("Get Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::GetGroundSphereCastsRadiusPercentageIncrease)
+                ->Event("Set Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
                 ->Event("Get Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -479,8 +480,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
                 ->Event("Get Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::GetSprintRegenRate)
                 ->Event("Set Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::SetSprintRegenRate)
-                ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
-                ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
+                ->Event("Get Stamina Percentage (%)", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
+                ->Event("Set Stamina Percentage (%)", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
                 ->Event("Get Stamina Increasing", &FirstPersonControllerComponentRequests::GetStaminaIncreasing)
                 ->Event("Get Stamina Decreasing", &FirstPersonControllerComponentRequests::GetStaminaDecreasing)
                 ->Event("Get Sprint Uses Stamina", &FirstPersonControllerComponentRequests::GetSprintUsesStamina)
@@ -508,7 +509,7 @@ namespace FirstPersonController
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
                 ->Event("Get Crouched", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Get Standing", &FirstPersonControllerComponentRequests::GetStanding)
-                ->Event("Get Crouched Percentage", &FirstPersonControllerComponentRequests::GetCrouchedPercentage)
+                ->Event("Get Crouched Percentage (%)", &FirstPersonControllerComponentRequests::GetCrouchedPercentage)
                 ->Event("Get Crouch Script Locked", &FirstPersonControllerComponentRequests::GetCrouchScriptLocked)
                 ->Event("Set Crouch Script Locked", &FirstPersonControllerComponentRequests::SetCrouchScriptLocked)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
@@ -1557,7 +1558,7 @@ namespace FirstPersonController
         AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
         // Move the sphere to the location of the character and apply the Z offset
-        sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius));
+        sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ((1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius));
 
         AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ(-1.f);
 
@@ -1566,13 +1567,13 @@ namespace FirstPersonController
         {
             sphereCastDirection = -m_sphereCastsAxisDirectionPose;
             if(m_sphereCastsAxisDirectionPose.GetZ() > 0.f)
-                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ((1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
             else
-                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ((1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ((1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius)));
         }
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
+            (1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius,
             sphereCastPose,
             sphereCastDirection,
             m_groundedSphereCastOffset,
@@ -1664,7 +1665,7 @@ namespace FirstPersonController
         m_airTime += deltaTime;
 
         request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            (1.f + m_groundedSphereCastRadiusPercentageIncrease/100.f)*m_capsuleRadius,
+            (1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius,
             sphereCastPose,
             sphereCastDirection,
             m_groundCloseSphereCastOffset,
@@ -2676,13 +2677,13 @@ namespace FirstPersonController
     {
         return m_headHitEntityIds;
     }
-    float FirstPersonControllerComponent::GetGroundedSphereCastRadiusPercentageIncrease() const
+    float FirstPersonControllerComponent::GetGroundSphereCastsRadiusPercentageIncrease() const
     {
-        return m_groundedSphereCastRadiusPercentageIncrease;
+        return m_groundSphereCastsRadiusPercentageIncrease;
     }
-    void FirstPersonControllerComponent::SetGroundedSphereCastRadiusPercentageIncrease(const float& new_groundedSphereCastRadiusPercentageIncrease)
+    void FirstPersonControllerComponent::SetGroundSphereCastsRadiusPercentageIncrease(const float& new_groundSphereCastsRadiusPercentageIncrease)
     {
-        m_groundedSphereCastRadiusPercentageIncrease = new_groundedSphereCastRadiusPercentageIncrease;
+        m_groundSphereCastsRadiusPercentageIncrease = new_groundSphereCastsRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {

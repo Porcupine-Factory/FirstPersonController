@@ -137,8 +137,8 @@ namespace FirstPersonController
         virtual void SetHeadCollisionGroup(const AZStd::string&) = 0;
         virtual AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit) const = 0;
         virtual AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const = 0;
-        virtual float GetGroundedSphereCastRadiusPercentageIncrease() const = 0;
-        virtual void SetGroundedSphereCastRadiusPercentageIncrease(const float&) = 0;
+        virtual float GetGroundSphereCastsRadiusPercentageIncrease() const = 0;
+        virtual void SetGroundSphereCastsRadiusPercentageIncrease(const float&) = 0;
         virtual float GetMaxGroundedAngleDegrees() const = 0;
         virtual void SetMaxGroundedAngleDegrees(const float&) = 0;
         virtual float GetTopWalkSpeed() const = 0;
