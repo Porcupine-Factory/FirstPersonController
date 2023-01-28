@@ -1909,7 +1909,7 @@ namespace FirstPersonController
                     m_secondJump = false;
             }
         }
-        else if(m_jumpCounter < m_jumpMaxHoldTime && currentVelocity.GetZ() > 0.f && m_jumpHeld && !m_jumpReqRepress)
+        else if((m_jumpCounter + deltaTime/2.f) < m_jumpMaxHoldTime && currentVelocity.GetZ() > 0.f && m_jumpHeld && !m_jumpReqRepress)
         {
             if(m_jumpValue == 0.f)
             {
