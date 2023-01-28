@@ -571,29 +571,11 @@ namespace FirstPersonController
                     OnSceneSimulationStart(fixedDeltaTime);
                 }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
 
-            m_postSimulateHandler = AzPhysics::SystemEvents::OnPostsimulateEvent::Handler(
-                [this](float deltaTime)
-                {
-                    OnPostSimulate(deltaTime);
-                }
-            );
-
-            AzPhysics::SimulatedBodyComponentRequestsBus::EventResult(m_controllerBodyHandle, GetEntityId(),
-                &AzPhysics::SimulatedBodyComponentRequestsBus::Events::GetSimulatedBodyHandle);
-
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            if(auto* physXSystem = PhysX::GetPhysXSystem())
+            if(sceneInterface != nullptr)
             {
-                physXSystem->RegisterPostSimulateEvent(m_postSimulateHandler);
-            }
-
-            if(auto* controller = GetController())
-            {
-                if(sceneInterface != nullptr)
-                {
-                    sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
-                }
+                sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
             }
         }
 
@@ -649,17 +631,8 @@ namespace FirstPersonController
 
         if(!m_addVelocityForTickVsTimestep)
         {
-            if(auto* controller = GetController())
-            {
-                if (auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get())
-                {
-                    sceneInterface->RemoveSimulatedBody(m_attachedSceneHandle, controller->m_bodyHandle);
-                }
-                m_controllerBodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
-                m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
-                m_sceneSimulationStartHandler.Disconnect();
-                m_postSimulateHandler.Disconnect();
-            }
+            m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+            m_sceneSimulationStartHandler.Disconnect();
         }
     }
 
@@ -833,48 +806,9 @@ namespace FirstPersonController
         ProcessInput(deltaTime, true);
     }
 
-    void FirstPersonControllerComponent::OnPostSimulate([[maybe_unused]] float deltaTime)
-    {
-        if(auto* controller = GetController())
-        {
-            const AZ::Vector3 newPosition = controller->GetBasePosition();
-            AZ::TransformBus::Event(GetEntityId(), &AZ::TransformBus::Events::SetWorldTranslation, newPosition);
-            controller->ResetRequestedVelocityForTick();
-        }
-    }
-
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
         ProcessInput(physicsTimestep, false);
-        if(auto* controller = GetController())
-        {
-            controller->ApplyRequestedVelocity(physicsTimestep);
-            controller->ResetRequestedVelocityForPhysicsTimestep();
-        }
-    }
-
-    const PhysX::CharacterController* FirstPersonControllerComponent::GetControllerConst() const
-    {
-        if(m_controllerBodyHandle == AzPhysics::InvalidSimulatedBodyHandle || m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
-        {
-            if(m_controllerBodyHandle == AzPhysics::InvalidSimulatedBodyHandle)
-                AZ_Printf("", "Body Handle Fail");
-            if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
-                AZ_Printf("", "Scene Handle Fail");
-            return nullptr;
-        }
-
-        if(auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get())
-        {
-            return azdynamic_cast<PhysX::CharacterController*>(
-                sceneInterface->GetSimulatedBodyFromHandle(m_attachedSceneHandle, m_controllerBodyHandle));
-        }
-        return nullptr;
-    }
-
-    PhysX::CharacterController* FirstPersonControllerComponent::GetController()
-    {
-        return const_cast<PhysX::CharacterController*>(static_cast<const FirstPersonControllerComponent&>(*this).GetControllerConst());
     }
 
     AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
@@ -1283,6 +1217,9 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
     {
+        if(!m_addVelocityForTickVsTimestep && m_activeCameraEntity == nullptr)
+            return;
+
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
         if(m_crouchEnableToggle && !m_crouchScriptLocked && m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
@@ -1863,25 +1800,12 @@ namespace FirstPersonController
         if(m_headHit)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
-        AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
-        Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
-            &Physics::CharacterRequestBus::Events::GetVelocity);
-
-        // Reorient the applied "Z" velocity to the true Z axis
-        if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
-        {
-            if(m_velocityZPosDirection.GetZ() >= 0.f)
-                currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ()).TransformVector(currentVelocity);
-            else
-                currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ(-1.f)).TransformVector(-currentVelocity);
-        }
-
         const float prevApplyVelocityZ = m_applyVelocityZ;
 
         // Used for the Verlet integration averaging calculation
         m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
 
-        if(m_grounded && (m_jumpReqRepress || (currentVelocity.GetZ() <= 0.f && m_applyVelocityZ <= 0.f)))
+        if(m_grounded && (m_jumpReqRepress || (m_applyVelocityZ <= 0.f && m_applyVelocityZ <= 0.f)))
         {
             if(m_jumpValue && !m_jumpHeld && !m_headHit)
             {
@@ -1909,7 +1833,7 @@ namespace FirstPersonController
                     m_secondJump = false;
             }
         }
-        else if((m_jumpCounter + deltaTime/2.f) < m_jumpMaxHoldTime && currentVelocity.GetZ() > 0.f && m_jumpHeld && !m_jumpReqRepress)
+        else if((m_jumpCounter + deltaTime/2.f) < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
         {
             if(m_jumpValue == 0.f)
             {
@@ -1931,7 +1855,7 @@ namespace FirstPersonController
             if(m_jumpCounter != 0.f)
                 m_jumpCounter = 0.f;
 
-            if(currentVelocity.GetZ() <= 0.f)
+            if(m_applyVelocityZ <= 0.f)
                 m_applyVelocityZCurrentDelta = m_gravity * m_jumpFallingGravityFactor * deltaTime;
             else
                 m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
@@ -1965,8 +1889,24 @@ namespace FirstPersonController
             m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
 
         // Account for the case where the PhysX Character Gameplay component's gravity is used instead
-        if(m_gravity == 0.f && m_grounded && currentVelocity.GetZ() < 0.f)
-            m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
+        if(m_gravity == 0.f && m_grounded)
+        {
+            AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
+            Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
+                &Physics::CharacterRequestBus::Events::GetVelocity);
+
+            // Reorient the applied "Z" velocity to the true Z axis
+            if(m_velocityZPosDirection != AZ::Vector3::CreateAxisZ())
+            {
+                if(m_velocityZPosDirection.GetZ() >= 0.f)
+                    currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ()).TransformVector(currentVelocity);
+                else
+                    currentVelocity = AZ::Quaternion::CreateShortestArc(m_velocityZPosDirection, AZ::Vector3::CreateAxisZ(-1.f)).TransformVector(-currentVelocity);
+            }
+
+            if(currentVelocity.GetZ() < 0.f)
+                m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
+        }
 
         if(prevApplyVelocityZ >= 0.f && m_applyVelocityZ < 0.f)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedFalling);
@@ -2573,44 +2513,17 @@ namespace FirstPersonController
                     OnSceneSimulationStart(fixedDeltaTime);
                 }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
 
-            m_postSimulateHandler = AzPhysics::SystemEvents::OnPostsimulateEvent::Handler(
-                [this](float deltaTime)
-                {
-                    OnPostSimulate(deltaTime);
-                }
-            );
-
-            AzPhysics::SimulatedBodyComponentRequestsBus::EventResult(m_controllerBodyHandle, GetEntityId(),
-                &AzPhysics::SimulatedBodyComponentRequestsBus::Events::GetSimulatedBodyHandle);
-
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            if(auto* physXSystem = PhysX::GetPhysXSystem())
+            if(sceneInterface != nullptr)
             {
-                physXSystem->RegisterPostSimulateEvent(m_postSimulateHandler);
-            }
-
-            if(auto* controller = GetController())
-            {
-                if(sceneInterface != nullptr)
-                {
-                    sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
-                }
+                sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
             }
         }
         else
         {
-            if(auto* controller = GetController())
-            {
-                if (auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get())
-                {
-                    sceneInterface->RemoveSimulatedBody(m_attachedSceneHandle, controller->m_bodyHandle);
-                }
-                m_controllerBodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
-                m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
-                m_sceneSimulationStartHandler.Disconnect();
-                m_postSimulateHandler.Disconnect();
-            }
+            m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+            m_sceneSimulationStartHandler.Disconnect();
         }
     }
     bool FirstPersonControllerComponent::GetScriptSetsXYTargetVelocity() const

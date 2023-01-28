@@ -347,14 +347,9 @@ namespace FirstPersonController
         bool m_hitSomething = false;
 
         // Provides the functionality when AddVelocityForPhysicsTimestep is used
-        AzPhysics::SystemEvents::OnPostsimulateEvent::Handler m_postSimulateHandler;
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
-        AzPhysics::SimulatedBodyHandle m_controllerBodyHandle = AzPhysics::InvalidSimulatedBodyHandle;
-        void OnPostSimulate([[maybe_unused]] float deltaTime);
         void OnSceneSimulationStart(float physicsTimestep);
-        const PhysX::CharacterController* GetControllerConst() const;
-        PhysX::CharacterController* GetController();
         bool m_addVelocityForTickVsTimestep = true;
 
         // Determines whether the character's X&Y target velocity
