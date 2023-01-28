@@ -1810,7 +1810,7 @@ namespace FirstPersonController
         // Used for the Verlet integration averaging calculation
         m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
 
-        if(m_grounded && (m_jumpReqRepress || (m_applyVelocityZ <= 0.f && m_applyVelocityZ <= 0.f)))
+        if(m_grounded && (m_jumpReqRepress || m_applyVelocityZ <= 0.f))
         {
             if(m_jumpValue && !m_jumpHeld && !m_headHit)
             {
@@ -1867,7 +1867,7 @@ namespace FirstPersonController
 
             if(!m_doubleJumpEnabled && !m_jumpHeld)
                 m_jumpHeld = true;
-            else if(m_doubleJumpEnabled && m_jumpValue == 0.f && m_jumpHeld)
+            else if(m_doubleJumpEnabled && !m_secondJump && m_jumpValue == 0.f && m_jumpHeld)
                 m_jumpHeld = false;
 
             if(m_doubleJumpEnabled && !m_secondJump && !m_jumpHeld && m_jumpValue != 0.f)
