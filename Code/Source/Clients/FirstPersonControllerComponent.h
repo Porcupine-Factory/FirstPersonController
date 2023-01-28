@@ -142,6 +142,8 @@ namespace FirstPersonController
         void SetUpdateXYOnlyNearGround(const bool& new_updateXYOnlyNearGround) override;
         bool GetAddVelocityForTimestepVsTick() const override;
         void SetAddVelocityForTimestepVsTick(const bool& new_addVelocityForTimestepVsTick) override;
+        float GetPhysicsTimestepScaleFactor() const override;
+        void SetPhysicsTimestepScaleFactor(const float& new_physicsTimestepScaleFactor) override;
         bool GetScriptSetsXYTargetVelocity() const override;
         void SetScriptSetsXYTargetVelocity(const bool& new_scriptSetsXYTargetVelocity) override;
         AZ::Vector2 GetTargetXYVelocity() const override;
@@ -351,6 +353,7 @@ namespace FirstPersonController
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         void OnSceneSimulationStart(float physicsTimestep);
         bool m_addVelocityForTimestepVsTick = true;
+        float m_physicsTimestepScaleFactor = 1.f;
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true

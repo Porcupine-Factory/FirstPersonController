@@ -103,6 +103,8 @@ namespace FirstPersonController
         virtual void SetUpdateXYOnlyNearGround(const bool&) = 0;
         virtual bool GetAddVelocityForTimestepVsTick() const = 0;
         virtual void SetAddVelocityForTimestepVsTick(const bool&) = 0;
+        virtual float GetPhysicsTimestepScaleFactor() const = 0;
+        virtual void SetPhysicsTimestepScaleFactor(const float&) = 0;
         virtual bool GetScriptSetsXYTargetVelocity() const = 0;
         virtual void SetScriptSetsXYTargetVelocity(const bool&) = 0;
         virtual AZ::Vector2 GetTargetXYVelocity() const = 0;

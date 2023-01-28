@@ -411,6 +411,8 @@ namespace FirstPersonController
                 ->Event("Set Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::SetUpdateXYOnlyNearGround)
                 ->Event("Get Add Velocity For Physics Timestep Vs Tick", &FirstPersonControllerComponentRequests::GetAddVelocityForTimestepVsTick)
                 ->Event("Set Add Velocity For Physics Timestep Vs Tick", &FirstPersonControllerComponentRequests::SetAddVelocityForTimestepVsTick)
+                ->Event("Get Physics Timestep Scale Factor", &FirstPersonControllerComponentRequests::GetPhysicsTimestepScaleFactor)
+                ->Event("Set Physics Timestep Scale Factor", &FirstPersonControllerComponentRequests::SetPhysicsTimestepScaleFactor)
                 ->Event("Get Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetScriptSetsXYTargetVelocity)
                 ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
                 ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
@@ -809,7 +811,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
-        ProcessInput(physicsTimestep, false);
+        ProcessInput(physicsTimestep*m_physicsTimestepScaleFactor, false);
     }
 
     AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
@@ -2526,6 +2528,14 @@ namespace FirstPersonController
             m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
             m_sceneSimulationStartHandler.Disconnect();
         }
+    }
+    float FirstPersonControllerComponent::GetPhysicsTimestepScaleFactor() const
+    {
+        return m_physicsTimestepScaleFactor;
+    }
+    void FirstPersonControllerComponent::SetPhysicsTimestepScaleFactor(const float& new_physicsTimestepScaleFactor)
+    {
+        m_physicsTimestepScaleFactor = new_physicsTimestepScaleFactor;
     }
     bool FirstPersonControllerComponent::GetScriptSetsXYTargetVelocity() const
     {
