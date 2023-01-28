@@ -54,7 +54,7 @@ namespace FirstPersonController
               ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
-              ->Field("Add Velocity For Tick Instead Of Physics Timestep", &FirstPersonControllerComponent::m_addVelocityForTickVsTimestep)
+              ->Field("Add Velocity For Physics Timestep Instead Of Tick", &FirstPersonControllerComponent::m_addVelocityForTimestepVsTick)
               ->Field("X&Y Movement Tracks Surface Inclines", &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal)
               ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
@@ -171,8 +171,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_opposingDecel,
                         "Opposing Direction Deceleration Factor", "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking Acceleration creates the deceleration that's used. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_addVelocityForTickVsTimestep,
-                        "Add Velocity For Tick Instead Of Physics Timestep", "If this is enabled then the velocity will be applied on each tick (frame), if it is disabled then the velocity will be applied on each physics timestep.")
+                        &FirstPersonControllerComponent::m_addVelocityForTimestepVsTick,
+                        "Add Velocity For Physics Timestep Instead Of Tick", "If this is enabled then the velocity will be applied on each physics timestep, if it is disabled then the velocity will be applied on each tick (frame).")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal,
                         "X&Y Movement Tracks Surface Inclines", "Determines whether the character's X&Y movement will be tilted in order to follow inclines. This will apply up to the max angle that is specified in the PhysX Character Controller component.")
@@ -409,8 +409,8 @@ namespace FirstPersonController
                 ->Event("Set Update X&Y Velocity When Descending", &FirstPersonControllerComponentRequests::SetUpdateXYDescending)
                 ->Event("Get Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::GetUpdateXYOnlyNearGround)
                 ->Event("Set Update X&Y Velocity Only Near Ground", &FirstPersonControllerComponentRequests::SetUpdateXYOnlyNearGround)
-                ->Event("Get Add Velocity For Tick Vs Physics Timestpe", &FirstPersonControllerComponentRequests::GetAddVelocityForTickVsTimestep)
-                ->Event("Set Add Velocity For Tick Vs Physics Timestep", &FirstPersonControllerComponentRequests::SetAddVelocityForTickVsTimestep)
+                ->Event("Get Add Velocity For Physics Timestep Vs Tick", &FirstPersonControllerComponentRequests::GetAddVelocityForTimestepVsTick)
+                ->Event("Set Add Velocity For Physics Timestep Vs Tick", &FirstPersonControllerComponentRequests::SetAddVelocityForTimestepVsTick)
                 ->Event("Get Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::GetScriptSetsXYTargetVelocity)
                 ->Event("Set Script Sets X&Y Target Velocity", &FirstPersonControllerComponentRequests::SetScriptSetsXYTargetVelocity)
                 ->Event("Get Target X&Y Velocity", &FirstPersonControllerComponentRequests::GetTargetXYVelocity)
@@ -557,7 +557,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
-        if(!m_addVelocityForTickVsTimestep)
+        if(m_addVelocityForTimestepVsTick)
         {
             Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
             if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
@@ -630,7 +630,7 @@ namespace FirstPersonController
         InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
 
-        if(!m_addVelocityForTickVsTimestep)
+        if(m_addVelocityForTimestepVsTick)
         {
             m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
             m_sceneSimulationStartHandler.Disconnect();
@@ -1218,7 +1218,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
     {
-        if(!m_addVelocityForTickVsTimestep && m_activeCameraEntity == nullptr)
+        if(m_addVelocityForTimestepVsTick && m_activeCameraEntity == nullptr)
             return;
 
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
@@ -1455,7 +1455,7 @@ namespace FirstPersonController
         // Get the current velocity to determine if something was hit
         AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
 
-        if(m_addVelocityForTickVsTimestep)
+        if(!m_addVelocityForTimestepVsTick)
         {
             Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
                 &Physics::CharacterRequestBus::Events::GetVelocity);
@@ -2003,7 +2003,7 @@ namespace FirstPersonController
             UpdateRotation(deltaTime);
         }
 
-        if(!m_addVelocityForTickVsTimestep && tickElseTimestep)
+        if(m_addVelocityForTimestepVsTick && tickElseTimestep)
         {
             // Get the current velocity to determine if something was hit
             AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
@@ -2021,7 +2021,7 @@ namespace FirstPersonController
                 m_hitSomething = false;
         }
 
-        if(m_addVelocityForTickVsTimestep || !tickElseTimestep)
+        if(!m_addVelocityForTimestepVsTick || !tickElseTimestep)
         {
             CheckGrounded(deltaTime);
 
@@ -2054,7 +2054,7 @@ namespace FirstPersonController
             /* Physics::CharacterRequestBus::Event(GetEntityId(),
                   &Physics::CharacterRequestBus::Events::SetUpDirection, m_sphereCastsAxisDirectionPose); */
 
-            if(m_addVelocityForTickVsTimestep)
+            if(!m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(GetEntityId(),
                     &Physics::CharacterRequestBus::Events::AddVelocityForTick,
                     m_prevTargetVelocity);
@@ -2491,15 +2491,15 @@ namespace FirstPersonController
     {
         m_updateXYOnlyNearGround = new_updateXYOnlyNearGround;
     }
-    bool FirstPersonControllerComponent::GetAddVelocityForTickVsTimestep() const
+    bool FirstPersonControllerComponent::GetAddVelocityForTimestepVsTick() const
     {
-        return m_addVelocityForTickVsTimestep;
+        return m_addVelocityForTimestepVsTick;
     }
-    void FirstPersonControllerComponent::SetAddVelocityForTickVsTimestep(const bool& new_addVelocityForTickVsTimestep)
+    void FirstPersonControllerComponent::SetAddVelocityForTimestepVsTick(const bool& new_addVelocityForTimestepVsTick)
     {
-        m_addVelocityForTickVsTimestep = new_addVelocityForTickVsTimestep;
+        m_addVelocityForTimestepVsTick = new_addVelocityForTimestepVsTick;
 
-        if(!m_addVelocityForTickVsTimestep)
+        if(m_addVelocityForTimestepVsTick)
         {
             Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
             if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
