@@ -1244,7 +1244,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
     {
-        if(m_addVelocityForTimestepVsTick && m_activeCameraEntity == nullptr)
+        if(m_activeCameraEntity == nullptr)
             return;
 
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
