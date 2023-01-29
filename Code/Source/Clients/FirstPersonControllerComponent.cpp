@@ -334,36 +334,45 @@ namespace FirstPersonController
                 ->Event("Get Forward Scale", &FirstPersonControllerComponentRequests::GetForwardScale)
                 ->Event("Set Forward Scale", &FirstPersonControllerComponentRequests::SetForwardScale)
                 ->Event("Get Forward Input Value", &FirstPersonControllerComponentRequests::GetForwardInputValue)
+                ->Event("Set Forward Input Value", &FirstPersonControllerComponentRequests::SetForwardInputValue)
                 ->Event("Get Back Event Name", &FirstPersonControllerComponentRequests::GetBackEventName)
                 ->Event("Set Back Event Name", &FirstPersonControllerComponentRequests::SetBackEventName)
                 ->Event("Get Back Scale", &FirstPersonControllerComponentRequests::GetBackScale)
                 ->Event("Set Back Scale", &FirstPersonControllerComponentRequests::SetBackScale)
                 ->Event("Get Back Input Value", &FirstPersonControllerComponentRequests::GetBackInputValue)
+                ->Event("Set Back Input Value", &FirstPersonControllerComponentRequests::SetBackInputValue)
                 ->Event("Get Left Event Name", &FirstPersonControllerComponentRequests::GetLeftEventName)
                 ->Event("Set Left Event Name", &FirstPersonControllerComponentRequests::SetLeftEventName)
                 ->Event("Get Left Scale", &FirstPersonControllerComponentRequests::GetLeftScale)
                 ->Event("Set Left Scale", &FirstPersonControllerComponentRequests::SetLeftScale)
                 ->Event("Get Left Input Value", &FirstPersonControllerComponentRequests::GetLeftInputValue)
+                ->Event("Set Left Input Value", &FirstPersonControllerComponentRequests::SetLeftInputValue)
                 ->Event("Get Right Event Name", &FirstPersonControllerComponentRequests::GetRightEventName)
                 ->Event("Set Right Event Name", &FirstPersonControllerComponentRequests::SetRightEventName)
                 ->Event("Get Right Scale", &FirstPersonControllerComponentRequests::GetRightScale)
                 ->Event("Set Right Scale", &FirstPersonControllerComponentRequests::SetRightScale)
                 ->Event("Get Right Input Value", &FirstPersonControllerComponentRequests::GetRightInputValue)
+                ->Event("Set Right Input Value", &FirstPersonControllerComponentRequests::SetRightInputValue)
                 ->Event("Get Yaw Event Name", &FirstPersonControllerComponentRequests::GetYawEventName)
                 ->Event("Set Yaw Event Name", &FirstPersonControllerComponentRequests::SetYawEventName)
                 ->Event("Get Yaw Input Value", &FirstPersonControllerComponentRequests::GetYawInputValue)
+                ->Event("Set Yaw Input Value", &FirstPersonControllerComponentRequests::SetYawInputValue)
                 ->Event("Get Pitch Event Name", &FirstPersonControllerComponentRequests::GetPitchEventName)
                 ->Event("Set Pitch Event Name", &FirstPersonControllerComponentRequests::SetPitchEventName)
                 ->Event("Get Pitch Input Value", &FirstPersonControllerComponentRequests::GetPitchInputValue)
+                ->Event("Set Pitch Input Value", &FirstPersonControllerComponentRequests::SetPitchInputValue)
                 ->Event("Get Sprint Event Name", &FirstPersonControllerComponentRequests::GetSprintEventName)
                 ->Event("Set Sprint Event Name", &FirstPersonControllerComponentRequests::SetSprintEventName)
                 ->Event("Get Sprint Input Value", &FirstPersonControllerComponentRequests::GetSprintInputValue)
+                ->Event("Set Sprint Input Value", &FirstPersonControllerComponentRequests::SetSprintInputValue)
                 ->Event("Get Crouch Event Name", &FirstPersonControllerComponentRequests::GetCrouchEventName)
                 ->Event("Set Crouch Event Name", &FirstPersonControllerComponentRequests::SetCrouchEventName)
                 ->Event("Get Crouch Input Value", &FirstPersonControllerComponentRequests::GetCrouchInputValue)
+                ->Event("Set Crouch Input Value", &FirstPersonControllerComponentRequests::SetCrouchInputValue)
                 ->Event("Get Jump Event Name", &FirstPersonControllerComponentRequests::GetJumpEventName)
                 ->Event("Set Jump Event Name", &FirstPersonControllerComponentRequests::SetJumpEventName)
                 ->Event("Get Jump Input Value", &FirstPersonControllerComponentRequests::GetJumpInputValue)
+                ->Event("Set Jump Input Value", &FirstPersonControllerComponentRequests::SetJumpInputValue)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Ground Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundSceneQueryHits)
@@ -437,6 +446,10 @@ namespace FirstPersonController
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
                 ->Event("Get Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
                 ->Event("Set Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::SetJumpSecondInitialVelocity)
+                ->Event("Get Jump Requires Repress For Current Jump", &FirstPersonControllerComponentRequests::GetJumpReqRepress)
+                ->Event("Set Jump Requires Repress For Current Jump", &FirstPersonControllerComponentRequests::SetJumpReqRepress)
+                ->Event("Get Jump Held", &FirstPersonControllerComponentRequests::GetJumpHeld)
+                ->Event("Set Jump Held", &FirstPersonControllerComponentRequests::SetJumpHeld)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
                 ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
@@ -1807,8 +1820,7 @@ namespace FirstPersonController
 
         const float prevApplyVelocityZ = m_applyVelocityZ;
 
-        // Used for the Verlet integration averaging calculation
-        m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
+        bool initialJump = false;
 
         if(m_grounded && (m_jumpReqRepress || m_applyVelocityZ <= 0.f))
         {
@@ -1821,6 +1833,7 @@ namespace FirstPersonController
                     return;
                 }
                 m_applyVelocityZCurrentDelta = m_jumpInitialVelocity;
+                initialJump = true;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnFirstJump);
@@ -1888,7 +1901,13 @@ namespace FirstPersonController
 
         // Perform an average of the current and previous Z velocity delta
         // as described by Verlet integration, which should reduce accumulated error
-        m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
+        if(!initialJump)
+        {
+            m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
+            m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
+        }
+        else
+            m_applyVelocityZ += m_applyVelocityZCurrentDelta;
 
         if(m_headHit && m_applyVelocityZ > 0.f && m_headHitSetsApogee)
             m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
@@ -2141,6 +2160,10 @@ namespace FirstPersonController
     {
         return m_forwardValue;
     }
+    void FirstPersonControllerComponent::SetForwardInputValue(const float& new_forwardValue)
+    {
+        m_forwardValue = new_forwardValue;
+    }
     AZStd::string FirstPersonControllerComponent::GetBackEventName() const
     {
         return m_strBack;
@@ -2161,6 +2184,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetBackInputValue() const
     {
         return m_backValue;
+    }
+    void FirstPersonControllerComponent::SetBackInputValue(const float& new_backValue)
+    {
+        m_backValue = new_backValue;
     }
     AZStd::string FirstPersonControllerComponent::GetLeftEventName() const
     {
@@ -2183,6 +2210,10 @@ namespace FirstPersonController
     {
         return m_leftValue;
     }
+    void FirstPersonControllerComponent::SetLeftInputValue(const float& new_leftValue)
+    {
+        m_leftValue = new_leftValue;
+    }
     AZStd::string FirstPersonControllerComponent::GetRightEventName() const
     {
         return m_strRight;
@@ -2204,6 +2235,10 @@ namespace FirstPersonController
     {
         return m_rightValue;
     }
+    void FirstPersonControllerComponent::SetRightInputValue(const float& new_rightValue)
+    {
+        m_rightValue = new_rightValue;
+    }
     AZStd::string FirstPersonControllerComponent::GetYawEventName() const
     {
         return m_strYaw;
@@ -2216,6 +2251,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetYawInputValue() const
     {
         return m_yawValue;
+    }
+    void FirstPersonControllerComponent::SetYawInputValue(const float& new_yawValue)
+    {
+        m_yawValue = new_yawValue;
     }
     AZStd::string FirstPersonControllerComponent::GetPitchEventName() const
     {
@@ -2230,6 +2269,10 @@ namespace FirstPersonController
     {
         return m_pitchValue;
     }
+    void FirstPersonControllerComponent::SetPitchInputValue(const float& new_pitchValue)
+    {
+        m_pitchValue = new_pitchValue;
+    }
     AZStd::string FirstPersonControllerComponent::GetSprintEventName() const
     {
         return m_strSprint;
@@ -2242,6 +2285,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetSprintInputValue() const
     {
         return m_sprintValue;
+    }
+    void FirstPersonControllerComponent::SetSprintInputValue(const float& new_sprintValue)
+    {
+        m_sprintValue = new_sprintValue;
     }
     AZStd::string FirstPersonControllerComponent::GetCrouchEventName() const
     {
@@ -2256,6 +2303,10 @@ namespace FirstPersonController
     {
         return m_crouchValue;
     }
+    void FirstPersonControllerComponent::SetCrouchInputValue(const float& new_crouchValue)
+    {
+        m_crouchValue = new_crouchValue;
+    }
     AZStd::string FirstPersonControllerComponent::GetJumpEventName() const
     {
         return m_strJump;
@@ -2268,6 +2319,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetJumpInputValue() const
     {
         return m_jumpValue;
+    }
+    void FirstPersonControllerComponent::SetJumpInputValue(const float& new_jumpValue)
+    {
+        m_jumpValue = new_jumpValue;
     }
     bool FirstPersonControllerComponent::GetGrounded() const
     {
@@ -2632,6 +2687,22 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetJumpSecondInitialVelocity(const float& new_jumpSecondInitialVelocity)
     {
         m_jumpSecondInitialVelocity = new_jumpSecondInitialVelocity;
+    }
+    bool FirstPersonControllerComponent::GetJumpReqRepress() const
+    {
+        return m_jumpReqRepress;
+    }
+    void FirstPersonControllerComponent::SetJumpReqRepress(const bool& new_jumpReqRepress)
+    {
+        m_jumpReqRepress = new_jumpReqRepress;
+    }
+    bool FirstPersonControllerComponent::GetJumpHeld() const
+    {
+        return m_jumpHeld;
+    }
+    void FirstPersonControllerComponent::SetJumpHeld(const bool& new_jumpHeld)
+    {
+        m_jumpHeld = new_jumpHeld;
     }
     bool FirstPersonControllerComponent::GetDoubleJump() const
     {
