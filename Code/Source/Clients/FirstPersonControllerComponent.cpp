@@ -893,19 +893,10 @@ namespace FirstPersonController
         m_activeCameraEntity = GetActiveCameraEntityPtr();
         t = m_activeCameraEntity->GetTransform();
 
-        float currentPitch = t->GetLocalRotation().GetX();
-
-        if(currentPitch <= m_cameraPitchMaxAngle && currentPitch >= m_cameraPitchMinAngle ||
-           currentPitch >= m_cameraPitchMaxAngle && newLookRotationDelta.GetX() < 0.f ||
-           currentPitch <= m_cameraPitchMinAngle && newLookRotationDelta.GetX() > 0.f)
-        {
-            t->RotateAroundLocalX(newLookRotationDelta.GetX());
-            currentPitch = t->GetLocalRotation().GetX();
-        }
-        if(currentPitch > m_cameraPitchMaxAngle)
-            t->RotateAroundLocalX(m_cameraPitchMaxAngle - currentPitch);
-        else if(currentPitch < m_cameraPitchMinAngle)
-            t->RotateAroundLocalX(m_cameraPitchMinAngle - currentPitch);
+        t->SetLocalRotation(AZ::Vector3(AZ::GetClamp(t->GetLocalRotation().GetX()+newLookRotationDelta.GetX(),
+                                                        m_cameraPitchMinAngle, m_cameraPitchMaxAngle),
+                                        t->GetLocalRotation().GetY(),
+                                        t->GetLocalRotation().GetZ()));
 
         m_currentHeading = GetEntity()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetZ();
