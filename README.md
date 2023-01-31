@@ -16,3 +16,8 @@ We contribute to this gem in our free time. If you like the work we do, and want
 
 ## License
 This project's source and header files are licensed under the [MPL 2.0](/LICENSE.txt).
+
+## Acknowledgements
+Thank you to [Olex Lozitskiy](https://github.com/AMZN-Olex) for his [O3DE book](https://github.com/AMZN-Olex/O3DEBookCode2111) which was instrumental in writing this gem.
+
+Thank you to the [Open 3D Foundation](https://o3d.foundation/) for the effort that has been put into O3DE itself.
