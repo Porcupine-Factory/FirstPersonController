@@ -1,0 +1,11 @@
+{
+    "repo_name":"FirstPersonController",
+    "origin":"Porcupine Factory",
+    "repo_uri": "https://github.com/Porcupine-Factory/FirstPersonController.git",
+    "summary": "The First Person Controller Gem provides customizable controls for your character in the first-person perspective.",
+    "additional_info": "Provides movement, rotation, jumping, sprinting, and crouching.",
+    "last_updated": "01/30/2023 01:00pm",
+    "gems": [
+        "https://raw.githubusercontent.com/Porcupine-Factory/FirstPersonController/main"
+    ]
+}
