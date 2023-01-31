@@ -1,0 +1,18 @@
+# FirstPersonController
+O3DE First Person Controller Gem licensed under the [MPL 2.0](/LICENSE.txt).
+
+## Installation Instructions
+You can install this gem in your project using O3DE's project manager. Navigate to the Gem Repositories page and provide this repo's git URL.
+
+For more information, see the instructions found in O3DE's documentation: https://www.o3de.org/docs/user-guide/gems/repositories/overview/#add-a-gem-repository-in-project-manager
+
+## How To Use This Gem
+TODO
+
+## Donate
+We contribute to this gem in our free time. If you like the work we do, and want to contribute in some way other than writing code, please donate here:
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate/?hosted_button_id=FMSTWR9MUAFA2)
+
+## License
+This project's source and header files are licensed under the [MPL 2.0](/LICENSE.txt).
