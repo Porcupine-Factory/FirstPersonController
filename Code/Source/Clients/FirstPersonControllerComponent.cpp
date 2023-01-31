@@ -895,10 +895,9 @@ namespace FirstPersonController
 
         float currentPitch = t->GetLocalRotation().GetX();
 
-        using namespace AZ::Constants;
         if(currentPitch <= m_cameraPitchMaxAngle && currentPitch >= m_cameraPitchMinAngle ||
-           currentPitch >= HalfPi && newLookRotationDelta.GetX() < 0.f ||
-           currentPitch <= -HalfPi && newLookRotationDelta.GetX() > 0.f)
+           currentPitch >= m_cameraPitchMaxAngle && newLookRotationDelta.GetX() < 0.f ||
+           currentPitch <= m_cameraPitchMinAngle && newLookRotationDelta.GetX() > 0.f)
         {
             t->RotateAroundLocalX(newLookRotationDelta.GetX());
             currentPitch = t->GetLocalRotation().GetX();
