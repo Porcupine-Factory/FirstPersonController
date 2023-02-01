@@ -481,8 +481,8 @@ namespace FirstPersonController
                 ->Event("Set Top Walk Speed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
                 ->Event("Get Walk Acceleration", &FirstPersonControllerComponentRequests::GetWalkAcceleration)
                 ->Event("Set Walk Acceleration", &FirstPersonControllerComponentRequests::SetWalkAcceleration)
-                ->Event("Get Walk Deceleration", &FirstPersonControllerComponentRequests::GetWalkDeceleration)
-                ->Event("Set Walk Deceleration", &FirstPersonControllerComponentRequests::SetWalkDeceleration)
+                ->Event("Get Deceleration Factor", &FirstPersonControllerComponentRequests::GetDecelerationFactor)
+                ->Event("Set Deceleration Factor", &FirstPersonControllerComponentRequests::SetDecelerationFactor)
                 ->Event("Get Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::GetOpposingDecel)
                 ->Event("Set Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::SetOpposingDecel)
                 ->Event("Get Accelerating Via First Person Controller", &FirstPersonControllerComponentRequests::GetAccelerating)
@@ -2850,11 +2850,11 @@ namespace FirstPersonController
     {
         m_accel = new_accel;
     }
-    float FirstPersonControllerComponent::GetWalkDeceleration() const
+    float FirstPersonControllerComponent::GetDecelerationFactor() const
     {
         return m_decel;
     }
-    void FirstPersonControllerComponent::SetWalkDeceleration(const float& new_decel)
+    void FirstPersonControllerComponent::SetDecelerationFactor(const float& new_decel)
     {
         m_decel = new_decel;
     }

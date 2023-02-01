@@ -208,8 +208,8 @@ namespace FirstPersonController
         void SetTopWalkSpeed(const float& new_speed) override;
         float GetWalkAcceleration() const override;
         void SetWalkAcceleration(const float& new_accel) override;
-        float GetWalkDeceleration() const override;
-        void SetWalkDeceleration(const float& new_decel) override;
+        float GetDecelerationFactor() const override;
+        void SetDecelerationFactor(const float& new_decel) override;
         float GetOpposingDecel() const override;
         void SetOpposingDecel(const float& new_opposingDecel) override;
         bool GetAccelerating() const override;
