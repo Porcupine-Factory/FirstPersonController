@@ -208,6 +208,10 @@ namespace FirstPersonController
         void SetTopWalkSpeed(const float& new_speed) override;
         float GetWalkAcceleration() const override;
         void SetWalkAcceleration(const float& new_accel) override;
+        float GetTotalLerpTime() const override;
+        void SetTotalLerpTime(const float& new_totalLerpTime) override;
+        float GetLerpTime() const override;
+        void SetLerpTime(const float& new_lerpTime) override;
         float GetDecelerationFactor() const override;
         void SetDecelerationFactor(const float& new_decel) override;
         float GetOpposingDecel() const override;
@@ -392,6 +396,7 @@ namespace FirstPersonController
 
         // Used to track where we are along lerping the velocity between the two values
         float m_lerpTime = 0.f;
+        float m_totalLerpTime = 0.f;
 
         // Sprint application variables
         float m_sprintAccelValue = 1.f;

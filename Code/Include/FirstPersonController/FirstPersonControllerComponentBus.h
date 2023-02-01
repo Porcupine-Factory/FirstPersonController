@@ -170,6 +170,10 @@ namespace FirstPersonController
         virtual void SetTopWalkSpeed(const float&) = 0;
         virtual float GetWalkAcceleration() const = 0;
         virtual void SetWalkAcceleration(const float&) = 0;
+        virtual float GetTotalLerpTime() const = 0;
+        virtual void SetTotalLerpTime(const float& new_totalLerpTime) = 0;
+        virtual float GetLerpTime() const = 0;
+        virtual void SetLerpTime(const float& new_lerpTime) = 0;
         virtual float GetDecelerationFactor() const = 0;
         virtual void SetDecelerationFactor(const float&) = 0;
         virtual float GetOpposingDecel() const = 0;

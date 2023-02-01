@@ -481,6 +481,10 @@ namespace FirstPersonController
                 ->Event("Set Top Walk Speed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
                 ->Event("Get Walk Acceleration", &FirstPersonControllerComponentRequests::GetWalkAcceleration)
                 ->Event("Set Walk Acceleration", &FirstPersonControllerComponentRequests::SetWalkAcceleration)
+                ->Event("Get Total Lerp Time", &FirstPersonControllerComponentRequests::GetTotalLerpTime)
+                ->Event("Set Total Lerp Time", &FirstPersonControllerComponentRequests::SetTotalLerpTime)
+                ->Event("Get Lerp Time", &FirstPersonControllerComponentRequests::GetLerpTime)
+                ->Event("Set Lerp Time", &FirstPersonControllerComponentRequests::SetLerpTime)
                 ->Event("Get Deceleration Factor", &FirstPersonControllerComponentRequests::GetDecelerationFactor)
                 ->Event("Set Deceleration Factor", &FirstPersonControllerComponentRequests::SetDecelerationFactor)
                 ->Event("Get Opposing Direction Deceleration Factor", &FirstPersonControllerComponentRequests::GetOpposingDecel)
@@ -908,9 +912,9 @@ namespace FirstPersonController
     // and it's with respect to the world when m_instantVelocityRotation == false
     AZ::Vector2 FirstPersonControllerComponent::LerpVelocityXY(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
-        const float totalLerpTime = m_prevApplyVelocityXY.GetDistance(targetVelocityXY)/m_accel;
+        m_totalLerpTime = m_prevApplyVelocityXY.GetDistance(targetVelocityXY)/m_accel;
 
-        if(totalLerpTime == 0.f)
+        if(m_totalLerpTime == 0.f)
         {
             m_accelerating = false;
             m_decelerationFactorApplied = false;
@@ -929,11 +933,11 @@ namespace FirstPersonController
 
         m_lerpTime += lerpDeltaTime;
 
-        if(m_lerpTime >= totalLerpTime)
-            m_lerpTime = totalLerpTime;
+        if(m_lerpTime >= m_totalLerpTime)
+            m_lerpTime = m_totalLerpTime;
 
         // Lerp the velocity from the last applied velocity to the target velocity
-        AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+        AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
 
         // Decelerate at a different rate than the acceleration
         if(newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
@@ -976,10 +980,10 @@ namespace FirstPersonController
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
             m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
 
-            if(m_lerpTime >= totalLerpTime)
-                m_lerpTime = totalLerpTime;
+            if(m_lerpTime >= m_totalLerpTime)
+                m_lerpTime = m_totalLerpTime;
 
-            AZ::Vector2 newVelocityXYDecel =  m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / totalLerpTime);
+            AZ::Vector2 newVelocityXYDecel =  m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
             if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
         }
@@ -2849,6 +2853,22 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetWalkAcceleration(const float& new_accel)
     {
         m_accel = new_accel;
+    }
+    float FirstPersonControllerComponent::GetTotalLerpTime() const
+    {
+        return m_totalLerpTime;
+    }
+    void FirstPersonControllerComponent::SetTotalLerpTime(const float& new_totalLerpTime)
+    {
+        m_totalLerpTime = new_totalLerpTime;
+    }
+    float FirstPersonControllerComponent::GetLerpTime() const
+    {
+        return m_lerpTime;
+    }
+    void FirstPersonControllerComponent::SetLerpTime(const float& new_lerpTime)
+    {
+        m_lerpTime = new_lerpTime;
     }
     float FirstPersonControllerComponent::GetDecelerationFactor() const
     {
