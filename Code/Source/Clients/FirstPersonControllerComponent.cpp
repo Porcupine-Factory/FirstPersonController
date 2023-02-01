@@ -1109,7 +1109,20 @@ namespace FirstPersonController
                 if(abs(scale) > abs(greatestSprintScale))
                         greatestSprintScale = scale;
 
-            m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (m_sprintVelocityAdjust - 1) + 1.f;
+            if(m_sprintAccelValue >= 1.f)
+            {
+                if(greatestSprintScale >= 1.f)
+                    m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (m_sprintVelocityAdjust - 1.f) + 1.f;
+                else
+                    m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale) * (m_sprintVelocityAdjust) + 1.f;
+            }
+            else
+            {
+                if(greatestSprintScale >= 1.f)
+                    m_sprintAccelAdjust = (m_sprintAccelValue)/(greatestSprintScale - 1.f) * (m_sprintVelocityAdjust - 1.f);
+                else
+                    m_sprintAccelAdjust = (m_sprintAccelValue)/(greatestSprintScale) * (m_sprintVelocityAdjust);
+            }
 
             if(m_sprintUsesStamina)
             {
@@ -1171,7 +1184,21 @@ namespace FirstPersonController
                 else
                     lastAdjustScale = CreateEllipseScaledVector(AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_prevTargetVelocityXY)).GetNormalized()), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
 
-                m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (lastAdjustScale - 1) + 1.f;
+                if(m_sprintAccelValue >= 1.f)
+                {
+                    if(greatestSprintScale >= 1.f)
+                        m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (lastAdjustScale - 1.f) + 1.f;
+                    else
+                        m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale) * (lastAdjustScale) + 1.f;
+                }
+                else
+                {
+                    if(greatestSprintScale >= 1.f)
+                        m_sprintAccelAdjust = (m_sprintAccelValue)/(greatestSprintScale - 1.f) * (lastAdjustScale - 1.f);
+                    else
+                        m_sprintAccelAdjust = (m_sprintAccelValue)/(greatestSprintScale) * (lastAdjustScale);
+                }
+
                 m_sprintStopAccelAdjustCaptured = true;
             }
 
