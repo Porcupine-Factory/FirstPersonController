@@ -1156,8 +1156,8 @@ namespace FirstPersonController
 
             m_sprintValue = 0.f;
 
-            // Set the sprint acceleration adjust according to the local direction we're moving
-            if((m_instantVelocityRotation || !m_sprintStopAccelAdjustCaptured) && targetVelocityXY.IsZero())
+            // Set the sprint acceleration adjust according to the local direction the character is moving
+            if(!m_sprintStopAccelAdjustCaptured && targetVelocityXY.IsZero())
             {
                 // Figure out which of the scaled sprint velocity directions is the greatest
                 float greatestSprintScale = 0.f;
@@ -1165,7 +1165,12 @@ namespace FirstPersonController
                     if(abs(scale) > abs(greatestSprintScale))
                             greatestSprintScale = scale;
 
-                float lastAdjustScale = CreateEllipseScaledVector(AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()).GetNormalized()), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                float lastAdjustScale = 1.f;
+                if(m_instantVelocityRotation)
+                    lastAdjustScale = CreateEllipseScaledVector(m_prevTargetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                else
+                    lastAdjustScale = CreateEllipseScaledVector(AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_prevTargetVelocityXY)).GetNormalized()), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+
                 m_sprintAccelAdjust = (m_sprintAccelValue - 1.f)/(greatestSprintScale - 1.f) * (lastAdjustScale - 1) + 1.f;
                 m_sprintStopAccelAdjustCaptured = true;
             }
