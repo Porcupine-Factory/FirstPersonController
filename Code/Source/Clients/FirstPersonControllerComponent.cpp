@@ -1063,9 +1063,9 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
-        // and it shouldn't be applied if you're crouching
+        // and it shouldn't be applied if you're crouching (depending on various settings)
         if(m_sprintValue == 0.f
-           || (!m_sprintWhileCrouched && !m_standing)
+           || (!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing)
            || (!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX())
            || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue)
            || (targetVelocityXY.IsZero())
