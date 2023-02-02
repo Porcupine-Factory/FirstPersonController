@@ -45,7 +45,7 @@ namespace FirstPersonController
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yawSensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitchSensitivity)
               ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotationDamp)
-              ->Field("Camera Slerp Instead of Lerp Rotation", &FirstPersonControllerComponent::m_cameraSlerpInsteadOfLerpRotation)
+              ->Field("Camera Slerp Instead Of Lerp Rotation", &FirstPersonControllerComponent::m_cameraSlerpInsteadOfLerpRotation)
 
               // Direction Scale Factors group
               ->Field("Forward Scale", &FirstPersonControllerComponent::m_forwardScale)
