@@ -1000,11 +1000,17 @@ namespace FirstPersonController
         if(newVelocityXY == targetVelocityXY)
         {
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTargetVelocityReached);
+
+            const bool vXCrossYPos = (m_velocityXCrossYDirection.GetZ() >= 0.f);
             if(newVelocityXY.GetLength() == 0.f)
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStopped);
-            else if((newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength()))
+            else if(vXCrossYPos && (newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength()))
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
-            else if(newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())
+            else if(!vXCrossYPos && (newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength()))
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
+            else if(vXCrossYPos >= 0.f && newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
+            else if(!vXCrossYPos < 0.f && newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
         }
 
@@ -1091,7 +1097,12 @@ namespace FirstPersonController
         if(m_sprintValue == 0.f || m_sprintCooldown != 0.f)
             m_sprintVelocityAdjust = 1.f;
         else
-            m_sprintVelocityAdjust = CreateEllipseScaledVector(targetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+        {
+            if(m_velocityXCrossYDirection.GetZ() >= 0.f)
+                m_sprintVelocityAdjust = CreateEllipseScaledVector(targetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+            else
+                m_sprintVelocityAdjust = CreateEllipseScaledVector((-targetVelocityXY).GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+        }
 
         if(m_sprintPrevValue == 0.f && !AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintStarted);
@@ -1184,9 +1195,19 @@ namespace FirstPersonController
 
                 float lastAdjustScale = 1.f;
                 if(m_instantVelocityRotation)
-                    lastAdjustScale = CreateEllipseScaledVector(m_prevTargetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                {
+                    if(m_velocityXCrossYDirection.GetZ() >= 0.f)
+                        lastAdjustScale = CreateEllipseScaledVector(m_prevTargetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                    else
+                        lastAdjustScale = CreateEllipseScaledVector((-m_prevTargetVelocityXY).GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                }
                 else
-                    lastAdjustScale = CreateEllipseScaledVector(AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_prevTargetVelocityXY)).GetNormalized()), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                {
+                    if(m_velocityXCrossYDirection.GetZ() >= 0.f)
+                        lastAdjustScale = CreateEllipseScaledVector(AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_prevTargetVelocityXY)).GetNormalized()), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                    else
+                        lastAdjustScale = CreateEllipseScaledVector(AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(-m_prevTargetVelocityXY)).GetNormalized()), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight).GetLength();
+                }
 
                 if(m_sprintAccelValue >= 1.f)
                 {
@@ -1458,18 +1479,18 @@ namespace FirstPersonController
         float forwardBack = m_forwardValue * m_forwardScale + -1.f * m_backValue * m_backScale;
         float leftRight = -1.f * m_leftValue * m_leftScale + m_rightValue * m_rightScale;
 
+        // Remove the scale factor since it's going to be applied after the normalization
+        if(forwardBack >= 0.f)
+            forwardBack /= m_forwardScale;
+        else
+            forwardBack /= m_backScale;
+
         // If the character is being flipped upside-down then flip the X&Y movement
         if(m_velocityXCrossYDirection.GetZ() < 0.f)
         {
             forwardBack *= -1.f;
             leftRight *= -1.f;
         }
-
-        // Remove the scale factor since it's going to be applied after the normalization
-        if(forwardBack >= 0.f)
-            forwardBack /= m_forwardScale;
-        else
-            forwardBack /= m_backScale;
 
         if(leftRight >= 0.f)
             leftRight /= m_rightScale;
@@ -1482,7 +1503,10 @@ namespace FirstPersonController
         if((forwardBack || leftRight) && sqrt(forwardBack*forwardBack + leftRight*leftRight) > 1.f)
             targetVelocityXY.Normalize();
 
-        targetVelocityXY = CreateEllipseScaledVector(targetVelocityXY, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
+        if(m_velocityXCrossYDirection.GetZ() >= 0.f)
+            targetVelocityXY = CreateEllipseScaledVector(targetVelocityXY, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
+        else
+            targetVelocityXY = -CreateEllipseScaledVector((-targetVelocityXY), m_forwardScale, m_backScale, m_leftScale, m_rightScale);
 
         // Call the sprint manager
         if(!m_scriptSetsTargetVelocityXY)
