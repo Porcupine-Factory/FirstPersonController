@@ -318,10 +318,10 @@ namespace FirstPersonController
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
 
-        // Active camera entity
+        // Active camera entity pointer
         AZ::Entity* m_activeCameraEntity = nullptr;
 
-        // Child entity IDs
+        // Child EntityIds
         bool m_obtainedChildIds = false;
         AZStd::vector<AZ::EntityId> m_children;
 
@@ -363,6 +363,13 @@ namespace FirstPersonController
         void OnCooldownStarted();
         void OnCooldownDone();
 
+        // Provides the functionality when AddVelocityForPhysicsTimestep is used
+        void OnSceneSimulationStart(float physicsTimestep);
+        AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
+        AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+        bool m_addVelocityForTimestepVsTick = true;
+        float m_physicsTimestepScaleFactor = 1.f;
+
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
@@ -376,13 +383,6 @@ namespace FirstPersonController
         bool m_instantVelocityRotation = true;
         bool m_velocityIgnoreObstacles = true;
         bool m_hitSomething = false;
-
-        // Provides the functionality when AddVelocityForPhysicsTimestep is used
-        AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
-        AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
-        void OnSceneSimulationStart(float physicsTimestep);
-        bool m_addVelocityForTimestepVsTick = true;
-        float m_physicsTimestepScaleFactor = 1.f;
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true
@@ -558,23 +558,23 @@ namespace FirstPersonController
         float m_jumpValue = 0.f;
 
         // Event IDs and action names
-        StartingPointInput::InputEventNotificationId m_MoveForwardEventId;
+        StartingPointInput::InputEventNotificationId m_moveForwardEventId;
         AZStd::string m_strForward = "Forward";
-        StartingPointInput::InputEventNotificationId m_MoveBackEventId;
+        StartingPointInput::InputEventNotificationId m_moveBackEventId;
         AZStd::string m_strBack = "Back";
-        StartingPointInput::InputEventNotificationId m_MoveLeftEventId;
+        StartingPointInput::InputEventNotificationId m_moveLeftEventId;
         AZStd::string m_strLeft = "Left";
-        StartingPointInput::InputEventNotificationId m_MoveRightEventId;
+        StartingPointInput::InputEventNotificationId m_moveRightEventId;
         AZStd::string m_strRight = "Right";
-        StartingPointInput::InputEventNotificationId m_RotateYawEventId;
+        StartingPointInput::InputEventNotificationId m_rotateYawEventId;
         AZStd::string m_strYaw = "Yaw";
-        StartingPointInput::InputEventNotificationId m_RotatePitchEventId;
+        StartingPointInput::InputEventNotificationId m_rotatePitchEventId;
         AZStd::string m_strPitch = "Pitch";
-        StartingPointInput::InputEventNotificationId m_SprintEventId;
+        StartingPointInput::InputEventNotificationId m_sprintEventId;
         AZStd::string m_strSprint = "Sprint";
-        StartingPointInput::InputEventNotificationId m_CrouchEventId;
+        StartingPointInput::InputEventNotificationId m_crouchEventId;
         AZStd::string m_strCrouch = "Crouch";
-        StartingPointInput::InputEventNotificationId m_JumpEventId;
+        StartingPointInput::InputEventNotificationId m_jumpEventId;
         AZStd::string m_strJump = "Jump";
 
         // Array of action names
@@ -588,14 +588,14 @@ namespace FirstPersonController
 
         // Map of event IDs and event value multipliers
         AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
-            {&m_MoveForwardEventId, &m_forwardValue},
-            {&m_MoveBackEventId, &m_backValue},
-            {&m_MoveLeftEventId, &m_leftValue},
-            {&m_MoveRightEventId, &m_rightValue},
-            {&m_RotateYawEventId, &m_yawValue},
-            {&m_RotatePitchEventId, &m_pitchValue},
-            {&m_SprintEventId, &m_sprintValue},
-            {&m_CrouchEventId, &m_crouchValue},
-            {&m_JumpEventId, &m_jumpValue}};
+            {&m_moveForwardEventId, &m_forwardValue},
+            {&m_moveBackEventId, &m_backValue},
+            {&m_moveLeftEventId, &m_leftValue},
+            {&m_moveRightEventId, &m_rightValue},
+            {&m_rotateYawEventId, &m_yawValue},
+            {&m_rotatePitchEventId, &m_pitchValue},
+            {&m_sprintEventId, &m_sprintValue},
+            {&m_crouchEventId, &m_crouchValue},
+            {&m_jumpEventId, &m_jumpValue}};
     };
 }

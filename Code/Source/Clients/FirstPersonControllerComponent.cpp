@@ -716,7 +716,7 @@ namespace FirstPersonController
         if(inputId == nullptr)
             return;
 
-        if(*inputId == m_SprintEventId)
+        if(*inputId == m_sprintEventId)
         {
             if(m_grounded)
             {
@@ -729,7 +729,7 @@ namespace FirstPersonController
 
         for(auto& it_event: m_controlMap)
         {
-            if(*inputId == *(it_event.first) && !(*(it_event.first) == m_SprintEventId))
+            if(*inputId == *(it_event.first) && !(*(it_event.first) == m_sprintEventId))
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
@@ -763,16 +763,16 @@ namespace FirstPersonController
             return;
         }
 
-        if(*inputId == m_RotateYawEventId)
+        if(*inputId == m_rotateYawEventId)
         {
             m_yawValue = value;
         }
-        else if(*inputId == m_RotatePitchEventId)
+        else if(*inputId == m_rotatePitchEventId)
         {
             m_pitchValue = value;
         }
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
-        else if(*inputId == m_SprintEventId)
+        else if(*inputId == m_sprintEventId)
         {
             if(m_grounded || m_sprintPrevValue != 1.f)
             {
