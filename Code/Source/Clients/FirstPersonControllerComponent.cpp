@@ -285,7 +285,7 @@ namespace FirstPersonController
                         "X&Y Acceleration Jump Factor (m/s²)", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHoldDistance,
-                        "Jump Hold Distance (m)", "Effectively determines the time that jump may be held.")
+                        "Jump Hold Distance (m)", "Effectively determines the time that jump may be held. During this initial period of the jump, the Jump Held Gravity Factor is applied, making the maximum height greater. If the number entered here exceeds the calculated apogee, you will get a warning message.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
                         "Grounded Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
