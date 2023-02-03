@@ -207,7 +207,7 @@ namespace FirstPersonController
                         "Sprint Forward Scale", "Determines the sprint factor applied in the forward direction. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintScaleBack,
-                        "Sprint Back Scale", "Determines the sprint factor applied in the back direction. It is suggested to use a number greater than or equal to 1.0 for this.")
+                        "Sprint Back Scale", "Determines the sprint factor applied in the back direction. It is suggested to use a number greater than or equal to 1.0 for this. When set to 1.0, it makes it so that there will be no sprint applied when moving only backwards (not considering left/right component to the movement).")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintScaleLeft,
                         "Sprint Left Scale", "Determines the sprint factor applied in the left direction. It is suggested to use a number greater than or equal to 1.0 for this.")
@@ -225,7 +225,7 @@ namespace FirstPersonController
                         "Sprint Cooldown Time (sec)", "The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or Stamina hits 0%.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintBackwards,
-                        "Sprint Backwards", "Determines whether the character can sprint backwards.")
+                        "Sprint Backwards", "Determines whether sprint can be applied when there is any backwards component to the movement. Enabling this does not inherently make it so you can sprint backwards. You will also have to set Sprint Back Scale to something greater than 1.0 to have that effect. If Sprint Back, Left, and Right Scale are all set to 1.0, then this effectively does nothing.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintWhileCrouched,
                         "Sprint While Crouched", "Determines whether the character can sprint while crouched.")

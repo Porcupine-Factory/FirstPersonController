@@ -417,7 +417,7 @@ namespace FirstPersonController
         float m_sprintCooldownTime = 1.f;
         float m_sprintPauseTime = (m_sprintCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintCooldownTime;
         float m_sprintPause = 0.f;
-        bool m_sprintBackwards = false;
+        bool m_sprintBackwards = true;
         bool m_sprintWhileCrouched = true;
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisableScript = false;
