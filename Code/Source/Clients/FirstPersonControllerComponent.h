@@ -444,7 +444,7 @@ namespace FirstPersonController
         bool m_crouchScriptLocked = false;
 
         // Jumping and gravity
-        float m_gravity = -30.0f;
+        float m_gravity = -30.f;
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
