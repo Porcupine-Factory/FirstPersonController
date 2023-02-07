@@ -235,6 +235,8 @@ namespace FirstPersonController
         void SetSprintScaleRight(const float& new_sprintScaleRight) override;
         float GetSprintAccelScale() const override;
         void SetSprintAccelScale(const float& new_sprintAccelScale) override;
+        float GetSprintAccumulatedAccel() const override;
+        void SetSprintAccumulatedAccel(const float& new_sprintAccumulatedAccel) override;
         float GetSprintMaxTime() const override;
         void SetSprintMaxTime(const float& new_sprintMaxTime) override;
         float GetSprintHeldTime() const override;
@@ -408,7 +410,7 @@ namespace FirstPersonController
         float m_sprintScaleRight = 1.25f;
         float m_sprintAccelAdjust = 0.f;
         bool m_sprintStopAccelAdjustCaptured = false;
-        float m_sprintAccumulateAccelTime = 0.f;
+        float m_sprintAccumulatedAccel = 0.f;
         float m_sprintPrevVelocityLength = 0.f;
         float m_sprintHeldDuration = 0.f;
         float m_sprintRegenRate = 1.f;

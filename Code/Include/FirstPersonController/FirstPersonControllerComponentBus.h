@@ -197,6 +197,8 @@ namespace FirstPersonController
         virtual void SetSprintScaleRight(const float&) = 0;
         virtual float GetSprintAccelScale() const = 0;
         virtual void SetSprintAccelScale(const float&) = 0;
+        virtual float GetSprintAccumulatedAccel() const = 0;
+        virtual void SetSprintAccumulatedAccel(const float&) = 0;
         virtual float GetSprintMaxTime() const = 0;
         virtual void SetSprintMaxTime(const float&) = 0;
         virtual float GetSprintHeldTime() const = 0;

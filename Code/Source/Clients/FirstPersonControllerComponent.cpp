@@ -508,6 +508,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Scale Right", &FirstPersonControllerComponentRequests::SetSprintScaleRight)
                 ->Event("Get Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::GetSprintAccelScale)
                 ->Event("Set Sprint Acceleration Scale", &FirstPersonControllerComponentRequests::SetSprintAccelScale)
+                ->Event("Get Sprint Accumulated Acceleration", &FirstPersonControllerComponentRequests::GetSprintAccumulatedAccel)
+                ->Event("Set Sprint Accumulated Acceleration", &FirstPersonControllerComponentRequests::SetSprintAccumulatedAccel)
                 ->Event("Get Sprint Max Time", &FirstPersonControllerComponentRequests::GetSprintMaxTime)
                 ->Event("Set Sprint Max Time", &FirstPersonControllerComponentRequests::SetSprintMaxTime)
                 ->Event("Get Sprint Held Time", &FirstPersonControllerComponentRequests::GetSprintHeldTime)
@@ -925,8 +927,8 @@ namespace FirstPersonController
         // Apply the sprint factor to the acceleration (dt) based on the sprint having been (recently) pressed
         const float lastLerpTime = m_lerpTime;
 
-        float lerpDeltaTime = m_sprintAccumulateAccelTime > 0.f ? deltaTime * m_sprintAccelAdjust : deltaTime;
-        if(m_sprintAccelValue < 1.f && m_sprintAccumulateAccelTime > 0.f)
+        float lerpDeltaTime = (m_sprintAccumulatedAccel > 0.f || m_sprintVelocityAdjust != 1.f) ? deltaTime * m_sprintAccelAdjust : deltaTime;
+        if(m_sprintAccelValue < 1.f && m_sprintAccumulatedAccel > 0.f)
             lerpDeltaTime = deltaTime *  m_sprintAccelAdjust;
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
@@ -967,9 +969,9 @@ namespace FirstPersonController
                     targetVelocityXYLocal = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
                 if(m_standing || m_sprintWhileCrouched)
-                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale)) * m_sprintAccelAdjust;
+                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * (1.f + (m_sprintVelocityAdjust-1.f)) * greatestScale));
                 else
-                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * m_crouchScale * greatestScale)) * m_sprintAccelAdjust;
+                    m_decelerationFactor = (m_decel + (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * m_crouchScale * greatestScale));
             }
             else
             {
@@ -993,6 +995,19 @@ namespace FirstPersonController
             m_decelerationFactorApplied = false;
             m_opposingDecelFactorApplied = false;
         }
+
+        if(!AZ::IsClose(m_sprintAccelAdjust, 1.f))
+        {
+            if(!AZ::IsClose(m_sprintVelocityAdjust, 1.f) || (newVelocityXY.GetLength() < m_applyVelocityXY.GetLength()))
+                m_sprintAccumulatedAccel += (newVelocityXY.GetLength() - m_applyVelocityXY.GetLength());
+            else
+                m_sprintAccumulatedAccel = 0.f;
+
+            if(m_sprintAccumulatedAccel < 0.f)
+                m_sprintAccumulatedAccel = 0.f;
+        }
+        else
+            m_sprintAccumulatedAccel = 0.f;
 
         if(m_applyVelocityXY == AZ::Vector2::CreateZero())
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedMoving);
@@ -1092,7 +1107,7 @@ namespace FirstPersonController
 
         // Reset the counter if there is no movement
         if(m_applyVelocityXY.IsZero())
-            m_sprintAccumulateAccelTime = 0.f;
+            m_sprintAccumulatedAccel = 0.f;
 
         if(m_sprintValue == 0.f || m_sprintCooldown != 0.f)
             m_sprintVelocityAdjust = 1.f;
@@ -1153,28 +1168,6 @@ namespace FirstPersonController
 
             m_sprintPause = m_sprintPauseTime;
 
-            if(m_applyVelocityXY.GetLength() > m_sprintPrevVelocityLength && m_sprintVelocityAdjust != 1.f)
-            {
-                m_sprintAccumulateAccelTime += deltaTime;
-
-                const float totalSprintTime = (abs(greatestSprintScale)*m_speed)/(m_sprintAccelValue*m_accel);
-                if(m_sprintAccumulateAccelTime > totalSprintTime)
-                    m_sprintAccumulateAccelTime = totalSprintTime;
-            }
-            else if(m_applyVelocityXY.GetLength() < m_sprintPrevVelocityLength)
-            {
-                const AZ::Vector2 applyVelocityHeading = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
-                if(applyVelocityHeading.AngleSafe(targetVelocityXY) > AZ::Constants::HalfPi)
-                    m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
-                else
-                    m_sprintAccumulateAccelTime -= deltaTime;
-
-                if(m_sprintAccumulateAccelTime <= 0.f)
-                {
-                    m_sprintAccumulateAccelTime = 0.f;
-                    m_sprintPrevVelocityLength = 0.f;
-                }
-            }
             m_sprintPrevVelocityLength = m_applyVelocityXY.GetLength();
         }
         // Otherwise if the sprint velocity isn't applied then decrement the sprint counter
@@ -1226,12 +1219,11 @@ namespace FirstPersonController
 
                 m_sprintStopAccelAdjustCaptured = true;
             }
+            else if(AZ::IsClose(m_sprintAccumulatedAccel, 0.f) && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
+                m_sprintAccumulatedAccel = 0.f;
 
-            m_sprintAccumulateAccelTime -= deltaTime * m_decelerationFactor;
-
-            if(m_sprintAccumulateAccelTime <= 0.f)
+            if(m_sprintAccumulatedAccel <= 0.f)
             {
-                m_sprintAccumulateAccelTime = 0.f;
                 m_sprintPrevVelocityLength = 0.f;
                 m_sprintStopAccelAdjustCaptured = false;
                 m_sprintAccelAdjust = 1.f;
@@ -1595,7 +1587,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_applyVelocityXY.GetLength() = %.10f", m_applyVelocityXY.GetLength());
         //AZ_Printf("", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
         //AZ_Printf("", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
-        //AZ_Printf("", "m_sprintAccumulateAccelTime = %.10f", m_sprintAccumulateAccelTime);
+        //AZ_Printf("", "m_sprintAccumulatedAccel = %.10f", m_sprintAccumulatedAccel);
         //AZ_Printf("", "m_sprintValue = %.10f", m_sprintValue);
         //AZ_Printf("", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
         //AZ_Printf("", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
@@ -2985,6 +2977,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintAccelScale(const float& new_sprintAccelScale)
     {
         m_sprintAccelScale = new_sprintAccelScale;
+    }
+    float FirstPersonControllerComponent::GetSprintAccumulatedAccel() const
+    {
+        return m_sprintAccumulatedAccel;
+    }
+    void FirstPersonControllerComponent::SetSprintAccumulatedAccel(const float& new_sprintAccumulatedAccel)
+    {
+        m_sprintAccumulatedAccel = new_sprintAccumulatedAccel;
     }
     float FirstPersonControllerComponent::GetSprintMaxTime() const
     {
