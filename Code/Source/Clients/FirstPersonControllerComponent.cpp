@@ -1865,8 +1865,12 @@ namespace FirstPersonController
         if(m_gravityPrevented || m_hitSomething)
         {
             m_applyVelocityZ = m_correctedVelocityZ;
-            m_gravityPrevented = false;
             m_hitSomething = false;
+            if(m_gravityPrevented)
+            {
+                m_jumpHeld = false;
+                m_gravityPrevented = false;
+            }
         }
 
         const float prevApplyVelocityZ = m_applyVelocityZ;
@@ -2094,6 +2098,7 @@ namespace FirstPersonController
                 if(!m_gravityIgnoresObstacles && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
                 {
                     m_gravityPrevented = true;
+                    m_scriptSetGroundTick = true;
                     FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
                 }
 
