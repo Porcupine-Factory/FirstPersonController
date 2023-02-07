@@ -496,8 +496,8 @@ namespace FirstPersonController
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
                 ->Event("Get Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityIgnoresObstacles)
                 ->Event("Set Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityIgnoresObstacles)
-                ->Event("Get Something Hit", &FirstPersonControllerComponentRequests::GetHitSomething)
-                ->Event("Set Something Hit", &FirstPersonControllerComponentRequests::SetHitSomething)
+                ->Event("Get Hit Something", &FirstPersonControllerComponentRequests::GetHitSomething)
+                ->Event("Set Hit Something", &FirstPersonControllerComponentRequests::SetHitSomething)
                 ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
                 ->Event("Set Sprint Scale Forward", &FirstPersonControllerComponentRequests::SetSprintScaleForward)
                 ->Event("Get Sprint Scale Back", &FirstPersonControllerComponentRequests::GetSprintScaleBack)
@@ -1538,7 +1538,6 @@ namespace FirstPersonController
                 if(m_hitSomething)
                 {
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
-                    m_hitSomething = false;
                     m_correctedVelocityXY = AZ::Vector2::CreateZero();
                 }
                 m_prevApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
@@ -1549,10 +1548,8 @@ namespace FirstPersonController
                 m_prevTargetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
                 if(m_hitSomething)
-                {
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
-                    m_hitSomething = false;
-                }
+
                 m_prevApplyVelocityXY = m_applyVelocityXY;
             }
 
@@ -1862,7 +1859,10 @@ namespace FirstPersonController
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
         if(m_hitSomething)
+        {
             m_applyVelocityZ = m_correctedVelocityZ;
+            m_hitSomething = false;
+        }
 
         const float prevApplyVelocityZ = m_applyVelocityZ;
 
@@ -2086,7 +2086,7 @@ namespace FirstPersonController
                 if(!m_velocityIgnoreObstacles)
                     m_hitSomething = true;
 
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomethingOnXY);
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
             }
             else
             {
@@ -2151,7 +2151,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnTopWalkSpeedReached(){}
     void FirstPersonControllerComponent::OnTopSprintSpeedReached(){}
     void FirstPersonControllerComponent::OnHeadHit(){}
-    void FirstPersonControllerComponent::OnHitSomethingOnXY(){}
+    void FirstPersonControllerComponent::OnHitSomething(){}
     void FirstPersonControllerComponent::OnCrouched(){}
     void FirstPersonControllerComponent::OnStoodUp(){}
     void FirstPersonControllerComponent::OnStartedCrouching(){}

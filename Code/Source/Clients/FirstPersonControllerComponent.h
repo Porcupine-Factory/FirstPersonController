@@ -352,7 +352,7 @@ namespace FirstPersonController
         void OnTopWalkSpeedReached();
         void OnTopSprintSpeedReached();
         void OnHeadHit();
-        void OnHitSomethingOnXY();
+        void OnHitSomething();
         void OnCrouched();
         void OnStoodUp();
         void OnStartedCrouching();
