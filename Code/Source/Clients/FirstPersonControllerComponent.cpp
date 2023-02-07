@@ -500,6 +500,8 @@ namespace FirstPersonController
                 ->Event("Set Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetGravityIgnoresObstacles)
                 ->Event("Get Hit Something", &FirstPersonControllerComponentRequests::GetHitSomething)
                 ->Event("Set Hit Something", &FirstPersonControllerComponentRequests::SetHitSomething)
+                ->Event("Get Gravity Prevented", &FirstPersonControllerComponentRequests::GetGravityPrevented)
+                ->Event("Set Gravity Prevented", &FirstPersonControllerComponentRequests::SetGravityPrevented)
                 ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
                 ->Event("Set Sprint Scale Forward", &FirstPersonControllerComponentRequests::SetSprintScaleForward)
                 ->Event("Get Sprint Scale Back", &FirstPersonControllerComponentRequests::GetSprintScaleBack)
@@ -2955,6 +2957,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetHitSomething(const bool& new_hitSomething)
     {
         m_hitSomething = new_hitSomething;
+    }
+    bool FirstPersonControllerComponent::GetGravityPrevented() const
+    {
+        return m_gravityPrevented;
+    }
+    void FirstPersonControllerComponent::SetGravityPrevented(const bool& new_gravityPrevented)
+    {
+        m_gravityPrevented = new_gravityPrevented;
     }
     float FirstPersonControllerComponent::GetSprintScaleForward() const
     {

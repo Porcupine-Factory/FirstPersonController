@@ -227,6 +227,8 @@ namespace FirstPersonController
         void SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles) override;
         bool GetHitSomething() const override;
         void SetHitSomething(const bool& new_hitSomething) override;
+        bool GetGravityPrevented() const override;
+        void SetGravityPrevented(const bool& new_gravityPrevented) override;
         float GetSprintScaleForward() const override;
         void SetSprintScaleForward(const float& new_sprintScaleForward) override;
         float GetSprintScaleBack() const override;
