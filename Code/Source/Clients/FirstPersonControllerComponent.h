@@ -222,7 +222,9 @@ namespace FirstPersonController
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
         bool GetVelocityIgnoresObstacles() const override;
-        void SetVelocityIgnoresObstacles(const bool& new_velocityIgnoreObstacles) override;
+        void SetVelocityIgnoresObstacles(const bool& new_velocityIgnoresObstacles) override;
+        bool GetGravityIgnoresObstacles() const override;
+        void SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles) override;
         bool GetHitSomething() const override;
         void SetHitSomething(const bool& new_hitSomething) override;
         float GetSprintScaleForward() const override;
@@ -353,6 +355,7 @@ namespace FirstPersonController
         void OnTopSprintSpeedReached();
         void OnHeadHit();
         void OnHitSomething();
+        void OnGravityPrevented();
         void OnCrouched();
         void OnStoodUp();
         void OnStartedCrouching();
@@ -381,10 +384,12 @@ namespace FirstPersonController
         AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_correctedVelocityXY = AZ::Vector2::CreateZero();
-        float m_velocityCloseTolerance = 0.01f;
+        float m_velocityCloseTolerance = 1.f;
         bool m_instantVelocityRotation = true;
-        bool m_velocityIgnoreObstacles = true;
+        bool m_velocityIgnoresObstacles = true;
+        bool m_gravityIgnoresObstacles = false;
         bool m_hitSomething = false;
+        bool m_gravityPrevented = false;
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true

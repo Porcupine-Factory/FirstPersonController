@@ -185,6 +185,8 @@ namespace FirstPersonController
         virtual void SetInstantVelocityRotation(const bool&) = 0;
         virtual bool GetVelocityIgnoresObstacles() const = 0;
         virtual void SetVelocityIgnoresObstacles(const bool&) = 0;
+        virtual bool GetGravityIgnoresObstacles() const = 0;
+        virtual void SetGravityIgnoresObstacles(const bool&) = 0;
         virtual bool GetHitSomething() const = 0;
         virtual void SetHitSomething(const bool&) = 0;
         virtual float GetSprintScaleForward() const = 0;
@@ -296,6 +298,7 @@ namespace FirstPersonController
         virtual void OnTopSprintSpeedReached() = 0;
         virtual void OnHeadHit() = 0;
         virtual void OnHitSomething() = 0;
+        virtual void OnGravityPrevented() = 0;
         virtual void OnCrouched() = 0;
         virtual void OnStoodUp() = 0;
         virtual void OnStartedCrouching() = 0;
@@ -318,7 +321,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnCrouched, OnStoodUp, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
 
         void OnGroundHit() override
         {
@@ -363,6 +366,10 @@ namespace FirstPersonController
         void OnHitSomething() override
         {
             Call(FN_OnHitSomething);
+        }
+        void OnGravityPrevented() override
+        {
+            Call(FN_OnGravityPrevented);
         }
         void OnCrouched() override
         {

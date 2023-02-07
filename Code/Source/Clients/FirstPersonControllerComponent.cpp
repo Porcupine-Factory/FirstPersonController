@@ -496,6 +496,8 @@ namespace FirstPersonController
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
                 ->Event("Get Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityIgnoresObstacles)
                 ->Event("Set Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityIgnoresObstacles)
+                ->Event("Get Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetGravityIgnoresObstacles)
+                ->Event("Set Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetGravityIgnoresObstacles)
                 ->Event("Get Hit Something", &FirstPersonControllerComponentRequests::GetHitSomething)
                 ->Event("Set Hit Something", &FirstPersonControllerComponentRequests::SetHitSomething)
                 ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
@@ -1858,9 +1860,10 @@ namespace FirstPersonController
         if(m_headHit)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
-        if(m_hitSomething)
+        if(m_gravityPrevented || m_hitSomething)
         {
             m_applyVelocityZ = m_correctedVelocityZ;
+            m_gravityPrevented = false;
             m_hitSomething = false;
         }
 
@@ -2083,8 +2086,14 @@ namespace FirstPersonController
                 m_correctedVelocityZ = currentVelocity.GetZ();
 
                 // If enabled, cause the character's applied velocity to match the current velocity from Physics
-                if(!m_velocityIgnoreObstacles)
+                if(!m_velocityIgnoresObstacles)
                     m_hitSomething = true;
+
+                if(!m_gravityIgnoresObstacles && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
+                {
+                    m_gravityPrevented = true;
+                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
+                }
 
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
             }
@@ -2152,6 +2161,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnTopSprintSpeedReached(){}
     void FirstPersonControllerComponent::OnHeadHit(){}
     void FirstPersonControllerComponent::OnHitSomething(){}
+    void FirstPersonControllerComponent::OnGravityPrevented(){}
     void FirstPersonControllerComponent::OnCrouched(){}
     void FirstPersonControllerComponent::OnStoodUp(){}
     void FirstPersonControllerComponent::OnStartedCrouching(){}
@@ -2924,11 +2934,19 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetVelocityIgnoresObstacles() const
     {
-        return m_velocityIgnoreObstacles;
+        return m_velocityIgnoresObstacles;
     }
-    void FirstPersonControllerComponent::SetVelocityIgnoresObstacles(const bool& new_velocityIgnoreObstacles)
+    void FirstPersonControllerComponent::SetVelocityIgnoresObstacles(const bool& new_velocityIgnoresObstacles)
     {
-        m_velocityIgnoreObstacles = new_velocityIgnoreObstacles;
+        m_velocityIgnoresObstacles = new_velocityIgnoresObstacles;
+    }
+    bool FirstPersonControllerComponent::GetGravityIgnoresObstacles() const
+    {
+        return m_gravityIgnoresObstacles;
+    }
+    void FirstPersonControllerComponent::SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles)
+    {
+        m_gravityIgnoresObstacles = new_gravityIgnoresObstacles;
     }
     bool FirstPersonControllerComponent::GetHitSomething() const
     {
