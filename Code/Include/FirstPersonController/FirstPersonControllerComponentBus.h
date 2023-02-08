@@ -280,6 +280,7 @@ namespace FirstPersonController
         virtual void UpdateCameraPitch(const float&) = 0;
         virtual void UpdateCameraYaw(const float&) = 0;
         virtual float GetHeading() const = 0;
+        virtual void SetHeadingForTick(const float&) = 0;
         virtual float GetPitch() const = 0;
     };
 

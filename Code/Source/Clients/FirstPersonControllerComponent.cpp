@@ -589,6 +589,7 @@ namespace FirstPersonController
                 ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
+                ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
                 ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
@@ -908,8 +909,12 @@ namespace FirstPersonController
                                         t->GetLocalRotation().GetY(),
                                         t->GetLocalRotation().GetZ()));
 
-        m_currentHeading = GetEntity()->GetTransform()->
-            GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+        if(!m_scriptSetcurrentHeadingTick)
+            m_currentHeading = GetEntity()->GetTransform()->
+                GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+        else
+            m_scriptSetcurrentHeadingTick = false;
+
         m_currentPitch = GetActiveCameraEntityPtr()->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetX();
     }
@@ -3369,6 +3374,11 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetHeading() const
     {
         return m_currentHeading;
+    }
+    void FirstPersonControllerComponent::SetHeadingForTick(const float& new_currentHeading)
+    {
+        m_currentHeading = new_currentHeading;
+        m_scriptSetcurrentHeadingTick = true;
     }
     float FirstPersonControllerComponent::GetPitch() const
     {

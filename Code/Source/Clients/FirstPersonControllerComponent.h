@@ -318,6 +318,7 @@ namespace FirstPersonController
         void UpdateCameraYaw(const float& new_cameraYawAngle) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
         float GetHeading() const override;
+        void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
 
     private:
@@ -518,6 +519,7 @@ namespace FirstPersonController
 
         // Rotation-related variables
         float m_currentHeading = 0.f;
+        bool m_scriptSetcurrentHeadingTick = false;
         float m_currentPitch = 0.f;
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 30.f;
