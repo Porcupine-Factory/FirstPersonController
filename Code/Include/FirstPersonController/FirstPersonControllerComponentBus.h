@@ -187,6 +187,8 @@ namespace FirstPersonController
         virtual void SetVelocityIgnoresObstacles(const bool&) = 0;
         virtual bool GetGravityIgnoresObstacles() const = 0;
         virtual void SetGravityIgnoresObstacles(const bool&) = 0;
+        virtual bool GetJumpAllowedWhenGravityPrevented() const = 0;
+        virtual void SetJumpAllowedWhenGravityPrevented(const bool&) = 0;
         virtual bool GetHitSomething() const = 0;
         virtual void SetHitSomething(const bool&) = 0;
         virtual bool GetGravityPrevented() const = 0;

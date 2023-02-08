@@ -498,10 +498,12 @@ namespace FirstPersonController
                 ->Event("Set Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityIgnoresObstacles)
                 ->Event("Get Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetGravityIgnoresObstacles)
                 ->Event("Set Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetGravityIgnoresObstacles)
+                ->Event("Get Jump Allowed When Gravity Prevented By Obstacle", &FirstPersonControllerComponentRequests::GetJumpAllowedWhenGravityPrevented)
+                ->Event("Set Jump Allowed When Gravity Prevented By Obstacle", &FirstPersonControllerComponentRequests::SetJumpAllowedWhenGravityPrevented)
                 ->Event("Get Hit Something", &FirstPersonControllerComponentRequests::GetHitSomething)
                 ->Event("Set Hit Something", &FirstPersonControllerComponentRequests::SetHitSomething)
-                ->Event("Get Gravity Prevented", &FirstPersonControllerComponentRequests::GetGravityPrevented)
-                ->Event("Set Gravity Prevented", &FirstPersonControllerComponentRequests::SetGravityPrevented)
+                ->Event("Get Gravity Prevented By Obstacle", &FirstPersonControllerComponentRequests::GetGravityPrevented)
+                ->Event("Set Gravity Prevented By Obstacle", &FirstPersonControllerComponentRequests::SetGravityPrevented)
                 ->Event("Get Sprint Scale Forward", &FirstPersonControllerComponentRequests::GetSprintScaleForward)
                 ->Event("Set Sprint Scale Forward", &FirstPersonControllerComponentRequests::SetSprintScaleForward)
                 ->Event("Get Sprint Scale Back", &FirstPersonControllerComponentRequests::GetSprintScaleBack)
@@ -1873,8 +1875,9 @@ namespace FirstPersonController
             m_hitSomething = false;
             if(m_gravityPrevented)
             {
-                m_jumpHeld = false;
                 m_gravityPrevented = false;
+                if(m_jumpAllowedWhenGravityPrevented)
+                    m_jumpHeld = false;
             }
         }
 
@@ -2959,6 +2962,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles)
     {
         m_gravityIgnoresObstacles = new_gravityIgnoresObstacles;
+    }
+    bool FirstPersonControllerComponent::GetJumpAllowedWhenGravityPrevented() const
+    {
+        return m_jumpAllowedWhenGravityPrevented;
+    }
+    void FirstPersonControllerComponent::SetJumpAllowedWhenGravityPrevented(const bool& new_jumpAllowedWhenGravityPrevented)
+    {
+        m_jumpAllowedWhenGravityPrevented = new_jumpAllowedWhenGravityPrevented;
     }
     bool FirstPersonControllerComponent::GetHitSomething() const
     {

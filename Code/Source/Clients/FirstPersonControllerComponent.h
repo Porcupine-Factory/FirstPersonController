@@ -225,6 +225,8 @@ namespace FirstPersonController
         void SetVelocityIgnoresObstacles(const bool& new_velocityIgnoresObstacles) override;
         bool GetGravityIgnoresObstacles() const override;
         void SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles) override;
+        bool GetJumpAllowedWhenGravityPrevented() const override;
+        void SetJumpAllowedWhenGravityPrevented(const bool& new_jumpAllowedWhenGravityPrevented) override;
         bool GetHitSomething() const override;
         void SetHitSomething(const bool& new_hitSomething) override;
         bool GetGravityPrevented() const override;
@@ -391,6 +393,7 @@ namespace FirstPersonController
         bool m_instantVelocityRotation = true;
         bool m_velocityIgnoresObstacles = true;
         bool m_gravityIgnoresObstacles = false;
+        bool m_jumpAllowedWhenGravityPrevented = true;
         bool m_hitSomething = false;
         bool m_gravityPrevented = false;
 
