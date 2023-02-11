@@ -183,10 +183,12 @@ namespace FirstPersonController
         virtual bool GetOpposingDecelFactorApplied() const = 0;
         virtual bool GetInstantVelocityRotation() const = 0;
         virtual void SetInstantVelocityRotation(const bool&) = 0;
-        virtual bool GetVelocityIgnoresObstacles() const = 0;
-        virtual void SetVelocityIgnoresObstacles(const bool&) = 0;
+        virtual bool GetVelocityXYIgnoresObstacles() const = 0;
+        virtual void SetVelocityXYIgnoresObstacles(const bool&) = 0;
         virtual bool GetGravityIgnoresObstacles() const = 0;
         virtual void SetGravityIgnoresObstacles(const bool&) = 0;
+        virtual bool GetPosZIgnoresObstacles() const = 0;
+        virtual void SetPosZIgnoresObstacles(const bool&) = 0;
         virtual bool GetJumpAllowedWhenGravityPrevented() const = 0;
         virtual void SetJumpAllowedWhenGravityPrevented(const bool&) = 0;
         virtual bool GetHitSomething() const = 0;

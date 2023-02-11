@@ -494,10 +494,12 @@ namespace FirstPersonController
                 ->Event("Get Opposing Direction Deceleration Factor Applied", &FirstPersonControllerComponentRequests::GetOpposingDecelFactorApplied)
                 ->Event("Get Instant Velocity Rotation", &FirstPersonControllerComponentRequests::GetInstantVelocityRotation)
                 ->Event("Set Instant Velocity Rotation", &FirstPersonControllerComponentRequests::SetInstantVelocityRotation)
-                ->Event("Get Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityIgnoresObstacles)
-                ->Event("Set Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityIgnoresObstacles)
+                ->Event("Get Velocity X&Y Ignores Obstacles", &FirstPersonControllerComponentRequests::GetVelocityXYIgnoresObstacles)
+                ->Event("Set Velocity X&Y Ignores Obstacles", &FirstPersonControllerComponentRequests::SetVelocityXYIgnoresObstacles)
                 ->Event("Get Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetGravityIgnoresObstacles)
                 ->Event("Set Gravity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetGravityIgnoresObstacles)
+                ->Event("Get Positive Z Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::GetPosZIgnoresObstacles)
+                ->Event("Set Positive Z Velocity Ignores Obstacles", &FirstPersonControllerComponentRequests::SetPosZIgnoresObstacles)
                 ->Event("Get Jump Allowed When Gravity Prevented By Obstacle", &FirstPersonControllerComponentRequests::GetJumpAllowedWhenGravityPrevented)
                 ->Event("Set Jump Allowed When Gravity Prevented By Obstacle", &FirstPersonControllerComponentRequests::SetJumpAllowedWhenGravityPrevented)
                 ->Event("Get Hit Something", &FirstPersonControllerComponentRequests::GetHitSomething)
@@ -1558,7 +1560,7 @@ namespace FirstPersonController
                 // Set the previous target velocity to the new one
                 m_prevTargetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
-                if(m_hitSomething)
+                if(!m_velocityXYIgnoresObstacles && m_hitSomething)
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
 
                 m_prevApplyVelocityXY = m_applyVelocityXY;
@@ -1869,10 +1871,9 @@ namespace FirstPersonController
         if(m_headHit)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
-        if(m_gravityPrevented || m_hitSomething)
+        if(m_gravityPrevented || (!m_posZIgnoresObstacles && m_hitSomething))
         {
             m_applyVelocityZ = m_correctedVelocityZ;
-            m_hitSomething = false;
             if(m_gravityPrevented)
             {
                 m_gravityPrevented = false;
@@ -2094,16 +2095,22 @@ namespace FirstPersonController
             Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
                 &Physics::CharacterRequestBus::Events::GetVelocity);
 
-            if(!m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
+            if(!m_prevPrevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
             {
-                m_correctedVelocityXY = AZ::Vector2(currentVelocity);
-                m_correctedVelocityZ = currentVelocity.GetZ();
-
                 // If enabled, cause the character's applied velocity to match the current velocity from Physics
-                if(!m_velocityIgnoresObstacles)
-                    m_hitSomething = true;
+                m_hitSomething = true;
 
-                if(!m_gravityIgnoresObstacles && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
+                if(m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
+                    m_correctedVelocityXY = AZ::Vector2(currentVelocity);
+                else
+                    m_correctedVelocityXY = AZ::Vector2(currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)), currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
+
+                if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                    m_correctedVelocityZ = currentVelocity.GetZ();
+                else
+                    m_correctedVelocityZ = currentVelocity.Dot(m_velocityZPosDirection);
+
+                if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
                 {
                     m_gravityPrevented = true;
                     m_scriptSetGroundTick = true;
@@ -2113,12 +2120,10 @@ namespace FirstPersonController
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
             }
             else
-            {
-                m_correctedVelocityXY = AZ::Vector2(currentVelocity);
-                m_correctedVelocityZ = currentVelocity.GetZ();
                 m_hitSomething = false;
-            }
         }
+
+        m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
         if(!m_addVelocityForTimestepVsTick || timestepElseTick)
         {
@@ -2947,13 +2952,13 @@ namespace FirstPersonController
     {
         m_instantVelocityRotation = new_instantVelocityRotation;
     }
-    bool FirstPersonControllerComponent::GetVelocityIgnoresObstacles() const
+    bool FirstPersonControllerComponent::GetVelocityXYIgnoresObstacles() const
     {
-        return m_velocityIgnoresObstacles;
+        return m_velocityXYIgnoresObstacles;
     }
-    void FirstPersonControllerComponent::SetVelocityIgnoresObstacles(const bool& new_velocityIgnoresObstacles)
+    void FirstPersonControllerComponent::SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles)
     {
-        m_velocityIgnoresObstacles = new_velocityIgnoresObstacles;
+        m_velocityXYIgnoresObstacles = new_velocityXYIgnoresObstacles;
     }
     bool FirstPersonControllerComponent::GetGravityIgnoresObstacles() const
     {
@@ -2962,6 +2967,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles)
     {
         m_gravityIgnoresObstacles = new_gravityIgnoresObstacles;
+    }
+    bool FirstPersonControllerComponent::GetPosZIgnoresObstacles() const
+    {
+        return m_posZIgnoresObstacles;
+    }
+    void FirstPersonControllerComponent::SetPosZIgnoresObstacles(const bool& new_posZIgnoresObstacles)
+    {
+        m_posZIgnoresObstacles = new_posZIgnoresObstacles;
     }
     bool FirstPersonControllerComponent::GetJumpAllowedWhenGravityPrevented() const
     {

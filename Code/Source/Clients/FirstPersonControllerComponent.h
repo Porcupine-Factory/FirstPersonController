@@ -221,10 +221,12 @@ namespace FirstPersonController
         bool GetOpposingDecelFactorApplied() const override;
         bool GetInstantVelocityRotation() const override;
         void SetInstantVelocityRotation(const bool& new_instantVelocityRotation) override;
-        bool GetVelocityIgnoresObstacles() const override;
-        void SetVelocityIgnoresObstacles(const bool& new_velocityIgnoresObstacles) override;
+        bool GetVelocityXYIgnoresObstacles() const override;
+        void SetVelocityXYIgnoresObstacles(const bool& new_velocityXYIgnoresObstacles) override;
         bool GetGravityIgnoresObstacles() const override;
         void SetGravityIgnoresObstacles(const bool& new_gravityIgnoresObstacles) override;
+        bool GetPosZIgnoresObstacles() const override;
+        void SetPosZIgnoresObstacles(const bool& new_posZIgnoresObstacles) override;
         bool GetJumpAllowedWhenGravityPrevented() const override;
         void SetJumpAllowedWhenGravityPrevented(const bool& new_jumpAllowedWhenGravityPrevented) override;
         bool GetHitSomething() const override;
@@ -383,6 +385,7 @@ namespace FirstPersonController
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevPrevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
         AZ::Vector3 m_addVelocityHeading = AZ::Vector3::CreateZero();
@@ -391,8 +394,9 @@ namespace FirstPersonController
         AZ::Vector2 m_correctedVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 1.f;
         bool m_instantVelocityRotation = true;
-        bool m_velocityIgnoresObstacles = true;
+        bool m_velocityXYIgnoresObstacles = true;
         bool m_gravityIgnoresObstacles = false;
+        bool m_posZIgnoresObstacles = true;
         bool m_jumpAllowedWhenGravityPrevented = true;
         bool m_hitSomething = false;
         bool m_gravityPrevented = false;
