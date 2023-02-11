@@ -1877,6 +1877,8 @@ namespace FirstPersonController
             if(m_gravityPrevented)
             {
                 m_gravityPrevented = false;
+                m_grounded = true;
+                m_groundClose = true;
                 if(m_jumpAllowedWhenGravityPrevented)
                     m_jumpHeld = false;
             }
@@ -2113,7 +2115,6 @@ namespace FirstPersonController
                 if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
                 {
                     m_gravityPrevented = true;
-                    m_scriptSetGroundTick = true;
                     FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
                 }
 
