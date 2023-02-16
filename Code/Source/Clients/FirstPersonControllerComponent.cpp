@@ -1871,17 +1871,15 @@ namespace FirstPersonController
         if(m_headHit)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
-        if(m_gravityPrevented || (!m_posZIgnoresObstacles && m_hitSomething))
+        if(m_gravityPrevented[0] && m_gravityPrevented[1])
         {
             m_applyVelocityZ = m_correctedVelocityZ;
-            if(m_gravityPrevented)
-            {
-                m_gravityPrevented = false;
-                m_grounded = true;
-                m_groundClose = true;
-                if(m_jumpAllowedWhenGravityPrevented)
-                    m_jumpHeld = false;
-            }
+            m_gravityPrevented[0] = false;
+            m_gravityPrevented[1] = false;
+            m_grounded = true;
+            m_groundClose = true;
+            if(m_jumpAllowedWhenGravityPrevented)
+                m_jumpHeld = false;
         }
 
         const float prevApplyVelocityZ = m_applyVelocityZ;
@@ -2114,9 +2112,17 @@ namespace FirstPersonController
 
                 if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
                 {
-                    m_gravityPrevented = true;
-                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
+                    // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
+                    if(m_gravityPrevented[0])
+                    {
+                        m_gravityPrevented[1] = true;
+                        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
+                    }
+                    else
+                        m_gravityPrevented[0] = true;
                 }
+                else
+                    m_gravityPrevented[0] = m_gravityPrevented[1] = false;
 
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
             }
@@ -2995,11 +3001,11 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetGravityPrevented() const
     {
-        return m_gravityPrevented;
+        return m_gravityPrevented[1];
     }
     void FirstPersonControllerComponent::SetGravityPrevented(const bool& new_gravityPrevented)
     {
-        m_gravityPrevented = new_gravityPrevented;
+        m_gravityPrevented[0] = m_gravityPrevented[1] = new_gravityPrevented;
     }
     float FirstPersonControllerComponent::GetSprintScaleForward() const
     {

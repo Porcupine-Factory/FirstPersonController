@@ -399,7 +399,7 @@ namespace FirstPersonController
         bool m_posZIgnoresObstacles = true;
         bool m_jumpAllowedWhenGravityPrevented = true;
         bool m_hitSomething = false;
-        bool m_gravityPrevented = false;
+        bool m_gravityPrevented[2] = {false, false};
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true
