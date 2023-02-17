@@ -1447,7 +1447,10 @@ namespace FirstPersonController
 
             // Bail if something is detected above the player
             if(hits)
+            {
+                m_crouchPrevValue = m_crouchValue;
                 return;
+            }
 
             float cameraTravelDelta = m_crouchDistance * deltaTime / m_crouchTime;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
