@@ -1897,7 +1897,7 @@ namespace FirstPersonController
             for(AzPhysics::SceneQueryHit hit: hits.m_hits)
                 m_headHitEntityIds.push_back(hit.m_entityId);
 
-        if(m_headHit)
+        if(m_headHit && !m_grounded && m_applyVelocityZ >= 0.f)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
 
         if(m_gravityPrevented[0] && m_gravityPrevented[1])
