@@ -198,8 +198,15 @@ namespace FirstPersonController
         bool GetJumpHeadIgnoreNonKinematicRigidBodies() const override;
         void SetJumpHeadIgnoreNonKinematicRigidBodies(const bool& new_jumpHeadIgnoreNonKinematicRigidBodies) override;
         AZStd::string GetHeadCollisionGroupName() const override;
-        void SetHeadCollisionGroup(const AZStd::string& new_headCollisionGroupName) override;
+        void SetHeadCollisionGroupByName(const AZStd::string& new_headCollisionGroupName) override;
         AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const override;
+        bool GetStandPrevented() const override;
+        void SetStandPrevented(const bool& new_standPrevented) override;
+        bool GetStandIgnoreNonKinematicRigidBodies() const override;
+        void SetStandIgnoreNonKinematicRigidBodies(const bool& new_standIgnoreNonKinematicRigidBodies) override;
+        AZStd::string GetStandCollisionGroupName() const override;
+        void SetStandCollisionGroupByName(const AZStd::string& new_standCollisionGroupName) override;
+        AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const override;
         float GetGroundSphereCastsRadiusPercentageIncrease() const override;
         void SetGroundSphereCastsRadiusPercentageIncrease(const float& new_groundSphereCastsRadiusPercentageIncrease) override;
         float GetMaxGroundedAngleDegrees() const override;
@@ -365,6 +372,7 @@ namespace FirstPersonController
         void OnGravityPrevented();
         void OnCrouched();
         void OnStoodUp();
+        void OnStandPrevented();
         void OnStartedCrouching();
         void OnStartedStanding();
         void OnFirstJump();
@@ -563,6 +571,12 @@ namespace FirstPersonController
         // This sphere cast determines how far above the charcter's head that an obstruction is detected
         // for allowing them to uncrouch
         float m_uncrouchHeadSphereCastOffset = 0.1f;
+        bool m_standPrevented = false;
+        bool m_standPreventedViaScript = false;
+        AzPhysics::CollisionGroups::Id m_standCollisionGroupId = AzPhysics::CollisionGroups::Id();
+        AzPhysics::CollisionGroup m_standCollisionGroup = AzPhysics::CollisionGroup::All;
+        AZStd::vector<AZ::EntityId> m_standPreventedEntityIds;
+        bool m_standIgnoreNonKinematicRigidBodies = true;
 
         // Event value multipliers
         float m_forwardValue = 0.f;

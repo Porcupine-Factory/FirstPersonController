@@ -470,9 +470,16 @@ namespace FirstPersonController
                 ->Event("Set Head Hit", &FirstPersonControllerComponentRequests::SetHeadHit)
                 ->Event("Get Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::GetJumpHeadIgnoreNonKinematicRigidBodies)
                 ->Event("Set Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::SetJumpHeadIgnoreNonKinematicRigidBodies)
-                ->Event("Get Head Collision Group Name", &FirstPersonControllerComponentRequests::GetHeadCollisionGroupName)
-                ->Event("Set Head Collision Group Name", &FirstPersonControllerComponentRequests::SetHeadCollisionGroup)
+                ->Event("Get Head Hit Collision Group Name", &FirstPersonControllerComponentRequests::GetHeadCollisionGroupName)
+                ->Event("Set Head Hit Collision Group By Name", &FirstPersonControllerComponentRequests::SetHeadCollisionGroupByName)
                 ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
+                ->Event("Get Stand Prevented", &FirstPersonControllerComponentRequests::GetStandPrevented)
+                ->Event("Set Stand Prevented", &FirstPersonControllerComponentRequests::SetStandPrevented)
+                ->Event("Get Stand Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::GetStandIgnoreNonKinematicRigidBodies)
+                ->Event("Set Stand Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::SetStandIgnoreNonKinematicRigidBodies)
+                ->Event("Get Stand Collision Group Name", &FirstPersonControllerComponentRequests::GetStandCollisionGroupName)
+                ->Event("Set Stand Collision Group By Name", &FirstPersonControllerComponentRequests::SetStandCollisionGroupByName)
+                ->Event("Get Stand Prevented EntityIds", &FirstPersonControllerComponentRequests::GetStandPreventedEntityIds)
                 ->Event("Get Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::GetGroundSphereCastsRadiusPercentageIncrease)
                 ->Event("Set Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
                 ->Event("Get Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
@@ -1413,7 +1420,7 @@ namespace FirstPersonController
                 sphereCastDirection,
                 m_uncrouchHeadSphereCastOffset,
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                AzPhysics::CollisionGroup::All,
+                m_standCollisionGroup,
                 nullptr);
 
             request.m_reportMultipleHits = true;
@@ -1440,17 +1447,36 @@ namespace FirstPersonController
                             return true;
                     }
 
+                    if(m_standIgnoreNonKinematicRigidBodies)
+                    {
+                        // Check to see if the entity hit is kinematic
+                        bool isKinematic = true;
+                        Physics::RigidBodyRequestBus::EventResult(isKinematic, hit.m_entityId,
+                            &Physics::RigidBodyRequests::IsKinematic);
+
+                        if(!isKinematic)
+                            return true;
+                    }
+
                     return false;
                 };
 
             AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
 
-            // Bail if something is detected above the player
+            m_standPreventedEntityIds.clear();
             if(hits)
+                for(AzPhysics::SceneQueryHit hit: hits.m_hits)
+                    m_standPreventedEntityIds.push_back(hit.m_entityId);
+
+            // Bail if something is detected above the player
+            if(hits || m_standPreventedViaScript)
             {
                 m_crouchPrevValue = m_crouchValue;
+                m_standPrevented = true;
+                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStandPrevented);
                 return;
             }
+            m_standPrevented = false;
 
             float cameraTravelDelta = m_crouchDistance * deltaTime / m_crouchTime;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
@@ -2194,6 +2220,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGravityPrevented(){}
     void FirstPersonControllerComponent::OnCrouched(){}
     void FirstPersonControllerComponent::OnStoodUp(){}
+    void FirstPersonControllerComponent::OnStandPrevented(){}
     void FirstPersonControllerComponent::OnStartedCrouching(){}
     void FirstPersonControllerComponent::OnStartedStanding(){}
     void FirstPersonControllerComponent::OnFirstJump(){}
@@ -2862,7 +2889,7 @@ namespace FirstPersonController
             groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_headCollisionGroup);
         return groupName;
     }
-    void FirstPersonControllerComponent::SetHeadCollisionGroup(const AZStd::string& new_headCollisionGroupName)
+    void FirstPersonControllerComponent::SetHeadCollisionGroupByName(const AZStd::string& new_headCollisionGroupName)
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
@@ -2877,6 +2904,49 @@ namespace FirstPersonController
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetHeadHitEntityIds() const
     {
         return m_headHitEntityIds;
+    }
+    bool FirstPersonControllerComponent::GetStandPrevented() const
+    {
+        return m_standPrevented;
+    }
+    void FirstPersonControllerComponent::SetStandPrevented(const bool& new_standPrevented)
+    {
+        m_standPrevented = new_standPrevented;
+        if(m_standPrevented)
+            m_standPreventedViaScript = true;
+        else
+            m_standPreventedViaScript = false;
+    }
+    bool FirstPersonControllerComponent::GetStandIgnoreNonKinematicRigidBodies() const
+    {
+        return m_standIgnoreNonKinematicRigidBodies;
+    }
+    void FirstPersonControllerComponent::SetStandIgnoreNonKinematicRigidBodies(const bool& new_standIgnoreNonKinematicRigidBodies)
+    {
+        m_standIgnoreNonKinematicRigidBodies = new_standIgnoreNonKinematicRigidBodies;
+    }
+    AZStd::string FirstPersonControllerComponent::GetStandCollisionGroupName() const
+    {
+        AZStd::string groupName;
+        Physics::CollisionRequestBus::BroadcastResult(
+            groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_standCollisionGroup);
+        return groupName;
+    }
+    void FirstPersonControllerComponent::SetStandCollisionGroupByName(const AZStd::string& new_standCollisionGroupName)
+    {
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_standCollisionGroupName, collisionGroup);
+        if(success)
+        {
+            m_standCollisionGroup = collisionGroup;
+            const AzPhysics::CollisionConfiguration& configuration = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
+            m_standCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_standCollisionGroupName);
+        }
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetStandPreventedEntityIds() const
+    {
+        return m_standPreventedEntityIds;
     }
     float FirstPersonControllerComponent::GetGroundSphereCastsRadiusPercentageIncrease() const
     {

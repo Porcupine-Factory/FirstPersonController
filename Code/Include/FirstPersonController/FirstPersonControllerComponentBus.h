@@ -159,9 +159,16 @@ namespace FirstPersonController
         virtual bool GetJumpHeadIgnoreNonKinematicRigidBodies() const = 0;
         virtual void SetJumpHeadIgnoreNonKinematicRigidBodies(const bool&) = 0;
         virtual AZStd::string GetHeadCollisionGroupName() const = 0;
-        virtual void SetHeadCollisionGroup(const AZStd::string&) = 0;
+        virtual void SetHeadCollisionGroupByName(const AZStd::string&) = 0;
         virtual AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit) const = 0;
         virtual AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const = 0;
+        virtual bool GetStandPrevented() const = 0;
+        virtual void SetStandPrevented(const bool&) = 0;
+        virtual bool GetStandIgnoreNonKinematicRigidBodies() const = 0;
+        virtual void SetStandIgnoreNonKinematicRigidBodies(const bool&) = 0;
+        virtual AZStd::string GetStandCollisionGroupName() const = 0;
+        virtual void SetStandCollisionGroupByName(const AZStd::string&) = 0;
+        virtual AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const = 0;
         virtual float GetGroundSphereCastsRadiusPercentageIncrease() const = 0;
         virtual void SetGroundSphereCastsRadiusPercentageIncrease(const float&) = 0;
         virtual float GetMaxGroundedAngleDegrees() const = 0;
@@ -308,6 +315,7 @@ namespace FirstPersonController
         virtual void OnGravityPrevented() = 0;
         virtual void OnCrouched() = 0;
         virtual void OnStoodUp() = 0;
+        virtual void OnStandPrevented() = 0;
         virtual void OnStartedCrouching() = 0;
         virtual void OnStartedStanding() = 0;
         virtual void OnFirstJump() = 0;
@@ -328,7 +336,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
 
         void OnGroundHit() override
         {
@@ -385,6 +393,10 @@ namespace FirstPersonController
         void OnStoodUp() override
         {
             Call(FN_OnStoodUp);
+        }
+        void OnStandPrevented() override
+        {
+            Call(FN_OnStandPrevented);
         }
         void OnStartedCrouching() override
         {
