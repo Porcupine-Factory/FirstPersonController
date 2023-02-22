@@ -2048,12 +2048,9 @@ namespace FirstPersonController
     // with the vector 3 that's provided. This is intentionally done without any rotation about the Z axis.
     AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
     {
-        if(newXCrossYDirection.IsZero())
-            return AZ::Vector3::CreateAxisZ();
-
         AZ::Vector3 tiltedXY = AZ::Vector3(vXY);
 
-        if(newXCrossYDirection != AZ::Vector3::CreateAxisZ())
+        if(!newXCrossYDirection.IsZero() && newXCrossYDirection != AZ::Vector3::CreateAxisZ())
         {
             if(newXCrossYDirection.GetZ() > 0.f)
             {
@@ -2068,6 +2065,7 @@ namespace FirstPersonController
                     tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
                 else
                    tiltedY = AZ::Quaternion::CreateRotationX(AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+
                 tiltedXY = tiltedX + tiltedY;
             }
             else if(newXCrossYDirection.GetZ() < 0.f)
@@ -2083,6 +2081,7 @@ namespace FirstPersonController
                     tiltedY = AZ::Quaternion::CreateRotationX(AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
                 else
                    tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ()))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+
                 tiltedXY = tiltedX + tiltedY;
             }
             else
