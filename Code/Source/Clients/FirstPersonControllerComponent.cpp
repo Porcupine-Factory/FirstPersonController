@@ -2087,7 +2087,7 @@ namespace FirstPersonController
             else
             {
                 AZ::Vector3 tiltedX = AZ::Vector3::CreateAxisX(vXY.GetX());
-                if(newXCrossYDirection.GetX() != 0.f)
+                if(!AZ::IsClose(newXCrossYDirection.GetX(), 0.f))
                 {
                     if(newXCrossYDirection.GetX() > 0.f)
                         tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, 0.f))).TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
@@ -2096,7 +2096,7 @@ namespace FirstPersonController
                 }
 
                 AZ::Vector3 tiltedY = AZ::Vector3::CreateAxisY(vXY.GetY());
-                if(newXCrossYDirection.GetY() != 0.f)
+                if(!AZ::IsClose(newXCrossYDirection.GetY(), 0.f))
                 {
                     if(newXCrossYDirection.GetY() > 0.f)
                         tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), 0.f))).TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
