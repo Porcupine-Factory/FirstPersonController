@@ -99,7 +99,7 @@ namespace FirstPersonController
               ->Field("Jump Hold Distance (m)", &FirstPersonControllerComponent::m_jumpHoldDistance)
               ->Field("Jump Head Hit Detection Distance (m)", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
               ->Field("Jump Head Hit Sets Apogee", &FirstPersonControllerComponent::m_headHitSetsApogee)
-              ->Field("Jump Head Hit Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies)
+              ->Field("Jump Head Hit Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_updateXYDecending)
@@ -302,8 +302,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_headHitSetsApogee,
                         "Jump Head Hit Sets Apogee", "Determines whether a collision with the head hit sphere cast causes the character's jump velocity to imminently stop, defining that point as the apogee of a jump.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_jumpHeadIgnoreNonKinematicRigidBodies,
-                        "Jump Head Hit Ignore Non-Kinematic Rigid Bodies", "Determines whether or not non-kinematic (dynamic) rigid bodies are ignored by the jump head collision detection system.")
+                        &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies,
+                        "Jump Head Hit Ignore Dynamic Rigid Bodies", "Determines whether or not non-kinematic (dynamic) rigid bodies are ignored by the jump head collision detection system.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
                         "Enable Double Jump", "Turn this on to enable double jumping.")
@@ -468,15 +468,15 @@ namespace FirstPersonController
                 ->Event("Set Head Hit Sets Apogee", &FirstPersonControllerComponentRequests::SetHeadHitSetsApogee)
                 ->Event("Get Head Hit", &FirstPersonControllerComponentRequests::GetHeadHit)
                 ->Event("Set Head Hit", &FirstPersonControllerComponentRequests::SetHeadHit)
-                ->Event("Get Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::GetJumpHeadIgnoreNonKinematicRigidBodies)
-                ->Event("Set Jump Head Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::SetJumpHeadIgnoreNonKinematicRigidBodies)
+                ->Event("Get Jump Head Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::GetJumpHeadIgnoreDynamicRigidBodies)
+                ->Event("Set Jump Head Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::SetJumpHeadIgnoreDynamicRigidBodies)
                 ->Event("Get Head Hit Collision Group Name", &FirstPersonControllerComponentRequests::GetHeadCollisionGroupName)
                 ->Event("Set Head Hit Collision Group By Name", &FirstPersonControllerComponentRequests::SetHeadCollisionGroupByName)
                 ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
                 ->Event("Get Stand Prevented", &FirstPersonControllerComponentRequests::GetStandPrevented)
                 ->Event("Set Stand Prevented", &FirstPersonControllerComponentRequests::SetStandPrevented)
-                ->Event("Get Stand Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::GetStandIgnoreNonKinematicRigidBodies)
-                ->Event("Set Stand Ignore Non-Kinematic Rigid Bodies", &FirstPersonControllerComponentRequests::SetStandIgnoreNonKinematicRigidBodies)
+                ->Event("Get Stand Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::GetStandIgnoreDynamicRigidBodies)
+                ->Event("Set Stand Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::SetStandIgnoreDynamicRigidBodies)
                 ->Event("Get Stand Collision Group Name", &FirstPersonControllerComponentRequests::GetStandCollisionGroupName)
                 ->Event("Set Stand Collision Group By Name", &FirstPersonControllerComponentRequests::SetStandCollisionGroupByName)
                 ->Event("Get Stand Prevented EntityIds", &FirstPersonControllerComponentRequests::GetStandPreventedEntityIds)
@@ -1447,14 +1447,16 @@ namespace FirstPersonController
                             return true;
                     }
 
-                    if(m_standIgnoreNonKinematicRigidBodies)
+                    if(m_standIgnoreDynamicRigidBodies)
                     {
-                        // Check to see if the entity hit is kinematic
-                        bool isKinematic = true;
-                        Physics::RigidBodyRequestBus::EventResult(isKinematic, hit.m_entityId,
-                            &Physics::RigidBodyRequests::IsKinematic);
+                        // Check to see if the entity hit is dynamic
+                        AzPhysics::RigidBody* bodyHit;
+                        Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId,
+                            &Physics::RigidBodyRequests::GetRigidBody);
 
-                        if(!isKinematic)
+                        // Static Rigid Bodies are not connected to the RigidBodyRequestBus and therefore
+                        // do not have a handler for it
+                        if(bodyHit != NULL && !bodyHit->IsKinematic())
                             return true;
                     }
 
@@ -1874,14 +1876,16 @@ namespace FirstPersonController
                         return true;
                 }
 
-                if(m_jumpHeadIgnoreNonKinematicRigidBodies)
+                if(m_jumpHeadIgnoreDynamicRigidBodies)
                 {
-                    // Check to see if the entity hit is kinematic
-                    bool isKinematic = true;
-                    Physics::RigidBodyRequestBus::EventResult(isKinematic, hit.m_entityId,
-                        &Physics::RigidBodyRequests::IsKinematic);
+                    // Check to see if the entity hit is dynamic
+                    AzPhysics::RigidBody* bodyHit;
+                    Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId,
+                        &Physics::RigidBodyRequests::GetRigidBody);
 
-                    if(!isKinematic)
+                    // Static Rigid Bodies are not connected to the RigidBodyRequestBus and therefore
+                    // do not have a handler for it
+                    if(bodyHit != NULL && !bodyHit->IsKinematic())
                         return true;
                 }
 
@@ -2873,13 +2877,13 @@ namespace FirstPersonController
     {
         m_headHit = new_headHit;
     }
-    bool FirstPersonControllerComponent::GetJumpHeadIgnoreNonKinematicRigidBodies() const
+    bool FirstPersonControllerComponent::GetJumpHeadIgnoreDynamicRigidBodies() const
     {
-        return m_jumpHeadIgnoreNonKinematicRigidBodies;
+        return m_jumpHeadIgnoreDynamicRigidBodies;
     }
-    void FirstPersonControllerComponent::SetJumpHeadIgnoreNonKinematicRigidBodies(const bool& new_jumpHeadIgnoreNonKinematicRigidBodies)
+    void FirstPersonControllerComponent::SetJumpHeadIgnoreDynamicRigidBodies(const bool& new_jumpHeadIgnoreDynamicRigidBodies)
     {
-        m_jumpHeadIgnoreNonKinematicRigidBodies = new_jumpHeadIgnoreNonKinematicRigidBodies;
+        m_jumpHeadIgnoreDynamicRigidBodies = new_jumpHeadIgnoreDynamicRigidBodies;
     }
     AZStd::string FirstPersonControllerComponent::GetHeadCollisionGroupName() const
     {
@@ -2916,13 +2920,13 @@ namespace FirstPersonController
         else
             m_standPreventedViaScript = false;
     }
-    bool FirstPersonControllerComponent::GetStandIgnoreNonKinematicRigidBodies() const
+    bool FirstPersonControllerComponent::GetStandIgnoreDynamicRigidBodies() const
     {
-        return m_standIgnoreNonKinematicRigidBodies;
+        return m_standIgnoreDynamicRigidBodies;
     }
-    void FirstPersonControllerComponent::SetStandIgnoreNonKinematicRigidBodies(const bool& new_standIgnoreNonKinematicRigidBodies)
+    void FirstPersonControllerComponent::SetStandIgnoreDynamicRigidBodies(const bool& new_standIgnoreDynamicRigidBodies)
     {
-        m_standIgnoreNonKinematicRigidBodies = new_standIgnoreNonKinematicRigidBodies;
+        m_standIgnoreDynamicRigidBodies = new_standIgnoreDynamicRigidBodies;
     }
     AZStd::string FirstPersonControllerComponent::GetStandCollisionGroupName() const
     {

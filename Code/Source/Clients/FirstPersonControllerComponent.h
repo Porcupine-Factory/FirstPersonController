@@ -195,15 +195,15 @@ namespace FirstPersonController
         void SetHeadHitSetsApogee(const bool& new_headHitSetsApogee) override;
         bool GetHeadHit() const override;
         void SetHeadHit(const bool& new_headHit) override;
-        bool GetJumpHeadIgnoreNonKinematicRigidBodies() const override;
-        void SetJumpHeadIgnoreNonKinematicRigidBodies(const bool& new_jumpHeadIgnoreNonKinematicRigidBodies) override;
+        bool GetJumpHeadIgnoreDynamicRigidBodies() const override;
+        void SetJumpHeadIgnoreDynamicRigidBodies(const bool& new_jumpHeadIgnoreDynamicRigidBodies) override;
         AZStd::string GetHeadCollisionGroupName() const override;
         void SetHeadCollisionGroupByName(const AZStd::string& new_headCollisionGroupName) override;
         AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const override;
         bool GetStandPrevented() const override;
         void SetStandPrevented(const bool& new_standPrevented) override;
-        bool GetStandIgnoreNonKinematicRigidBodies() const override;
-        void SetStandIgnoreNonKinematicRigidBodies(const bool& new_standIgnoreNonKinematicRigidBodies) override;
+        bool GetStandIgnoreDynamicRigidBodies() const override;
+        void SetStandIgnoreDynamicRigidBodies(const bool& new_standIgnoreDynamicRigidBodies) override;
         AZStd::string GetStandCollisionGroupName() const override;
         void SetStandCollisionGroupByName(const AZStd::string& new_standCollisionGroupName) override;
         AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const override;
@@ -514,7 +514,7 @@ namespace FirstPersonController
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
         bool m_secondJump = false;
-        bool m_jumpHeadIgnoreNonKinematicRigidBodies = true;
+        bool m_jumpHeadIgnoreDynamicRigidBodies = true;
         bool m_headHit = false;
         bool m_headHitSetsApogee = true;
         AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();
@@ -576,7 +576,7 @@ namespace FirstPersonController
         AzPhysics::CollisionGroups::Id m_standCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_standCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_standPreventedEntityIds;
-        bool m_standIgnoreNonKinematicRigidBodies = true;
+        bool m_standIgnoreDynamicRigidBodies = true;
 
         // Event value multipliers
         float m_forwardValue = 0.f;
