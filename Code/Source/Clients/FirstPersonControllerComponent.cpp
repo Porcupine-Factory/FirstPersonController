@@ -641,6 +641,8 @@ namespace FirstPersonController
         Physics::CharacterRequestBus::EventResult(m_maxGroundedAngleDegrees, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
 
+        m_capsuleCurrentHeight = m_capsuleHeight;
+
         // Set the collision group based on the group Id that is selected
         Physics::CollisionRequestBus::BroadcastResult(
             m_groundedCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_groundedCollisionGroupId);
@@ -1829,7 +1831,7 @@ namespace FirstPersonController
         AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
 
         // Move the sphere to the location of the character and apply the Z offset
-        sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius));
+        sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius));
 
         AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ();
 
@@ -1838,9 +1840,9 @@ namespace FirstPersonController
         {
             sphereCastDirection = m_sphereCastsAxisDirectionPose;
             if(m_sphereCastsAxisDirectionPose.GetZ() >= 0.f)
-                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose).TransformVector(AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius)));
             else
-                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleHeight - m_capsuleRadius)));
+                sphereCastPose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose).TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius)));
         }
 
         AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
@@ -2249,6 +2251,8 @@ namespace FirstPersonController
             &PhysX::CharacterControllerRequestBus::Events::GetHeight);
         PhysX::CharacterControllerRequestBus::EventResult(m_capsuleRadius, GetEntityId(),
             &PhysX::CharacterControllerRequestBus::Events::GetRadius);
+
+        m_capsuleCurrentHeight = m_capsuleHeight;
     }
     void FirstPersonControllerComponent::ReacquireMaxSlopeAngle()
     {
