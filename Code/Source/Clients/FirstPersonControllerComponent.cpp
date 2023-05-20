@@ -1320,7 +1320,10 @@ namespace FirstPersonController
         }
         else if(!m_crouchEnableToggle && !m_crouchScriptLocked)
         {
-            if(m_crouchValue != 0.f)
+            if(m_crouchValue != 0.f
+                 && ((m_sprintValue == 0.f || !m_crouchSprintCausesStanding)
+                  || ((m_crouchPriorityWhenSprintPressed) && (m_standing || (m_crouching && !m_crouched))))
+                 && (m_jumpValue == 0.f || !m_crouchJumpCausesStanding))
                 m_crouching = true;
             else
                 m_crouching = false;
