@@ -12,6 +12,7 @@
 #include <AzCore/std/containers/map.h>
 
 #include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
+#include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Input/Events/InputChannelEventListener.h>
 
 #include <StartingPointInput/InputEventNotificationBus.h>
@@ -23,6 +24,7 @@ namespace FirstPersonController
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
+        , protected Physics::CharacterNotificationBus::Handler
         , public AzFramework::InputChannelEventListener
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentRequestBus::Handler
@@ -35,6 +37,9 @@ namespace FirstPersonController
         // AZ::Component interface implementation
         void Activate() override;
         void Deactivate() override;
+
+        // Physics::CharacterNotificationBus override
+        void OnCharacterActivated(const AZ::EntityId& entityId) override;
 
         static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
@@ -342,9 +347,6 @@ namespace FirstPersonController
         // Child EntityIds
         bool m_obtainedChildIds = false;
         AZStd::vector<AZ::EntityId> m_children;
-
-        // Used for obtaining PhysX Character Controller Component's attributes
-        bool m_obtainedPhysXCharacterAttributes = false;
 
         // Called on each tick
         void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);

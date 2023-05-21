@@ -9,7 +9,6 @@
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Serialization/EditContext.h>
 
-#include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Physics/RigidBodyBus.h>
 #include <AzFramework/Physics/CollisionBus.h>
 #include <AzFramework/Physics/SystemBus.h>
@@ -632,6 +631,33 @@ namespace FirstPersonController
             }
         }
 
+        // The charcter controller needs to be activated in order to obtain the
+        // PhysX Chartacter Controller Component's attributes
+        Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
+
+        // Set the collision group based on the group Id that is selected
+        Physics::CollisionRequestBus::BroadcastResult(
+            m_groundedCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_groundedCollisionGroupId);
+
+        UpdateJumpMaxHoldTime();
+
+        AssignConnectInputEvents();
+
+        AZ::TickBus::Handler::BusConnect();
+
+        InputChannelEventListener::Connect();
+        // Attempting to allow all possible input events through without filtering anything out
+        // This may not be necessary
+        AZStd::shared_ptr<AzFramework::InputChannelEventFilterInclusionList> filter;
+        AzFramework::InputChannelEventListener::SetFilter(filter);
+
+        FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
+    }
+
+    void FirstPersonControllerComponent::OnCharacterActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+        Physics::CharacterNotificationBus::Handler::BusDisconnect();
+
         // Obtain the PhysX Character Controller's capsule height and radius
         // and use those dimensions for the ground detection shapecast capsule
         PhysX::CharacterControllerRequestBus::EventResult(m_capsuleHeight, GetEntityId(),
@@ -642,10 +668,6 @@ namespace FirstPersonController
             &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
 
         m_capsuleCurrentHeight = m_capsuleHeight;
-
-        // Set the collision group based on the group Id that is selected
-        Physics::CollisionRequestBus::BroadcastResult(
-            m_groundedCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_groundedCollisionGroupId);
 
         if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
             m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
@@ -661,20 +683,6 @@ namespace FirstPersonController
         //AZ_Printf("", "m_capsuleHeight = %.10f", m_capsuleHeight);
         //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
         //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
-
-        UpdateJumpMaxHoldTime();
-
-        AssignConnectInputEvents();
-
-        AZ::TickBus::Handler::BusConnect();
-
-        InputChannelEventListener::Connect();
-        // Attempting to allow all possible input events through without filtering anything out
-        // This may not be necessary
-        AZStd::shared_ptr<AzFramework::InputChannelEventFilterInclusionList> filter;
-        AzFramework::InputChannelEventListener::SetFilter(filter);
-
-        FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
     }
 
     void FirstPersonControllerComponent::Deactivate()
@@ -2122,16 +2130,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
     {
-        // Obtain the PhysX Character Controller Component's attributes one time
-        // This is necessary since the PhysX Character Controller Component may not have a handler when
-        // FirstPersonControllerComponent::Activate() is called
-        if(!m_obtainedPhysXCharacterAttributes && PhysX::CharacterControllerRequestBus::HasHandlers())
-        {
-            ReacquireCapsuleDimensions();
-            ReacquireMaxSlopeAngle();
-            m_obtainedPhysXCharacterAttributes = true;
-        }
-
         // Only update the rotation on each tick
         if(!timestepElseTick)
         {
