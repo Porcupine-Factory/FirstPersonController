@@ -343,6 +343,9 @@ namespace FirstPersonController
         bool m_obtainedChildIds = false;
         AZStd::vector<AZ::EntityId> m_children;
 
+        // Used for obtaining PhysX Character Controller Component's attributes
+        bool m_obtainedPhysXCharacterAttributes = false;
+
         // Called on each tick
         void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);
 
@@ -495,9 +498,9 @@ namespace FirstPersonController
         float m_applyVelocityZCurrentDelta = 0.f;
         float m_applyVelocityZPrevDelta = 0.f;
         float m_correctedVelocityZ = 0.f;
-        float m_capsuleRadius = 0.25f;
-        float m_capsuleHeight = 1.753f;
-        float m_capsuleCurrentHeight = 1.753f;
+        float m_capsuleRadius = 0.3f;
+        float m_capsuleHeight = 1.8f;
+        float m_capsuleCurrentHeight = 1.8f;
         // The grounded sphere cast offset determines how far below the character's feet the ground is detected
         float m_groundedSphereCastOffset = 0.001f;
         // The ground close sphere cast offset determines how far below the character's feet the ground is considered to be close

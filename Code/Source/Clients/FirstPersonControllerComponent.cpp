@@ -2122,6 +2122,16 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
     {
+        // Obtain the PhysX Character Controller Component's attributes one time
+        // This is necessary since the PhysX Character Controller Component may not have a handler when
+        // FirstPersonControllerComponent::Activate() is called
+        if(!m_obtainedPhysXCharacterAttributes && PhysX::CharacterControllerRequestBus::HasHandlers())
+        {
+            ReacquireCapsuleDimensions();
+            ReacquireMaxSlopeAngle();
+            m_obtainedPhysXCharacterAttributes = true;
+        }
+
         // Only update the rotation on each tick
         if(!timestepElseTick)
         {
@@ -2255,12 +2265,19 @@ namespace FirstPersonController
         PhysX::CharacterControllerRequestBus::EventResult(m_capsuleRadius, GetEntityId(),
             &PhysX::CharacterControllerRequestBus::Events::GetRadius);
 
+        if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
+            m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
+
         m_capsuleCurrentHeight = m_capsuleHeight;
     }
     void FirstPersonControllerComponent::ReacquireMaxSlopeAngle()
     {
         Physics::CharacterRequestBus::EventResult(m_maxGroundedAngleDegrees, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
+
+        // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
+        // maximum slope angle value
+        m_maxGroundedAngleDegrees += 0.01f;
     }
     AZStd::string FirstPersonControllerComponent::GetForwardEventName() const
     {
