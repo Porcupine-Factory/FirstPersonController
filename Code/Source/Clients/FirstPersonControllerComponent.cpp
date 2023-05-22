@@ -1592,7 +1592,7 @@ namespace FirstPersonController
                 // Set the previous target velocity to the new one
                 m_prevTargetVelocityXY = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
-                if(m_hitSomething)
+                if(!m_velocityXYIgnoresObstacles && m_hitSomething)
                 {
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
                     m_correctedVelocityXY = AZ::Vector2::CreateZero();
