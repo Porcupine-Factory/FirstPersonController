@@ -1584,7 +1584,7 @@ namespace FirstPersonController
         // Obtain the last applied velocity if the target velocity changed
         if((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
                                         : (m_prevTargetVelocityXY != targetVelocityXYWorld))
-            || m_hitSomething
+            || (!m_velocityXYIgnoresObstacles && m_hitSomething)
             || (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
         {
             if(m_instantVelocityRotation)
