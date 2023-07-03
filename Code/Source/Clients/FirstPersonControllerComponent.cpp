@@ -963,13 +963,16 @@ namespace FirstPersonController
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
 
-        m_lerpTime += lerpDeltaTime;
+        m_lerpTime += lerpDeltaTime * 0.5f;
 
         if(m_lerpTime >= m_totalLerpTime)
             m_lerpTime = m_totalLerpTime;
 
         // Lerp the velocity from the last applied velocity to the target velocity
         AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
+
+        if(m_lerpTime != m_totalLerpTime)
+            m_lerpTime += lerpDeltaTime * 0.5f;
 
         // Decelerate at a different rate than the acceleration
         if(newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
@@ -1010,7 +1013,7 @@ namespace FirstPersonController
             }
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
-            m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
+            m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor * 0.5f;
 
             if(m_lerpTime >= m_totalLerpTime)
                 m_lerpTime = m_totalLerpTime;
@@ -1018,6 +1021,9 @@ namespace FirstPersonController
             AZ::Vector2 newVelocityXYDecel =  m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
             if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
+
+            if(m_lerpTime != m_totalLerpTime)
+                m_lerpTime += lerpDeltaTime * m_decelerationFactor * 0.5f;
         }
         else
         {
