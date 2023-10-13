@@ -305,6 +305,7 @@ namespace FirstPersonController
         virtual void OnGroundSoonHit() = 0;
         virtual void OnUngrounded() = 0;
         virtual void OnStartedFalling() = 0;
+        virtual void OnJumpApogeeReached() = 0;
         virtual void OnStartedMoving() = 0;
         virtual void OnTargetVelocityReached() = 0;
         virtual void OnStopped() = 0;
@@ -336,7 +337,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
 
         void OnGroundHit() override
         {
@@ -353,6 +354,10 @@ namespace FirstPersonController
         void OnStartedFalling() override
         {
             Call(FN_OnStartedFalling);
+        }
+        void OnJumpApogeeReached() override
+        {
+            Call(FN_OnJumpApogeeReached);
         }
         void OnStartedMoving()
         {

@@ -1994,9 +1994,7 @@ namespace FirstPersonController
             else
                 m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
 
-            if(!m_doubleJumpEnabled && !m_jumpHeld)
-                m_jumpHeld = true;
-            else if(m_doubleJumpEnabled && !m_secondJump && m_jumpValue == 0.f && m_jumpHeld)
+            if(m_jumpHeld && m_jumpValue == 0.f)
                 m_jumpHeld = false;
 
             if(m_doubleJumpEnabled && !m_secondJump && !m_jumpHeld && m_jumpValue != 0.f)
@@ -2048,8 +2046,10 @@ namespace FirstPersonController
                 m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
         }
 
-        if(prevApplyVelocityZ >= 0.f && m_applyVelocityZ < 0.f)
+        if(prevApplyVelocityZ == 0.f && m_applyVelocityZ < 0.f)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedFalling);
+        if(prevApplyVelocityZ > 0.f && m_applyVelocityZ <= 0.f)
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnJumpApogeeReached);
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
@@ -2232,6 +2232,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
     void FirstPersonControllerComponent::OnStartedFalling(){}
+    void FirstPersonControllerComponent::OnJumpApogeeReached(){}
     void FirstPersonControllerComponent::OnStartedMoving(){}
     void FirstPersonControllerComponent::OnTargetVelocityReached(){}
     void FirstPersonControllerComponent::OnStopped(){}
