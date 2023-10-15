@@ -1,5 +1,6 @@
 {
     "gem_name": "FirstPersonController",
+    "version": "1.0.0",
     "display_name": "FirstPersonController",
     "license": "MPL 2.0",
     "license_url": "https://github.com/Porcupine-Factory/FirstPersonController/blob/main/LICENSE.txt",
@@ -18,7 +19,10 @@
     "icon_path": "preview.png",
     "requirements": "This requires the PhysX and Starting Point Input gems.",
     "documentation_url": "https://github.com/Porcupine-Factory/FirstPersonController/wiki",
-    "dependencies": [],
+    "dependencies": [
+        "PhysX",
+        "StartingPointInput"
+    ],
     "repo_uri": "https://github.com/Porcupine-Factory/FirstPersonController.git",
     "restricted": "FirstPersonController"
 }
