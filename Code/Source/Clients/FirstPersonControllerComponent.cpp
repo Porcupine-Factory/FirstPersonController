@@ -75,7 +75,8 @@ namespace FirstPersonController
               // Crouching group
               ->Field("Crouch Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
-              ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
+              ->Field("Crouch Time (sec)", &FirstPersonControllerComponent::m_crouchTime)
+              ->Field("Stand Time (sec)", &FirstPersonControllerComponent::m_standTime)
               ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouchEnableToggle)
               ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouchJumpCausesStanding)
@@ -239,7 +240,10 @@ namespace FirstPersonController
                         "Crouch Distance (m)", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchTime,
-                        "Crouch Time (sec)", "Determines the time it takes to complete the crouch.")
+                        "Crouch Time (sec)", "Determines the time it takes to crouch down from standing.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_standTime,
+                        "Stand Time (sec)", "Determines the time it takes to stand up from crouching.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
                         "Crouch Standing Head Clearance (m)", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
@@ -568,6 +572,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Distance", &FirstPersonControllerComponentRequests::SetCrouchDistance)
                 ->Event("Get Crouch Time", &FirstPersonControllerComponentRequests::GetCrouchTime)
                 ->Event("Set Crouch Time", &FirstPersonControllerComponentRequests::SetCrouchTime)
+                ->Event("Get Stand Time", &FirstPersonControllerComponentRequests::GetStandTime)
+                ->Event("Set Stand Time", &FirstPersonControllerComponentRequests::SetStandTime)
                 ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
                 ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
                 ->Event("Get Crouch Jump Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchJumpCausesStanding)
@@ -1499,7 +1505,7 @@ namespace FirstPersonController
             }
             m_standPrevented = false;
 
-            float cameraTravelDelta = m_crouchDistance * deltaTime / m_crouchTime;
+            float cameraTravelDelta = m_crouchDistance * deltaTime / m_standTime;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
             if(m_cameraLocalZTravelDistance >= 0.f)
@@ -3370,6 +3376,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchTime(const float& new_crouchTime)
     {
         m_crouchTime = new_crouchTime;
+    }
+    float FirstPersonControllerComponent::GetStandTime() const
+    {
+        return m_standTime;
+    }
+    void FirstPersonControllerComponent::SetStandTime(const float& new_standTime)
+    {
+        m_standTime = new_standTime;
     }
     float FirstPersonControllerComponent::GetUncrouchHeadSphereCastOffset() const
     {

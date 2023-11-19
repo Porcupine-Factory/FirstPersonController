@@ -297,6 +297,8 @@ namespace FirstPersonController
         void SetCrouchDistance(const float& new_crouchDistance) override;
         float GetCrouchTime() const override;
         void SetCrouchTime(const float& new_crouchTime) override;
+        float GetStandTime() const override;
+        void SetStandTime(const float& new_standTime) override;
         float GetUncrouchHeadSphereCastOffset() const override;
         void SetUncrouchHeadSphereCastOffset(const float& new_uncrouchHeadSphereCastOffset) override;
         bool GetCrouchEnableToggle() const override;
@@ -463,6 +465,7 @@ namespace FirstPersonController
         // Crouch application variables
         float m_crouchDistance = 0.5f;
         float m_crouchTime = 0.2f;
+        float m_standTime = 0.2f;
         float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
         bool m_crouched = false;
