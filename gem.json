@@ -6,14 +6,18 @@
     "license_url": "https://github.com/Porcupine-Factory/FirstPersonController/blob/main/LICENSE.txt",
     "origin": "Porcupine Factory",
     "origin_uri": "https://github.com/Porcupine-Factory/FirstPersonController.git",
-    "last_updated": "2023-01-30",
-    "sha256":"",
+    "last_updated": "2023-11-22",
+    "sha256": "",
     "type": "Code",
     "summary": "The First Person Controller Gem provides customizable controls for your character in the first-person perspective.",
     "canonical_tags": [
         "Gem"
     ],
     "user_tags": [
+        "Input",
+        "Gameplay",
+        "Scripting",
+        "Physics",
         "FirstPersonController"
     ],
     "icon_path": "preview.png",
@@ -24,5 +28,9 @@
         "StartingPointInput"
     ],
     "repo_uri": "https://github.com/Porcupine-Factory/FirstPersonController.git",
-    "restricted": "FirstPersonController"
+    "restricted": "FirstPersonController",
+    "platforms": [
+        "Linux",
+        "Windows"
+    ]
 }
