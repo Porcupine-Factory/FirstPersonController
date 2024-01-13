@@ -102,7 +102,7 @@ namespace FirstPersonController
               ->Field("Jump Head Hit Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
-              ->Field("Update X&Y Velocity When Decending", &FirstPersonControllerComponent::m_updateXYDecending)
+              ->Field("Update X&Y Velocity When Descending", &FirstPersonControllerComponent::m_updateXYDescending)
               ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_updateXYOnlyNearGround)
 
               ->Version(1);
@@ -315,7 +315,7 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_updateXYAscending,
                         "Update X&Y Velocity When Ascending", "Allows movement in X&Y during a jump’s ascent.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_updateXYDecending,
+                        &FirstPersonControllerComponent::m_updateXYDescending,
                         "Update X&Y Velocity When Descending", "Allows movement in X&Y during a jump’s descent.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYOnlyNearGround,
@@ -2199,9 +2199,9 @@ namespace FirstPersonController
 
             // So long as the character is grounded or depending on how the update X&Y velocity while jumping
             // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
-            if(m_grounded || (m_updateXYAscending && m_updateXYDecending && !m_updateXYOnlyNearGround)
+            if(m_grounded || (m_updateXYAscending && m_updateXYDescending && !m_updateXYOnlyNearGround)
                || ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
-               || ((m_updateXYDecending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
+               || ((m_updateXYDescending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
                 UpdateVelocityXY(deltaTime);
 
             UpdateVelocityZ(deltaTime);
@@ -2694,11 +2694,11 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetUpdateXYDescending() const
     {
-        return m_updateXYAscending;
+        return m_updateXYDescending;
     }
-    void FirstPersonControllerComponent::SetUpdateXYDescending(const bool& new_updateXYDecending)
+    void FirstPersonControllerComponent::SetUpdateXYDescending(const bool& new_updateXYDescending)
     {
-        m_updateXYDecending = new_updateXYDecending;
+        m_updateXYDescending = new_updateXYDescending;
     }
     bool FirstPersonControllerComponent::GetUpdateXYOnlyNearGround() const
     {

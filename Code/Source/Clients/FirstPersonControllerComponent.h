@@ -155,7 +155,7 @@ namespace FirstPersonController
         bool GetUpdateXYAscending() const override;
         void SetUpdateXYAscending(const bool& new_updateXYAscending) override;
         bool GetUpdateXYDescending() const override;
-        void SetUpdateXYDescending(const bool& new_updateXYDecending) override;
+        void SetUpdateXYDescending(const bool& new_updateXYDescending) override;
         bool GetUpdateXYOnlyNearGround() const override;
         void SetUpdateXYOnlyNearGround(const bool& new_updateXYOnlyNearGround) override;
         bool GetAddVelocityForTimestepVsTick() const override;
@@ -533,7 +533,7 @@ namespace FirstPersonController
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;
-        bool m_updateXYDecending = true;
+        bool m_updateXYDescending = true;
         bool m_updateXYOnlyNearGround = false;
 
         // These default values work well, depending on OS mouse settings,
