@@ -13,6 +13,7 @@
 #include <AzFramework/Physics/CollisionBus.h>
 #include <AzFramework/Physics/SystemBus.h>
 #include <AzFramework/Physics/Components/SimulatedBodyComponentBus.h>
+#include <AzFramework/Physics/NameConstants.h>
 #include <AzFramework/Components/CameraBus.h>
 #include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
 #include <AzFramework/Input/Devices/InputDeviceId.h>
@@ -53,8 +54,10 @@ namespace FirstPersonController
               ->Field("Right Scale", &FirstPersonControllerComponent::m_rightScale)
 
               // X&Y Movement group
-              ->Field("Top Walking Speed (m/s)", &FirstPersonControllerComponent::m_speed)
-              ->Field("Walking Acceleration (m/s²)", &FirstPersonControllerComponent::m_accel)
+              ->Field("Top Walking Speed", &FirstPersonControllerComponent::m_speed)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
+              ->Field("Walking Acceleration", &FirstPersonControllerComponent::m_accel)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" m%ss%s%s", Physics::NameConstants::GetInterpunct().c_str(), Physics::NameConstants::GetSuperscriptMinus().c_str(), Physics::NameConstants::GetSuperscriptTwo().c_str()))
               ->Field("Deceleration Factor", &FirstPersonControllerComponent::m_decel)
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
               ->Field("Add Velocity For Physics Timestep Instead Of Tick", &FirstPersonControllerComponent::m_addVelocityForTimestepVsTick)
@@ -67,16 +70,20 @@ namespace FirstPersonController
               ->Field("Sprint Left Scale", &FirstPersonControllerComponent::m_sprintScaleLeft)
               ->Field("Sprint Right Scale", &FirstPersonControllerComponent::m_sprintScaleRight)
               ->Field("Sprint Acceleration Scale", &FirstPersonControllerComponent::m_sprintAccelScale)
-              ->Field("Sprint Max Time (sec)", &FirstPersonControllerComponent::m_sprintMaxTime)
-              ->Field("Sprint Cooldown Time (sec)", &FirstPersonControllerComponent::m_sprintCooldownTime)
+              ->Field("Sprint Max Time", &FirstPersonControllerComponent::m_sprintMaxTime)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " sec")
+              ->Field("Sprint Cooldown Time", &FirstPersonControllerComponent::m_sprintCooldownTime)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " sec")
               ->Field("Sprint Backwards", &FirstPersonControllerComponent::m_sprintBackwards)
               ->Field("Sprint While Crouched", &FirstPersonControllerComponent::m_sprintWhileCrouched)
 
               // Crouching group
               ->Field("Crouch Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
-              ->Field("Crouch Time (sec)", &FirstPersonControllerComponent::m_crouchTime)
-              ->Field("Stand Time (sec)", &FirstPersonControllerComponent::m_standTime)
+              ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " sec")
+              ->Field("Stand Time", &FirstPersonControllerComponent::m_standTime)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " sec")
               ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouchEnableToggle)
               ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouchJumpCausesStanding)
@@ -86,18 +93,25 @@ namespace FirstPersonController
               // Jumping group
               ->Field("Grounded Collision Group", &FirstPersonControllerComponent::m_groundedCollisionGroupId)
               ->Field("Jump Head Hit Collision Group", &FirstPersonControllerComponent::m_headCollisionGroupId)
-              ->Field("Gravity (m/s²)", &FirstPersonControllerComponent::m_gravity)
-              ->Field("Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpInitialVelocity)
-              ->Field("Second Jump Initial Velocity (m/s)", &FirstPersonControllerComponent::m_jumpSecondInitialVelocity)
+              ->Field("Gravity", &FirstPersonControllerComponent::m_gravity)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" m%ss%s%s", Physics::NameConstants::GetInterpunct().c_str(), Physics::NameConstants::GetSuperscriptMinus().c_str(), Physics::NameConstants::GetSuperscriptTwo().c_str()))
+              ->Field("Jump Initial Velocity", &FirstPersonControllerComponent::m_jumpInitialVelocity)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
+              ->Field("Second Jump Initial Velocity", &FirstPersonControllerComponent::m_jumpSecondInitialVelocity)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
               ->Field("Jump Held Gravity Factor", &FirstPersonControllerComponent::m_jumpHeldGravityFactor)
               ->Field("Jump Falling Gravity Factor", &FirstPersonControllerComponent::m_jumpFallingGravityFactor)
-              ->Field("X&Y Acceleration Jump Factor (m/s²)", &FirstPersonControllerComponent::m_jumpAccelFactor)
-              ->Field("Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponent::m_groundSphereCastsRadiusPercentageIncrease)
-                ->Attribute(AZ::Edit::Attributes::Suffix, "%")
-              ->Field("Grounded Offset (m)", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
-              ->Field("Ground Close Offset (m)", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
-              ->Field("Jump Hold Distance (m)", &FirstPersonControllerComponent::m_jumpHoldDistance)
-              ->Field("Jump Head Hit Detection Distance (m)", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
+              ->Field("X&Y Acceleration Jump Factor", &FirstPersonControllerComponent::m_jumpAccelFactor)
+              ->Field("Ground Sphere Casts' Radius Percentage Increase", &FirstPersonControllerComponent::m_groundSphereCastsRadiusPercentageIncrease)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " %")
+              ->Field("Grounded Offset", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
+              ->Field("Ground Close Offset", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
+              ->Field("Jump Hold Distance", &FirstPersonControllerComponent::m_jumpHoldDistance)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
+              ->Field("Jump Head Hit Detection Distance", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Jump Head Hit Sets Apogee", &FirstPersonControllerComponent::m_headHitSetsApogee)
               ->Field("Jump Head Hit Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
@@ -166,10 +180,10 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_speed,
-                        "Top Walking Speed (m/s)", "Determines maximum walking speed of the character.")
+                        "Top Walking Speed", "Determines maximum walking speed of the character.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_accel,
-                        "Walking Acceleration (m/s²)", "Determines how quickly the character will reach the desired velocity.")
+                        "Walking Acceleration", "Determines how quickly the character will reach the desired velocity.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_decel,
                         "Deceleration Factor", "Determines how quickly the character will stop. The product of this number and Walking Acceleration determines the resulting deceleration. It is suggested to use a number greater than or equal to 1.0 for this.")
@@ -220,10 +234,10 @@ namespace FirstPersonController
                         "Sprint Acceleration Scale", "Determines how quickly the character will reach the desired velocity while sprinting. It is suggested to use a number greater than or equal to 1.0 for this.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintMaxTime,
-                        "Sprint Max Time (sec)", "The maximum consecutive sprinting time before beginning Sprint Cooldown. The underlying quantity of Stamina is set by this number.")
+                        "Sprint Max Time", "The maximum consecutive sprinting time before beginning Sprint Cooldown. The underlying quantity of Stamina is set by this number.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintCooldownTime,
-                        "Sprint Cooldown Time (sec)", "The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or Stamina hits 0%.")
+                        "Sprint Cooldown Time", "The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or Stamina hits 0%.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_sprintBackwards,
                         "Sprint Backwards", "Determines whether sprint can be applied when there is any backwards component to the movement. Enabling this does not inherently make it so you can sprint backwards. You will also have to set Sprint Back Scale to something greater than 1.0 to have that effect. If Sprint Back, Left, and Right Scale are all set to 1.0, then this effectively does nothing.")
@@ -238,16 +252,16 @@ namespace FirstPersonController
                         "Crouch Speed Scale", "Determines how much slow the character will move when crouched. The product of this number and the top walk speed is the top crouch walk speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
-                        "Crouch Distance (m)", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
+                        "Crouch Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchTime,
-                        "Crouch Time (sec)", "Determines the time it takes to crouch down from standing.")
+                        "Crouch Time", "Determines the time it takes to crouch down from standing.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_standTime,
-                        "Stand Time (sec)", "Determines the time it takes to stand up from crouching.")
+                        "Stand Time", "Determines the time it takes to stand up from crouching.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
-                        "Crouch Standing Head Clearance (m)", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
+                        "Crouch Standing Head Clearance", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchEnableToggle,
                         "Crouch Enable Toggle", "Determines whether the crouch key toggles crouching. Disabling this requires the crouch key to be held to maintain crouch.")
@@ -271,13 +285,13 @@ namespace FirstPersonController
                         "Jump Head Hit Collision Group", "The collision group which will be used for the jump head hit detection.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
-                        "Gravity (m/s²)", "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay component's gravity instead.")
+                        "Gravity", "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay component's gravity instead.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpInitialVelocity,
-                        "Jump Initial Velocity (m/s)", "The velocity used when initiating the jump.")
+                        "Jump Initial Velocity", "The velocity used when initiating the jump.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpSecondInitialVelocity,
-                        "Second Jump Initial Velocity (m/s)", "The initial velocity that's used for the second jump.")
+                        "Second Jump Initial Velocity", "The initial velocity that's used for the second jump.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeldGravityFactor,
                         "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump.")
@@ -286,22 +300,22 @@ namespace FirstPersonController
                         "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the character is falling.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
-                        "X&Y Acceleration Jump Factor (m/s²)", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
+                        "X&Y Acceleration Jump Factor", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHoldDistance,
-                        "Jump Hold Distance (m)", "Effectively determines the time that jump may be held. During this initial period of the jump, the Jump Held Gravity Factor is applied, making the maximum height greater. If the number entered here exceeds the calculated apogee, you will get a warning message.")
+                        "Jump Hold Distance", "Effectively determines the time that jump may be held. During this initial period of the jump, the Jump Held Gravity Factor is applied, making the maximum height greater. If the number entered here exceeds the calculated apogee, you will get a warning message.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
-                        "Grounded Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
+                        "Grounded Offset", "Determines the offset distance between the bottom of the character and ground.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundCloseSphereCastOffset,
-                        "Ground Close Offset (m)", "Determines the offset distance between the bottom of the character and ground.")
+                        "Ground Close Offset", "Determines the offset distance between the bottom of the character and ground.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundSphereCastsRadiusPercentageIncrease,
-                        "Ground Sphere Casts' Radius Percentage Increase (%)", "The percentage increase in the radius of the ground and ground close sphere casts over the PhysX Character Controller's capsule radius.")
+                        "Ground Sphere Casts' Radius Percentage Increase", "The percentage increase in the radius of the ground and ground close sphere casts over the PhysX Character Controller's capsule radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset,
-                        "Jump Head Hit Detection Distance (m)", "The distance above the character's head where an obstruction will be detected for jumping. The apogee of the jump occurs when there is a collision.")
+                        "Jump Head Hit Detection Distance", "The distance above the character's head where an obstruction will be detected for jumping. The apogee of the jump occurs when there is a collision.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_headHitSetsApogee,
                         "Jump Head Hit Sets Apogee", "Determines whether a collision with the head hit sphere cast causes the character's jump velocity to imminently stop, defining that point as the apogee of a jump.")
