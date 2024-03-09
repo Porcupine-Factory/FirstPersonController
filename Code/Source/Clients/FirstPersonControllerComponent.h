@@ -329,12 +329,8 @@ namespace FirstPersonController
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
         bool GetCameraSlerpInsteadOfLerpRotation() const override;
         void SetCameraSlerpInsteadOfLerpRotation(const bool& new_cameraSlerpInsteadOfLerpRotation) override;
-        bool GetUpdateCameraYawIgnoresInput() const override;
-        void SetUpdateCameraYawIgnoresInput(const bool& new_updateCameraYawIgnoresInput) override;
-        bool GetUpdateCameraPitchIgnoresInput() const override;
-        void SetUpdateCameraPitchIgnoresInput(const bool& new_updateCameraPitchIgnoresInput) override;
-        void UpdateCameraYaw(const float& new_cameraYawAngle) override;
-        void UpdateCameraPitch(const float& new_cameraPitchAngle) override;
+        void UpdateCameraYaw(const float& new_cameraYawAngle, const bool& updateCameraYawConsidersInput = true) override;
+        void UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput = true) override;
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
@@ -548,8 +544,6 @@ namespace FirstPersonController
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 30.f;
         bool m_cameraSlerpInsteadOfLerpRotation = true;
-        bool m_updateCameraYawIgnoresInput = false;
-        bool m_updateCameraPitchIgnoresInput = false;
         float m_cameraPitchMaxAngle = AZ::Constants::HalfPi;
         float m_cameraPitchMinAngle = -AZ::Constants::HalfPi;
 
