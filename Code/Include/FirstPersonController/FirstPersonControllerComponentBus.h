@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define FIRST_PERSON_CONTROLLER
+
 #include <AzCore/Component/ComponentBus.h>
 #include <AzCore/RTTI/BehaviorContext.h>
 #include <AzCore/Math/Vector3.h>
