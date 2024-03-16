@@ -903,7 +903,7 @@ namespace FirstPersonController
         return ca->FindEntity(activeCameraId);
     }
 
-    void FirstPersonControllerComponent::SmoothRotation(const float& deltaTime)
+    void FirstPersonControllerComponent::SmoothRotation()
     {
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
@@ -921,20 +921,20 @@ namespace FirstPersonController
         const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerAnglesRadians(
             AZ::Vector3::CreateFromFloat3(m_cameraRotationAngles));
 
-        if(m_rotationDamp*deltaTime <= 1.f)
+        if(m_rotationDamp*0.01f <= 1.f)
         {
             if(m_cameraSlerpInsteadOfLerpRotation)
-                m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp*deltaTime);
+                m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp*0.01f);
             else
-                m_newLookRotationDelta = m_newLookRotationDelta.Lerp(targetLookRotationDelta, m_rotationDamp*deltaTime);
+                m_newLookRotationDelta = m_newLookRotationDelta.Lerp(targetLookRotationDelta, m_rotationDamp*0.01f);
         }
         else
             m_newLookRotationDelta = targetLookRotationDelta;
     }
 
-    void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime)
+    void FirstPersonControllerComponent::UpdateRotation()
     {
-        SmoothRotation(deltaTime);
+        SmoothRotation();
         const AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
 
         AZ::TransformInterface* t = GetEntity()->GetTransform();
@@ -2158,7 +2158,7 @@ namespace FirstPersonController
         // Only update the rotation on each tick
         if(!timestepElseTick)
         {
-            UpdateRotation(deltaTime);
+            UpdateRotation();
 
             // Get the current velocity to determine if something was hit
             AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();

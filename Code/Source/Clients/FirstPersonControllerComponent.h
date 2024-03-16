@@ -354,9 +354,9 @@ namespace FirstPersonController
         void UpdateVelocityXY(const float& deltaTime);
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
-        void UpdateRotation(const float& deltaTime);
+        void UpdateRotation();
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
-        void SmoothRotation(const float& deltaTime);
+        void SmoothRotation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
 
