@@ -327,8 +327,6 @@ namespace FirstPersonController
         void SetCameraPitchMinAngleDegrees(const float& new_pitchMinAngleDegrees) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
-        bool GetCameraSlerpInsteadOfLerpRotation() const override;
-        void SetCameraSlerpInsteadOfLerpRotation(const bool& new_cameraSlerpInsteadOfLerpRotation) override;
         void UpdateCameraYaw(const float& new_cameraYawAngle, const bool& updateCameraYawConsidersInput = true) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput = true) override;
         float GetHeading() const override;
@@ -543,7 +541,6 @@ namespace FirstPersonController
         float m_currentPitch = 0.f;
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 30.f;
-        bool m_cameraSlerpInsteadOfLerpRotation = true;
         float m_cameraPitchMaxAngle = AZ::Constants::HalfPi;
         float m_cameraPitchMinAngle = -AZ::Constants::HalfPi;
 
