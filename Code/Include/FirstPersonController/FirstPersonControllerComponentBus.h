@@ -272,8 +272,8 @@ namespace FirstPersonController
         virtual void SetSprintViaScript(const bool&) = 0;
         virtual bool GetSprintEnableDisableScript() const = 0;
         virtual void SetSprintEnableDisableScript(const bool&) = 0;
-        virtual float GetCameraYawSensitivity() const = 0;
-        virtual void SetCameraYawSensitivity(const float&) = 0;
+        virtual float GetCharacterAndCameraYawSensitivity() const = 0;
+        virtual void SetCharacterAndCameraYawSensitivity(const float&) = 0;
         virtual float GetCameraPitchSensitivity() const = 0;
         virtual void SetCameraPitchSensitivity(const float&) = 0;
         virtual float GetCameraPitchMaxAngleRadians() const = 0;
@@ -286,8 +286,8 @@ namespace FirstPersonController
         virtual void SetCameraPitchMinAngleDegrees(const float&) = 0;
         virtual float GetCameraRotationDampFactor() const = 0;
         virtual void SetCameraRotationDampFactor(const float&) = 0;
+        virtual void UpdateCharacterAndCameraYaw(const float&, const bool&) = 0;
         virtual void UpdateCameraPitch(const float&, const bool&) = 0;
-        virtual void UpdateCameraYaw(const float&, const bool&) = 0;
         virtual float GetHeading() const = 0;
         virtual void SetHeadingForTick(const float&) = 0;
         virtual float GetPitch() const = 0;

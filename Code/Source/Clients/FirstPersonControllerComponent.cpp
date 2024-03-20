@@ -148,7 +148,7 @@ namespace FirstPersonController
                         "Right Key", "Key for moving right. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strYaw,
-                        "Camera Yaw Rotate Input", "Camera left/right rotation control. Must match an Event Name in the .inputbindings file.")
+                        "Camera Yaw Rotate Input", "Camera (and Character) left/right rotation control. Must match an Event Name in the .inputbindings file.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_strPitch,
                         "Camera Pitch Rotate Input", "Camera up/down rotation control. Must match an Event Name in the .inputbindings file.")
@@ -595,8 +595,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchSprintCausesStanding)
                 ->Event("Get Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::GetCrouchPriorityWhenSprintPressed)
                 ->Event("Set Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::SetCrouchPriorityWhenSprintPressed)
-                ->Event("Get Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCameraYawSensitivity)
-                ->Event("Set Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCameraYawSensitivity)
+                ->Event("Get Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCharacterAndCameraYawSensitivity)
+                ->Event("Set Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCharacterAndCameraYawSensitivity)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
                 ->Event("Get Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleRadians)
@@ -609,7 +609,7 @@ namespace FirstPersonController
                 ->Event("Set Camera Pitch Min Angle (Degrees)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleDegrees)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
-                ->Event("Update Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCameraYaw)
+                ->Event("Update Character And Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCharacterAndCameraYaw)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
@@ -3427,11 +3427,11 @@ namespace FirstPersonController
     {
         m_crouchPriorityWhenSprintPressed = new_crouchPriorityWhenSprintPressed;
     }
-    float FirstPersonControllerComponent::GetCameraYawSensitivity() const
+    float FirstPersonControllerComponent::GetCharacterAndCameraYawSensitivity() const
     {
         return m_yawSensitivity;
     }
-    void FirstPersonControllerComponent::SetCameraYawSensitivity(const float& new_yawSensitivity)
+    void FirstPersonControllerComponent::SetCharacterAndCameraYawSensitivity(const float& new_yawSensitivity)
     {
         m_yawSensitivity = new_yawSensitivity;
     }
@@ -3483,12 +3483,12 @@ namespace FirstPersonController
     {
         m_rotationDamp = new_rotationDamp;
     }
-    void FirstPersonControllerComponent::UpdateCameraYaw(const float& new_cameraYawAngle, const bool& updateCameraYawConsidersInput)
+    void FirstPersonControllerComponent::UpdateCharacterAndCameraYaw(const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput)
     {
-        if(updateCameraYawConsidersInput)
-            m_cameraRotationAngles[2] = new_cameraYawAngle - m_yawValue * m_yawSensitivity;
+        if(updateCharacterAndCameraYawConsidersInput)
+            m_cameraRotationAngles[2] = new_characterAndCameraYawAngle - m_yawValue * m_yawSensitivity;
         else
-            m_cameraRotationAngles[2] = new_cameraYawAngle;
+            m_cameraRotationAngles[2] = new_characterAndCameraYawAngle;
         m_rotatingYawViaScriptGamepad = true;
     }
     void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput)

@@ -313,8 +313,8 @@ namespace FirstPersonController
         void SetSprintViaScript(const bool& new_sprintViaScript) override;
         bool GetSprintEnableDisableScript() const override;
         void SetSprintEnableDisableScript(const bool& new_sprintEnableDisableScript) override;
-        float GetCameraYawSensitivity() const override;
-        void SetCameraYawSensitivity(const float& new_yawSensitivity) override;
+        float GetCharacterAndCameraYawSensitivity() const override;
+        void SetCharacterAndCameraYawSensitivity(const float& new_yawSensitivity) override;
         float GetCameraPitchSensitivity() const override;
         void SetCameraPitchSensitivity(const float& new_pitchSensitivity) override;
         float GetCameraPitchMaxAngleRadians() const override;
@@ -327,7 +327,7 @@ namespace FirstPersonController
         void SetCameraPitchMinAngleDegrees(const float& new_pitchMinAngleDegrees) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
-        void UpdateCameraYaw(const float& new_cameraYawAngle, const bool& updateCameraYawConsidersInput = true) override;
+        void UpdateCharacterAndCameraYaw(const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput = true) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput = true) override;
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
