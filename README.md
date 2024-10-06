@@ -7,7 +7,7 @@ You can install this gem in your project using O3DE's project manager. Navigate 
 For more information, see the instructions found in O3DE's documentation: https://www.o3de.org/docs/user-guide/gems/repositories/overview/#add-a-gem-repository-in-project-manager
 
 ## How To Use This Gem
-https://youtu.be/O7rtXNlCNQQ
+[![O3DE First Person Controller Gem - Full Setup + Tutorial](https://s1.gifyu.com/images/SBwYu.gif)](https://www.youtube.com/watch?v=O7rtXNlCNQQ)
 
 ## Donate
 We contribute to this gem in our free time. If you like the work we do, and want to contribute in some way other than writing code, please donate here:
