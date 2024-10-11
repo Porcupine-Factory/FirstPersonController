@@ -112,7 +112,7 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
         BUILD_DEPENDENCIES
             PUBLIC
                 AZ::AzToolsFramework
-                $<TARGET_OBJECTS:Gem::FirstPersonController.Private.Object>
+                Gem::FirstPersonController.Private.Object
                 Gem::StartingPointInput.Static
                 Gem::PhysX.Static
     )
