@@ -1182,7 +1182,7 @@ namespace FirstPersonController
             m_staminaIncreasing = false;
 
             // Cause the character to stand if trying to sprint while crouched and the setting is enabled
-            if(m_crouchSprintCausesStanding && m_crouched)
+            if(m_crouchSprintCausesStanding && m_crouching && m_grounded)
                 m_crouching = false;
 
             // Figure out which of the scaled sprint velocity directions is the greatest
@@ -1344,15 +1344,16 @@ namespace FirstPersonController
 
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
-        if(m_crouchEnableToggle && !m_crouchScriptLocked && m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
+        if(m_crouchEnableToggle && (m_grounded || m_crouching)
+            && !m_crouchScriptLocked && m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
         {
             m_crouching = !m_crouching;
         }
-        else if(!m_crouchEnableToggle && !m_crouchScriptLocked)
+        else if(!m_crouchEnableToggle && (m_grounded || m_crouching) && !m_crouchScriptLocked)
         {
             if(m_crouchValue != 0.f
                  && ((m_sprintValue == 0.f || !m_crouchSprintCausesStanding)
-                  || ((m_crouchPriorityWhenSprintPressed) && (m_standing || (m_crouching && !m_crouched))))
+                  || ((m_crouchPriorityWhenSprintPressed) && (m_standing || m_crouching)))
                  && (m_jumpValue == 0.f || !m_crouchJumpCausesStanding || (m_jumpReqRepress && (m_standing || m_crouching))))
                 m_crouching = true;
             else
@@ -1371,6 +1372,7 @@ namespace FirstPersonController
         // and we are attempting to crouch while the sprint key is held, then do not crouch
         else if(!m_crouchPriorityWhenSprintPressed
             && m_sprintValue != 0.f
+            && m_grounded
             && m_crouching
             && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
            m_crouching = false;
@@ -1963,7 +1965,7 @@ namespace FirstPersonController
                     if(m_crouchJumpCausesStanding)
                     {
                         m_crouching = false;
-                        if(m_crouchPendJumps)
+                        if(m_crouchPendJumps && m_crouchEnableToggle)
                           m_crouchJumpPending = true;
                     }
                     if(!m_jumpWhileCrouched)
