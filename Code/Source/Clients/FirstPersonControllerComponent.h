@@ -207,6 +207,8 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const override;
         bool GetStandPrevented() const override;
         void SetStandPrevented(const bool& new_standPrevented) override;
+        bool GetJumpWhileCrouched() const override;
+        void SetJumpWhileCrouched(const bool& new_jumpWhileCrouched) override;
         bool GetStandIgnoreDynamicRigidBodies() const override;
         void SetStandIgnoreDynamicRigidBodies(const bool& new_standIgnoreDynamicRigidBodies) override;
         AZStd::string GetStandCollisionGroupName() const override;
@@ -305,6 +307,8 @@ namespace FirstPersonController
         void SetCrouchEnableToggle(const bool& new_crouchEnableToggle) override;
         bool GetCrouchJumpCausesStanding() const override;
         void SetCrouchJumpCausesStanding(const bool& new_crouchJumpCausesStanding) override;
+        bool GetCrouchPendJumps() const override;
+        void SetCrouchPendJumps(const bool& new_crouchPendJumps) override;
         bool GetCrouchSprintCausesStanding() const override;
         void SetCrouchSprintCausesStanding(const bool& new_crouchSprintCausesStanding) override;
         bool GetCrouchPriorityWhenSprintPressed() const override;
@@ -467,6 +471,8 @@ namespace FirstPersonController
         float m_cameraLocalZTravelDistance = 0.f;
         bool m_crouchEnableToggle = true;
         bool m_crouchJumpCausesStanding = true;
+        bool m_crouchPendJumps = true;
+        bool m_crouchJumpPending = false;
         bool m_crouchSprintCausesStanding = false;
         bool m_crouchPriorityWhenSprintPressed = true;
         bool m_crouchScriptLocked = false;
@@ -518,6 +524,7 @@ namespace FirstPersonController
         bool m_doubleJumpEnabled = false;
         bool m_secondJump = false;
         bool m_jumpHeadIgnoreDynamicRigidBodies = true;
+        bool m_jumpWhileCrouched = false;
         bool m_headHit = false;
         bool m_headHitSetsApogee = true;
         AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();

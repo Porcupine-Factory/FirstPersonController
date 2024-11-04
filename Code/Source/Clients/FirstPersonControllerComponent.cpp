@@ -115,6 +115,7 @@ namespace FirstPersonController
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Jump Head Hit Sets Apogee", &FirstPersonControllerComponent::m_headHitSetsApogee)
               ->Field("Jump Head Hit Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies)
+              ->Field("Jump While Crouched", &FirstPersonControllerComponent::m_jumpWhileCrouched)
               ->Field("Enable Double Jump", &FirstPersonControllerComponent::m_doubleJumpEnabled)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Descending", &FirstPersonControllerComponent::m_updateXYDescending)
@@ -281,6 +282,9 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_headCollisionGroupId,
                         "Jump Head Hit Collision Group", "The collision group which will be used for the jump head hit detection.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_jumpWhileCrouched,
+                        "Jump While Crouched", "Allow jumping while crouched.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_gravity,
                         "Gravity", "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay component's gravity instead.")
@@ -489,6 +493,8 @@ namespace FirstPersonController
                 ->Event("Get Head Hit Collision Group Name", &FirstPersonControllerComponentRequests::GetHeadCollisionGroupName)
                 ->Event("Set Head Hit Collision Group By Name", &FirstPersonControllerComponentRequests::SetHeadCollisionGroupByName)
                 ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
+                ->Event("Get Jump While Crouched", &FirstPersonControllerComponentRequests::GetJumpWhileCrouched)
+                ->Event("Set Jump While Crouched", &FirstPersonControllerComponentRequests::SetJumpWhileCrouched)
                 ->Event("Get Stand Prevented", &FirstPersonControllerComponentRequests::GetStandPrevented)
                 ->Event("Set Stand Prevented", &FirstPersonControllerComponentRequests::SetStandPrevented)
                 ->Event("Get Stand Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::GetStandIgnoreDynamicRigidBodies)
@@ -574,7 +580,7 @@ namespace FirstPersonController
                 ->Event("Set Enable Disable Sprint", &FirstPersonControllerComponentRequests::SetSprintEnableDisableScript)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
-                ->Event("Get Crouched", &FirstPersonControllerComponentRequests::GetCrouching)
+                ->Event("Get Crouched", &FirstPersonControllerComponentRequests::GetCrouched)
                 ->Event("Get Standing", &FirstPersonControllerComponentRequests::GetStanding)
                 ->Event("Get Crouched Percentage (%)", &FirstPersonControllerComponentRequests::GetCrouchedPercentage)
                 ->Event("Get Crouch Script Locked", &FirstPersonControllerComponentRequests::GetCrouchScriptLocked)
@@ -591,6 +597,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
                 ->Event("Get Crouch Jump Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchJumpCausesStanding)
                 ->Event("Set Crouch Jump Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchJumpCausesStanding)
+                ->Event("Get Crouch Pend Jumps", &FirstPersonControllerComponentRequests::GetCrouchPendJumps)
+                ->Event("Set Crouch Pend Jumps", &FirstPersonControllerComponentRequests::SetCrouchPendJumps)
                 ->Event("Get Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchSprintCausesStanding)
                 ->Event("Set Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchSprintCausesStanding)
                 ->Event("Get Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::GetCrouchPriorityWhenSprintPressed)
@@ -1370,7 +1378,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
 
         // Crouch down
-        if(m_crouching && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
+        if(m_crouching && (!m_crouched || m_grounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
         {
             if(m_standing)
                 m_standing = false;
@@ -1948,14 +1956,20 @@ namespace FirstPersonController
 
         if(m_grounded && (m_jumpReqRepress || m_applyVelocityZ <= 0.f))
         {
-            if(m_jumpValue && !m_jumpHeld && !m_headHit)
+            if((m_jumpValue || m_crouchJumpPending) && !m_jumpHeld && !m_headHit)
             {
                 if(!m_standing)
                 {
                     if(m_crouchJumpCausesStanding)
+                    {
                         m_crouching = false;
-                    return;
+                        if(m_crouchPendJumps)
+                          m_crouchJumpPending = true;
+                    }
+                    if(!m_jumpWhileCrouched)
+                        return;
                 }
+                m_crouchJumpPending = false;
                 m_applyVelocityZCurrentDelta = m_jumpInitialVelocity;
                 initialJump = true;
                 m_jumpHeld = true;
@@ -2195,8 +2209,7 @@ namespace FirstPersonController
         {
             CheckGrounded(deltaTime);
 
-            if(m_grounded)
-                CrouchManager(deltaTime);
+            CrouchManager(deltaTime);
 
             // So long as the character is grounded or depending on how the update X&Y velocity while jumping
             // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
@@ -2945,6 +2958,14 @@ namespace FirstPersonController
     {
         return m_headHitEntityIds;
     }
+    bool FirstPersonControllerComponent::GetJumpWhileCrouched() const
+    {
+        return m_jumpWhileCrouched;
+    }
+    void FirstPersonControllerComponent::SetJumpWhileCrouched(const bool& new_jumpWhileCrouched)
+    {
+        m_jumpWhileCrouched = new_jumpWhileCrouched;
+    }
     bool FirstPersonControllerComponent::GetStandPrevented() const
     {
         return m_standPrevented;
@@ -3410,6 +3431,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchJumpCausesStanding(const bool& new_crouchJumpCausesStanding)
     {
         m_crouchJumpCausesStanding = new_crouchJumpCausesStanding;
+    }
+    bool FirstPersonControllerComponent::GetCrouchPendJumps() const
+    {
+        return m_crouchPendJumps;
+    }
+    void FirstPersonControllerComponent::SetCrouchPendJumps(const bool& new_crouchPendJumps)
+    {
+        m_crouchPendJumps = new_crouchPendJumps;
     }
     bool FirstPersonControllerComponent::GetCrouchSprintCausesStanding() const
     {

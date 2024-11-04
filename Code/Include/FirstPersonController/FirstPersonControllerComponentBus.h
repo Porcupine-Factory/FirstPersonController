@@ -166,6 +166,8 @@ namespace FirstPersonController
         virtual AZStd::vector<AZ::EntityId> GetHeadHitEntityIds() const = 0;
         virtual bool GetStandPrevented() const = 0;
         virtual void SetStandPrevented(const bool&) = 0;
+        virtual bool GetJumpWhileCrouched() const = 0;
+        virtual void SetJumpWhileCrouched(const bool&) = 0;
         virtual bool GetStandIgnoreDynamicRigidBodies() const = 0;
         virtual void SetStandIgnoreDynamicRigidBodies(const bool&) = 0;
         virtual AZStd::string GetStandCollisionGroupName() const = 0;
@@ -264,6 +266,8 @@ namespace FirstPersonController
         virtual void SetCrouchEnableToggle(const bool&) = 0;
         virtual bool GetCrouchJumpCausesStanding() const = 0;
         virtual void SetCrouchJumpCausesStanding(const bool&) = 0;
+        virtual bool GetCrouchPendJumps() const = 0;
+        virtual void SetCrouchPendJumps(const bool&) = 0;
         virtual bool GetCrouchSprintCausesStanding() const = 0;
         virtual void SetCrouchSprintCausesStanding(const bool&) = 0;
         virtual bool GetCrouchPriorityWhenSprintPressed() const = 0;
