@@ -313,6 +313,8 @@ namespace FirstPersonController
         void SetCrouchSprintCausesStanding(const bool& new_crouchSprintCausesStanding) override;
         bool GetCrouchPriorityWhenSprintPressed() const override;
         void SetCrouchPriorityWhenSprintPressed(const bool& new_crouchPriorityWhenSprintPressed) override;
+        bool GetCrouchWhenNotGrounded() const override;
+        void SetCrouchWhenNotGrounded(const bool& new_crouchWhenNotGrounded) override;
         bool GetSprintViaScript() const override;
         void SetSprintViaScript(const bool& new_sprintViaScript) override;
         bool GetSprintEnableDisableScript() const override;
@@ -476,6 +478,7 @@ namespace FirstPersonController
         bool m_crouchSprintCausesStanding = false;
         bool m_crouchPriorityWhenSprintPressed = true;
         bool m_crouchScriptLocked = false;
+        bool m_crouchWhenNotGrounded = false;
 
         // Jumping and gravity
         float m_gravity = -30.f;

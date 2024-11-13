@@ -603,6 +603,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Sprint Causes Standing", &FirstPersonControllerComponentRequests::SetCrouchSprintCausesStanding)
                 ->Event("Get Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::GetCrouchPriorityWhenSprintPressed)
                 ->Event("Set Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::SetCrouchPriorityWhenSprintPressed)
+                ->Event("Get Crouch When Not Grounded", &FirstPersonControllerComponentRequests::GetCrouchWhenNotGrounded)
+                ->Event("Set Crouch When Not Grounded", &FirstPersonControllerComponentRequests::SetCrouchWhenNotGrounded)
                 ->Event("Get Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCharacterAndCameraYawSensitivity)
                 ->Event("Set Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCharacterAndCameraYawSensitivity)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
@@ -1344,7 +1346,7 @@ namespace FirstPersonController
 
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
-        if(m_crouchEnableToggle && (m_grounded || m_crouching)
+        if(m_crouchEnableToggle && (m_grounded || m_crouching || m_crouchWhenNotGrounded)
             && !m_crouchScriptLocked && m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
         {
             m_crouching = !m_crouching;
@@ -1380,7 +1382,7 @@ namespace FirstPersonController
         //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
 
         // Crouch down
-        if(m_crouching && (!m_crouched || m_grounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
+        if(m_crouching && (!m_crouched || m_grounded || m_crouchWhenNotGrounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
         {
             if(m_standing)
                 m_standing = false;
@@ -3457,6 +3459,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchPriorityWhenSprintPressed(const bool& new_crouchPriorityWhenSprintPressed)
     {
         m_crouchPriorityWhenSprintPressed = new_crouchPriorityWhenSprintPressed;
+    }
+    bool FirstPersonControllerComponent::GetCrouchWhenNotGrounded() const
+    {
+        return m_crouchWhenNotGrounded;
+    }
+    void FirstPersonControllerComponent::SetCrouchWhenNotGrounded(const bool& new_crouchWhenNotGrounded)
+    {
+        m_crouchWhenNotGrounded = new_crouchWhenNotGrounded;
     }
     float FirstPersonControllerComponent::GetCharacterAndCameraYawSensitivity() const
     {

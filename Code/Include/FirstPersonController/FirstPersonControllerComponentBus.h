@@ -272,6 +272,8 @@ namespace FirstPersonController
         virtual void SetCrouchSprintCausesStanding(const bool&) = 0;
         virtual bool GetCrouchPriorityWhenSprintPressed() const = 0;
         virtual void SetCrouchPriorityWhenSprintPressed(const bool&) = 0;
+        virtual bool GetCrouchWhenNotGrounded() const = 0;
+        virtual void SetCrouchWhenNotGrounded(const bool&) = 0;
         virtual bool GetSprintViaScript() const = 0;
         virtual void SetSprintViaScript(const bool&) = 0;
         virtual bool GetSprintEnableDisableScript() const = 0;
