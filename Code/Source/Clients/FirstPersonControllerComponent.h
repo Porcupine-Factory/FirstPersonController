@@ -6,12 +6,14 @@
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
 
 #include <AzCore/Component/Component.h>
+#include <AzCore/Component/EntityBus.h>
 #include <AzCore/Component/TickBus.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/Math/Quaternion.h>
 #include <AzCore/std/containers/map.h>
 
 #include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
+#include <AzFramework/Components/CameraBus.h>
 #include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Input/Events/InputChannelEventListener.h>
 
@@ -28,6 +30,8 @@ namespace FirstPersonController
         , public AzFramework::InputChannelEventListener
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentRequestBus::Handler
+        , public AZ::EntityBus::Handler
+        , Camera::CameraNotificationBus::Handler
     {
     public:
         AZ_COMPONENT(FirstPersonControllerComponent, "{0a47c7c2-0f94-48dd-8e3f-fd55c30475b9}");
@@ -37,6 +41,9 @@ namespace FirstPersonController
         // AZ::Component interface implementation
         void Activate() override;
         void Deactivate() override;
+
+        // AZ::EntityBus interface
+        void OnEntityActivated(const AZ::EntityId& entityId) override;
 
         // Physics::CharacterNotificationBus override
         void OnCharacterActivated(const AZ::EntityId& entityId) override;
@@ -60,8 +67,10 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // FirstPersonControllerRequestBus
+        AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
         AZ::Entity* GetActiveCameraEntityPtr() const override;
         AZ::EntityId GetActiveCameraEntityId() const override;
+        void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
         void ReacquireChildEntityIds() override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
@@ -343,8 +352,15 @@ namespace FirstPersonController
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
 
-        // Active camera entity pointer
+        // Assigns a camera to m_cameraEntityId if none is specified
+        void OnCameraAdded(const AZ::EntityId& cameraId);
+
+        // Set the first-person camera position
+        void InitializeCameraPosition();
+
+        // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;
+        AZ::EntityId m_cameraEntityId;
 
         // Child EntityIds
         bool m_obtainedChildIds = false;
@@ -360,6 +376,7 @@ namespace FirstPersonController
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation();
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
+        void UpdateCamera(float deltaTime);
         void SmoothRotation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
@@ -397,6 +414,12 @@ namespace FirstPersonController
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         bool m_addVelocityForTimestepVsTick = true;
         float m_physicsTimestepScaleFactor = 1.f;
+
+        // Camera interpolation variables
+        float m_eyeHeight = 1.6f;
+        float m_cameraSmoothingSpeed = 15.f;
+        AZ::Vector3 m_targetCameraPosition = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_currentCameraPosition = AZ::Vector3::CreateZero();
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
@@ -549,6 +572,8 @@ namespace FirstPersonController
         float m_currentHeading = 0.f;
         bool m_scriptSetcurrentHeadingTick = false;
         float m_currentPitch = 0.f;
+        float m_cameraPitch = 0.f;
+        float m_cameraYaw = 0.f;
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 30.f;
         float m_cameraPitchMaxAngle = AZ::Constants::HalfPi;

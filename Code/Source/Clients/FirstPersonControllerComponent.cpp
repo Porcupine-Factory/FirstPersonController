@@ -14,7 +14,6 @@
 #include <AzFramework/Physics/SystemBus.h>
 #include <AzFramework/Physics/Components/SimulatedBodyComponentBus.h>
 #include <AzFramework/Physics/NameConstants.h>
-#include <AzFramework/Components/CameraBus.h>
 #include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
 #include <AzFramework/Input/Devices/InputDeviceId.h>
 
@@ -30,6 +29,12 @@ namespace FirstPersonController
         if(auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
         {
             sc->Class<FirstPersonControllerComponent, AZ::Component>()
+              // Camera Configuration
+              ->Field("Camera Entity", &FirstPersonControllerComponent::m_cameraEntityId)
+                  ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
+              // Camera Interpolation group
+              ->Field("Eye Height", &FirstPersonControllerComponent::m_eyeHeight)
+              ->Field("Camera Smoothing Speed", &FirstPersonControllerComponent::m_cameraSmoothingSpeed)
               // Input Bindings group
               ->Field("Forward Key", &FirstPersonControllerComponent::m_strForward)
               ->Field("Back Key", &FirstPersonControllerComponent::m_strBack)
@@ -132,6 +137,18 @@ namespace FirstPersonController
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person Controller")
                     ->Attribute(AZ::Edit::Attributes::HelpPageURL, "https://www.youtube.com/watch?v=O7rtXNlCNQQ")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Configuration")
+                    ->Attribute(AutoExpand, true)
+                    ->DataElement(0,
+                        &FirstPersonControllerComponent::m_cameraEntityId,
+                        "Camera Entity", "The camera entity to use for the first-person view.")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Interpolation")
+                    ->Attribute(AutoExpand, false)
+                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_eyeHeight,
+                        "Eye Height", "Height of the camera above the character's base position (meters).")
+                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothingSpeed,
+                        "Camera Smoothing Speed", "Speed at which the camera interpolates to its target position.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -350,6 +367,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
                 ->Event("Get Pointer To Active Camera Entity", &FirstPersonControllerComponentRequests::GetActiveCameraEntityPtr)
                 ->Event("Get Active Camera EntityId", &FirstPersonControllerComponentRequests::GetActiveCameraEntityId)
+                ->Event("Set Camera Entity", &FirstPersonControllerComponentRequests::SetCameraEntity)
                 ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
                 ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
                 ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
@@ -666,6 +684,7 @@ namespace FirstPersonController
 
         AssignConnectInputEvents();
 
+        Camera::CameraNotificationBus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
 
         InputChannelEventListener::Connect();
@@ -675,6 +694,12 @@ namespace FirstPersonController
         AzFramework::InputChannelEventListener::SetFilter(filter);
 
         FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
+
+        // Delaying the assignment of m_cameraEntityId to OnEntityActivated so the Entity is activated and ready
+        if (m_cameraEntityId.IsValid())
+        {
+            AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
+        }
     }
 
     void FirstPersonControllerComponent::OnCharacterActivated([[maybe_unused]] const AZ::EntityId& entityId)
@@ -714,11 +739,37 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusDisconnect();
         InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
+        AZ::EntityBus::Handler::BusDisconnect();
+        Camera::CameraNotificationBus::Handler::BusDisconnect();
 
         if(m_addVelocityForTimestepVsTick)
         {
             m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
             m_sceneSimulationStartHandler.Disconnect();
+        }
+
+        m_activeCameraEntity = nullptr;
+    }
+
+    void FirstPersonControllerComponent::OnEntityActivated(const AZ::EntityId& entityId)
+    {
+        AZ::EntityBus::Handler::BusDisconnect();
+        if (m_cameraEntityId.IsValid())
+        {
+            m_activeCameraEntity = GetEntityPtr(entityId);
+            if (m_activeCameraEntity)
+            {
+                InitializeCameraPosition();
+                Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
+                AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
+                    m_activeCameraEntity->GetName().c_str());
+            }
+            else
+            {
+                AZ_Warning("First Person Controller Component", false,
+                    "Camera entity ID %s is invalid.", m_cameraEntityId.ToString().c_str());
+                m_cameraEntityId = AZ::EntityId();
+            }
         }
     }
 
@@ -889,6 +940,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
+        UpdateCamera(deltaTime);
         ProcessInput(deltaTime, false);
     }
 
@@ -897,14 +949,73 @@ namespace FirstPersonController
         ProcessInput(physicsTimestep*m_physicsTimestepScaleFactor, true);
     }
 
+    void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
+    {
+        if (!m_cameraEntityId.IsValid())
+        {
+            m_cameraEntityId = cameraId;
+            m_activeCameraEntity = GetEntityPtr(cameraId);
+            if (m_activeCameraEntity)
+            {
+                InitializeCameraPosition();
+                Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
+                AZ_Printf("First Person Controller Component", "Default camera %s assigned and set as active view.",
+                    m_activeCameraEntity->GetName().c_str());
+            }
+            else
+            {
+                AZ_Warning("First Person Controller Component", false,
+                    "Default camera ID %s from CameraNotificationBus is invalid.", cameraId.ToString().c_str());
+                m_cameraEntityId = AZ::EntityId();
+            }
+        }
+    }
+
+    AZ::Entity* FirstPersonControllerComponent::GetEntityPtr(AZ::EntityId pointer) const
+    {
+        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+        return ca ? ca->FindEntity(pointer) : nullptr;
+    }
+
     AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
     {
+        if(m_activeCameraEntity)
+        {
+            return m_activeCameraEntity;
+        }
         AZ::EntityId activeCameraId;
-        Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId,
-            &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
-
+        Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId, &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
         return ca->FindEntity(activeCameraId);
+    }
+
+    void FirstPersonControllerComponent::InitializeCameraPosition()
+    {
+        if (m_activeCameraEntity)
+        {
+            AZ::Vector3 characterPosition;
+            AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+            m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
+            m_currentCameraPosition = m_targetCameraPosition;
+            AZ::TransformBus::Event(m_activeCameraEntity->GetId(), &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
+        }
+    }
+
+    void FirstPersonControllerComponent::UpdateCamera(float deltaTime)
+    {
+        if(!m_activeCameraEntity && m_cameraEntityId.IsValid())
+        {
+            SetCameraEntity(m_cameraEntityId);
+        }
+
+        if(m_activeCameraEntity)
+        {
+            AZ::Vector3 characterPosition;
+            AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+            m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
+            m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, deltaTime * m_cameraSmoothingSpeed);
+            AZ::TransformBus::Event(m_activeCameraEntity->GetId(), &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
+        }
     }
 
     void FirstPersonControllerComponent::SmoothRotation()
@@ -940,21 +1051,26 @@ namespace FirstPersonController
 
         t->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
-        m_activeCameraEntity = GetActiveCameraEntityPtr();
+        //m_activeCameraEntity = GetActiveCameraEntityPtr();
         t = m_activeCameraEntity->GetTransform();
 
-        t->SetLocalRotation(AZ::Vector3(AZ::GetClamp(t->GetLocalRotation().GetX()+newLookRotationDelta.GetX(),
-                                                        m_cameraPitchMinAngle, m_cameraPitchMaxAngle),
-                                        t->GetLocalRotation().GetY(),
-                                        t->GetLocalRotation().GetZ()));
+        // Update yaw from character and clamp pitch
+        m_cameraYaw += newLookRotationDelta.GetZ();
+        float pitchDelta = newLookRotationDelta.GetX();
+        m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
 
-        if(!m_scriptSetcurrentHeadingTick)
+        // Apply rotation using quaternion composition
+        AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
+        AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
+        t->SetLocalRotationQuaternion(yawRotation * pitchRotation);
+
+        if (!m_scriptSetcurrentHeadingTick)
             m_currentHeading = GetEntity()->GetTransform()->
-                GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+            GetWorldRotationQuaternion().GetEulerRadians().GetZ();
         else
             m_scriptSetcurrentHeadingTick = false;
 
-        m_currentPitch = GetActiveCameraEntityPtr()->GetTransform()->
+        m_currentPitch = m_activeCameraEntity->GetTransform()->
             GetWorldRotationQuaternion().GetEulerRadians().GetX();
     }
 
@@ -2283,6 +2399,34 @@ namespace FirstPersonController
     AZ::EntityId FirstPersonControllerComponent::GetActiveCameraEntityId() const
     {
         return m_activeCameraEntity->GetId();
+    }
+    void FirstPersonControllerComponent::SetCameraEntity(const AZ::EntityId new_cameraEntityId)
+    {
+        if (new_cameraEntityId != m_cameraEntityId)
+        {
+            AZ::EntityBus::Handler::BusDisconnect();
+            m_cameraEntityId = new_cameraEntityId;
+            m_activeCameraEntity = nullptr;
+
+            if (m_cameraEntityId.IsValid())
+            {
+                m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
+                if (m_activeCameraEntity)
+                {
+                    AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
+                    InitializeCameraPosition();
+                    Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
+                    AZ_Printf("FirstPersonControllerComponent", "Camera reassigned to %s and set as active view.",
+                        m_activeCameraEntity->GetName().c_str());
+                }
+                else
+                {
+                    AZ_Warning("FirstPersonControllerComponent", false,
+                        "New camera entity ID %s is invalid.", m_cameraEntityId.ToString().c_str());
+                    m_cameraEntityId = AZ::EntityId();
+                }
+            }
+        }
     }
     void FirstPersonControllerComponent::ReacquireChildEntityIds()
     {
