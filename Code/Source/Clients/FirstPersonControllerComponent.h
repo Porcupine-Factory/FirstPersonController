@@ -71,6 +71,10 @@ namespace FirstPersonController
         AZ::Entity* GetActiveCameraEntityPtr() const override;
         AZ::EntityId GetActiveCameraEntityId() const override;
         void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
+        AZ::EntityId GetCameraParentEntity() const override;
+        void SetCameraParentEntity(const AZ::EntityId new_cameraParentEntityId) override;
+        bool GetUpdateCameraForTimestepVsTick() const;
+        void SetUpdateCameraForTimestepVsTick(const bool& new_updateCameraForTimestepVsTick);
         void ReacquireChildEntityIds() override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
@@ -362,6 +366,9 @@ namespace FirstPersonController
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::EntityId m_cameraEntityId;
 
+        // User-specified camera parent
+        AZ::EntityId m_cameraParentEntityId;
+
         // Child EntityIds
         bool m_obtainedChildIds = false;
         AZStd::vector<AZ::EntityId> m_children;
@@ -377,6 +384,7 @@ namespace FirstPersonController
         void UpdateRotation();
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void UpdateCamera(float deltaTime);
+        bool IsCameraChildOfPlayer();
         void SmoothRotation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void CrouchManager(const float& deltaTime);
@@ -413,11 +421,13 @@ namespace FirstPersonController
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         bool m_addVelocityForTimestepVsTick = true;
+        bool m_updateCameraForTimestepVsTick = false;
         float m_physicsTimestepScaleFactor = 1.f;
 
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
-        float m_cameraSmoothingSpeed = 15.f;
+        float m_cameraSmoothingSpeed = 65.f;
+        float m_prevDeltaTime = 0.16667f;
         AZ::Vector3 m_targetCameraPosition = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentCameraPosition = AZ::Vector3::CreateZero();
 

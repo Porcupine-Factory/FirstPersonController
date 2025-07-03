@@ -22,6 +22,10 @@ namespace FirstPersonController
         virtual AZ::Entity* GetActiveCameraEntityPtr() const = 0;
         virtual AZ::EntityId GetActiveCameraEntityId() const = 0;
         virtual void SetCameraEntity(const AZ::EntityId) = 0;
+        virtual AZ::EntityId GetCameraParentEntity() const = 0;
+        virtual void SetCameraParentEntity(const AZ::EntityId new_cameraParentEntityId) = 0;
+        virtual bool GetUpdateCameraForTimestepVsTick() const = 0;
+        virtual void SetUpdateCameraForTimestepVsTick(const bool& new_updateCameraForTimestepVsTick) = 0;
         virtual void ReacquireChildEntityIds() = 0;
         virtual void ReacquireCapsuleDimensions() = 0;
         virtual void ReacquireMaxSlopeAngle() = 0;
