@@ -957,6 +957,7 @@ namespace FirstPersonController
         {
             UpdateCamera(physicsTimestep * m_physicsTimestepScaleFactor);
         }
+        m_prevTimeStep = physicsTimestep;
     }
 
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
@@ -1647,7 +1648,12 @@ namespace FirstPersonController
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedCrouching);
 
             const float prevCapsuleCurrentHeight = m_capsuleCurrentHeight;
-            SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentDownVelocity, ((m_prevDeltaTime + deltaTime) / 2.f), (m_capsuleHeight - m_crouchDistance), m_crouchTime);
+
+            if(m_addVelocityForTimestepVsTick)
+              SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentDownVelocity, ((m_prevTimeStep + deltaTime) / 2.f), (m_capsuleHeight - m_crouchDistance), m_crouchTime);
+            else
+              SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentDownVelocity, ((m_prevDeltaTime + deltaTime) / 2.f), (m_capsuleHeight - m_crouchDistance), m_crouchTime);
+
             float cameraTravelDelta = m_capsuleCurrentHeight - prevCapsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
@@ -1776,7 +1782,12 @@ namespace FirstPersonController
             m_standPrevented = false;
 
             const float prevCapsuleCurrentHeight = m_capsuleCurrentHeight;
-            SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentUpVelocity, ((m_prevDeltaTime + deltaTime) / 2.f), m_capsuleHeight, m_standTime);
+
+            if(m_addVelocityForTimestepVsTick)
+              SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentUpVelocity, ((m_prevTimeStep + deltaTime) / 2.f), m_capsuleHeight, m_standTime);
+            else
+              SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentUpVelocity, ((m_prevDeltaTime + deltaTime) / 2.f), m_capsuleHeight, m_standTime);
+
             float cameraTravelDelta = m_capsuleCurrentHeight - prevCapsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
@@ -2464,7 +2475,8 @@ namespace FirstPersonController
 
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
-        if(!m_addVelocityForTimestepVsTick || timestepElseTick)
+        // Handle motion on either the physics fixed timestep or the frame tick, depending on which is selected and which is currently executing
+        if(timestepElseTick == m_addVelocityForTimestepVsTick)
         {
             CheckGrounded(deltaTime);
 
