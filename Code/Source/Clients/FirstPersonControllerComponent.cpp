@@ -1571,6 +1571,30 @@ namespace FirstPersonController
         //AZ_Printf("", "Stamina = %.10f\%", m_staminaPercentage);
     }
 
+    void FirstPersonControllerComponent::SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime)
+    {
+        if (smoothTime > 0.0f)
+        {
+            const float omega = 2.0f / smoothTime;
+            const float x = omega * timeDelta;
+            const float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
+            const float change = value - target;
+            const float temp = (valueRate + change * omega) * timeDelta;
+            valueRate = (valueRate - temp * omega) * exp;
+            value = target + (change + temp) * exp;
+        }
+        else if (timeDelta > 0.0f)
+        {
+            valueRate = (target - value) / timeDelta;
+            value = target;
+        }
+        else
+        {
+            value = target;
+            valueRate = float(0); // Zero the rate
+        }
+    }
+
     void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
     {
         if(m_activeCameraEntity == nullptr)
@@ -1622,27 +1646,27 @@ namespace FirstPersonController
             if(m_cameraLocalZTravelDistance == 0.f)
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedCrouching);
 
-            float cameraTravelDelta = -1.f * m_crouchDistance * deltaTime / m_crouchTime;
+            const float prevCapsuleCurrentHeight = m_capsuleCurrentHeight;
+            SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentDownVelocity, ((m_prevDeltaTime + deltaTime) / 2.f), (m_capsuleHeight - m_crouchDistance), m_crouchTime);
+            float cameraTravelDelta = m_capsuleCurrentHeight - prevCapsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            if(m_cameraLocalZTravelDistance <= -1.f * m_crouchDistance)
+            if(AZ::IsClose(m_cameraLocalZTravelDistance, -1.f * m_crouchDistance))
             {
                 cameraTravelDelta += abs(m_cameraLocalZTravelDistance) - m_crouchDistance;
                 m_cameraLocalZTravelDistance = -1.f * m_crouchDistance;
+                m_capsuleCurrentHeight = m_capsuleHeight - m_crouchDistance;
                 m_crouched = true;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCrouched);
+                // Now that the character is crouched, reset the initial down velocity back to zero
+                m_crouchInitCurrentDownVelocity = 0.f;
             }
-
-            // Adjust the height of the collider capsule based on the crouching height
-            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleCurrentHeight, GetEntityId(),
-                &PhysX::CharacterControllerRequestBus::Events::GetHeight);
 
             float stepHeight = 0.f;
             Physics::CharacterRequestBus::EventResult(stepHeight, GetEntityId(),
                 &Physics::CharacterRequestBus::Events::GetStepHeight);
 
             // Subtract the distance to get down to the crouching height
-            m_capsuleCurrentHeight += cameraTravelDelta;
             if(m_capsuleCurrentHeight < (2.f*m_capsuleRadius + 0.00001f))
                 m_capsuleCurrentHeight = 2.f*m_capsuleRadius + 0.00001f;
             if(m_capsuleCurrentHeight < (stepHeight + 0.00001f))
@@ -1751,23 +1775,22 @@ namespace FirstPersonController
             }
             m_standPrevented = false;
 
-            float cameraTravelDelta = m_crouchDistance * deltaTime / m_standTime;
+            const float prevCapsuleCurrentHeight = m_capsuleCurrentHeight;
+            SmoothCriticallyDampedFloat(m_capsuleCurrentHeight, m_crouchInitCurrentUpVelocity, ((m_prevDeltaTime + deltaTime) / 2.f), m_capsuleHeight, m_standTime);
+            float cameraTravelDelta = m_capsuleCurrentHeight - prevCapsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            if(m_cameraLocalZTravelDistance >= 0.f)
+            if(AZ::IsClose(m_cameraLocalZTravelDistance, 0.f))
             {
                 cameraTravelDelta -= m_cameraLocalZTravelDistance;
                 m_cameraLocalZTravelDistance = 0.f;
+                m_capsuleCurrentHeight = m_capsuleHeight;
                 m_standing = true;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStoodUp);
+                // Now that the character is standing, reset the initial up velocity back to zero
+                m_crouchInitCurrentUpVelocity = 0.f;
             }
 
-            // Adjust the height of the collider capsule based on the standing height
-            PhysX::CharacterControllerRequestBus::EventResult(m_capsuleCurrentHeight, GetEntityId(),
-                &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-
-            // Add the distance to get back to the standing height
-            m_capsuleCurrentHeight += cameraTravelDelta;
             if(m_capsuleCurrentHeight > m_capsuleHeight)
                 m_capsuleCurrentHeight = m_capsuleHeight;
             //AZ_Printf("", "Standing capsule height = %.10f", m_capsuleCurrentHeight);
@@ -2538,7 +2561,7 @@ namespace FirstPersonController
                     m_cameraParentEntityId = parentId;
                     // AZ_Printf("FirstPersonControllerComponent", "Camera parent updated to %s for camera entity %s.",
                     //     parentId.IsValid() ? GetEntityPtr(parentId)->GetName().c_str() : "world",
-                        m_activeCameraEntity->GetName().c_str());
+                        m_activeCameraEntity->GetName().c_str();
 
                     InitializeCameraPosition();
                     Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);

@@ -387,6 +387,7 @@ namespace FirstPersonController
         bool IsCameraChildOfPlayer();
         void SmoothRotation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
+        void SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
 
         // FirstPersonControllerNotificationBus
@@ -498,6 +499,8 @@ namespace FirstPersonController
         // Crouch application variables
         float m_crouchDistance = 0.5f;
         float m_crouchTime = 0.2f;
+        float m_crouchInitCurrentDownVelocity = 0.f;
+        float m_crouchInitCurrentUpVelocity = 0.f;
         float m_standTime = 0.2f;
         float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
