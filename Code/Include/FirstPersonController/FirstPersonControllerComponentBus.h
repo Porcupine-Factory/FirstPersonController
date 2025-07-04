@@ -9,6 +9,7 @@
 #include <AzCore/Component/ComponentBus.h>
 #include <AzCore/RTTI/BehaviorContext.h>
 #include <AzCore/Math/Vector3.h>
+#include <AzCore/Component/TransformBus.h>
 
 #include <AzFramework/Physics/PhysicsScene.h>
 
@@ -22,10 +23,11 @@ namespace FirstPersonController
         virtual AZ::Entity* GetActiveCameraEntityPtr() const = 0;
         virtual AZ::EntityId GetActiveCameraEntityId() const = 0;
         virtual void SetCameraEntity(const AZ::EntityId) = 0;
-        virtual AZ::EntityId GetCameraParentEntity() const = 0;
-        virtual void SetCameraParentEntity(const AZ::EntityId new_cameraParentEntityId) = 0;
         virtual bool GetCameraSmoothFollow() const = 0;
         virtual void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow) = 0;
+        virtual void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) = 0;
+        virtual void SetParentChangeUpdate(const AZ::EntityId& entityId) = 0;
+        virtual AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const = 0;
         virtual void ReacquireChildEntityIds() = 0;
         virtual void ReacquireCapsuleDimensions() = 0;
         virtual void ReacquireMaxSlopeAngle() = 0;
