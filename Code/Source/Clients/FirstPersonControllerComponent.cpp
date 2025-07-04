@@ -1060,7 +1060,7 @@ namespace FirstPersonController
         m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
 
         // Smoothly interpolate camera position using averaged delta time
-        float avgDeltaTime = (m_prevDeltaTime + deltaTime) / 2.f;
+        const float avgDeltaTime = (m_prevDeltaTime + deltaTime) / 2.f;
         m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * avgDeltaTime);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
     }
@@ -1120,7 +1120,7 @@ namespace FirstPersonController
         if(m_activeCameraEntity)
         {
             AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
-            bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
+            const bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
 
             if(!m_cameraSmoothFollow && isCameraChildOfPlayer)
             {
@@ -1135,11 +1135,11 @@ namespace FirstPersonController
             {
                 // Update yaw and pitch for camera's local rotation
                 m_cameraYaw += newLookRotationDelta.GetZ();
-                float pitchDelta = newLookRotationDelta.GetX();
+                const float pitchDelta = newLookRotationDelta.GetX();
                 m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
 
-                AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
-                AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
+                const AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
+                const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
                 cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
             }
         }
@@ -1626,7 +1626,7 @@ namespace FirstPersonController
             float cameraTravelDelta = m_capsuleCurrentHeight - prevCapsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            if(AZ::IsClose(m_cameraLocalZTravelDistance, -1.f * m_crouchDistance))
+            if(AZ::IsClose(m_capsuleCurrentHeight, (m_capsuleHeight - m_crouchDistance)))
             {
                 cameraTravelDelta += abs(m_cameraLocalZTravelDistance) - m_crouchDistance;
                 m_cameraLocalZTravelDistance = -1.f * m_crouchDistance;
@@ -1760,7 +1760,7 @@ namespace FirstPersonController
             float cameraTravelDelta = m_capsuleCurrentHeight - prevCapsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            if(AZ::IsClose(m_cameraLocalZTravelDistance, 0.f))
+            if(AZ::IsClose(m_capsuleCurrentHeight, m_capsuleHeight))
             {
                 cameraTravelDelta -= m_cameraLocalZTravelDistance;
                 m_cameraLocalZTravelDistance = 0.f;
