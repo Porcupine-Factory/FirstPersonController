@@ -29,13 +29,12 @@ namespace FirstPersonController
         if(auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
         {
             sc->Class<FirstPersonControllerComponent, AZ::Component>()
-              // Camera Configuration
+              // Camera Configuration group
               ->Field("Camera Entity", &FirstPersonControllerComponent::m_cameraEntityId)
                   ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
-              // Camera Interpolation group
               ->Field("Eye Height", &FirstPersonControllerComponent::m_eyeHeight)
+              ->Field("Camera Smooth Follow", &FirstPersonControllerComponent::m_cameraSmoothFollow)
               ->Field("Camera Smoothing Speed", &FirstPersonControllerComponent::m_cameraSmoothingSpeed)
-              ->Field("Update Camera For Physics Timestep Instead Of Tick", &FirstPersonControllerComponent::m_updateCameraForTimestepVsTick)
               // Input Bindings group
               ->Field("Forward Key", &FirstPersonControllerComponent::m_strForward)
               ->Field("Back Key", &FirstPersonControllerComponent::m_strBack)
@@ -140,19 +139,16 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::HelpPageURL, "https://www.youtube.com/watch?v=O7rtXNlCNQQ")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Configuration")
-                    ->Attribute(AutoExpand, true)
+                    ->Attribute(AutoExpand, false)
                     ->DataElement(0,
                         &FirstPersonControllerComponent::m_cameraEntityId,
                         "Camera Entity", "The camera entity to use for the first-person view.")
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Interpolation")
-                    ->Attribute(AutoExpand, false)
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_eyeHeight,
                         "Eye Height", "Height of the camera above the character's base position (meters).")
+                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothFollow,
+                        "Camera Smooth Follow", "If enabled, camera smoothly follows the character with interpolation; otherwise, follows parent transforms if a child or remains static if not a child.")
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothingSpeed,
                         "Camera Smoothing Speed", "Speed at which the camera interpolates to its target position.")
-                    ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_updateCameraForTimestepVsTick,
-                        "Update Camera For Physics Timestep Instead Of Tick", "If enabled, camera follows parent transforms on physics timestep; otherwise, uses smooth-follow on tick.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -374,6 +370,8 @@ namespace FirstPersonController
                 ->Event("Set Camera Entity", &FirstPersonControllerComponentRequests::SetCameraEntity)
                 ->Event("Get Camera Parent Entity", &FirstPersonControllerComponentRequests::GetCameraParentEntity)
                 ->Event("Set Camera Parent Entity", &FirstPersonControllerComponentRequests::SetCameraParentEntity)
+                ->Event("Get Camera Smooth Follow", &FirstPersonControllerComponentRequests::GetCameraSmoothFollow)
+                ->Event("Set Camera Smooth Follow", &FirstPersonControllerComponentRequests::SetCameraSmoothFollow)
                 ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
                 ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
                 ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
@@ -655,7 +653,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
-        if(m_addVelocityForTimestepVsTick || m_updateCameraForTimestepVsTick)
+        if(m_addVelocityForTimestepVsTick)
         {
             Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
             if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
@@ -698,7 +696,19 @@ namespace FirstPersonController
         if (m_cameraEntityId.IsValid())
         {
             AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
+            m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
+            if (m_activeCameraEntity)
+            {
+                InitializeCameraPosition();
+                Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
+                AZ_Printf("First Person Controller Component", "Camera entity %s activated with cameraSmoothFollow=%s.",
+                    m_activeCameraEntity->GetName().c_str(), m_cameraSmoothFollow ? "true" : "false");
+            }
         }
+
+        // Debug log to verify m_cameraSmoothFollow value at activation
+        AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
+            m_cameraSmoothFollow ? "true" : "false");
     }
 
     void FirstPersonControllerComponent::OnCharacterActivated([[maybe_unused]] const AZ::EntityId& entityId)
@@ -741,7 +751,7 @@ namespace FirstPersonController
         Camera::CameraNotificationBus::Handler::BusDisconnect();
         AZ::EntityBus::Handler::BusDisconnect();
 
-        if(m_addVelocityForTimestepVsTick || m_updateCameraForTimestepVsTick)
+        if(m_addVelocityForTimestepVsTick)
         {
             m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
             m_sceneSimulationStartHandler.Disconnect();
@@ -939,24 +949,13 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        if(!m_updateCameraForTimestepVsTick)
-        {
-            UpdateCamera(deltaTime);
-        }
         ProcessInput(deltaTime, false);
         m_prevDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
-        if(m_addVelocityForTimestepVsTick)
-        {
-            ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
-        }
-        if(m_updateCameraForTimestepVsTick)
-        {
-            UpdateCamera(physicsTimestep * m_physicsTimestepScaleFactor);
-        }
+        ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
         m_prevTimeStep = physicsTimestep;
     }
 
@@ -1007,7 +1006,7 @@ namespace FirstPersonController
             return;
         }
 
-        // Set target position for non-child or tick-based updates
+        // Set target position for smooth follow
         AZ::Vector3 characterPosition;
         AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
         m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
@@ -1016,23 +1015,14 @@ namespace FirstPersonController
         // Determine if the camera is a child of the player character
         bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
 
-        // Handle camera parenting based on m_updateCameraForTimestepVsTick
-        if(m_updateCameraForTimestepVsTick)
+        // Handle camera parenting based on m_cameraSmoothFollow
+        if (m_cameraSmoothFollow)
         {
-            if(!isCameraChildOfPlayer)
-            {
-                // Camera is not a child, set world position to match player's
-                AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_targetCameraPosition);
-            }
-            // Camera is a child, do not set local position to respect user's manual height
-        }
-        else
-        {
-            // When updating on tick, reparent camera if it is a child of the player
-            if(isCameraChildOfPlayer)
+            // When smooth follow is enabled, reparent camera if it is a child of the player
+            if (isCameraChildOfPlayer)
             {
                 AZ::EntityId parentId = m_cameraParentEntityId.IsValid() ? m_cameraParentEntityId : AZ::EntityId();
-                if(!parentId.IsValid())
+                if (!parentId.IsValid())
                 {
                     // Default to player's parent if no specific parent is set
                     AZ::TransformBus::EventResult(parentId, GetEntityId(), &AZ::TransformBus::Events::GetParentId);
@@ -1044,9 +1034,10 @@ namespace FirstPersonController
             // Set initial world position for smooth following
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
         }
+        // When smooth follow is disabled, do not set position
     }
 
-    void FirstPersonControllerComponent::UpdateCamera(float deltaTime)
+    void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
         if(!m_activeCameraEntity && m_cameraEntityId.IsValid())
         {
@@ -1058,41 +1049,20 @@ namespace FirstPersonController
             return;
         }
 
-        // Log whether the camera is updated on physics timestep or tick
-        // AZ_Printf("FirstPersonControllerComponent", "Camera updating on %s (deltaTime: %f).",
-        //     m_updateCameraForTimestepVsTick ? "physics timestep" : "tick", deltaTime);
+        if (!m_cameraSmoothFollow)
+        {
+            return;
+        }
 
         // Calculate target position
         AZ::Vector3 characterPosition;
         AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
         m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
 
-        // Determine if the camera is a child of the player character
-        bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
-
-        // Log camera child status
-        // AZ_Printf("FirstPersonControllerComponent", "Camera is %s of player character.",
-        //     isCameraChildOfPlayer ? "child" : "not a child");
-
-        if(m_updateCameraForTimestepVsTick)
-        {
-            if(!isCameraChildOfPlayer)
-            {
-                // Camera is not a child, set world position to match player's
-                AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_targetCameraPosition);
-                // AZ_Printf("FirstPersonControllerComponent", "Non-child camera updated: position=(%f, %f, %f)",
-                //     m_targetCameraPosition.GetX(), m_targetCameraPosition.GetY(), m_targetCameraPosition.GetZ());
-            }
-            // Camera is a child, do not set local position to respect user's manual height
-        }
-        else
-        {
-            // Smoothly interpolate camera position
-            m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * deltaTime);
-            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
-            // AZ_Printf("FirstPersonControllerComponent", "Camera interpolated: position=(%f, %f, %f)",
-            //     m_currentCameraPosition.GetX(), m_currentCameraPosition.GetY(), m_currentCameraPosition.GetZ());
-        }
+        // Smoothly interpolate camera position using averaged delta time
+        float avgDeltaTime = (m_prevDeltaTime + deltaTime) / 2.f;
+        m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * avgDeltaTime);
+        AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
     }
 
     // Helper function to check if camera is a child of the player
@@ -1146,16 +1116,15 @@ namespace FirstPersonController
         AZ::TransformInterface* playerTransform = GetEntity()->GetTransform();
         playerTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
-        // Determine if the camera is a child of the player character
-        bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
-
         m_activeCameraEntity = GetActiveCameraEntityPtr();
-        if(m_activeCameraEntity)
+        if (m_activeCameraEntity)
         {
             AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
-            if(m_updateCameraForTimestepVsTick && isCameraChildOfPlayer)
+            bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
+
+            if (!m_cameraSmoothFollow && isCameraChildOfPlayer)
             {
-                // Original coupled camera behavior: apply yaw to player, pitch to camera's local rotation
+                // Apply pitch to camera's local rotation, yaw is handled by player parent
                 cameraTransform->SetLocalRotation(AZ::Vector3(
                     AZ::GetClamp(cameraTransform->GetLocalRotation().GetX() + newLookRotationDelta.GetX(),
                         m_cameraPitchMinAngle, m_cameraPitchMaxAngle),
@@ -1164,7 +1133,7 @@ namespace FirstPersonController
             }
             else
             {
-                // New decoupled camera behavior: update yaw and pitch, apply to camera's local rotation
+                // Update yaw and pitch for camera's local rotation
                 m_cameraYaw += newLookRotationDelta.GetZ();
                 float pitchDelta = newLookRotationDelta.GetX();
                 m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
@@ -2432,6 +2401,7 @@ namespace FirstPersonController
         if(!timestepElseTick)
         {
             UpdateRotation();
+            LerpCameraToCharacter(deltaTime);
 
             // Get the current velocity to determine if something was hit
             AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
@@ -2605,9 +2575,9 @@ namespace FirstPersonController
         if(m_cameraParentEntityId != new_cameraParentEntityId)
         {
             m_cameraParentEntityId = new_cameraParentEntityId;
-            if(m_activeCameraEntity && !m_updateCameraForTimestepVsTick)
+            if(m_activeCameraEntity && m_cameraSmoothFollow)
             {
-                // Reparent only if not using physics timestep updates
+                // Reparent only if smooth follow is enabled
                 AZ::EntityId parentId = m_cameraParentEntityId.IsValid() ? m_cameraParentEntityId : AZ::EntityId();
                 if(!parentId.IsValid())
                 {
@@ -2619,52 +2589,19 @@ namespace FirstPersonController
             }
         }
     }
-    bool FirstPersonControllerComponent::GetUpdateCameraForTimestepVsTick() const
+    bool FirstPersonControllerComponent::GetCameraSmoothFollow() const
     {
-        return m_updateCameraForTimestepVsTick;
+        return m_cameraSmoothFollow;
     }
-    void FirstPersonControllerComponent::SetUpdateCameraForTimestepVsTick(const bool& new_updateCameraForTimestepVsTick)
+    void FirstPersonControllerComponent::SetCameraSmoothFollow(const bool& new_cameraSmoothFollow)
     {
-        if(m_updateCameraForTimestepVsTick != new_updateCameraForTimestepVsTick)
+        if(m_cameraSmoothFollow != new_cameraSmoothFollow)
         {
-            m_updateCameraForTimestepVsTick = new_updateCameraForTimestepVsTick;
+            m_cameraSmoothFollow = new_cameraSmoothFollow;
 
             if(m_activeCameraEntity)
             {
                 InitializeCameraPosition();
-            }
-
-            if(m_updateCameraForTimestepVsTick)
-            {
-                if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
-                {
-                    Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
-                    if(m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
-                    {
-                        AZ_Error("First Person Controller Component", false, "Failed to retrieve default scene.");
-                        return;
-                    }
-
-                    m_sceneSimulationStartHandler = AzPhysics::SceneEvents::OnSceneSimulationStartHandler(
-                        [this]([[maybe_unused]] AzPhysics::SceneHandle sceneHandle, float fixedDeltaTime)
-                        {
-                            OnSceneSimulationStart(fixedDeltaTime);
-                        }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
-
-                    auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
-                    if(sceneInterface != nullptr)
-                    {
-                        sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
-                    }
-                }
-            }
-            else
-            {
-                if(!m_addVelocityForTimestepVsTick)
-                {
-                    m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
-                    m_sceneSimulationStartHandler.Disconnect();
-                }
             }
         }
     }

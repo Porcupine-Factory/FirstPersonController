@@ -31,7 +31,7 @@ namespace FirstPersonController
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentRequestBus::Handler
         , public AZ::EntityBus::Handler
-        , Camera::CameraNotificationBus::Handler
+        , public Camera::CameraNotificationBus::Handler
     {
     public:
         AZ_COMPONENT(FirstPersonControllerComponent, "{0a47c7c2-0f94-48dd-8e3f-fd55c30475b9}");
@@ -73,8 +73,8 @@ namespace FirstPersonController
         void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
         AZ::EntityId GetCameraParentEntity() const override;
         void SetCameraParentEntity(const AZ::EntityId new_cameraParentEntityId) override;
-        bool GetUpdateCameraForTimestepVsTick() const;
-        void SetUpdateCameraForTimestepVsTick(const bool& new_updateCameraForTimestepVsTick);
+        bool GetCameraSmoothFollow() const;
+        void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow);
         void ReacquireChildEntityIds() override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
@@ -383,7 +383,7 @@ namespace FirstPersonController
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation();
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
-        void UpdateCamera(float deltaTime);
+        void LerpCameraToCharacter(float deltaTime);
         bool IsCameraChildOfPlayer();
         void SmoothRotation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
@@ -426,7 +426,7 @@ namespace FirstPersonController
         AzPhysics::SceneEvents::OnSceneSimulationStartHandler m_sceneSimulationStartHandler;
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         bool m_addVelocityForTimestepVsTick = true;
-        bool m_updateCameraForTimestepVsTick = false;
+        bool m_cameraSmoothFollow = true;
         float m_physicsTimestepScaleFactor = 1.f;
 
         // Camera interpolation variables
