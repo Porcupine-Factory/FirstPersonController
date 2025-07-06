@@ -503,8 +503,6 @@ namespace FirstPersonController
         // Crouch application variables
         float m_crouchDistance = 0.5f;
         float m_crouchTime = 0.2f;
-        float m_crouchInitCurrentDownVelocity = 0.f;
-        float m_crouchInitCurrentUpVelocity = 0.f;
         float m_standTime = 0.2f;
         float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
