@@ -1686,6 +1686,7 @@ namespace FirstPersonController
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedCrouching);
 
             float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
+            // Calculate the current crouch height
             m_capsuleCurrentHeight = m_capsuleHeight - (m_crouchCurrentUpDownTime * (2 * m_crouchTime * m_crouchDownInitVelocity - m_crouchCurrentUpDownTime * m_crouchDownInitVelocity + m_crouchCurrentUpDownTime * m_crouchDownFinalVelocity)) / (2 * m_crouchTime);
             cameraTravelDelta += m_capsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
@@ -1835,6 +1836,7 @@ namespace FirstPersonController
             m_standPrevented = false;
 
             float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
+            // Calculate the current crouch height
             m_capsuleCurrentHeight = m_capsuleHeight - (m_crouchCurrentUpDownTime * (2 * m_standTime * m_crouchUpFinalVelocity + m_crouchCurrentUpDownTime * m_crouchUpInitVelocity - m_crouchCurrentUpDownTime * m_crouchUpFinalVelocity)) / (2 * m_standTime);
             cameraTravelDelta += m_capsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
