@@ -1673,7 +1673,7 @@ namespace FirstPersonController
             else if(m_standingUpMove)
             {
                 // Back-calculate m_crouchCurrentUpDownTime based on the current crouching height
-                m_crouchCurrentUpDownTime = -1.f * (sqrt(m_crouchTime) * (sqrt((m_crouchDownInitVelocity - m_crouchDownFinalVelocity) * (2 * m_capsuleCurrentHeight - 2 * m_capsuleHeight) + m_crouchTime * m_crouchDownInitVelocity * m_crouchDownInitVelocity) - sqrt(m_crouchTime) * m_crouchDownInitVelocity)) / (m_crouchDownInitVelocity - m_crouchDownFinalVelocity);
+                m_crouchCurrentUpDownTime = -1.f * ((sqrt(m_crouchTime * (m_crouchDownInitVelocity - m_crouchDownFinalVelocity) * (2.f * m_capsuleCurrentHeight - 2.f * m_capsuleHeight) + m_crouchTime * m_crouchTime * m_crouchDownInitVelocity * m_crouchDownInitVelocity) - m_crouchTime * m_crouchDownInitVelocity)) / (m_crouchDownInitVelocity - m_crouchDownFinalVelocity);
                 // Ensure the resulting calculation is real, otherwise set it to zero
                 if(isnan(m_crouchCurrentUpDownTime))
                     m_crouchCurrentUpDownTime = 0.f;
