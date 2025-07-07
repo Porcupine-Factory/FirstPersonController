@@ -1665,10 +1665,18 @@ namespace FirstPersonController
         // Crouch down
         if(m_crouching && (!m_crouched || m_grounded || m_crouchWhenNotGrounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
         {
-            if(m_standing || m_standingUpMove)
+            if(m_standing)
             {
-                m_crouchCurrentUpDownTime *= m_crouchTime / m_standTime;
+                m_crouchCurrentUpDownTime = 0.f;
                 m_standing = false;
+            }
+            else if(m_standingUpMove)
+            {
+                // Back-calculate m_crouchCurrentUpDownTime based on the current crouching height
+                m_crouchCurrentUpDownTime = -1.f * (sqrt(m_crouchTime) * (sqrt((m_crouchDownInitVelocity - m_crouchDownFinalVelocity) * (2 * m_capsuleCurrentHeight - 2 * m_capsuleHeight) + m_crouchTime * m_crouchDownInitVelocity * m_crouchDownInitVelocity) - sqrt(m_crouchTime) * m_crouchDownInitVelocity)) / (m_crouchDownInitVelocity - m_crouchDownFinalVelocity);
+                // Ensure the resulting calculation is real, otherwise set it to zero
+                if(isnan(m_crouchCurrentUpDownTime))
+                    m_crouchCurrentUpDownTime = 0.f;
                 m_standingUpMove = false;
             }
 
@@ -1718,10 +1726,18 @@ namespace FirstPersonController
         // Stand up
         else if(!m_crouching && m_cameraLocalZTravelDistance != 0.f)
         {
-            if(m_crouched || m_crouchingDownMove)
+            if(m_crouched)
             {
-                m_crouchCurrentUpDownTime *= m_standTime / m_crouchTime;
+                m_crouchCurrentUpDownTime = m_standTime;
                 m_crouched = false;
+            }
+            else if(m_crouchingDownMove)
+            {
+                // Back-calculate m_crouchCurrentUpDownTime based on the current crouching height
+                m_crouchCurrentUpDownTime = ((sqrt(m_standTime * (m_crouchUpInitVelocity - m_crouchUpFinalVelocity) * (2.f * m_capsuleHeight - 2.f * m_capsuleCurrentHeight) + m_standTime * m_standTime * m_crouchUpFinalVelocity * m_crouchUpFinalVelocity) - sqrt(m_standTime * m_standTime * m_crouchUpFinalVelocity * m_crouchUpFinalVelocity)))/(m_crouchUpInitVelocity - m_crouchUpFinalVelocity);
+                // Ensure the resulting calculation is real, otherwise set it to m_standTime
+                if(isnan(m_crouchCurrentUpDownTime))
+                    m_crouchCurrentUpDownTime = m_standTime;
                 m_crouchingDownMove = false;
             }
 
