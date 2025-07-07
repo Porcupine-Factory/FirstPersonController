@@ -265,8 +265,16 @@ namespace FirstPersonController
         virtual void SetCrouchDistance(const float&) = 0;
         virtual float GetCrouchTime() const = 0;
         virtual void SetCrouchTime(const float&) = 0;
+        virtual float GetCrouchStartSpeed() const = 0;
+        virtual void SetCrouchStartSpeed(const float&) = 0;
+        virtual float GetCrouchEndSpeed() const = 0;
         virtual float GetStandTime() const = 0;
         virtual void SetStandTime(const float&) = 0;
+        virtual float GetStandStartSpeed() const = 0;
+        virtual void SetStandStartSpeed(const float&) = 0;
+        virtual float GetStandEndSpeed() const = 0;
+        virtual bool GetCrouchingDownMove() const = 0;
+        virtual bool GetStandingUpMove() const = 0;
         virtual float GetUncrouchHeadSphereCastOffset() const = 0;
         virtual void SetUncrouchHeadSphereCastOffset(const float&) = 0;
         virtual bool GetCrouchEnableToggle() const = 0;

@@ -313,8 +313,16 @@ namespace FirstPersonController
         void SetCrouchDistance(const float& new_crouchDistance) override;
         float GetCrouchTime() const override;
         void SetCrouchTime(const float& new_crouchTime) override;
+        float GetCrouchStartSpeed() const override;
+        void SetCrouchStartSpeed(const float& new_crouchDownInitVelocity) override;
+        float GetCrouchEndSpeed() const override;
         float GetStandTime() const override;
         void SetStandTime(const float& new_standTime) override;
+        float GetStandStartSpeed() const override;
+        void SetStandStartSpeed(const float& new_crouchUpInitVelocity) override;
+        float GetStandEndSpeed() const override;
+        bool GetCrouchingDownMove() const override;
+        bool GetStandingUpMove() const override;
         float GetUncrouchHeadSphereCastOffset() const override;
         void SetUncrouchHeadSphereCastOffset(const float& new_uncrouchHeadSphereCastOffset) override;
         bool GetCrouchEnableToggle() const override;
@@ -503,11 +511,18 @@ namespace FirstPersonController
         // Crouch application variables
         float m_crouchDistance = 0.5f;
         float m_crouchTime = 0.2f;
-        float m_standTime = 0.2f;
+        float m_crouchCurrentUpDownTime = 0.f;
+        float m_crouchDownInitVelocity = 5.0f;
+        float m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
+        float m_standTime = 0.15f;
+        float m_crouchUpInitVelocity = 4.0f;
+        float m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
         float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
         bool m_crouched = false;
         bool m_standing = true;
+        bool m_crouchingDownMove = false;
+        bool m_standingUpMove = false;
         float m_cameraLocalZTravelDistance = 0.f;
         bool m_crouchEnableToggle = true;
         bool m_crouchJumpCausesStanding = true;

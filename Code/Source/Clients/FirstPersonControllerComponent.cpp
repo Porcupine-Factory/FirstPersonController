@@ -83,13 +83,17 @@ namespace FirstPersonController
               ->Field("Sprint While Crouched", &FirstPersonControllerComponent::m_sprintWhileCrouched)
 
               // Crouching group
-              ->Field("Crouch Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
+              ->Field("Crouch Movement Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+              ->Field("Crouch Start Speed", &FirstPersonControllerComponent::m_crouchDownInitVelocity)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
               ->Field("Stand Time", &FirstPersonControllerComponent::m_standTime)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+              ->Field("Stand Start Speed", &FirstPersonControllerComponent::m_crouchUpInitVelocity)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
               ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouchEnableToggle)
@@ -266,7 +270,7 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchScale,
-                        "Crouch Speed Scale", "Determines how much slow the character will move when crouched. The product of this number and the top walk speed is the top crouch walk speed.")
+                        "Crouch Movement Speed Scale", "Determines how much slow the character will move when crouched. The product of this number and the top walk speed is the top crouch walk speed.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
                         "Crouch Distance", "Determines the distance the camera will move on the Z axis and the reduction in the PhysX Character Controller's capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
@@ -274,8 +278,14 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_crouchTime,
                         "Crouch Time", "Determines the time it takes to crouch down from standing.")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouchDownInitVelocity,
+                        "Crouch Start Speed", "The initial speed for the crouching motion. If this speed is too slow to reach the Crouch Distance within the Crouch Time then the slowest constant velocity will be used instead and a warning will be printed. If the Crouch Distance can be reached at a slower velocity then a constant deceleration will be applied to meet the Crouch Time.")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_standTime,
                         "Stand Time", "Determines the time it takes to stand up from crouching.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_crouchUpInitVelocity,
+                        "Stand Start Speed", "The initial speed for the standing motion. If this speed is too slow to reach the (standing) Crouch Distance within the Stand Time then the slowest constant velocity will be used instead and a warning will be printed. If the (standing) Crouch Distance can be reached at a slower velocity then a constant deceleration will be applied to meet the Stand Time.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
                         "Crouch Standing Head Clearance", "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from fully standing up if there is.")
@@ -615,8 +625,16 @@ namespace FirstPersonController
                 ->Event("Set Crouch Distance", &FirstPersonControllerComponentRequests::SetCrouchDistance)
                 ->Event("Get Crouch Time", &FirstPersonControllerComponentRequests::GetCrouchTime)
                 ->Event("Set Crouch Time", &FirstPersonControllerComponentRequests::SetCrouchTime)
+                ->Event("Get Crouch Start Speed", &FirstPersonControllerComponentRequests::GetCrouchStartSpeed)
+                ->Event("Set Crouch Start Speed", &FirstPersonControllerComponentRequests::SetCrouchStartSpeed)
+                ->Event("Get Crouch End Speed", &FirstPersonControllerComponentRequests::GetCrouchEndSpeed)
                 ->Event("Get Stand Time", &FirstPersonControllerComponentRequests::GetStandTime)
                 ->Event("Set Stand Time", &FirstPersonControllerComponentRequests::SetStandTime)
+                ->Event("Get Stand Start Speed", &FirstPersonControllerComponentRequests::GetStandStartSpeed)
+                ->Event("Set Stand Start Speed", &FirstPersonControllerComponentRequests::SetStandStartSpeed)
+                ->Event("Get Stand End Speed", &FirstPersonControllerComponentRequests::GetStandEndSpeed)
+                ->Event("Get Crouching Down Move", &FirstPersonControllerComponentRequests::GetCrouchingDownMove)
+                ->Event("Get Standing Up Move", &FirstPersonControllerComponentRequests::GetStandingUpMove)
                 ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
                 ->Event("Set Crouch Enable Toggle", &FirstPersonControllerComponentRequests::SetCrouchEnableToggle)
                 ->Event("Get Crouch Jump Causes Standing", &FirstPersonControllerComponentRequests::GetCrouchJumpCausesStanding)
@@ -722,6 +740,40 @@ namespace FirstPersonController
 
         if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
             m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
+
+        // Calculate the crouch down final velocity
+        m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
+        // Check to make sure that the crouching is decelerated, if not then force a constant velocity to meet m_crouchTime
+        if(m_crouchDownFinalVelocity > m_crouchDownInitVelocity)
+        {
+            m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
+            m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead.");
+        }
+        // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
+        else if(m_crouchDownFinalVelocity < 0)
+        {
+            m_crouchDownFinalVelocity = 0.f;
+            m_crouchDownInitVelocity = 2.f * m_crouchDistance / m_crouchTime;
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too fast to reach the crouching position at crouch time, setting the start crouch speed to something slower that ends at a speed of zero.");
+        }
+
+        // Calculate the crouch up (stand) final velocity
+        m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
+        // Check to make sure that the standing is decelerated, if not then force a constant velocity to meet m_standTime
+        if(m_crouchUpFinalVelocity > m_crouchUpInitVelocity)
+        {
+            m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
+            m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
+            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead.");
+        }
+        // Check to make sure that the final standing velocity isn't negative, and fix it if it is
+        else if(m_crouchUpFinalVelocity < 0)
+        {
+            m_crouchUpFinalVelocity = 0.f;
+            m_crouchUpInitVelocity = 2.f * m_crouchDistance / m_standTime;
+            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too fast to reach the standing position at stand time, setting the start stand speed to something slower that ends at a speed of zero.");
+        }
 
         // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
         // maximum slope angle value
@@ -1055,8 +1107,7 @@ namespace FirstPersonController
         m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
 
         // Smoothly interpolate camera position using averaged delta time
-        const float avgDeltaTime = (m_prevDeltaTime + deltaTime) / 2.f;
-        m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * avgDeltaTime);
+        m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * deltaTime);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
     }
 
@@ -1183,7 +1234,7 @@ namespace FirstPersonController
 
         float lerpDeltaTime = (m_sprintAccumulatedAccel > 0.f || m_sprintVelocityAdjust != 1.f) ? deltaTime * m_sprintAccelAdjust : deltaTime;
         if(m_sprintAccelValue < 1.f && m_sprintAccumulatedAccel > 0.f)
-            lerpDeltaTime = deltaTime *  m_sprintAccelAdjust;
+            lerpDeltaTime = deltaTime * m_sprintAccelAdjust;
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
 
@@ -1614,19 +1665,31 @@ namespace FirstPersonController
         // Crouch down
         if(m_crouching && (!m_crouched || m_grounded || m_crouchWhenNotGrounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
         {
-            if(m_standing)
+            if(m_standing || m_standingUpMove)
+            {
+                m_crouchCurrentUpDownTime *= m_crouchTime / m_standTime;
                 m_standing = false;
+                m_standingUpMove = false;
+            }
+
+            m_crouchingDownMove = true;
 
             if(m_cameraLocalZTravelDistance == 0.f)
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedCrouching);
 
-            float cameraTravelDelta = -1.f * m_crouchDistance * deltaTime / m_crouchTime;
+            float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
+            m_capsuleCurrentHeight = m_capsuleHeight - (m_crouchCurrentUpDownTime * (2 * m_crouchTime * m_crouchDownInitVelocity - m_crouchCurrentUpDownTime * m_crouchDownInitVelocity + m_crouchCurrentUpDownTime * m_crouchDownFinalVelocity)) / (2 * m_crouchTime);
+            cameraTravelDelta += m_capsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            if(m_cameraLocalZTravelDistance <= -1.f * m_crouchDistance)
+            m_crouchCurrentUpDownTime += deltaTime;
+
+            if(m_cameraLocalZTravelDistance <= -1.f * m_crouchDistance || m_crouchCurrentUpDownTime > m_crouchTime)
             {
                 cameraTravelDelta += abs(m_cameraLocalZTravelDistance) - m_crouchDistance;
                 m_cameraLocalZTravelDistance = -1.f * m_crouchDistance;
+                m_crouchCurrentUpDownTime = m_crouchTime;
+                m_crouchingDownMove = false;
                 m_crouched = true;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCrouched);
             }
@@ -1655,8 +1718,14 @@ namespace FirstPersonController
         // Stand up
         else if(!m_crouching && m_cameraLocalZTravelDistance != 0.f)
         {
-            if(m_crouched)
+            if(m_crouched || m_crouchingDownMove)
+            {
+                m_crouchCurrentUpDownTime *= m_standTime / m_crouchTime;
                 m_crouched = false;
+                m_crouchingDownMove = false;
+            }
+
+            m_standingUpMove = true;
 
             if(m_cameraLocalZTravelDistance == -1.f * m_crouchDistance)
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedStanding);
@@ -1749,13 +1818,19 @@ namespace FirstPersonController
             }
             m_standPrevented = false;
 
-            float cameraTravelDelta = m_crouchDistance * deltaTime / m_standTime;
+            float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
+            m_capsuleCurrentHeight = m_capsuleHeight - (m_crouchCurrentUpDownTime * (2 * m_standTime * m_crouchUpFinalVelocity + m_crouchCurrentUpDownTime * m_crouchUpInitVelocity - m_crouchCurrentUpDownTime * m_crouchUpFinalVelocity)) / (2 * m_standTime);
+            cameraTravelDelta += m_capsuleCurrentHeight;
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            if(m_cameraLocalZTravelDistance >= 0.f)
+            m_crouchCurrentUpDownTime -= deltaTime;
+
+            if(m_cameraLocalZTravelDistance >= 0.f || m_crouchCurrentUpDownTime <= 0.f)
             {
                 cameraTravelDelta -= m_cameraLocalZTravelDistance;
                 m_cameraLocalZTravelDistance = 0.f;
+                m_crouchCurrentUpDownTime = 0.f;
+                m_standingUpMove = false;
                 m_standing = true;
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStoodUp);
             }
@@ -2396,7 +2471,7 @@ namespace FirstPersonController
         if(!timestepElseTick)
         {
             UpdateRotation();
-            LerpCameraToCharacter(deltaTime);
+            LerpCameraToCharacter((deltaTime + m_prevDeltaTime) / 2.f);
 
             // Get the current velocity to determine if something was hit
             AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
@@ -2443,20 +2518,35 @@ namespace FirstPersonController
         // Handle motion on either the physics fixed timestep or the frame tick, depending on which is selected and which is currently executing
         if(timestepElseTick == m_addVelocityForTimestepVsTick)
         {
-            CheckGrounded(deltaTime);
+            if(m_addVelocityForTimestepVsTick)
+                CheckGrounded((deltaTime + m_prevTimeStep) / 2.f);
+            else
+                CheckGrounded((deltaTime + m_prevDeltaTime) / 2.f);
 
-            CrouchManager(deltaTime);
+
+            if(m_addVelocityForTimestepVsTick)
+                CrouchManager((deltaTime + m_prevTimeStep) / 2.f);
+            else
+                CrouchManager((deltaTime + m_prevDeltaTime) / 2.f);
 
             // So long as the character is grounded or depending on how the update X&Y velocity while jumping
             // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
             if(m_grounded || (m_updateXYAscending && m_updateXYDescending && !m_updateXYOnlyNearGround)
                || ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
                || ((m_updateXYDescending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
-                UpdateVelocityXY(deltaTime);
+            {
+                if(m_addVelocityForTimestepVsTick)
+                    UpdateVelocityXY((deltaTime + m_prevTimeStep) / 2.f);
+                else
+                    UpdateVelocityXY((deltaTime + m_prevDeltaTime) / 2.f);
+            }
 
-            UpdateVelocityZ(deltaTime);
+            if(m_addVelocityForTimestepVsTick)
+                UpdateVelocityZ((deltaTime + m_prevTimeStep) / 2.f);
+            else
+                UpdateVelocityZ((deltaTime + m_prevDeltaTime) / 2.f);
 
-            // Track the sum of the normal vectors for the velocity's XY plane if its set
+            // Track the sum of the normal vectors for the velocity's XY plane if it's set
             if(m_velocityXCrossYTracksNormal)
                 SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
 
@@ -3762,6 +3852,34 @@ namespace FirstPersonController
     {
         m_crouchTime = new_crouchTime;
     }
+    float FirstPersonControllerComponent::GetCrouchStartSpeed() const
+    {
+        return m_crouchDownInitVelocity;
+    }
+    void FirstPersonControllerComponent::SetCrouchStartSpeed(const float& new_crouchDownInitVelocity)
+    {
+        m_crouchDownInitVelocity = new_crouchDownInitVelocity;
+        // Recalculate the crouch down final velocity
+        m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
+        // Check to make sure that the crouching is decelerated, if not then force a constant velocity to meet m_crouchTime
+        if(m_crouchDownFinalVelocity > m_crouchDownInitVelocity)
+        {
+            m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
+            m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed changed to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead.");
+        }
+        // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
+        else if(m_crouchDownFinalVelocity < 0)
+        {
+            m_crouchDownFinalVelocity = 0.f;
+            m_crouchDownInitVelocity = 2.f * m_crouchDistance / m_crouchTime;
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed changed to a value that's too fast to reach the crouching position at crouch time, setting the start crouch speed to something slower that ends at a speed of zero.");
+        }
+    }
+    float FirstPersonControllerComponent::GetCrouchEndSpeed() const
+    {
+        return m_crouchDownFinalVelocity;
+    }
     float FirstPersonControllerComponent::GetStandTime() const
     {
         return m_standTime;
@@ -3770,9 +3888,45 @@ namespace FirstPersonController
     {
         m_standTime = new_standTime;
     }
+    float FirstPersonControllerComponent::GetStandStartSpeed() const
+    {
+        return m_crouchUpInitVelocity;
+    }
+    void FirstPersonControllerComponent::SetStandStartSpeed(const float& new_crouchUpInitVelocity)
+    {
+        m_crouchUpInitVelocity = new_crouchUpInitVelocity;
+        // Recalculate the crouch up (stand) final velocity
+        m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
+        // Check to make sure that the standing is decelerated, if not then force a constant velocity to meet m_standTime
+        if(m_crouchUpFinalVelocity > m_crouchUpInitVelocity)
+        {
+            m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
+            m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
+            AZ_Warning("First Person Controller Component", false, "Stand start speed changed to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead.");
+        }
+        // Check to make sure that the final standing velocity isn't negative, and fix it if it is
+        else if(m_crouchUpFinalVelocity < 0)
+        {
+            m_crouchUpFinalVelocity = 0.f;
+            m_crouchUpInitVelocity = 2.f * m_crouchDistance / m_standTime;
+            AZ_Warning("First Person Controller Component", false, "Stand start speed changed to a value that's too fast to reach the standing position at stand time, setting the start stand speed to something slower that ends at a speed of zero.");
+        }
+    }
+    float FirstPersonControllerComponent::GetStandEndSpeed() const
+    {
+        return m_crouchUpFinalVelocity;
+    }
     float FirstPersonControllerComponent::GetUncrouchHeadSphereCastOffset() const
     {
         return m_uncrouchHeadSphereCastOffset;
+    }
+    bool FirstPersonControllerComponent::GetCrouchingDownMove() const
+    {
+        return m_crouchingDownMove;
+    }
+    bool FirstPersonControllerComponent::GetStandingUpMove() const
+    {
+        return m_standingUpMove;
     }
     void FirstPersonControllerComponent::SetUncrouchHeadSphereCastOffset(const float& new_uncrouchHeadSphereCastOffset)
     {
