@@ -1150,46 +1150,54 @@ namespace FirstPersonController
         {
             AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
-            if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
+            if(m_cameraSmoothFollow)
             {
-                // Follow the character's rotation and apply a delta to the pitch
-                float cameraPitch = cameraTransform->GetLocalRotation().GetX();
-                const float characterPitch = characterTransform->GetLocalRotation().GetX();
-                if(m_prevCharacterPitch != characterPitch)
-                    cameraPitch += (characterPitch - m_prevCharacterPitch);
-                m_prevCharacterPitch = characterPitch;
+                if(IsCameraChildOfCharacter())
+                {
+                    // Follow the character's rotation and apply a delta to the pitch
+                    float cameraPitch = cameraTransform->GetLocalRotation().GetX();
+                    const float characterPitch = characterTransform->GetLocalRotation().GetX();
+                    if(m_prevCharacterPitch != characterPitch)
+                    {
+                        if(m_currentHeading > AZ::Constants::QuarterPi || m_currentHeading < -AZ::Constants::QuarterPi)
+                            cameraPitch += (m_prevCharacterPitch - characterPitch);
+                        else
+                            cameraPitch += (characterPitch - m_prevCharacterPitch);
+                    }
+                    m_prevCharacterPitch = characterPitch;
 
-                float rollDelta = 0.f;
-                const float characterRoll = characterTransform->GetLocalRotation().GetY();
-                if(m_prevCharacterRoll != characterRoll)
-                    rollDelta = (characterRoll - m_prevCharacterRoll);
-                m_prevCharacterRoll = characterRoll;
+                    float rollDelta = 0.f;
+                    const float characterRoll = characterTransform->GetLocalRotation().GetY();
+                    if(m_prevCharacterRoll != characterRoll)
+                        rollDelta = (characterRoll - m_prevCharacterRoll);
+                    m_prevCharacterRoll = characterRoll;
 
-                cameraTransform->SetWorldRotation(characterTransform->GetWorldRotation());
-                cameraTransform->RotateAroundLocalX(AZ::GetClamp(cameraPitch + newLookRotationDelta.GetX(),
-                        m_cameraPitchMinAngle, m_cameraPitchMaxAngle));
-                cameraTransform->RotateAroundLocalY(rollDelta);
-            }
-            else if(m_cameraSmoothFollow)
-            {
-                // Follow the character's rotation and apply a delta to the pitch
-                const float characterPitch = characterTransform->GetLocalRotation().GetX();
-                const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
-                m_prevCharacterPitch = characterPitch;
-                const float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(m_sphereCastsAxisDirectionPose);
-                m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle + angleFromZ, m_cameraPitchMaxAngle + angleFromZ);
+                    cameraTransform->SetWorldRotation(characterTransform->GetWorldRotation());
+                    cameraTransform->RotateAroundLocalX(AZ::GetClamp(cameraPitch + newLookRotationDelta.GetX(),
+                            m_cameraPitchMinAngle, m_cameraPitchMaxAngle));
+                    cameraTransform->RotateAroundLocalY(rollDelta);
+                }
+                else
+                {
+                    // Follow the character's rotation and apply a delta to the pitch
+                    const float characterPitch = characterTransform->GetLocalRotation().GetX();
+                    const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
+                    m_prevCharacterPitch = characterPitch;
+                    const float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(m_sphereCastsAxisDirectionPose);
+                    m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle + angleFromZ, m_cameraPitchMaxAngle + angleFromZ);
 
-                const float characterRoll = characterTransform->GetLocalRotation().GetY();
-                const float rollDelta = (characterRoll - m_prevCharacterRoll);
-                m_cameraRoll += rollDelta;
-                m_prevCharacterRoll = characterRoll;
+                    const float characterRoll = characterTransform->GetLocalRotation().GetY();
+                    const float rollDelta = (characterRoll - m_prevCharacterRoll);
+                    m_cameraRoll += rollDelta;
+                    m_prevCharacterRoll = characterRoll;
 
-                m_cameraYaw += newLookRotationDelta.GetZ();
+                    m_cameraYaw += newLookRotationDelta.GetZ();
 
-                const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
-                const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
-                const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
-                cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
+                    const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
+                    const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
+                    const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
+                    cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
+                }
             }
             else if(IsCameraChildOfCharacter())
             {
