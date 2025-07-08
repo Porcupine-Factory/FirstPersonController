@@ -393,7 +393,7 @@ namespace FirstPersonController
         void UpdateRotation();
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void LerpCameraToCharacter(float deltaTime);
-        bool IsCameraChildOfPlayer();
+        bool IsCameraChildOfCharacter();
         void SmoothRotation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
@@ -602,7 +602,10 @@ namespace FirstPersonController
         float m_currentHeading = 0.f;
         bool m_scriptSetcurrentHeadingTick = false;
         float m_currentPitch = 0.f;
+        float m_prevCharacterPitch = 0.f;
+        float m_prevCharacterRoll = 0.f;
         float m_cameraPitch = 0.f;
+        float m_cameraRoll = 0.f;
         float m_cameraYaw = 0.f;
         AZ::Quaternion m_newLookRotationDelta = AZ::Quaternion::CreateZero();
         float m_rotationDamp = 30.f;

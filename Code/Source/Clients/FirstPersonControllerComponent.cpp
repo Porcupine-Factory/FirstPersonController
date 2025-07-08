@@ -149,7 +149,7 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_cameraEntityId,
                         "Camera Entity", "The camera entity to use for the first-person view.")
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothFollow,
-                        "Camera Smooth Follow", "If enabled, camera smoothly follows the character with interpolation; otherwise, follows parent transforms if a child or remains static if not a child.")
+                        "Camera Smooth Follow", "If enabled, the camera follows the character using linear interpolation on the frame tick; otherwise, the camera follows its parent transform.")
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_eyeHeight,
                         "Eye Height", "Height of the camera above the character's base position (meters). Only used if Camera Smooth Follow is enabled.")
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothingSpeed,
@@ -783,9 +783,9 @@ namespace FirstPersonController
         // This number can be altered using the RequestBus
         m_sprintPauseTime = (m_sprintCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintCooldownTime;
 
-        //AZ_Printf("", "m_capsuleHeight = %.10f", m_capsuleHeight);
-        //AZ_Printf("", "m_capsuleRadius = %.10f", m_capsuleRadius);
-        //AZ_Printf("", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
+        //AZ_Printf("First Person Controller Component", "m_capsuleHeight = %.10f", m_capsuleHeight);
+        //AZ_Printf("First Person Controller Component", "m_capsuleRadius = %.10f", m_capsuleRadius);
+        //AZ_Printf("First Person Controller Component", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
     }
 
     void FirstPersonControllerComponent::Deactivate()
@@ -814,18 +814,14 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(entityId);
             if(m_activeCameraEntity)
             {
-                const bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
-                if(m_cameraSmoothFollow && isCameraChildOfPlayer)
-                {
+                if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
                     SetParentChangeDoNotUpdate(m_cameraEntityId);
-                }
                 else
-                {
                     SetParentChangeUpdate(m_cameraEntityId);
-                }
+
                 InitializeCameraPosition();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
-                //AZ_Printf("FirstPersonControllerComponent", "Camera entity %s activated and set as active view.",
+                //AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
                 //    m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() : m_activeCameraEntity->GetName().c_str());
             }
             else
@@ -955,7 +951,7 @@ namespace FirstPersonController
         const AzFramework::InputDeviceId& deviceId = inputChannel.GetInputDevice().GetInputDeviceId();
 
         // TODO: Implement gamepad support
-        //AZ_Printf("", "OnInputChannelEventFiltered");
+        //AZ_Printf("First Person Controller Component", "OnInputChannelEventFiltered");
         if(AzFramework::InputDeviceGamepad::IsGamepadDevice(deviceId))
             OnGamepadEvent(inputChannel);
 
@@ -1022,18 +1018,14 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(cameraId);
             if(m_activeCameraEntity)
             {
-                const bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
-                if(m_cameraSmoothFollow && isCameraChildOfPlayer)
-                {
+                if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
                     SetParentChangeDoNotUpdate(m_cameraEntityId);
-                }
                 else
-                {
                     SetParentChangeUpdate(m_cameraEntityId);
-                }
+
                 InitializeCameraPosition();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
-                //AZ_Printf("FirstPersonControllerComponent", "Default camera %s assigned and set as active view.",
+                //AZ_Printf("First Person Controller Component", "Default camera %s assigned and set as active view.",
                 //    m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() : m_activeCameraEntity->GetName().c_str());
             }
             else
@@ -1078,41 +1070,32 @@ namespace FirstPersonController
 
         // Set initial world position for smooth following
         if(m_cameraSmoothFollow)
-        {
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
-        }
-        // When smooth follow is disabled, do not set position
     }
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
         if(!m_activeCameraEntity && m_cameraEntityId.IsValid())
-        {
             SetCameraEntity(m_cameraEntityId);
-        }
 
         if(!m_activeCameraEntity)
-        {
             return;
-        }
 
         if(!m_cameraSmoothFollow)
-        {
             return;
-        }
 
         // Calculate target position
         AZ::Vector3 characterPosition;
         AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-        m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
+        m_targetCameraPosition = characterPosition + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
 
-        // Smoothly interpolate camera position using averaged delta time
+        // Smoothly interpolate camera position
         m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * deltaTime);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
     }
 
-    // Helper function to check if camera is a child of the player
-    bool FirstPersonControllerComponent::IsCameraChildOfPlayer()
+    // Helper function to check if camera is a child of the character
+    bool FirstPersonControllerComponent::IsCameraChildOfCharacter()
     {
         if(!m_obtainedChildIds)
         {
@@ -1159,28 +1142,58 @@ namespace FirstPersonController
         const AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
 
         // Apply yaw to player character
-        AZ::TransformInterface* playerTransform = GetEntity()->GetTransform();
-        playerTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
+        AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
+        characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
         if(m_activeCameraEntity)
         {
             AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
-            const bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
 
-            if(m_cameraSmoothFollow)
+            if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
             {
-                // Update yaw and pitch for camera's world rotation to mimic world parenting
-                m_cameraYaw += newLookRotationDelta.GetZ();
-                const float pitchDelta = newLookRotationDelta.GetX();
-                m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
-                const AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
-                const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
-                cameraTransform->SetWorldRotationQuaternion(yawRotation * pitchRotation);
+                // Follow the character's rotation and apply a delta to the pitch
+                float cameraPitch = cameraTransform->GetLocalRotation().GetX();
+                const float characterPitch = characterTransform->GetLocalRotation().GetX();
+                if(m_prevCharacterPitch != characterPitch)
+                    cameraPitch += (characterPitch - m_prevCharacterPitch);
+                m_prevCharacterPitch = characterPitch;
+
+                float rollDelta = 0.f;
+                const float characterRoll = characterTransform->GetLocalRotation().GetY();
+                if(m_prevCharacterRoll != characterRoll)
+                    rollDelta = (characterRoll - m_prevCharacterRoll);
+                m_prevCharacterRoll = characterRoll;
+
+                cameraTransform->SetWorldRotation(characterTransform->GetWorldRotation());
+                cameraTransform->RotateAroundLocalX(AZ::GetClamp(cameraPitch + newLookRotationDelta.GetX(),
+                        m_cameraPitchMinAngle, m_cameraPitchMaxAngle));
+                cameraTransform->RotateAroundLocalY(rollDelta);
             }
-            else if(isCameraChildOfPlayer)
+            else if(m_cameraSmoothFollow)
             {
-                // Apply pitch to camera's local rotation, yaw is handled by player parent
+                // Follow the character's rotation and apply a delta to the pitch
+                const float characterPitch = characterTransform->GetLocalRotation().GetX();
+                const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
+                m_prevCharacterPitch = characterPitch;
+                const float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(m_sphereCastsAxisDirectionPose);
+                m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle + angleFromZ, m_cameraPitchMaxAngle + angleFromZ);
+
+                const float characterRoll = characterTransform->GetLocalRotation().GetY();
+                const float rollDelta = (characterRoll - m_prevCharacterRoll);
+                m_cameraRoll += rollDelta;
+                m_prevCharacterRoll = characterRoll;
+
+                m_cameraYaw += newLookRotationDelta.GetZ();
+
+                const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
+                const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
+                const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
+                cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
+            }
+            else if(IsCameraChildOfCharacter())
+            {
+                // Apply pitch to camera's local rotation, yaw follows the parent character entity
                 cameraTransform->SetLocalRotation(AZ::Vector3(
                     AZ::GetClamp(cameraTransform->GetLocalRotation().GetX() + newLookRotationDelta.GetX(),
                         m_cameraPitchMinAngle, m_cameraPitchMaxAngle),
@@ -1201,18 +1214,12 @@ namespace FirstPersonController
 
         // Update heading and pitch
         if(!m_scriptSetcurrentHeadingTick)
-        {
-            m_currentHeading = playerTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
-        }
+            m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
         else
-        {
             m_scriptSetcurrentHeadingTick = false;
-        }
 
         if(m_activeCameraEntity)
-        {
             m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotationQuaternion().GetEulerRadians().GetX();
-        }
     }
 
     // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
@@ -1593,7 +1600,7 @@ namespace FirstPersonController
             m_staminaPercentage = 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime;
         else
             m_staminaPercentage = 0.f;
-        //AZ_Printf("", "Stamina = %.10f\%", m_staminaPercentage);
+        //AZ_Printf("First Person Controller Component", "Stamina = %.10f\%", m_staminaPercentage);
     }
 
     void FirstPersonControllerComponent::SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime)
@@ -1660,7 +1667,7 @@ namespace FirstPersonController
             && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
              m_crouching = false;
 
-        //AZ_Printf("", "m_crouching = %s", m_crouching ? "true" : "false");
+        //AZ_Printf("First Person Controller Component", "m_crouching = %s", m_crouching ? "true" : "false");
 
         // Crouch down
         if(m_crouching && (!m_crouched || m_grounded || m_crouchWhenNotGrounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
@@ -1717,7 +1724,7 @@ namespace FirstPersonController
                 m_capsuleCurrentHeight = 2.f*m_capsuleRadius + 0.00001f;
             if(m_capsuleCurrentHeight < (stepHeight + 0.00001f))
                 m_capsuleCurrentHeight = stepHeight + 0.00001f;
-            //AZ_Printf("", "Crouching capsule height = %.10f", m_capsuleCurrentHeight);
+            //AZ_Printf("First Person Controller Component", "Crouching capsule height = %.10f", m_capsuleCurrentHeight);
 
             PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
                 &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
@@ -1861,7 +1868,7 @@ namespace FirstPersonController
             m_capsuleCurrentHeight += cameraTravelDelta;
             if(m_capsuleCurrentHeight > m_capsuleHeight)
                 m_capsuleCurrentHeight = m_capsuleHeight;
-            //AZ_Printf("", "Standing capsule height = %.10f", m_capsuleCurrentHeight);
+            //AZ_Printf("First Person Controller Component", "Standing capsule height = %.10f", m_capsuleCurrentHeight);
 
             PhysX::CharacterControllerRequestBus::Event(GetEntityId(),
                 &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
@@ -1986,28 +1993,28 @@ namespace FirstPersonController
         }
 
         // Debug print statements to observe the velocity, acceleration, and position
-        //AZ_Printf("", "m_currentHeading = %.10f", m_currentHeading);
-        //AZ_Printf("", "m_applyVelocityXY.GetLength() = %.10f", m_applyVelocityXY.GetLength());
-        //AZ_Printf("", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
-        //AZ_Printf("", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
-        //AZ_Printf("", "m_sprintAccumulatedAccel = %.10f", m_sprintAccumulatedAccel);
-        //AZ_Printf("", "m_sprintValue = %.10f", m_sprintValue);
-        //AZ_Printf("", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
-        //AZ_Printf("", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
-        //AZ_Printf("", "m_decelerationFactor = %.10f", m_decelerationFactor);
-        //AZ_Printf("", "m_sprintVelocityAdjust = %.10f", m_sprintVelocityAdjust);
-        //AZ_Printf("", "m_sprintHeldDuration = %.10f", m_sprintHeldDuration);
-        //AZ_Printf("", "m_sprintPause = %.10f", m_sprintPause);
-        //AZ_Printf("", "m_sprintPauseTime = %.10f", m_sprintPauseTime);
-        //AZ_Printf("", "m_sprintCooldown = %.10f", m_sprintCooldown);
+        //AZ_Printf("First Person Controller Component", "m_currentHeading = %.10f", m_currentHeading);
+        //AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetLength() = %.10f", m_applyVelocityXY.GetLength());
+        //AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
+        //AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
+        //AZ_Printf("First Person Controller Component", "m_sprintAccumulatedAccel = %.10f", m_sprintAccumulatedAccel);
+        //AZ_Printf("First Person Controller Component", "m_sprintValue = %.10f", m_sprintValue);
+        //AZ_Printf("First Person Controller Component", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
+        //AZ_Printf("First Person Controller Component", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
+        //AZ_Printf("First Person Controller Component", "m_decelerationFactor = %.10f", m_decelerationFactor);
+        //AZ_Printf("First Person Controller Component", "m_sprintVelocityAdjust = %.10f", m_sprintVelocityAdjust);
+        //AZ_Printf("First Person Controller Component", "m_sprintHeldDuration = %.10f", m_sprintHeldDuration);
+        //AZ_Printf("First Person Controller Component", "m_sprintPause = %.10f", m_sprintPause);
+        //AZ_Printf("First Person Controller Component", "m_sprintPauseTime = %.10f", m_sprintPauseTime);
+        //AZ_Printf("First Person Controller Component", "m_sprintCooldown = %.10f", m_sprintCooldown);
         //static AZ::Vector2 prevVelocity = m_applyVelocityXY;
-        //AZ_Printf("", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocityXY)/deltaTime);
+        //AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocityXY)/deltaTime);
         //prevVelocity = m_applyVelocityXY;
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-        //AZ_Printf("", "X Position = %.10f", pos.GetX());
-        //AZ_Printf("", "Y Position = %.10f", pos.GetY());
-        //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
-        //AZ_Printf("","");
+        //AZ_Printf("First Person Controller Component", "X Position = %.10f", pos.GetX());
+        //AZ_Printf("First Person Controller Component", "Y Position = %.10f", pos.GetY());
+        //AZ_Printf("First Person Controller Component", "Z Position = %.10f", pos.GetZ());
+        //AZ_Printf("First Person Controller Component","");
     }
 
     void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
@@ -2075,8 +2082,8 @@ namespace FirstPersonController
                 if(abs(hit.m_normal.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) > m_maxGroundedAngleDegrees)
                 {
                     steepNormals.push_back(hit);
-                    //AZ_Printf("", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
-                    //AZ_Printf("", "Steep Angle = %.10f", hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
+                    //AZ_Printf("First Person Controller Component", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
+                    //AZ_Printf("First Person Controller Component", "Steep Angle = %.10f", hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
                     return true;
                 }
 
@@ -2101,7 +2108,7 @@ namespace FirstPersonController
             for(AzPhysics::SceneQueryHit normal: steepNormals)
                 sumNormals += normal.m_normal;
 
-            //AZ_Printf("", "Sum of Steep Angles = %.10f", sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose));
+            //AZ_Printf("First Person Controller Component", "Sum of Steep Angles = %.10f", sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose));
             if(abs(sumNormals.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) <= m_maxGroundedAngleDegrees)
             {
                 normalsSumNotSteep = true;
@@ -2150,7 +2157,7 @@ namespace FirstPersonController
             m_groundClose = m_scriptGroundClose;
             m_scriptSetGroundCloseTick = false;
         }
-        //AZ_Printf("", "m_groundClose = %s", m_groundClose ? "true" : "false");
+        //AZ_Printf("First Person Controller Component", "m_groundClose = %s", m_groundClose ? "true" : "false");
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
@@ -2402,18 +2409,18 @@ namespace FirstPersonController
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-        //AZ_Printf("", "Z Position = %.10f", pos.GetZ());
-        //AZ_Printf("", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
-        //AZ_Printf("", "m_applyVelocityZPrevDelta = %.10f", m_applyVelocityZPrevDelta);
-        //AZ_Printf("", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
-        //AZ_Printf("", "m_applyVelocityZ = %.10f", m_applyVelocityZ);
-        //AZ_Printf("", "m_grounded = %s", m_grounded ? "true" : "false");
-        //AZ_Printf("", "m_jumpCounter = %.10f", m_jumpCounter);
-        //AZ_Printf("", "deltaTime = %.10f", deltaTime);
-        //AZ_Printf("", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
-        //AZ_Printf("", "m_jumpHoldDistance = %.10f", m_jumpHoldDistance);
-        //AZ_Printf("", "dvz/dt = %.10f", (m_applyVelocityZ - prevApplyVelocityZ)/deltaTime);
-        //AZ_Printf("","");
+        //AZ_Printf("First Person Controller Component", "Z Position = %.10f", pos.GetZ());
+        //AZ_Printf("First Person Controller Component", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
+        //AZ_Printf("First Person Controller Component", "m_applyVelocityZPrevDelta = %.10f", m_applyVelocityZPrevDelta);
+        //AZ_Printf("First Person Controller Component", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
+        //AZ_Printf("First Person Controller Component", "m_applyVelocityZ = %.10f", m_applyVelocityZ);
+        //AZ_Printf("First Person Controller Component", "m_grounded = %s", m_grounded ? "true" : "false");
+        //AZ_Printf("First Person Controller Component", "m_jumpCounter = %.10f", m_jumpCounter);
+        //AZ_Printf("First Person Controller Component", "deltaTime = %.10f", deltaTime);
+        //AZ_Printf("First Person Controller Component", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
+        //AZ_Printf("First Person Controller Component", "m_jumpHoldDistance = %.10f", m_jumpHoldDistance);
+        //AZ_Printf("First Person Controller Component", "dvz/dt = %.10f", (m_applyVelocityZ - prevApplyVelocityZ)/deltaTime);
+        //AZ_Printf("First Person Controller Component","");
     }
 
     // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
@@ -2639,15 +2646,11 @@ namespace FirstPersonController
                 m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
                 if(m_activeCameraEntity)
                 {
-                    const bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
-                    if(m_cameraSmoothFollow && isCameraChildOfPlayer)
-                    {
+                    if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
                         SetParentChangeDoNotUpdate(m_cameraEntityId);
-                    }
                     else
-                    {
                         SetParentChangeUpdate(m_cameraEntityId);
-                    }
+
                     InitializeCameraPosition();
                     Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                     //AZ_Printf("First Person Controller Component", "Camera entity %s set and activated.",
@@ -2685,15 +2688,11 @@ namespace FirstPersonController
 
             if(m_activeCameraEntity)
             {
-                const bool isCameraChildOfPlayer = IsCameraChildOfPlayer();
-                if(m_cameraSmoothFollow && isCameraChildOfPlayer)
-                {
+                if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
                     SetParentChangeDoNotUpdate(m_cameraEntityId);
-                }
                 else
-                {
                     SetParentChangeUpdate(m_cameraEntityId);
-                }
+
                 InitializeCameraPosition();
             }
         }
@@ -2728,7 +2727,7 @@ namespace FirstPersonController
             {
                 AZ::TransformBus::Event(entityId, &AZ::TransformBus::Events::SetOnParentChangedBehavior,
                     AZ::OnParentChangedBehavior::Update);
-                //AZ_Printf("FirstPersonControllerComponent", "Entity %s reset to OnParentChangedBehavior::Update.",
+                //AZ_Printf("First Person Controller Component", "Entity %s reset to OnParentChangedBehavior::Update.",
                 //    entity->GetName().empty() ? entityId.ToString().c_str() : entity->GetName().c_str());
             }
             else
