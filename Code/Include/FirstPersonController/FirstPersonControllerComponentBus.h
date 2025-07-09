@@ -28,6 +28,9 @@ namespace FirstPersonController
         virtual void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) = 0;
         virtual void SetParentChangeUpdate(const AZ::EntityId& entityId) = 0;
         virtual AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const = 0;
+        virtual float GetEyeHeight() const = 0;
+        virtual void SetEyeHeight(const float&) = 0;
+        virtual float GetCameraLocalZTravelDistance() const = 0;
         virtual void ReacquireChildEntityIds() = 0;
         virtual void ReacquireCapsuleDimensions() = 0;
         virtual void ReacquireMaxSlopeAngle() = 0;

@@ -384,6 +384,9 @@ namespace FirstPersonController
                 ->Event("Set Do Not Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeDoNotUpdate)
                 ->Event("Set Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeUpdate)
                 ->Event("Get On Parent Changed Behavior", &FirstPersonControllerComponentRequests::GetParentChangeBehavior)
+                ->Event("Get Eye Height", &FirstPersonControllerComponentRequests::GetEyeHeight)
+                ->Event("Set Eye Height", &FirstPersonControllerComponentRequests::SetEyeHeight)
+                ->Event("Get Camera Local Z Travel Distance", &FirstPersonControllerComponentRequests::GetCameraLocalZTravelDistance)
                 ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
                 ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
                 ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
@@ -2755,6 +2758,18 @@ namespace FirstPersonController
         AZ_Warning("First Person Controller Component", false,
             "Entity ID %s is invalid for GetParentChangeBehavior.", entityId.ToString().c_str());
         return AZ::OnParentChangedBehavior::Update;
+    }
+    float FirstPersonControllerComponent::GetEyeHeight() const
+    {
+        return m_eyeHeight;
+    }
+    void FirstPersonControllerComponent::SetEyeHeight(const float& new_eyeHeight)
+    {
+        m_eyeHeight = new_eyeHeight;
+    }
+    float FirstPersonControllerComponent::GetCameraLocalZTravelDistance() const
+    {
+        return m_cameraLocalZTravelDistance;
     }
     void FirstPersonControllerComponent::ReacquireChildEntityIds()
     {

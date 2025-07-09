@@ -76,6 +76,9 @@ namespace FirstPersonController
         void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId);
         void SetParentChangeUpdate(const AZ::EntityId& entityId);
         AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const;
+        float GetEyeHeight() const override;
+        void SetEyeHeight(const float& new_eyeHeight) override;
+        float GetCameraLocalZTravelDistance() const override;
         void ReacquireChildEntityIds() override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
