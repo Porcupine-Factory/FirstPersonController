@@ -443,16 +443,10 @@ namespace FirstPersonController
 
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
-        float m_cameraSmoothingSpeed = 65.f;
-        AZ::Vector3 m_targetCameraPosition = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_currentCameraPosition = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_prevPhysicsPosition = AZ::Vector3::CreateZero(); // Previous physics transform
-        AZ::Vector3 m_currentPhysicsPosition = AZ::Vector3::CreateZero(); // Current physics transform
-        float m_physicsTimeAccumulator = 0.0f; // Added for physics-based interpolation
-        AZ::Quaternion m_prevPhysicsRotation = AZ::Quaternion::CreateIdentity();
-        AZ::Quaternion m_currentPhysicsRotation = AZ::Quaternion::CreateIdentity();
-        float m_lastPhysicsTimes[2] = { 0.0f, 0.0f };
-        int m_newTimeIndex = 0;
+        float m_cameraSmoothingSpeed = 1.f;
+        float m_physicsTimeAccumulator = 0.f;
+        AZ::Vector3 m_prevPhysicsPosition = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_currentPhysicsPosition = AZ::Vector3::CreateZero();
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();

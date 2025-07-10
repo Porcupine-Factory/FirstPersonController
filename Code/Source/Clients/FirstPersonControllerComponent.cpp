@@ -1080,19 +1080,17 @@ namespace FirstPersonController
         // Set target position for smooth follow
         AZ::Vector3 characterPosition;
         AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-        m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
-        m_prevPhysicsPosition = m_currentCameraPosition;
-        m_currentCameraPosition = m_targetCameraPosition;
-        m_currentPhysicsPosition = m_currentCameraPosition;
+        m_currentPhysicsPosition = characterPosition + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+        m_prevPhysicsPosition = m_currentPhysicsPosition;
 
         // Set initial world position for smooth following
         if(m_cameraSmoothFollow)
-            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsPosition);
     }
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if (!m_activeCameraEntity || !m_cameraSmoothFollow || (deltaTime > m_prevTimeStep))
+        if(!m_activeCameraEntity || !m_cameraSmoothFollow || (deltaTime > m_prevTimeStep))
             return;
 
         // Update time accumulator
@@ -1102,11 +1100,11 @@ namespace FirstPersonController
         float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
 
         // Interpolate position
-        AZ::Vector3 interpolatedPosition = m_prevPhysicsPosition.Lerp(m_currentPhysicsPosition, alpha);
+        AZ::Vector3 interpolatedPosition = m_prevPhysicsPosition.Lerp(m_currentPhysicsPosition, alpha * m_cameraSmoothingSpeed);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedPosition);
 
         // Reset accumulator if it exceeds physics timestep
-        if (m_physicsTimeAccumulator >= m_prevTimeStep)
+        if(m_physicsTimeAccumulator >= m_prevTimeStep)
             m_physicsTimeAccumulator -= m_prevTimeStep;
     }
 
