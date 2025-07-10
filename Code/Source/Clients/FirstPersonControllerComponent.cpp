@@ -1009,8 +1009,21 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
+        if (m_cameraSmoothFollow && m_activeCameraEntity)
+        {
+            // Reset camera to latest physics position before physics update
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsPosition);
+        }
+
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
         m_prevTimeStep = physicsTimestep;
+        if (m_cameraSmoothFollow)
+        {
+            m_prevPhysicsPosition = m_currentPhysicsPosition;
+            AZ::TransformBus::EventResult(m_currentPhysicsPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+            m_currentPhysicsPosition += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+            m_physicsTimeAccumulator = 0.0f;
+        }
     }
 
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
@@ -1064,12 +1077,13 @@ namespace FirstPersonController
         {
             return;
         }
-
         // Set target position for smooth follow
         AZ::Vector3 characterPosition;
         AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
         m_targetCameraPosition = characterPosition + AZ::Vector3(0.f, 0.f, m_eyeHeight + m_cameraLocalZTravelDistance);
+        m_prevPhysicsPosition = m_currentCameraPosition;
         m_currentCameraPosition = m_targetCameraPosition;
+        m_currentPhysicsPosition = m_currentCameraPosition;
 
         // Set initial world position for smooth following
         if(m_cameraSmoothFollow)
@@ -1078,23 +1092,22 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if(!m_activeCameraEntity && m_cameraEntityId.IsValid())
-            SetCameraEntity(m_cameraEntityId);
-
-        if(!m_activeCameraEntity)
+        if (!m_activeCameraEntity || !m_cameraSmoothFollow || (deltaTime > m_prevTimeStep))
             return;
 
-        if(!m_cameraSmoothFollow)
-            return;
+        // Update time accumulator
+        m_physicsTimeAccumulator += deltaTime;
 
-        // Calculate target position
-        AZ::Vector3 characterPosition;
-        AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-        m_targetCameraPosition = characterPosition + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+        // Calculate interpolation factor
+        float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
 
-        // Smoothly interpolate camera position
-        m_currentCameraPosition = m_currentCameraPosition.Lerp(m_targetCameraPosition, m_cameraSmoothingSpeed * deltaTime);
-        AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCameraPosition);
+        // Interpolate position
+        AZ::Vector3 interpolatedPosition = m_prevPhysicsPosition.Lerp(m_currentPhysicsPosition, alpha);
+        AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedPosition);
+
+        // Reset accumulator if it exceeds physics timestep
+        if (m_physicsTimeAccumulator >= m_prevTimeStep)
+            m_physicsTimeAccumulator -= m_prevTimeStep;
     }
 
     // Helper function to check if camera is a child of the character
@@ -2506,7 +2519,7 @@ namespace FirstPersonController
         if(!timestepElseTick)
         {
             UpdateRotation();
-            LerpCameraToCharacter((deltaTime + m_prevDeltaTime) / 2.f);
+            LerpCameraToCharacter(deltaTime);
 
             // Get the current velocity to determine if something was hit
             AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
