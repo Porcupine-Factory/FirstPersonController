@@ -443,7 +443,6 @@ namespace FirstPersonController
 
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
-        float m_cameraSmoothingSpeed = 1.f;
         float m_physicsTimeAccumulator = 0.f;
         AZ::Vector3 m_prevPhysicsPosition = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentPhysicsPosition = AZ::Vector3::CreateZero();

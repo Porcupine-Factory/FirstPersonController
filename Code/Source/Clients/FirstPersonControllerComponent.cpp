@@ -34,7 +34,6 @@ namespace FirstPersonController
                   ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
               ->Field("Camera Smooth Follow", &FirstPersonControllerComponent::m_cameraSmoothFollow)
               ->Field("Eye Height", &FirstPersonControllerComponent::m_eyeHeight)
-              ->Field("Camera Smoothing Speed", &FirstPersonControllerComponent::m_cameraSmoothingSpeed)
 
               // Input Bindings group
               ->Field("Forward Key", &FirstPersonControllerComponent::m_strForward)
@@ -152,8 +151,6 @@ namespace FirstPersonController
                         "Camera Smooth Follow", "If enabled, the camera follows the character using linear interpolation on the frame tick; otherwise, the camera follows its parent transform.")
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_eyeHeight,
                         "Eye Height", "Height of the camera above the character's base position (meters). Only used if Camera Smooth Follow is enabled.")
-                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothingSpeed,
-                        "Camera Smoothing Speed", "Speed at which the camera interpolates to its target position.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -1090,7 +1087,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if(!m_activeCameraEntity || !m_cameraSmoothFollow || (deltaTime > m_prevTimeStep))
+        if(!m_activeCameraEntity || !m_cameraSmoothFollow)
             return;
 
         // Update time accumulator
@@ -1100,7 +1097,7 @@ namespace FirstPersonController
         float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
 
         // Interpolate position
-        AZ::Vector3 interpolatedPosition = m_prevPhysicsPosition.Lerp(m_currentPhysicsPosition, alpha * m_cameraSmoothingSpeed);
+        AZ::Vector3 interpolatedPosition = m_prevPhysicsPosition.Lerp(m_currentPhysicsPosition, alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedPosition);
 
         // Reset accumulator if it exceeds physics timestep
