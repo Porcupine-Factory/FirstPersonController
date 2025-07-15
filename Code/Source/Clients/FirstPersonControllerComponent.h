@@ -399,7 +399,7 @@ namespace FirstPersonController
         bool IsCameraChildOfCharacter();
         void SmoothRotation();
         void ResetCameraToCharacter();
-        void CapturePostSimTranslation();
+        void CapturePhysicsTranslation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);

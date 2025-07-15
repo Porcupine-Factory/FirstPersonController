@@ -1035,7 +1035,7 @@ namespace FirstPersonController
         {
             // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
             // the most recent post-simulation transform for smoother following.
-            CapturePostSimTranslation();
+            CapturePhysicsTranslation();
         }
     }
 
@@ -1140,7 +1140,7 @@ namespace FirstPersonController
             &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsTranslation);
     }
 
-    void FirstPersonControllerComponent::CapturePostSimTranslation()
+    void FirstPersonControllerComponent::CapturePhysicsTranslation()
     {
         m_prevPhysicsTranslation = m_currentPhysicsTranslation;
         AZ::TransformBus::EventResult(m_currentPhysicsTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
