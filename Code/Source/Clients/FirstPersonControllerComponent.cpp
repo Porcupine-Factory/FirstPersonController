@@ -814,11 +814,6 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(entityId);
             if(m_activeCameraEntity)
             {
-                if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
-                    SetParentChangeDoNotUpdate(m_cameraEntityId);
-                else
-                    SetParentChangeUpdate(m_cameraEntityId);
-
                 InitializeCameraPosition();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                 //AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
@@ -1031,11 +1026,6 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(cameraId);
             if(m_activeCameraEntity)
             {
-                if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
-                    SetParentChangeDoNotUpdate(m_cameraEntityId);
-                else
-                    SetParentChangeUpdate(m_cameraEntityId);
-
                 InitializeCameraPosition();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                 //AZ_Printf("First Person Controller Component", "Default camera %s assigned and set as active view.",
@@ -1157,60 +1147,11 @@ namespace FirstPersonController
         characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
-        if(m_activeCameraEntity)
+        if (m_activeCameraEntity)
         {
             AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
-            if(m_cameraSmoothFollow)
-            {
-                if(IsCameraChildOfCharacter())
-                {
-                    // Follow the character's rotation and apply a delta to the pitch
-                    float cameraPitch = cameraTransform->GetLocalRotation().GetX();
-                    const float characterPitch = characterTransform->GetLocalRotation().GetX();
-                    if(m_prevCharacterPitch != characterPitch)
-                    {
-                        cameraPitch += (characterPitch - m_prevCharacterPitch) * AZ::Cos(m_currentHeading);
-                        m_prevCharacterPitch = characterPitch;
-                    }
-
-                    float rollDelta = 0.f;
-                    const float characterRoll = characterTransform->GetLocalRotation().GetY();
-                    if(m_prevCharacterRoll != characterRoll)
-                    {
-                        rollDelta = (characterRoll - m_prevCharacterRoll);
-                        cameraPitch += (characterRoll - m_prevCharacterRoll) * AZ::Sin(m_currentHeading);
-                        m_prevCharacterRoll = characterRoll;
-                    }
-
-                    cameraTransform->SetWorldRotation(characterTransform->GetWorldRotation());
-                    cameraTransform->RotateAroundLocalX(AZ::GetClamp(cameraPitch + newLookRotationDelta.GetX(),
-                            m_cameraPitchMinAngle, m_cameraPitchMaxAngle));
-                    cameraTransform->RotateAroundLocalY(rollDelta);
-                }
-                else
-                {
-                    // Follow the character's rotation and apply a delta to the pitch
-                    m_cameraYaw += newLookRotationDelta.GetZ();
-
-                    const float characterPitch = characterTransform->GetLocalRotation().GetX();
-                    const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
-                    const float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(m_sphereCastsAxisDirectionPose);
-                    m_prevCharacterPitch = characterPitch;
-                    m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle - angleFromZ, m_cameraPitchMaxAngle - angleFromZ);
-
-                    const float characterRoll = characterTransform->GetLocalRotation().GetY();
-                    const float rollDelta = (characterRoll - m_prevCharacterRoll);
-                    m_prevCharacterRoll = characterRoll;
-                    m_cameraRoll += rollDelta;
-
-                    const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
-                    const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
-                    const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
-                    cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
-                }
-            }
-            else if(IsCameraChildOfCharacter())
+            if (IsCameraChildOfCharacter())
             {
                 // Apply pitch to camera's local rotation, yaw follows the parent character entity
                 cameraTransform->SetLocalRotation(AZ::Vector3(
@@ -1218,6 +1159,27 @@ namespace FirstPersonController
                         m_cameraPitchMinAngle, m_cameraPitchMaxAngle),
                     cameraTransform->GetLocalRotation().GetY(),
                     cameraTransform->GetLocalRotation().GetZ()));
+            }
+            else if (m_cameraSmoothFollow)
+            {
+                // Follow the character's rotation and apply a delta to the pitch
+                m_cameraYaw += newLookRotationDelta.GetZ();
+
+                const float characterPitch = characterTransform->GetLocalRotation().GetX();
+                const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
+                const float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(m_sphereCastsAxisDirectionPose);
+                m_prevCharacterPitch = characterPitch;
+                m_cameraPitch = AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle - angleFromZ, m_cameraPitchMaxAngle - angleFromZ);
+
+                const float characterRoll = characterTransform->GetLocalRotation().GetY();
+                const float rollDelta = (characterRoll - m_prevCharacterRoll);
+                m_prevCharacterRoll = characterRoll;
+                m_cameraRoll += rollDelta;
+
+                const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
+                const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
+                const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
+                cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
             }
             else
             {
@@ -1231,12 +1193,12 @@ namespace FirstPersonController
         }
 
         // Update heading and pitch
-        if(!m_scriptSetcurrentHeadingTick)
+        if (!m_scriptSetcurrentHeadingTick)
             m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
         else
             m_scriptSetcurrentHeadingTick = false;
 
-        if(m_activeCameraEntity)
+        if (m_activeCameraEntity)
             m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotationQuaternion().GetEulerRadians().GetX();
     }
 
@@ -2664,11 +2626,6 @@ namespace FirstPersonController
                 m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
                 if(m_activeCameraEntity)
                 {
-                    if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
-                        SetParentChangeDoNotUpdate(m_cameraEntityId);
-                    else
-                        SetParentChangeUpdate(m_cameraEntityId);
-
                     InitializeCameraPosition();
                     Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                     //AZ_Printf("First Person Controller Component", "Camera entity %s set and activated.",
@@ -2706,11 +2663,6 @@ namespace FirstPersonController
 
             if(m_activeCameraEntity)
             {
-                if(m_cameraSmoothFollow && IsCameraChildOfCharacter())
-                    SetParentChangeDoNotUpdate(m_cameraEntityId);
-                else
-                    SetParentChangeUpdate(m_cameraEntityId);
-
                 InitializeCameraPosition();
             }
         }
