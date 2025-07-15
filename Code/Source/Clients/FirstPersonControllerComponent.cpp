@@ -33,7 +33,6 @@ namespace FirstPersonController
               ->Field("Camera Entity", &FirstPersonControllerComponent::m_cameraEntityId)
                   ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
               ->Field("Camera Smooth Follow", &FirstPersonControllerComponent::m_cameraSmoothFollow)
-              ->Field("Eye Height", &FirstPersonControllerComponent::m_eyeHeight)
 
               // Input Bindings group
               ->Field("Forward Key", &FirstPersonControllerComponent::m_strForward)
@@ -149,8 +148,6 @@ namespace FirstPersonController
                         "Camera Entity", "The camera entity to use for the first-person view.")
                     ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothFollow,
                         "Camera Smooth Follow", "If enabled, the camera follows the character using linear interpolation on the frame tick; otherwise, the camera follows its parent transform.")
-                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_eyeHeight,
-                        "Eye Height", "Height of the camera above the character's base position (meters). Only used if Camera Smooth Follow is enabled.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -814,7 +811,15 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(entityId);
             if(m_activeCameraEntity)
             {
-                InitializeCameraPosition();
+                // Calculate initial eye height based on the positional difference between the 
+                // camera and character entities, projected along the pose axis.
+                AZ::Vector3 characterWorldTranslation;
+                AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+                AZ::Vector3 cameraWorldTranslation;
+                AZ::TransformBus::EventResult(cameraWorldTranslation, m_cameraEntityId, &AZ::TransformBus::Events::GetWorldTranslation);
+                AZ::Vector3 diff = cameraWorldTranslation - characterWorldTranslation;
+                m_eyeHeight = diff.Dot(m_sphereCastsAxisDirectionPose.GetNormalized());
+                InitializeCameraTranslation();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                 //AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
                 //    m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() : m_activeCameraEntity->GetName().c_str());
@@ -1004,16 +1009,16 @@ namespace FirstPersonController
         if (m_cameraSmoothFollow && m_activeCameraEntity)
         {
             // Reset camera to latest physics position before physics update
-            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsPosition);
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsTranslation);
         }
 
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
         m_prevTimeStep = physicsTimestep;
         if (m_cameraSmoothFollow)
         {
-            m_prevPhysicsPosition = m_currentPhysicsPosition;
-            AZ::TransformBus::EventResult(m_currentPhysicsPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-            m_currentPhysicsPosition += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+            m_prevPhysicsTranslation = m_currentPhysicsTranslation;
+            AZ::TransformBus::EventResult(m_currentPhysicsTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+            m_currentPhysicsTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
             m_physicsTimeAccumulator = 0.0f;
         }
     }
@@ -1026,7 +1031,7 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(cameraId);
             if(m_activeCameraEntity)
             {
-                InitializeCameraPosition();
+                InitializeCameraTranslation();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                 //AZ_Printf("First Person Controller Component", "Default camera %s assigned and set as active view.",
                 //    m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() : m_activeCameraEntity->GetName().c_str());
@@ -1058,21 +1063,21 @@ namespace FirstPersonController
         return ca->FindEntity(activeCameraId);
     }
 
-    void FirstPersonControllerComponent::InitializeCameraPosition()
+    void FirstPersonControllerComponent::InitializeCameraTranslation()
     {
         if(!m_activeCameraEntity)
         {
             return;
         }
         // Set target position for smooth follow
-        AZ::Vector3 characterPosition;
-        AZ::TransformBus::EventResult(characterPosition, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-        m_currentPhysicsPosition = characterPosition + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
-        m_prevPhysicsPosition = m_currentPhysicsPosition;
+        AZ::Vector3 characterWorldTranslation;
+        AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+        m_currentPhysicsTranslation = characterWorldTranslation + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+        m_prevPhysicsTranslation = m_currentPhysicsTranslation;
 
         // Set initial world position for smooth following
         if(m_cameraSmoothFollow)
-            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsPosition);
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsTranslation);
     }
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
@@ -1087,8 +1092,8 @@ namespace FirstPersonController
         float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
 
         // Interpolate position
-        AZ::Vector3 interpolatedPosition = m_prevPhysicsPosition.Lerp(m_currentPhysicsPosition, alpha);
-        AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedPosition);
+        AZ::Vector3 interpolatedTranslation = m_prevPhysicsTranslation.Lerp(m_currentPhysicsTranslation, alpha);
+        AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedTranslation);
 
         // Reset accumulator if it exceeds physics timestep
         if(m_physicsTimeAccumulator >= m_prevTimeStep)
@@ -2626,7 +2631,7 @@ namespace FirstPersonController
                 m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
                 if(m_activeCameraEntity)
                 {
-                    InitializeCameraPosition();
+                    InitializeCameraTranslation();
                     Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                     //AZ_Printf("First Person Controller Component", "Camera entity %s set and activated.",
                     //    m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() : m_activeCameraEntity->GetName().c_str());
@@ -2663,7 +2668,7 @@ namespace FirstPersonController
 
             if(m_activeCameraEntity)
             {
-                InitializeCameraPosition();
+                InitializeCameraTranslation();
             }
         }
     }

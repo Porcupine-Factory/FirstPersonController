@@ -372,7 +372,7 @@ namespace FirstPersonController
         void OnCameraAdded(const AZ::EntityId& cameraId);
 
         // Set the first-person camera position
-        void InitializeCameraPosition();
+        void InitializeCameraTranslation();
 
         // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -444,8 +444,8 @@ namespace FirstPersonController
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
         float m_physicsTimeAccumulator = 0.f;
-        AZ::Vector3 m_prevPhysicsPosition = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_currentPhysicsPosition = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevPhysicsTranslation = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_currentPhysicsTranslation = AZ::Vector3::CreateZero();
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
