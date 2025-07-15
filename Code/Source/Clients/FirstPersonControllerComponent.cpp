@@ -1017,7 +1017,7 @@ namespace FirstPersonController
         if (m_cameraSmoothFollow && m_activeCameraEntity)
         {
             // Reset camera to latest physics position before physics update
-            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsTranslation);
+            ResetCameraToCharacter();
         }
 
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
@@ -1035,9 +1035,7 @@ namespace FirstPersonController
         {
             // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
             // the most recent post-simulation transform for smoother following.
-            m_prevPhysicsTranslation = m_currentPhysicsTranslation;
-            AZ::TransformBus::EventResult(m_currentPhysicsTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-            m_currentPhysicsTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+            CapturePostSimTranslation();
         }
     }
 
@@ -1134,6 +1132,19 @@ namespace FirstPersonController
             }
         }
         return false;
+    }
+
+    void FirstPersonControllerComponent::ResetCameraToCharacter()
+    {
+        AZ::TransformBus::Event(m_cameraEntityId, 
+            &AZ::TransformBus::Events::SetWorldTranslation, m_currentPhysicsTranslation);
+    }
+
+    void FirstPersonControllerComponent::CapturePostSimTranslation()
+    {
+        m_prevPhysicsTranslation = m_currentPhysicsTranslation;
+        AZ::TransformBus::EventResult(m_currentPhysicsTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+        m_currentPhysicsTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
     }
 
     void FirstPersonControllerComponent::SmoothRotation()
