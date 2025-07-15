@@ -685,11 +685,18 @@ namespace FirstPersonController
                     OnSceneSimulationStart(fixedDeltaTime);
                 }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
 
+            m_sceneSimulationFinishHandler = AzPhysics::SceneEvents::OnSceneSimulationFinishHandler(
+                [this]([[maybe_unused]] AzPhysics::SceneHandle sceneHandle, [[maybe_unused]] float fixedDeltaTime)
+                {
+                    OnSceneSimulationFinish(fixedDeltaTime);
+                }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
+
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            if(sceneInterface != nullptr)
+            if (sceneInterface != nullptr)
             {
                 sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
+                sceneInterface->RegisterSceneSimulationFinishHandler(m_attachedSceneHandle, m_sceneSimulationFinishHandler);  // New
             }
         }
 
@@ -798,6 +805,7 @@ namespace FirstPersonController
         {
             m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
             m_sceneSimulationStartHandler.Disconnect();
+            m_sceneSimulationFinishHandler.Disconnect();
         }
 
         m_activeCameraEntity = nullptr;
@@ -1014,12 +1022,22 @@ namespace FirstPersonController
 
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
         m_prevTimeStep = physicsTimestep;
+
         if (m_cameraSmoothFollow)
         {
+            m_physicsTimeAccumulator = 0.0f;
+        }
+    }
+
+    void FirstPersonControllerComponent::OnSceneSimulationFinish([[maybe_unused]] float physicsTimestep)
+    {
+        if (m_cameraSmoothFollow)
+        {
+            // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
+            // the most recent post-simulation transform for smoother following.
             m_prevPhysicsTranslation = m_currentPhysicsTranslation;
             AZ::TransformBus::EventResult(m_currentPhysicsTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
             m_currentPhysicsTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
-            m_physicsTimeAccumulator = 0.0f;
         }
     }
 
