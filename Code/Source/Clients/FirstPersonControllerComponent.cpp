@@ -20,6 +20,9 @@
 #include <PhysX/CharacterControllerBus.h>
 #include <System/PhysXSystem.h>
 
+#include <Atom/RPI.Public/ViewportContext.h>
+#include <Atom/RPI.Public/ViewportContextBus.h>
+
 namespace FirstPersonController
 {
     using namespace StartingPointInput;
@@ -670,6 +673,25 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::Activate()
     {
+        AzFramework::NativeWindowHandle windowHandle = nullptr;
+        windowHandle = AZ::RPI::ViewportContextRequests::Get()->GetDefaultViewportContext()->GetWindowHandle();
+        AZ_Printf("", "windowHandle = %d", windowHandle);
+        if(windowHandle)
+        {
+            float refreshRate = 60.f;
+            AzFramework::WindowRequestBus::EventResult(refreshRate, windowHandle, &AzFramework::WindowRequestBus::Events::GetDisplayRefreshRate);
+
+            AZ_Printf("", "refreshRate = %.10f", refreshRate);
+
+            AzPhysics::SystemConfiguration* config = const_cast<AzPhysics::SystemConfiguration*>(AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration());
+
+            config->m_fixedTimestep = 1.f / refreshRate;
+
+            AZ_Printf("", "config.m_fixedTimestep = %.10f", config->m_fixedTimestep);
+
+            AZ::Interface<AzPhysics::SystemInterface>::Get()->UpdateConfiguration(config, true);
+        }
+
         if(m_addVelocityForTimestepVsTick)
         {
             Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
