@@ -693,7 +693,7 @@ namespace FirstPersonController
 
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            if (sceneInterface != nullptr)
+            if(sceneInterface != nullptr)
             {
                 sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
                 sceneInterface->RegisterSceneSimulationFinishHandler(m_attachedSceneHandle, m_sceneSimulationFinishHandler);
@@ -819,8 +819,8 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(entityId);
             if(m_activeCameraEntity)
             {
-                // Calculate initial eye height based on the positional difference between the 
-                // camera and character entities, projected along the pose axis.
+                // Calculate initial eye height based on the difference between the 
+                // camera and character entities' translations, projected along the pose axis.
                 AZ::Vector3 characterWorldTranslation;
                 AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
                 AZ::Vector3 cameraWorldTranslation;
@@ -1020,13 +1020,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish([[maybe_unused]] float physicsTimestep)
     {
-        if (m_cameraSmoothFollow)
-        {
-            // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
-            // the most recent post-simulation transform for smoother following.
-            CaptureCharacterPhysicsTranslation();
-            m_physicsTimeAccumulator = 0.0f;
-        }
+        CaptureCharacterEyeTranslation();
     }
 
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
@@ -1075,15 +1069,16 @@ namespace FirstPersonController
         {
             return;
         }
-        // Set target position for smooth follow
+
+        // Set target translation for smooth follow
         AZ::Vector3 characterWorldTranslation;
         AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-        m_currentCharacterPhysicsTranslation  = characterWorldTranslation + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
-        m_prevCharacterPhysicsTranslation = m_currentCharacterPhysicsTranslation ;
+        m_currentCharacterEyeTranslation = characterWorldTranslation + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+        m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation ;
 
-        // Set initial world position for smooth following
-        if(m_cameraSmoothFollow)
-            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterPhysicsTranslation );
+        // Set initial world translation for smooth following
+        if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
     }
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
@@ -1095,10 +1090,10 @@ namespace FirstPersonController
         m_physicsTimeAccumulator += deltaTime;
 
         // Calculate interpolation factor
-        float const alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
+        float const alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.f, 1.f);
 
-        // Interpolate position
-        AZ::Vector3 const interpolatedCameraTranslation = m_prevCharacterPhysicsTranslation.Lerp(m_currentCharacterPhysicsTranslation , alpha);
+        // Interpolate translation
+        AZ::Vector3 const interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedCameraTranslation);
 
         // Reset accumulator if it exceeds physics timestep
@@ -1127,14 +1122,20 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
         AZ::TransformBus::Event(m_cameraEntityId, 
-            &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterPhysicsTranslation );
+            &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
     }
 
-    void FirstPersonControllerComponent::CaptureCharacterPhysicsTranslation()
+    void FirstPersonControllerComponent::CaptureCharacterEyeTranslation()
     {
-        m_prevCharacterPhysicsTranslation = m_currentCharacterPhysicsTranslation ;
-        AZ::TransformBus::EventResult(m_currentCharacterPhysicsTranslation , GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-        m_currentCharacterPhysicsTranslation  += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+        if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
+        {
+            // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
+            // the most recent post-simulation transform.
+            m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation;
+            AZ::TransformBus::EventResult(m_currentCharacterEyeTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+            m_currentCharacterEyeTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+            m_physicsTimeAccumulator = 0.f;
+        }
     }
 
     void FirstPersonControllerComponent::SmoothRotation()
@@ -1171,11 +1172,11 @@ namespace FirstPersonController
         characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
-        if (m_activeCameraEntity)
+        if(m_activeCameraEntity)
         {
             AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
-            if (IsCameraChildOfCharacter())
+            if(IsCameraChildOfCharacter())
             {
                 // Apply pitch to camera's local rotation, yaw follows the parent character entity
                 cameraTransform->SetLocalRotation(AZ::Vector3(
@@ -1184,7 +1185,7 @@ namespace FirstPersonController
                     cameraTransform->GetLocalRotation().GetY(),
                     cameraTransform->GetLocalRotation().GetZ()));
             }
-            else if (m_cameraSmoothFollow)
+            else if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
             {
                 // Follow the character's rotation and apply a delta to the pitch
                 m_cameraYaw += newLookRotationDelta.GetZ();
@@ -1217,12 +1218,12 @@ namespace FirstPersonController
         }
 
         // Update heading and pitch
-        if (!m_scriptSetcurrentHeadingTick)
+        if(!m_scriptSetcurrentHeadingTick)
             m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
         else
             m_scriptSetcurrentHeadingTick = false;
 
-        if (m_activeCameraEntity)
+        if(m_activeCameraEntity)
             m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotationQuaternion().GetEulerRadians().GetX();
     }
 
@@ -1609,17 +1610,17 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime)
     {
-        if(smoothTime > 0.0f)
+        if(smoothTime > 0.f)
         {
-            const float omega = 2.0f / smoothTime;
+            const float omega = 2.f / smoothTime;
             const float x = omega * timeDelta;
-            const float exp = 1.0f / (1.0f + x + 0.48f * x * x + 0.235f * x * x * x);
+            const float exp = 1.f / (1.f + x + 0.48f * x * x + 0.235f * x * x * x);
             const float change = value - target;
             const float temp = (valueRate + change * omega) * timeDelta;
             valueRate = (valueRate - temp * omega) * exp;
             value = target + (change + temp) * exp;
         }
-        else if(timeDelta > 0.0f)
+        else if(timeDelta > 0.f)
         {
             valueRate = (target - value) / timeDelta;
             value = target;
@@ -1996,7 +1997,7 @@ namespace FirstPersonController
             m_opposingDecelFactorApplied = false;
         }
 
-        // Debug print statements to observe the velocity, acceleration, and position
+        // Debug print statements to observe the velocity, acceleration, and translation
         //AZ_Printf("First Person Controller Component", "m_currentHeading = %.10f", m_currentHeading);
         //AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetLength() = %.10f", m_applyVelocityXY.GetLength());
         //AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
@@ -2015,10 +2016,52 @@ namespace FirstPersonController
         //AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocityXY)/deltaTime);
         //prevVelocity = m_applyVelocityXY;
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-        //AZ_Printf("First Person Controller Component", "X Position = %.10f", pos.GetX());
-        //AZ_Printf("First Person Controller Component", "Y Position = %.10f", pos.GetY());
-        //AZ_Printf("First Person Controller Component", "Z Position = %.10f", pos.GetZ());
+        //AZ_Printf("First Person Controller Component", "X Translation = %.10f", pos.GetX());
+        //AZ_Printf("First Person Controller Component", "Y Translation = %.10f", pos.GetY());
+        //AZ_Printf("First Person Controller Component", "Z Translation = %.10f", pos.GetZ());
         //AZ_Printf("First Person Controller Component","");
+    }
+
+    void FirstPersonControllerComponent::CheckCharacterMovementObstructed()
+    {
+        // Get the current velocity to determine if something was hit
+        AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
+        Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
+            &Physics::CharacterRequestBus::Events::GetVelocity);
+
+        if(!m_prevPrevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
+        {
+            // If enabled, cause the character's applied velocity to match the current velocity from Physics
+            m_hitSomething = true;
+
+            if(m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
+                m_correctedVelocityXY = AZ::Vector2(currentVelocity);
+            else
+                m_correctedVelocityXY = AZ::Vector2(currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)), currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
+
+            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                m_correctedVelocityZ = currentVelocity.GetZ();
+            else
+                m_correctedVelocityZ = currentVelocity.Dot(m_velocityZPosDirection);
+
+            if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
+            {
+                // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
+                if(m_gravityPrevented[0])
+                {
+                    m_gravityPrevented[1] = true;
+                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
+                }
+                else
+                    m_gravityPrevented[0] = true;
+            }
+            else
+                m_gravityPrevented[0] = m_gravityPrevented[1] = false;
+
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
+        }
+        else
+            m_hitSomething = false;
     }
 
     void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
@@ -2413,7 +2456,7 @@ namespace FirstPersonController
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-        //AZ_Printf("First Person Controller Component", "Z Position = %.10f", pos.GetZ());
+        //AZ_Printf("First Person Controller Component", "Z Translation = %.10f", pos.GetZ());
         //AZ_Printf("First Person Controller Component", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZPrevDelta = %.10f", m_applyVelocityZPrevDelta);
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
@@ -2496,68 +2539,30 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
     {
-        if (timestepElseTick && m_cameraSmoothFollow && m_activeCameraEntity)
-        {
-            // Reset camera to latest physics position before physics update
-            ResetCameraToCharacter();
-        }
-
         // Only update the rotation on each tick
         if(!timestepElseTick)
         {
             UpdateRotation();
             LerpCameraToCharacter(deltaTime);
-
-            // Get the current velocity to determine if something was hit
-            AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
-            Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
-                &Physics::CharacterRequestBus::Events::GetVelocity);
-
-            if(!m_prevPrevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
-            {
-                // If enabled, cause the character's applied velocity to match the current velocity from Physics
-                m_hitSomething = true;
-
-                if(m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
-                    m_correctedVelocityXY = AZ::Vector2(currentVelocity);
-                else
-                    m_correctedVelocityXY = AZ::Vector2(currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)), currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
-
-                if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
-                    m_correctedVelocityZ = currentVelocity.GetZ();
-                else
-                    m_correctedVelocityZ = currentVelocity.Dot(m_velocityZPosDirection);
-
-                if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
-                {
-                    // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
-                    if(m_gravityPrevented[0])
-                    {
-                        m_gravityPrevented[1] = true;
-                        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
-                    }
-                    else
-                        m_gravityPrevented[0] = true;
-                }
-                else
-                    m_gravityPrevented[0] = m_gravityPrevented[1] = false;
-
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
-            }
-            else
-                m_hitSomething = false;
+            CheckCharacterMovementObstructed();
         }
 
+        // Keep track of the last two target velocity values for the obstruction check logic
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
         // Handle motion on either the physics fixed timestep or the frame tick, depending on which is selected and which is currently executing
         if(timestepElseTick == m_addVelocityForTimestepVsTick)
         {
+            if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
+            {
+                // Reset camera to latest physics translation before physics update
+                ResetCameraToCharacter();
+            }
+
             if(m_addVelocityForTimestepVsTick)
                 CheckGrounded((deltaTime + m_prevTimeStep) / 2.f);
             else
                 CheckGrounded((deltaTime + m_prevDeltaTime) / 2.f);
-
 
             if(m_addVelocityForTimestepVsTick)
                 CrouchManager((deltaTime + m_prevTimeStep) / 2.f);
@@ -2593,10 +2598,6 @@ namespace FirstPersonController
             m_prevTargetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
-
-            // Placed here for when CharacterControllerComponent::SetUpDirection() is implemented
-            // Physics::CharacterRequestBus::Event(GetEntityId(),
-            //      &Physics::CharacterRequestBus::Events::SetUpDirection, m_sphereCastsAxisDirectionPose);
 
             if(!m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(GetEntityId(),
@@ -2699,11 +2700,11 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetParentChangeDoNotUpdate(const AZ::EntityId& entityId)
     {
-        if (entityId.IsValid())
+        if(entityId.IsValid())
         {
             AZ::Entity* entity = nullptr;
             AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationBus::Events::FindEntity, entityId);
-            if (entity)
+            if(entity)
             {
                 AZ::TransformBus::Event(entityId, &AZ::TransformBus::Events::SetOnParentChangedBehavior,
                     AZ::OnParentChangedBehavior::DoNotUpdate);
@@ -2719,11 +2720,11 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetParentChangeUpdate(const AZ::EntityId& entityId)
     {
-        if (entityId.IsValid())
+        if(entityId.IsValid())
         {
             AZ::Entity* entity = nullptr;
             AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationBus::Events::FindEntity, entityId);
-            if (entity)
+            if(entity)
             {
                 AZ::TransformBus::Event(entityId, &AZ::TransformBus::Events::SetOnParentChangedBehavior,
                     AZ::OnParentChangedBehavior::Update);
@@ -2739,7 +2740,7 @@ namespace FirstPersonController
     }
     AZ::OnParentChangedBehavior FirstPersonControllerComponent::GetParentChangeBehavior(const AZ::EntityId& entityId) const
     {
-        if (entityId.IsValid())
+        if(entityId.IsValid())
         {
             AZ::OnParentChangedBehavior behavior = AZ::OnParentChangedBehavior::Update;
             AZ::TransformBus::EventResult(behavior, entityId, &AZ::TransformBus::Events::GetOnParentChangedBehavior);
@@ -3124,6 +3125,10 @@ namespace FirstPersonController
         m_sphereCastsAxisDirectionPose = new_sphereCastsAxisDirectionPose;
         if(m_sphereCastsAxisDirectionPose.IsZero())
             m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
+
+        // Set the character up direction using the new spherecast direction
+        Physics::CharacterRequestBus::Event(GetEntityId(),
+             &Physics::CharacterRequestBus::Events::SetUpDirection, m_sphereCastsAxisDirectionPose);
     }
     bool FirstPersonControllerComponent::GetVelocityXCrossYTracksNormal() const
     {
