@@ -17,6 +17,9 @@
 #include <AzFramework/Input/Devices/Gamepad/InputDeviceGamepad.h>
 #include <AzFramework/Input/Devices/InputDeviceId.h>
 
+#include <Atom/RPI.Public/ViewportContext.h>
+#include <Atom/RPI.Public/ViewportContextBus.h>
+
 #include <PhysX/CharacterControllerBus.h>
 #include <System/PhysXSystem.h>
 
@@ -698,6 +701,20 @@ namespace FirstPersonController
                 sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
                 sceneInterface->RegisterSceneSimulationFinishHandler(m_attachedSceneHandle, m_sceneSimulationFinishHandler);
             }
+        }
+
+        AzFramework::NativeWindowHandle windowHandle = nullptr;
+        windowHandle = AZ::RPI::ViewportContextRequests::Get()->GetDefaultViewportContext()->GetWindowHandle();
+        if(windowHandle)
+        {
+            float refreshRate = 60.f;
+            AzFramework::WindowRequestBus::EventResult(refreshRate, windowHandle, &AzFramework::WindowRequestBus::Events::GetDisplayRefreshRate);
+
+            const AzPhysics::SystemConfiguration* config = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration();
+
+            // Disable camera smooth follow if the physics timestep is less than or equal to the refresh time
+            if(config->m_fixedTimestep <= 1.f/refreshRate)
+                m_cameraSmoothFollow = false;
         }
 
         Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
