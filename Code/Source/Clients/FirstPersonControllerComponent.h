@@ -399,7 +399,7 @@ namespace FirstPersonController
         bool IsCameraChildOfCharacter();
         void SmoothRotation();
         void ResetCameraToCharacter();
-        void CapturePhysicsTranslation();
+        void CaptureCharacterPhysicsTranslation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
@@ -448,8 +448,8 @@ namespace FirstPersonController
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
         float m_physicsTimeAccumulator = 0.f;
-        AZ::Vector3 m_prevPhysicsTranslation = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_currentPhysicsTranslation = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevCharacterPhysicsTranslation = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_currentCharacterPhysicsTranslation = AZ::Vector3::CreateZero();
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
