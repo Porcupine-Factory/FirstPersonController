@@ -1025,6 +1025,7 @@ namespace FirstPersonController
             // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
             // the most recent post-simulation transform for smoother following.
             CaptureCharacterPhysicsTranslation();
+            m_physicsTimeAccumulator = 0.0f;
         }
     }
 
@@ -1094,10 +1095,10 @@ namespace FirstPersonController
         m_physicsTimeAccumulator += deltaTime;
 
         // Calculate interpolation factor
-        float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
+        float const alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.0f, 1.0f);
 
         // Interpolate position
-        AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterPhysicsTranslation.Lerp(m_currentCharacterPhysicsTranslation , alpha);
+        AZ::Vector3 const interpolatedCameraTranslation = m_prevCharacterPhysicsTranslation.Lerp(m_currentCharacterPhysicsTranslation , alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedCameraTranslation);
 
         // Reset accumulator if it exceeds physics timestep
@@ -2605,11 +2606,6 @@ namespace FirstPersonController
                 Physics::CharacterRequestBus::Event(GetEntityId(),
                     &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep,
                     m_prevTargetVelocity);
-        }
-
-        if (timestepElseTick && m_cameraSmoothFollow)
-        {
-            m_physicsTimeAccumulator = 0.0f;
         }
     }
 
