@@ -86,6 +86,7 @@ namespace FirstPersonController
               // Crouching group
               ->Field("Crouch Movement Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
               ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
+                  ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " s")
@@ -96,6 +97,7 @@ namespace FirstPersonController
               ->Field("Stand Start Speed", &FirstPersonControllerComponent::m_crouchUpInitVelocity)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
               ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
+                  ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Crouch Enable Toggle", &FirstPersonControllerComponent::m_crouchEnableToggle)
               ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouchJumpCausesStanding)
@@ -123,6 +125,7 @@ namespace FirstPersonController
               ->Field("Jump Hold Distance", &FirstPersonControllerComponent::m_jumpHoldDistance)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Jump Head Hit Detection Distance", &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset)
+                  ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Jump Head Hit Sets Apogee", &FirstPersonControllerComponent::m_headHitSetsApogee)
               ->Field("Jump Head Hit Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies)
@@ -131,6 +134,15 @@ namespace FirstPersonController
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Descending", &FirstPersonControllerComponent::m_updateXYDescending)
               ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_updateXYOnlyNearGround)
+
+              // Impulse group
+              ->Field("Enable Impulse", &FirstPersonControllerComponent::m_enableImpulses)
+              ->Field("Mass", &FirstPersonControllerComponent::m_characterMass)
+                  ->Attribute(AZ::Edit::Attributes::Min, 0.00001f)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetMassUnit())
+              ->Field("Impulse Velocity Deceleration", &FirstPersonControllerComponent::m_impulseVelocityDecel)
+                  ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" m%ss%s%s", Physics::NameConstants::GetInterpunct().c_str(), Physics::NameConstants::GetSuperscriptMinus().c_str(), Physics::NameConstants::GetSuperscriptTwo().c_str()))
 
               ->Version(1);
 
@@ -360,7 +372,19 @@ namespace FirstPersonController
                         "Update X&Y Velocity When Descending", "Allows movement in X&Y during a jump’s descent.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYOnlyNearGround,
-                        "Update X&Y Velocity Only When Ground Close", "Allows movement in X&Y only if close to an acceptable ground entity. According to the distance set in Jump Hold Distance. If the ascending and descending options are disabled, then this will effectively do nothing.");
+                        "Update X&Y Velocity Only When Ground Close", "Allows movement in X&Y only if close to an acceptable ground entity. According to the distance set in Jump Hold Distance. If the ascending and descending options are disabled, then this will effectively do nothing.")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Impulse")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_enableImpulses,
+                        "Enable Impulses", "Determines whether impulses can be applied to the character via the EBus (e.g. scripts). Dynamic / simulated rigid bodies will not apply impulses to the character without using the EBus.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_characterMass,
+                        "Mass", "Mass of the character for impulse calculations.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_impulseVelocityDecel,
+                        "Impulse Velocity Deceleration", "The rate at which the component of the character's velocity that's due to the impulse is reduced over time.");
             }
         }
 
@@ -500,6 +524,22 @@ namespace FirstPersonController
                 ->Event("Set Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::SetAddVelocityHeading)
                 ->Event("Get Apply Velocity Z", &FirstPersonControllerComponentRequests::GetApplyVelocityZ)
                 ->Event("Set Apply Velocity Z", &FirstPersonControllerComponentRequests::SetApplyVelocityZ)
+                ->Event("Get Enable Impulses", &FirstPersonControllerComponentRequests::GetEnableImpulses)
+                ->Event("Set Enable Impulses", &FirstPersonControllerComponentRequests::SetEnableImpulses)
+                ->Event("Get Linear Impulse", &FirstPersonControllerComponentRequests::GetLinearImpulse)
+                ->Event("Apply Linear Impulse", &FirstPersonControllerComponentRequests::ApplyLinearImpulse)
+                ->Event("Get Initial Velocity From Impulse", &FirstPersonControllerComponentRequests::GetInitVelocityFromImpulse)
+                ->Event("Set Initial Velocity From Impulse", &FirstPersonControllerComponentRequests::SetInitVelocityFromImpulse)
+                ->Event("Get Velocity From Impulse", &FirstPersonControllerComponentRequests::GetVelocityFromImpulse)
+                ->Event("Set Velocity From Impulse", &FirstPersonControllerComponentRequests::SetVelocityFromImpulse)
+                ->Event("Get Impulse Velocity Deceleration", &FirstPersonControllerComponentRequests::GetImpulseVelocityDecel)
+                ->Event("Set Impulse Velocity Deceleration", &FirstPersonControllerComponentRequests::SetImpulseVelocityDecel)
+                ->Event("Get Impulse Total Lerp Time", &FirstPersonControllerComponentRequests::GetImpulseTotalLerpTime)
+                ->Event("Set Impulse Total Lerp Time", &FirstPersonControllerComponentRequests::SetImpulseTotalLerpTime)
+                ->Event("Get Impulse Lerp Time", &FirstPersonControllerComponentRequests::GetImpulseLerpTime)
+                ->Event("Set Impulse Lerp Time", &FirstPersonControllerComponentRequests::SetImpulseLerpTime)
+                ->Event("Get Character Mass", &FirstPersonControllerComponentRequests::GetCharacterMass)
+                ->Event("Set Character Mass", &FirstPersonControllerComponentRequests::SetCharacterMass)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
                 ->Event("Get Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
@@ -1100,7 +1140,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if(!m_activeCameraEntity || !m_cameraSmoothFollow)
+        if(!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow)
             return;
 
         // Update time accumulator
@@ -1322,7 +1362,7 @@ namespace FirstPersonController
             if(m_lerpTime >= m_totalLerpTime)
                 m_lerpTime = m_totalLerpTime;
 
-            AZ::Vector2 newVelocityXYDecel =  m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
+            AZ::Vector2 newVelocityXYDecel = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
             if(newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
 
@@ -2487,6 +2527,70 @@ namespace FirstPersonController
         //AZ_Printf("First Person Controller Component","");
     }
 
+    void FirstPersonControllerComponent::ProcessLinearImpulse(const float& deltaTime)
+    {
+        // Only apply impulses if it's enabled
+        if(!m_enableImpulses)
+            m_linearImpulse = AZ::Vector3::CreateZero();
+
+        // Reset the impulse lerp time to zero if a (new) none-zero linear impulse is to be applied
+        if(!m_linearImpulse.IsZero())
+            m_impulseLerpTime = 0.f;
+
+        // Convert the linear impulse to a velocity based on the character's mass and accumulate it
+        const AZ::Vector3 impulseVelocity = m_linearImpulse / m_characterMass;
+        m_velocityFromImpulse += impulseVelocity;
+
+        // Apply the deceleration
+        if(!impulseVelocity.IsZero())
+        {
+            m_initVelocityFromImpulse = m_velocityFromImpulse;
+            m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetDistance(AZ::Vector3::CreateZero()) / m_impulseVelocityDecel;
+        }
+
+        // Accumulate half of the deltaTime
+        m_impulseLerpTime += deltaTime * 0.5f;
+
+        // If the total lerp time is zero or the lerp time has reached the total lerp time then do not continue adding velocity
+        if(m_impulseTotalLerpTime == 0.f || m_impulseLerpTime >= m_impulseTotalLerpTime)
+        {
+            m_impulseLerpTime = m_impulseTotalLerpTime;
+            m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
+            m_velocityFromImpulse = AZ::Vector3::CreateZero();
+            m_linearImpulse = AZ::Vector3::CreateZero();
+            return;
+        }
+        // Set the applied velocity based on the time that was calculated for it to reach zero
+        else
+        {
+            m_velocityFromImpulse = m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), m_impulseLerpTime / m_impulseTotalLerpTime);
+        }
+
+        // Debug print statements to observe the acceleration and timing
+        //static AZ::Vector3 prevVelocity = m_velocityFromImpulse;
+        //AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_velocityFromImpulse)/deltaTime);
+        //prevVelocity = m_velocityFromImpulse;
+        //AZ_Printf(First Person Controller Component", "m_impulseTotalLerpTime = %.10f", m_impulseTotalLerpTime);
+        //AZ_Printf(First Person Controller Component", "m_impulseLerpTime = %.10f", m_impulseLerpTime);
+
+        // Accumulate half of the deltaTime if the total lerp time hasn't been reached
+        if(m_impulseLerpTime != m_impulseTotalLerpTime)
+            m_impulseLerpTime += deltaTime * 0.5f;
+
+        // Add the velocity to the character
+        if(m_addVelocityForTimestepVsTick)
+            Physics::CharacterRequestBus::Event(GetEntityId(),
+                &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep,
+                m_velocityFromImpulse);
+        else
+            Physics::CharacterRequestBus::Event(GetEntityId(),
+                &Physics::CharacterRequestBus::Events::AddVelocityForTick,
+                m_velocityFromImpulse);
+
+        // Zero the impulse vector since it's been applied for this update
+        m_linearImpulse = AZ::Vector3::CreateZero();
+    }
+
     // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
     // with the vector 3 that's provided. This is intentionally done without any rotation about the Z axis.
     AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
@@ -2616,14 +2720,20 @@ namespace FirstPersonController
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
-            if(!m_addVelocityForTimestepVsTick)
-                Physics::CharacterRequestBus::Event(GetEntityId(),
-                    &Physics::CharacterRequestBus::Events::AddVelocityForTick,
-                    m_prevTargetVelocity);
-            else
+            if(m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(GetEntityId(),
                     &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep,
                     m_prevTargetVelocity);
+            else
+                Physics::CharacterRequestBus::Event(GetEntityId(),
+                    &Physics::CharacterRequestBus::Events::AddVelocityForTick,
+                    m_prevTargetVelocity);
+
+            // Apply any linear impulses to the character that have been set via the EBus
+            if(m_addVelocityForTimestepVsTick)
+                ProcessLinearImpulse((deltaTime + m_prevTimeStep) / 2.f);
+            else
+                ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
         }
     }
 
@@ -3339,6 +3449,72 @@ namespace FirstPersonController
     {
         SetGroundedForTick(false);
         m_applyVelocityZ = new_applyVelocityZ;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetLinearImpulse() const
+    {
+        return m_linearImpulse;
+    }
+    void FirstPersonControllerComponent::ApplyLinearImpulse(const AZ::Vector3& new_linearImpulse)
+    {
+        m_linearImpulse += new_linearImpulse;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetInitVelocityFromImpulse() const
+    {
+        return m_initVelocityFromImpulse;
+    }
+    void FirstPersonControllerComponent::SetInitVelocityFromImpulse(const AZ::Vector3& new_initVelocityFromImpulse)
+    {
+        m_initVelocityFromImpulse = new_initVelocityFromImpulse;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetVelocityFromImpulse() const
+    {
+        return m_velocityFromImpulse;
+    }
+    void FirstPersonControllerComponent::SetVelocityFromImpulse(const AZ::Vector3& new_velocityFromImpulse)
+    {
+        m_velocityFromImpulse = new_velocityFromImpulse;
+    }
+    bool FirstPersonControllerComponent::GetEnableImpulses() const
+    {
+        return m_enableImpulses;
+    }
+    void FirstPersonControllerComponent::SetEnableImpulses(const bool& new_enableImpulses)
+    {
+        m_enableImpulses = new_enableImpulses;
+        if(!m_enableImpulses)
+            m_linearImpulse = AZ::Vector3::CreateZero();
+    }
+    float FirstPersonControllerComponent::GetImpulseVelocityDecel() const
+    {
+        return m_impulseVelocityDecel;
+    }
+    void FirstPersonControllerComponent::SetImpulseVelocityDecel(const float& new_impulseVelocityDecel)
+    {
+        m_impulseVelocityDecel = AZ::GetMax(new_impulseVelocityDecel, 0.f);
+    }
+    float FirstPersonControllerComponent::GetImpulseTotalLerpTime() const
+    {
+        return m_impulseTotalLerpTime;
+    }
+    void FirstPersonControllerComponent::SetImpulseTotalLerpTime(const float& new_impulseTotalLerpTime)
+    {
+        m_impulseTotalLerpTime = AZ::GetMax(new_impulseTotalLerpTime, 0.f);
+    }
+    float FirstPersonControllerComponent::GetImpulseLerpTime() const
+    {
+        return m_impulseLerpTime;
+    }
+    void FirstPersonControllerComponent::SetImpulseLerpTime(const float& new_impulseLerpTime)
+    {
+        m_impulseLerpTime = AZ::GetMax(new_impulseLerpTime, 0.f);
+    }
+    float FirstPersonControllerComponent::GetCharacterMass() const
+    {
+        return m_characterMass;
+    }
+    void FirstPersonControllerComponent::SetCharacterMass(const float& new_characterMass)
+    {
+        m_characterMass = AZ::GetMax(new_characterMass, 0.f);
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const
     {

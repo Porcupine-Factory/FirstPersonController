@@ -195,6 +195,22 @@ namespace FirstPersonController
         void SetAddVelocityHeading(const AZ::Vector3& new_addVelocityHeading) override;
         float GetApplyVelocityZ() const override;
         void SetApplyVelocityZ(const float& new_applyVelocityZ) override;
+        bool GetEnableImpulses() const override;
+        void SetEnableImpulses(const bool& new_enableImpulses) override;
+        AZ::Vector3 GetLinearImpulse() const override;
+        void ApplyLinearImpulse(const AZ::Vector3& new_linearImpulse) override;
+        AZ::Vector3 GetInitVelocityFromImpulse() const override;
+        void SetInitVelocityFromImpulse(const AZ::Vector3& new_initVelocityFromImpulse) override;
+        AZ::Vector3 GetVelocityFromImpulse() const override;
+        void SetVelocityFromImpulse(const AZ::Vector3& new_velocityFromImpulse) override;
+        float GetImpulseVelocityDecel() const override;
+        void SetImpulseVelocityDecel(const float& new_impulseVelocityDecel) override;
+        float GetImpulseTotalLerpTime() const override;
+        void SetImpulseTotalLerpTime(const float& new_impulseTotalLerpTime) override;
+        float GetImpulseLerpTime() const override;
+        void SetImpulseLerpTime(const float& new_impulseLerpTime) override;
+        float GetCharacterMass() const override;
+        void SetCharacterMass(const float& new_characterMass) override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         float GetJumpSecondInitialVelocity() const override;
@@ -404,6 +420,7 @@ namespace FirstPersonController
         void SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
         void CheckCharacterMovementObstructed();
+        void ProcessLinearImpulse(const float& deltaTime);
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();
@@ -568,6 +585,14 @@ namespace FirstPersonController
         float m_applyVelocityZCurrentDelta = 0.f;
         float m_applyVelocityZPrevDelta = 0.f;
         float m_correctedVelocityZ = 0.f;
+        bool m_enableImpulses = true;
+        AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
+        float m_impulseVelocityDecel = 45.f;
+        float m_impulseTotalLerpTime = 0.f;
+        float m_impulseLerpTime = 0.f;
+        float m_characterMass = 80.f;
         float m_capsuleRadius = 0.3f;
         float m_capsuleHeight = 1.8f;
         float m_capsuleCurrentHeight = 1.8f;
