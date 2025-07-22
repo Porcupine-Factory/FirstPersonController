@@ -79,6 +79,7 @@ namespace FirstPersonController
         float GetEyeHeight() const override;
         void SetEyeHeight(const float& new_eyeHeight) override;
         float GetCameraLocalZTravelDistance() const override;
+        AZ::TransformInterface* GetCameraRotationTransform() const override;
         void ReacquireChildEntityIds() override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
@@ -645,6 +646,7 @@ namespace FirstPersonController
         float m_rotationDamp = 30.f;
         float m_cameraPitchMaxAngle = AZ::Constants::HalfPi;
         float m_cameraPitchMinAngle = -AZ::Constants::HalfPi;
+        AZ::TransformInterface* m_cameraRotationTransform = nullptr;
 
         // Used when a script wants to update the camera angle via the Request Bus or a gamepad
         bool m_rotatingPitchViaScriptGamepad = false;

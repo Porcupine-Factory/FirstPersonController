@@ -408,6 +408,7 @@ namespace FirstPersonController
                 ->Event("Get Eye Height", &FirstPersonControllerComponentRequests::GetEyeHeight)
                 ->Event("Set Eye Height", &FirstPersonControllerComponentRequests::SetEyeHeight)
                 ->Event("Get Camera Local Z Travel Distance", &FirstPersonControllerComponentRequests::GetCameraLocalZTravelDistance)
+                ->Event("Get Camera Rotation Transform", &FirstPersonControllerComponentRequests::GetCameraRotationTransform)
                 ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
                 ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
                 ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
@@ -1232,16 +1233,16 @@ namespace FirstPersonController
         m_activeCameraEntity = GetActiveCameraEntityPtr();
         if(m_activeCameraEntity)
         {
-            AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
+            m_cameraRotationTransform = m_activeCameraEntity->GetTransform();
 
             if(IsCameraChildOfCharacter())
             {
                 // Apply pitch to camera's local rotation, yaw follows the parent character entity
-                cameraTransform->SetLocalRotation(AZ::Vector3(
-                    AZ::GetClamp(cameraTransform->GetLocalRotation().GetX() + newLookRotationDelta.GetX(),
+                m_cameraRotationTransform->SetLocalRotation(AZ::Vector3(
+                    AZ::GetClamp(m_cameraRotationTransform->GetLocalRotation().GetX() + newLookRotationDelta.GetX(),
                         m_cameraPitchMinAngle, m_cameraPitchMaxAngle),
-                    cameraTransform->GetLocalRotation().GetY(),
-                    cameraTransform->GetLocalRotation().GetZ()));
+                    m_cameraRotationTransform->GetLocalRotation().GetY(),
+                    m_cameraRotationTransform->GetLocalRotation().GetZ()));
             }
             else if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
             {
@@ -1262,7 +1263,7 @@ namespace FirstPersonController
                 const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
                 const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
                 const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
-                cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
+                m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
             }
             else
             {
@@ -1271,7 +1272,7 @@ namespace FirstPersonController
                 const AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
                 m_cameraPitch = AZ::GetClamp(m_cameraPitch + newLookRotationDelta.GetX(), m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
                 const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
-                cameraTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
+                m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
             }
         }
 
@@ -2889,6 +2890,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetCameraLocalZTravelDistance() const
     {
         return m_cameraLocalZTravelDistance;
+    }
+    AZ::TransformInterface* FirstPersonControllerComponent::GetCameraRotationTransform() const
+    {
+        return m_cameraRotationTransform;
     }
     void FirstPersonControllerComponent::ReacquireChildEntityIds()
     {

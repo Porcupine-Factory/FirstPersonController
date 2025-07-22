@@ -31,6 +31,7 @@ namespace FirstPersonController
         virtual float GetEyeHeight() const = 0;
         virtual void SetEyeHeight(const float&) = 0;
         virtual float GetCameraLocalZTravelDistance() const = 0;
+        virtual AZ::TransformInterface* GetCameraRotationTransform() const = 0;
         virtual void ReacquireChildEntityIds() = 0;
         virtual void ReacquireCapsuleDimensions() = 0;
         virtual void ReacquireMaxSlopeAngle() = 0;
