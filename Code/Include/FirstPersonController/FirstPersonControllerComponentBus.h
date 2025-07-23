@@ -149,6 +149,7 @@ namespace FirstPersonController
         virtual bool GetEnableImpulses() const = 0;
         virtual void SetEnableImpulses(const bool&) = 0;
         virtual AZ::Vector3 GetLinearImpulse() const = 0;
+        virtual void SetLinearImpulse(const AZ::Vector3&) = 0;
         virtual void ApplyLinearImpulse(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetInitVelocityFromImpulse() const = 0;
         virtual void SetInitVelocityFromImpulse(const AZ::Vector3&) = 0;

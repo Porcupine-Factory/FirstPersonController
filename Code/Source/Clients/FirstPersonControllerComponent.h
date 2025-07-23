@@ -198,7 +198,8 @@ namespace FirstPersonController
         bool GetEnableImpulses() const override;
         void SetEnableImpulses(const bool& new_enableImpulses) override;
         AZ::Vector3 GetLinearImpulse() const override;
-        void ApplyLinearImpulse(const AZ::Vector3& new_linearImpulse) override;
+        void SetLinearImpulse(const AZ::Vector3& new_linearImpulse) override;
+        void ApplyLinearImpulse(const AZ::Vector3& new_addLinearImpulse) override;
         AZ::Vector3 GetInitVelocityFromImpulse() const override;
         void SetInitVelocityFromImpulse(const AZ::Vector3& new_initVelocityFromImpulse) override;
         AZ::Vector3 GetVelocityFromImpulse() const override;

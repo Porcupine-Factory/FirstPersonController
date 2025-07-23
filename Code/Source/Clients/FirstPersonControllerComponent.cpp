@@ -527,6 +527,7 @@ namespace FirstPersonController
                 ->Event("Get Enable Impulses", &FirstPersonControllerComponentRequests::GetEnableImpulses)
                 ->Event("Set Enable Impulses", &FirstPersonControllerComponentRequests::SetEnableImpulses)
                 ->Event("Get Linear Impulse", &FirstPersonControllerComponentRequests::GetLinearImpulse)
+                ->Event("Set Linear Impulse", &FirstPersonControllerComponentRequests::SetLinearImpulse)
                 ->Event("Apply Linear Impulse", &FirstPersonControllerComponentRequests::ApplyLinearImpulse)
                 ->Event("Get Initial Velocity From Impulse", &FirstPersonControllerComponentRequests::GetInitVelocityFromImpulse)
                 ->Event("Set Initial Velocity From Impulse", &FirstPersonControllerComponentRequests::SetInitVelocityFromImpulse)
@@ -2545,7 +2546,7 @@ namespace FirstPersonController
         if(!impulseVelocity.IsZero())
         {
             m_initVelocityFromImpulse = m_velocityFromImpulse;
-            m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetDistance(AZ::Vector3::CreateZero()) / m_impulseVelocityDecel;
+            m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseVelocityDecel;
         }
 
         // Accumulate half of the deltaTime
@@ -3454,9 +3455,13 @@ namespace FirstPersonController
     {
         return m_linearImpulse;
     }
-    void FirstPersonControllerComponent::ApplyLinearImpulse(const AZ::Vector3& new_linearImpulse)
+    void FirstPersonControllerComponent::SetLinearImpulse(const AZ::Vector3& new_linearImpulse)
     {
-        m_linearImpulse += new_linearImpulse;
+        m_linearImpulse = new_linearImpulse;
+    }
+    void FirstPersonControllerComponent::ApplyLinearImpulse(const AZ::Vector3& new_addLinearImpulse)
+    {
+        m_linearImpulse += new_addLinearImpulse;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetInitVelocityFromImpulse() const
     {
