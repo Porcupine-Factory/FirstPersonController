@@ -1840,7 +1840,6 @@ namespace FirstPersonController
             }
 
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-
                 m_capsuleRadius,
                 sphereCastPose,
                 sphereCastDirection,
