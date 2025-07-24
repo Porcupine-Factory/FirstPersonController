@@ -2571,8 +2571,8 @@ namespace FirstPersonController
         //static AZ::Vector3 prevVelocity = m_velocityFromImpulse;
         //AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_velocityFromImpulse)/deltaTime);
         //prevVelocity = m_velocityFromImpulse;
-        //AZ_Printf(First Person Controller Component", "m_impulseTotalLerpTime = %.10f", m_impulseTotalLerpTime);
-        //AZ_Printf(First Person Controller Component", "m_impulseLerpTime = %.10f", m_impulseLerpTime);
+        //AZ_Printf("First Person Controller Component", "m_impulseTotalLerpTime = %.10f", m_impulseTotalLerpTime);
+        //AZ_Printf("First Person Controller Component", "m_impulseLerpTime = %.10f", m_impulseLerpTime);
 
         // Accumulate half of the deltaTime if the total lerp time hasn't been reached
         if(m_impulseLerpTime != m_impulseTotalLerpTime)
