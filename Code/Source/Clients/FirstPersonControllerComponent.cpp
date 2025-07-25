@@ -2547,19 +2547,17 @@ namespace FirstPersonController
         if(!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
 
-        // Reset the impulse lerp time to zero if a (new) none-zero linear impulse is to be applied
-        if(!m_impulseUsesLinearDamp && !m_linearImpulse.IsZero())
-            m_impulseLerpTime = 0.f;
-
         // Convert the linear impulse to a velocity based on the character's mass and accumulate it
         const AZ::Vector3 impulseVelocity = m_linearImpulse / m_characterMass;
         m_velocityFromImpulse += impulseVelocity;
 
-        // When using a constant deceleration, calculate a new total lerp time when an impulse is applied
-        if(!m_impulseUsesLinearDamp && !impulseVelocity.IsZero())
+        // When using a constant deceleration, calculate a new total lerp time when an impulse is applied or when the deceleration changes
+        if(!m_impulseUsesLinearDamp && (!impulseVelocity.IsZero() || m_impulsePrevConstantDecel != m_impulseConstantDecel))
         {
             m_initVelocityFromImpulse = m_velocityFromImpulse;
             m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseConstantDecel;
+            m_impulseLerpTime = 0.f;
+            m_impulsePrevConstantDecel = m_impulseConstantDecel;
         }
 
         // Accumulate half of the deltaTime
