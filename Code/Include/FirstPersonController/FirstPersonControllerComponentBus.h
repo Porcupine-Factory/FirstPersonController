@@ -160,8 +160,8 @@ namespace FirstPersonController
         virtual void SetImpulseUsesLinearDamp(const bool&) = 0;
         virtual float GetImpulseLinearDamp() const = 0;
         virtual void SetImpulseLinearDamp(const float&) = 0;
-        virtual float GetImpulseVelocityDecel() const = 0;
-        virtual void SetImpulseVelocityDecel(const float&) = 0;
+        virtual float GetImpulseConstantDecel() const = 0;
+        virtual void SetImpulseConstantDecel(const float&) = 0;
         virtual float GetImpulseTotalLerpTime() const = 0;
         virtual void SetImpulseTotalLerpTime(const float&) = 0;
         virtual float GetImpulseLerpTime() const = 0;

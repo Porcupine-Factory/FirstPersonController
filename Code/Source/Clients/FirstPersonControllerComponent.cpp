@@ -143,7 +143,7 @@ namespace FirstPersonController
               ->Field("Use Linear Damping", &FirstPersonControllerComponent::m_impulseUsesLinearDamp)
               ->Field("Impulse Linear Damping", &FirstPersonControllerComponent::m_impulseLinearDamp)
                   ->Attribute(AZ::Edit::Attributes::Min, 0.f)
-              ->Field("Impulse Velocity Deceleration", &FirstPersonControllerComponent::m_impulseVelocityDecel)
+              ->Field("Impulse Constant Deceleration", &FirstPersonControllerComponent::m_impulseConstantDecel)
                   ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" m%ss%s%s", Physics::NameConstants::GetInterpunct().c_str(), Physics::NameConstants::GetSuperscriptMinus().c_str(), Physics::NameConstants::GetSuperscriptTwo().c_str()))
 
@@ -387,13 +387,13 @@ namespace FirstPersonController
                         "Mass", "Mass of the character for impulse calculations.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseUsesLinearDamp,
-                        "Use Linear Damping", "Turn this on to use Impulse Linear Damping, turn this off to use Impulse Velocity Deceleration.")
+                        "Use Linear Damping", "Turn this on to use Impulse Linear Damping, turn this off to use Impulse Constant Deceleration.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseLinearDamp,
                         "Impulse Linear Damping", "Slows down the character after an impulse the same way as is done by the PhysX Dynamic Rigid Body component, using a first-order homogeneous linear recurrence relation. Specifically, the velocity decays by a factor of (1 - Linear Damping / Fixed Time Step). Turn on 'Use Linear Damping' to use linear damping. Linear damping behaves like to Stokes' Law whereas constant deceleration behaves the same as kinetic friction.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_impulseVelocityDecel,
-                        "Impulse Velocity Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. Turn off 'Use Linear Damping' to use a constant deceleration. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law.");
+                        &FirstPersonControllerComponent::m_impulseConstantDecel,
+                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. Turn off 'Use Linear Damping' to use a constant deceleration. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law.");
             }
         }
 
@@ -547,8 +547,8 @@ namespace FirstPersonController
                 ->Event("Set Impulse Uses Linear Damping", &FirstPersonControllerComponentRequests::SetImpulseUsesLinearDamp)
                 ->Event("Get Impulse Linear Damping", &FirstPersonControllerComponentRequests::GetImpulseLinearDamp)
                 ->Event("Set Impulse Linear Damping", &FirstPersonControllerComponentRequests::SetImpulseLinearDamp)
-                ->Event("Get Impulse Velocity Deceleration", &FirstPersonControllerComponentRequests::GetImpulseVelocityDecel)
-                ->Event("Set Impulse Velocity Deceleration", &FirstPersonControllerComponentRequests::SetImpulseVelocityDecel)
+                ->Event("Get Impulse Constant Deceleration", &FirstPersonControllerComponentRequests::GetImpulseConstantDecel)
+                ->Event("Set Impulse Constant Deceleration", &FirstPersonControllerComponentRequests::SetImpulseConstantDecel)
                 ->Event("Get Impulse Total Lerp Time", &FirstPersonControllerComponentRequests::GetImpulseTotalLerpTime)
                 ->Event("Set Impulse Total Lerp Time", &FirstPersonControllerComponentRequests::SetImpulseTotalLerpTime)
                 ->Event("Get Impulse Lerp Time", &FirstPersonControllerComponentRequests::GetImpulseLerpTime)
@@ -2559,7 +2559,7 @@ namespace FirstPersonController
         if(!m_impulseUsesLinearDamp && !impulseVelocity.IsZero())
         {
             m_initVelocityFromImpulse = m_velocityFromImpulse;
-            m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseVelocityDecel;
+            m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseConstantDecel;
         }
 
         // Accumulate half of the deltaTime
@@ -3531,13 +3531,13 @@ namespace FirstPersonController
     {
         m_impulseLinearDamp = AZ::GetMax(new_impulseLinearDamp, 0.f);
     }
-    float FirstPersonControllerComponent::GetImpulseVelocityDecel() const
+    float FirstPersonControllerComponent::GetImpulseConstantDecel() const
     {
-        return m_impulseVelocityDecel;
+        return m_impulseConstantDecel;
     }
-    void FirstPersonControllerComponent::SetImpulseVelocityDecel(const float& new_impulseVelocityDecel)
+    void FirstPersonControllerComponent::SetImpulseConstantDecel(const float& new_impulseConstantDecel)
     {
-        m_impulseVelocityDecel = AZ::GetMax(new_impulseVelocityDecel, 0.f);
+        m_impulseConstantDecel = AZ::GetMax(new_impulseConstantDecel, 0.f);
     }
     float FirstPersonControllerComponent::GetImpulseTotalLerpTime() const
     {

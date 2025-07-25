@@ -209,8 +209,8 @@ namespace FirstPersonController
         void SetImpulseUsesLinearDamp(const bool& new_impulseUsesLinearDamp) override;
         float GetImpulseLinearDamp() const override;
         void SetImpulseLinearDamp(const float& new_impulseLinearDamp) override;
-        float GetImpulseVelocityDecel() const override;
-        void SetImpulseVelocityDecel(const float& new_impulseVelocityDecel) override;
+        float GetImpulseConstantDecel() const override;
+        void SetImpulseConstantDecel(const float& new_impulseConstantDecel) override;
         float GetImpulseTotalLerpTime() const override;
         void SetImpulseTotalLerpTime(const float& new_impulseTotalLerpTime) override;
         float GetImpulseLerpTime() const override;
@@ -595,7 +595,7 @@ namespace FirstPersonController
         AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
-        float m_impulseVelocityDecel = 45.f;
+        float m_impulseConstantDecel = 45.f;
         bool m_impulseUsesLinearDamp = true;
         float m_impulseLinearDamp = 0.05f;
         float m_impulseTotalLerpTime = 0.f;
