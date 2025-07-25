@@ -596,8 +596,8 @@ namespace FirstPersonController
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
         float m_impulseConstantDecel = 45.f;
-        bool m_impulseUsesLinearDamp = true;
-        float m_impulseLinearDamp = 0.05f;
+        bool m_impulseUsesLinearDamp = false;
+        float m_impulseLinearDamp = 5.f;
         float m_impulseTotalLerpTime = 0.f;
         float m_impulseLerpTime = 0.f;
         float m_characterMass = 80.f;
