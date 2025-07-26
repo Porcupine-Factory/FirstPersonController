@@ -215,6 +215,17 @@ namespace FirstPersonController
         void SetImpulseLerpTime(const float& new_impulseLerpTime) override;
         float GetCharacterMass() const override;
         void SetCharacterMass(const float& new_characterMass) override;
+        bool GetEnableCharacterHits() const override;
+        void SetEnableCharacterHits(const bool& new_enableCharacterHits) override;
+        float GetHitRadiusPercentageIncrease() const override;
+        void SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentIncrease) override;
+        float GetHitHeightPercentageIncrease() const override;
+        void SetHitHeightPercentageIncrease(const float& new_hitHeightPercentIncrease) override;
+        AZStd::string GetCharacterHitCollisionGroupName() const override;
+        void SetCharacterHitCollisionGroupByName(const AZStd::string& new_characterHitCollisionGroupName) override;
+        AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const override;
+        void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& new_characterHitBy) override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterSceneQueryHits() const override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         float GetJumpSecondInitialVelocity() const override;
@@ -425,6 +436,7 @@ namespace FirstPersonController
         void CrouchManager(const float& deltaTime);
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
+        void ProcessCharacterHits();
 
         // FirstPersonControllerNotificationBus
         void OnGroundHit();
@@ -589,16 +601,6 @@ namespace FirstPersonController
         float m_applyVelocityZCurrentDelta = 0.f;
         float m_applyVelocityZPrevDelta = 0.f;
         float m_correctedVelocityZ = 0.f;
-        bool m_enableImpulses = true;
-        AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
-        float m_impulseConstantDecel = 10.f;
-        float m_impulsePrevConstantDecel = 10.f;
-        float m_impulseLinearDamp = 4.f;
-        float m_impulseTotalLerpTime = 0.f;
-        float m_impulseLerpTime = 0.f;
-        float m_characterMass = 80.f;
         float m_capsuleRadius = 0.3f;
         float m_capsuleHeight = 1.8f;
         float m_capsuleCurrentHeight = 1.8f;
@@ -626,6 +628,25 @@ namespace FirstPersonController
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
         float m_jumpHeadSphereCastOffset = 0.1f;
+
+        // Variables used for impulses and hit detection
+        bool m_enableImpulses = true;
+        AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
+        float m_impulseConstantDecel = 10.f;
+        float m_impulsePrevConstantDecel = 10.f;
+        float m_impulseLinearDamp = 4.f;
+        float m_impulseTotalLerpTime = 0.f;
+        float m_impulseLerpTime = 0.f;
+        float m_characterMass = 80.f;
+        bool m_enableCharacterHits = true;
+        float m_hitRadiusPercentIncrease = 5.f;
+        float m_hitHeightPercentIncrease = 5.f;
+        AzPhysics::CollisionGroups::Id m_characterHitCollisionGroupId = AzPhysics::CollisionGroups::Id();
+        AzPhysics::CollisionGroup m_characterHitCollisionGroup = AzPhysics::CollisionGroup::All;
+        AzPhysics::SceneQuery::QueryType m_characterHitBy = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;
+        AZStd::vector<AzPhysics::SceneQueryHit> m_characterHits;
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;

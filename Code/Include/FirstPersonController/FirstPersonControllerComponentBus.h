@@ -166,6 +166,17 @@ namespace FirstPersonController
         virtual void SetImpulseLerpTime(const float&) = 0;
         virtual float GetCharacterMass() const = 0;
         virtual void SetCharacterMass(const float&) = 0;
+        virtual bool GetEnableCharacterHits() const = 0;
+        virtual void SetEnableCharacterHits(const bool&) = 0;
+        virtual float GetHitRadiusPercentageIncrease() const = 0;
+        virtual void SetHitRadiusPercentageIncrease(const float&) = 0;
+        virtual float GetHitHeightPercentageIncrease() const = 0;
+        virtual void SetHitHeightPercentageIncrease(const float&) = 0;
+        virtual AZStd::string GetCharacterHitCollisionGroupName() const = 0;
+        virtual void SetCharacterHitCollisionGroupByName(const AZStd::string&) = 0;
+        virtual AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const = 0;
+        virtual void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType&) = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterSceneQueryHits() const = 0;
         virtual float GetJumpInitialVelocity() const = 0;
         virtual void SetJumpInitialVelocity(const float&) = 0;
         virtual float GetJumpSecondInitialVelocity() const = 0;

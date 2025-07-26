@@ -146,6 +146,16 @@ namespace FirstPersonController
                   ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" m%ss%s%s", Physics::NameConstants::GetInterpunct().c_str(), Physics::NameConstants::GetSuperscriptMinus().c_str(), Physics::NameConstants::GetSuperscriptTwo().c_str()))
 
+              // Collision Detection group
+              ->Field("Enable Hit Detection", &FirstPersonControllerComponent::m_enableCharacterHits)
+              ->Field("Capsule Radius Detection Percentage Increase", &FirstPersonControllerComponent::m_hitRadiusPercentIncrease)
+                  ->Attribute(AZ::Edit::Attributes::Min, -100.f)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " %")
+              ->Field("Capsule Height Detection Percentage Increase", &FirstPersonControllerComponent::m_hitHeightPercentIncrease)
+                  ->Attribute(AZ::Edit::Attributes::Min, -100.f)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " %")
+              ->Field("Hit Detection Group", &FirstPersonControllerComponent::m_characterHitCollisionGroupId)
+
               ->Version(1);
 
             if(AZ::EditContext* ec = sc->GetEditContext())
@@ -389,7 +399,22 @@ namespace FirstPersonController
                         "Impulse Linear Damping", "Slows down the character after an impulse the same way as is done by the PhysX Dynamic Rigid Body component, using a first-order homogeneous linear recurrence relation. Specifically, the velocity decays by a factor of (1 - Linear Damping / Fixed Time Step). Linear damping behaves like to Stokes' Law whereas constant deceleration behaves the same as kinetic friction. This is used in combination with Impulse Constant Deceleration, set either to zero to use just one or the other.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseConstantDecel,
-                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other.");
+                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other.")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Collision Detection")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_enableCharacterHits,
+                        "Enable Hit Detection", "Determines whether collisions with the character will be detected by a capsule shapecast.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_hitRadiusPercentIncrease,
+                        "Capsule Radius Detection Percentage Increase", "Percentage to increase the character's capsule collider radius by to determine hits / collisions.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_hitHeightPercentIncrease,
+                        "Capsule Height Detection Percentage Increase", "Percentage to increase the character's capsule collider height by to determine hits / collisions.")
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_characterHitCollisionGroupId,
+                        "Hit Detection Group", "Collision group that will be detected by the capsule shapecast.");
             }
         }
 
@@ -549,6 +574,17 @@ namespace FirstPersonController
                 ->Event("Set Impulse Lerp Time", &FirstPersonControllerComponentRequests::SetImpulseLerpTime)
                 ->Event("Get Character Mass", &FirstPersonControllerComponentRequests::GetCharacterMass)
                 ->Event("Set Character Mass", &FirstPersonControllerComponentRequests::SetCharacterMass)
+                ->Event("Get Enable Character Hits", &FirstPersonControllerComponentRequests::GetEnableCharacterHits)
+                ->Event("Set Enable Character Hits", &FirstPersonControllerComponentRequests::SetEnableCharacterHits)
+                ->Event("Get Hit Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetHitRadiusPercentageIncrease)
+                ->Event("Set Hit Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetHitRadiusPercentageIncrease)
+                ->Event("Get Hit Height Percentage Increase", &FirstPersonControllerComponentRequests::GetHitHeightPercentageIncrease)
+                ->Event("Set Hit Height Percentage Increase", &FirstPersonControllerComponentRequests::SetHitHeightPercentageIncrease)
+                ->Event("Get Character Hit Collision Group Name", &FirstPersonControllerComponentRequests::GetCharacterHitCollisionGroupName)
+                ->Event("Set Character Hit Collision Group By Name", &FirstPersonControllerComponentRequests::SetCharacterHitCollisionGroupByName)
+                ->Event("Get Character Hit By", &FirstPersonControllerComponentRequests::GetCharacterHitBy)
+                ->Event("Set Character Hit By", &FirstPersonControllerComponentRequests::SetCharacterHitBy)
+                ->Event("Get Character Scene Query Hits", &FirstPersonControllerComponentRequests::GetCharacterSceneQueryHits)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
                 ->Event("Get Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::GetJumpSecondInitialVelocity)
@@ -769,6 +805,10 @@ namespace FirstPersonController
         Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
         Physics::CollisionRequestBus::BroadcastResult(
             m_groundedCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_groundedCollisionGroupId);
+        Physics::CollisionRequestBus::BroadcastResult(
+            m_headCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_headCollisionGroupId);
+        Physics::CollisionRequestBus::BroadcastResult(
+            m_characterHitCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_characterHitCollisionGroupId);
 
         UpdateJumpMaxHoldTime();
 
@@ -1860,7 +1900,7 @@ namespace FirstPersonController
             AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
             AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
-            // Disregard intersections with the character's collider and its child entities,
+            // Disregard intersections with the character's collider and its child entities
             auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
                 {
                     if(hit.m_entityId == GetEntityId())
@@ -2338,7 +2378,7 @@ namespace FirstPersonController
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
-        // Disregard intersections with the character's collider and its child entities,
+        // Disregard intersections with the character's collider and its child entities
         auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
             {
                 if(hit.m_entityId == GetEntityId())
@@ -2610,6 +2650,66 @@ namespace FirstPersonController
         m_linearImpulse = AZ::Vector3::CreateZero();
     }
 
+    void FirstPersonControllerComponent::ProcessCharacterHits()
+    {
+        if(m_enableCharacterHits)
+        {
+            // Create a capsule cast that will be used to detect when the character is hit
+            auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+
+            // Follow the character's transform
+            AZ::Transform capsulePose = AZ::Transform::CreateIdentity();
+
+            // Set the pose rotation based on the angle between the X axis and the m_sphereCastsAxisDirectionPose,
+            // this was experimentally found to be necessary to get the capsule orientation correct
+            capsulePose.SetRotation(AZ::Quaternion::CreateFromEulerAnglesRadians(GetVectorAnglesBetweenVectorsRadians(AZ::Vector3::CreateAxisX(), m_sphereCastsAxisDirectionPose)));
+
+            // Set the translation and shift the capsule based on the character's capsule height
+            capsulePose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
+
+            AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+                m_capsuleRadius * (1.f + m_hitRadiusPercentIncrease / 100.f),
+                m_capsuleCurrentHeight * (1.f + m_hitHeightPercentIncrease / 100.f),
+                capsulePose,
+                m_sphereCastsAxisDirectionPose,
+                0.f,
+                m_characterHitBy,
+                m_characterHitCollisionGroup,
+                nullptr);
+
+            request.m_reportMultipleHits = true;
+
+            AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+            AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
+            // Disregard intersections with the character's collider and its child entities
+            auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
+                {
+                    if(hit.m_entityId == GetEntityId())
+                        return true;
+
+                    // Obtain the child IDs if we don't already have them
+                    if(!m_obtainedChildIds)
+                    {
+                        AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                        m_obtainedChildIds = true;
+                    }
+
+                    for(AZ::EntityId id: m_children)
+                    {
+                        if(hit.m_entityId == id)
+                            return true;
+                    }
+
+                    return false;
+                };
+
+            AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
+
+            m_characterHits = hits.m_hits;
+        }
+    }
+
     // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
     // with the vector 3 that's provided. This is intentionally done without any rotation about the Z axis.
     AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
@@ -2753,6 +2853,8 @@ namespace FirstPersonController
                 ProcessLinearImpulse((deltaTime + m_prevTimeStep) / 2.f);
             else
                 ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
+
+            ProcessCharacterHits();
         }
     }
 
@@ -3550,6 +3652,69 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCharacterMass(const float& new_characterMass)
     {
         m_characterMass = AZ::GetMax(new_characterMass, 0.f);
+    }
+    bool FirstPersonControllerComponent::GetEnableCharacterHits() const
+    {
+        return m_enableCharacterHits;
+    }
+    void FirstPersonControllerComponent::SetEnableCharacterHits(const bool& new_enableCharacterHits)
+    {
+        m_enableCharacterHits = new_enableCharacterHits;
+        if(!m_enableCharacterHits)
+            m_characterHits.clear();
+    }
+    float FirstPersonControllerComponent::GetHitRadiusPercentageIncrease() const
+    {
+        return m_hitRadiusPercentIncrease;
+    }
+    void FirstPersonControllerComponent::SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentIncrease)
+    {
+        m_hitRadiusPercentIncrease = new_hitRadiusPercentIncrease;
+    }
+    float FirstPersonControllerComponent::GetHitHeightPercentageIncrease() const
+    {
+        return m_hitHeightPercentIncrease;
+    }
+    void FirstPersonControllerComponent::SetHitHeightPercentageIncrease(const float& new_hitHeightPercentIncrease)
+    {
+        m_hitHeightPercentIncrease = new_hitHeightPercentIncrease;
+    }
+    AZStd::string FirstPersonControllerComponent::GetCharacterHitCollisionGroupName() const
+    {
+        AZStd::string groupName;
+        Physics::CollisionRequestBus::BroadcastResult(
+            groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_characterHitCollisionGroup);
+        return groupName;
+    }
+    void FirstPersonControllerComponent::SetCharacterHitCollisionGroupByName(const AZStd::string& new_characterHitCollisionGroupName)
+    {
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_characterHitCollisionGroupName, collisionGroup);
+        if(success)
+        {
+            m_characterHitCollisionGroup = collisionGroup;
+            const AzPhysics::CollisionConfiguration& configuration = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
+            m_characterHitCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_characterHitCollisionGroupName);
+        }
+    }
+    AzPhysics::SceneQuery::QueryType FirstPersonControllerComponent::GetCharacterHitBy() const
+    {
+        // 0 = Static
+        // 1 = Dynamic
+        // 2 = StaticAndDynamic
+        return m_characterHitBy;
+    }
+    void FirstPersonControllerComponent::SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& new_characterHitBy)
+    {
+        // 0 = Static
+        // 1 = Dynamic
+        // 2 = StaticAndDynamic
+        m_characterHitBy = new_characterHitBy;
+    }
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
+    {
+        return m_characterHits;
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const
     {
