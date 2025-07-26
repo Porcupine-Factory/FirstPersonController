@@ -156,8 +156,6 @@ namespace FirstPersonController
         virtual void SetInitVelocityFromImpulse(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetVelocityFromImpulse() const = 0;
         virtual void SetVelocityFromImpulse(const AZ::Vector3&) = 0;
-        virtual bool GetImpulseUsesLinearDamp() const = 0;
-        virtual void SetImpulseUsesLinearDamp(const bool&) = 0;
         virtual float GetImpulseLinearDamp() const = 0;
         virtual void SetImpulseLinearDamp(const float&) = 0;
         virtual float GetImpulseConstantDecel() const = 0;

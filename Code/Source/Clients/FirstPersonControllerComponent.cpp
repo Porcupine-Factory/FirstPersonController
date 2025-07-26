@@ -140,7 +140,6 @@ namespace FirstPersonController
               ->Field("Mass", &FirstPersonControllerComponent::m_characterMass)
                   ->Attribute(AZ::Edit::Attributes::Min, 0.00001f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetMassUnit())
-              ->Field("Use Linear Damping", &FirstPersonControllerComponent::m_impulseUsesLinearDamp)
               ->Field("Impulse Linear Damping", &FirstPersonControllerComponent::m_impulseLinearDamp)
                   ->Attribute(AZ::Edit::Attributes::Min, 0.f)
               ->Field("Impulse Constant Deceleration", &FirstPersonControllerComponent::m_impulseConstantDecel)
@@ -386,14 +385,11 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_characterMass,
                         "Mass", "Mass of the character for impulse calculations.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_impulseUsesLinearDamp,
-                        "Use Linear Damping", "Turn this on to use Impulse Linear Damping, turn this off to use Impulse Constant Deceleration.")
-                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseLinearDamp,
-                        "Impulse Linear Damping", "Slows down the character after an impulse the same way as is done by the PhysX Dynamic Rigid Body component, using a first-order homogeneous linear recurrence relation. Specifically, the velocity decays by a factor of (1 - Linear Damping / Fixed Time Step). Turn on 'Use Linear Damping' to use linear damping. Linear damping behaves like to Stokes' Law whereas constant deceleration behaves the same as kinetic friction.")
+                        "Impulse Linear Damping", "Slows down the character after an impulse the same way as is done by the PhysX Dynamic Rigid Body component, using a first-order homogeneous linear recurrence relation. Specifically, the velocity decays by a factor of (1 - Linear Damping / Fixed Time Step). Linear damping behaves like to Stokes' Law whereas constant deceleration behaves the same as kinetic friction. This is used in combination with Impulse Constant Deceleration, set either to zero to use just one or the other.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseConstantDecel,
-                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. Turn off 'Use Linear Damping' to use a constant deceleration. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law.");
+                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other.");
             }
         }
 
@@ -543,8 +539,6 @@ namespace FirstPersonController
                 ->Event("Set Initial Velocity From Impulse", &FirstPersonControllerComponentRequests::SetInitVelocityFromImpulse)
                 ->Event("Get Velocity From Impulse", &FirstPersonControllerComponentRequests::GetVelocityFromImpulse)
                 ->Event("Set Velocity From Impulse", &FirstPersonControllerComponentRequests::SetVelocityFromImpulse)
-                ->Event("Get Impulse Uses Linear Damping", &FirstPersonControllerComponentRequests::GetImpulseUsesLinearDamp)
-                ->Event("Set Impulse Uses Linear Damping", &FirstPersonControllerComponentRequests::SetImpulseUsesLinearDamp)
                 ->Event("Get Impulse Linear Damping", &FirstPersonControllerComponentRequests::GetImpulseLinearDamp)
                 ->Event("Set Impulse Linear Damping", &FirstPersonControllerComponentRequests::SetImpulseLinearDamp)
                 ->Event("Get Impulse Constant Deceleration", &FirstPersonControllerComponentRequests::GetImpulseConstantDecel)
@@ -2552,7 +2546,7 @@ namespace FirstPersonController
         m_velocityFromImpulse += impulseVelocity;
 
         // When using a constant deceleration, calculate a new total lerp time when an impulse is applied or when the deceleration changes
-        if(!m_impulseUsesLinearDamp && (!impulseVelocity.IsZero() || m_impulsePrevConstantDecel != m_impulseConstantDecel))
+        if(!impulseVelocity.IsZero() || m_impulsePrevConstantDecel != m_impulseConstantDecel)
         {
             m_initVelocityFromImpulse = m_velocityFromImpulse;
             m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseConstantDecel;
@@ -2560,32 +2554,36 @@ namespace FirstPersonController
             m_impulsePrevConstantDecel = m_impulseConstantDecel;
         }
 
-        // Accumulate half of the deltaTime
-        if(!m_impulseUsesLinearDamp)
-            m_impulseLerpTime += deltaTime * 0.5f;
-
         // Decelerate using the linear damping value
-        // This follows a first-order homogeneous linear recurrence relation, similar to Stokes' Law
-        if(m_impulseUsesLinearDamp)
+        if(m_impulseLinearDamp != 0.f)
         {
+            // This follows a first-order homogeneous linear recurrence relation, similar to Stokes' Law
             m_velocityFromImpulse *= (1 - m_impulseLinearDamp * deltaTime);
-        }
-        // Decelerate at a constant rate
-        else
-        {
-            // If the total lerp time is zero or the lerp time has reached the total lerp time then do not continue adding velocity
-            if(m_impulseTotalLerpTime == 0.f || m_impulseLerpTime >= m_impulseTotalLerpTime)
+            if(m_impulseConstantDecel != 0.f)
             {
-                m_impulseLerpTime = m_impulseTotalLerpTime;
-                m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
-                m_velocityFromImpulse = AZ::Vector3::CreateZero();
-                m_linearImpulse = AZ::Vector3::CreateZero();
-                return;
+                m_initVelocityFromImpulse = m_velocityFromImpulse;
+                m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseConstantDecel;
+                m_impulseLerpTime = 0.f;
+                m_impulsePrevConstantDecel = m_impulseConstantDecel;
             }
-            // Set the applied velocity based on the time that was calculated for it to reach zero
-            else
-                m_velocityFromImpulse = m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), m_impulseLerpTime / m_impulseTotalLerpTime);
         }
+
+        // Accumulate half of the deltaTime
+        m_impulseLerpTime += deltaTime * 0.5f;
+
+        // Decelerate at a constant rate
+        // If the total lerp time is zero or the lerp time has reached the total lerp time then do not continue adding velocity
+        if(m_impulseConstantDecel != 0.f && (m_impulseTotalLerpTime == 0.f || m_impulseLerpTime >= m_impulseTotalLerpTime))
+        {
+            m_impulseLerpTime = m_impulseTotalLerpTime;
+            m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
+            m_velocityFromImpulse = AZ::Vector3::CreateZero();
+            m_linearImpulse = AZ::Vector3::CreateZero();
+            return;
+        }
+        // Set the applied velocity based on the time that was calculated for it to reach zero
+        else if(m_impulseConstantDecel != 0.f)
+            m_velocityFromImpulse = m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), m_impulseLerpTime / m_impulseTotalLerpTime);
 
         // Debug print statements to observe the acceleration and timing
         //static AZ::Vector3 prevVelocity = m_velocityFromImpulse;
@@ -2595,7 +2593,7 @@ namespace FirstPersonController
         //AZ_Printf("First Person Controller Component", "m_impulseLerpTime = %.10f", m_impulseLerpTime);
 
         // Accumulate half of the deltaTime if the total lerp time hasn't been reached
-        if(!m_impulseUsesLinearDamp && m_impulseLerpTime != m_impulseTotalLerpTime)
+        if(m_impulseLerpTime != m_impulseTotalLerpTime)
             m_impulseLerpTime += deltaTime * 0.5f;
 
         // Add the velocity to the character
@@ -3512,14 +3510,6 @@ namespace FirstPersonController
         m_enableImpulses = new_enableImpulses;
         if(!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
-    }
-    bool FirstPersonControllerComponent::GetImpulseUsesLinearDamp() const
-    {
-        return m_impulseUsesLinearDamp;
-    }
-    void FirstPersonControllerComponent::SetImpulseUsesLinearDamp(const bool& new_impulseUsesLinearDamp)
-    {
-        m_impulseUsesLinearDamp = new_impulseUsesLinearDamp;
     }
     float FirstPersonControllerComponent::GetImpulseLinearDamp() const
     {
