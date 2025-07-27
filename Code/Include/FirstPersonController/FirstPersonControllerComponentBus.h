@@ -91,10 +91,12 @@ namespace FirstPersonController
         virtual AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit) const = 0;
         virtual float GetSceneQueryHitDistance(AzPhysics::SceneQueryHit) const = 0;
         virtual Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit) const = 0;
+        virtual AZStd::shared_ptr<Physics::Material> GetSceneQueryHitMaterialPtr(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit) const = 0;
         virtual float GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit) const = 0;
         virtual float GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit) const = 0;
+        virtual float GetSceneQueryHitRestitution(AzPhysics::SceneQueryHit) const = 0;
         virtual Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit) const = 0;
         virtual bool GetGroundClose() const = 0;
@@ -154,6 +156,8 @@ namespace FirstPersonController
         virtual void SetApplyVelocityZ(const float&) = 0;
         virtual bool GetEnableImpulses() const = 0;
         virtual void SetEnableImpulses(const bool&) = 0;
+        virtual bool GetImpulseDecelUsesFriction() const = 0;
+        virtual void SetImpulseDecelUsesFriction(const bool&) = 0;
         virtual AZ::Vector3 GetLinearImpulse() const = 0;
         virtual void SetLinearImpulse(const AZ::Vector3&) = 0;
         virtual void ApplyLinearImpulse(const AZ::Vector3&) = 0;

@@ -138,6 +138,7 @@ namespace FirstPersonController
 
               // Impulse group
               ->Field("Enable Impulse", &FirstPersonControllerComponent::m_enableImpulses)
+              ->Field("Use Friction For Deceleration", &FirstPersonControllerComponent::m_impluseDecelUsesFriction)
               ->Field("Mass", &FirstPersonControllerComponent::m_characterMass)
                   ->Attribute(AZ::Edit::Attributes::Min, 0.00001f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetMassUnit())
@@ -393,6 +394,9 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_enableImpulses,
                         "Enable Impulses", "Determines whether impulses can be applied to the character via the EBus (e.g. scripts). Dynamic / simulated rigid bodies will not apply impulses to the character without using the EBus.")
                     ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_impluseDecelUsesFriction,
+                        "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction to determine the deceleration the character will experience when an impulse is applied.")
+                    ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterMass,
                         "Mass", "Mass of the character for impulse calculations.")
                     ->DataElement(nullptr,
@@ -400,7 +404,7 @@ namespace FirstPersonController
                         "Impulse Linear Damping", "Slows down the character after an impulse the same way as is done by the PhysX Dynamic Rigid Body component, using a first-order homogeneous linear recurrence relation. Specifically, the velocity decays by a factor of (1 - Linear Damping / Fixed Time Step). Linear damping behaves like to Stokes' Law whereas constant deceleration behaves the same as kinetic friction. This is used in combination with Impulse Constant Deceleration, set either to zero to use just one or the other.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseConstantDecel,
-                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other.")
+                        "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other. If 'Use Friction For Deceleration' is turned on then this constant will not be used.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Collision Detection")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -499,10 +503,12 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit Position", &FirstPersonControllerComponentRequests::GetSceneQueryHitPosition)
                 ->Event("Get Scene Query Hit Distance", &FirstPersonControllerComponentRequests::GetSceneQueryHitDistance)
                 ->Event("Get Scene Query Hit MaterialId", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialId)
+                ->Event("Get Scene Query Hit Material Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialPtr)
                 ->Event("Get Scene Query Hit Material Asset", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAsset)
                 ->Event("Get Scene Query Hit Material Asset Id", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAssetId)
                 ->Event("Get Scene Query Hit Dynamic Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitDynamicFriction)
                 ->Event("Get Scene Query Hit Static Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitStaticFriction)
+                ->Event("Get Scene Query Hit Restitution", &FirstPersonControllerComponentRequests::GetSceneQueryHitRestitution)
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
                 ->Event("Get Scene Query Hit Simulated Body Handle", &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
@@ -562,6 +568,8 @@ namespace FirstPersonController
                 ->Event("Set Apply Velocity Z", &FirstPersonControllerComponentRequests::SetApplyVelocityZ)
                 ->Event("Get Enable Impulses", &FirstPersonControllerComponentRequests::GetEnableImpulses)
                 ->Event("Set Enable Impulses", &FirstPersonControllerComponentRequests::SetEnableImpulses)
+                ->Event("Get Use Friction For Deceleration", &FirstPersonControllerComponentRequests::GetImpulseDecelUsesFriction)
+                ->Event("Set Use Friction For Deceleration", &FirstPersonControllerComponentRequests::SetImpulseDecelUsesFriction)
                 ->Event("Get Linear Impulse", &FirstPersonControllerComponentRequests::GetLinearImpulse)
                 ->Event("Set Linear Impulse", &FirstPersonControllerComponentRequests::SetLinearImpulse)
                 ->Event("Apply Linear Impulse", &FirstPersonControllerComponentRequests::ApplyLinearImpulse)
@@ -2586,6 +2594,9 @@ namespace FirstPersonController
         if(!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
 
+        if(m_impluseDecelUsesFriction && !m_groundHits.empty())
+            m_impulseConstantDecel = -1.f * m_gravity * GetSceneQueryHitDynamicFriction(m_groundHits.front());
+
         // Convert the linear impulse to a velocity based on the character's mass and accumulate it
         const AZ::Vector3 impulseVelocity = m_linearImpulse / m_characterMass;
         m_velocityFromImpulse += impulseVelocity;
@@ -3292,6 +3303,10 @@ namespace FirstPersonController
     {
         return hit.m_physicsMaterialId;
     }
+    AZStd::shared_ptr<Physics::Material> FirstPersonControllerComponent::GetSceneQueryHitMaterialPtr(AzPhysics::SceneQueryHit hit) const
+    {
+        return hit.m_shape->GetMaterial();
+    }
     AZ::Data::Asset<Physics::MaterialAsset> FirstPersonControllerComponent::GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit hit) const
     {
         AZStd::shared_ptr<Physics::Material> material =
@@ -3310,7 +3325,6 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit hit) const
     {
-        // Not working yet
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
                 AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId))->GetMaterialAsset();
@@ -3320,11 +3334,10 @@ namespace FirstPersonController
                 hit.m_physicsMaterialId,
                 physicsMaterialAsset));
 
-        return physxMaterial->GetDynamicFriction();
+        return physxMaterial->GetProperty("DynamicFriction").GetValue<float>();
     }
     float FirstPersonControllerComponent::GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit hit) const
     {
-        // Not working yet
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
                 AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId))->GetMaterialAsset();
@@ -3334,7 +3347,20 @@ namespace FirstPersonController
                 hit.m_physicsMaterialId,
                 physicsMaterialAsset));
 
-        return physxMaterial->GetStaticFriction();
+        return physxMaterial->GetProperty("StaticFriction").GetValue<float>();
+    }
+    float FirstPersonControllerComponent::GetSceneQueryHitRestitution(AzPhysics::SceneQueryHit hit) const
+    {
+        AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
+            AZStd::rtti_pointer_cast<Physics::Material>(
+                AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId))->GetMaterialAsset();
+
+        AZStd::shared_ptr<PhysX::Material> physxMaterial = AZStd::rtti_pointer_cast<PhysX::Material>(
+            AZ::Interface<Physics::MaterialManager>::Get()->FindOrCreateMaterial(
+                hit.m_physicsMaterialId,
+                physicsMaterialAsset));
+
+        return physxMaterial->GetProperty("Restitution").GetValue<float>();
     }
     Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const
     {
@@ -3666,6 +3692,14 @@ namespace FirstPersonController
         if(!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
     }
+    bool FirstPersonControllerComponent::GetImpulseDecelUsesFriction() const
+    {
+        return m_impluseDecelUsesFriction;
+    }
+    void FirstPersonControllerComponent::SetImpulseDecelUsesFriction(const bool& new_impluseDecelUsesFriction)
+    {
+        m_impluseDecelUsesFriction = new_impluseDecelUsesFriction;
+    }
     float FirstPersonControllerComponent::GetImpulseLinearDamp() const
     {
         return m_impulseLinearDamp;
@@ -3768,7 +3802,7 @@ namespace FirstPersonController
     AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
     {
         AzPhysics::SceneQueryHits characterHits;
-        characterHits.m_hits = m_groundCloseHits;
+        characterHits.m_hits = m_characterHits;
         return characterHits;
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const

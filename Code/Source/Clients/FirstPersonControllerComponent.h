@@ -139,10 +139,12 @@ namespace FirstPersonController
         AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit hit) const override;
         float GetSceneQueryHitDistance(AzPhysics::SceneQueryHit hit) const override;
         Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const override;
+        AZStd::shared_ptr<Physics::Material> GetSceneQueryHitMaterialPtr(AzPhysics::SceneQueryHit hit) const override;
         AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit hit) const override;
         AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit hit) const override;
         float GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit hit) const override;
         float GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit hit) const override;
+        float GetSceneQueryHitRestitution(AzPhysics::SceneQueryHit hit) const override;
         Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const override;
         AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const override;
         bool GetGroundClose() const override;
@@ -202,6 +204,8 @@ namespace FirstPersonController
         void SetApplyVelocityZ(const float& new_applyVelocityZ) override;
         bool GetEnableImpulses() const override;
         void SetEnableImpulses(const bool& new_enableImpulses) override;
+        bool GetImpulseDecelUsesFriction() const override;
+        void SetImpulseDecelUsesFriction(const bool& new_impluseDecelUsesFriction) override;
         AZ::Vector3 GetLinearImpulse() const override;
         void SetLinearImpulse(const AZ::Vector3& new_linearImpulse) override;
         void ApplyLinearImpulse(const AZ::Vector3& new_addLinearImpulse) override;
@@ -635,6 +639,7 @@ namespace FirstPersonController
 
         // Variables used for impulses and hit detection
         bool m_enableImpulses = true;
+        bool m_impluseDecelUsesFriction = true;
         AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
