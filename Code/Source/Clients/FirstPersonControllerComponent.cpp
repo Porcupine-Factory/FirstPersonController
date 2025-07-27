@@ -21,6 +21,7 @@
 #include <Atom/RPI.Public/ViewportContextBus.h>
 
 #include <PhysX/CharacterControllerBus.h>
+#include <PhysX/Material/PhysXMaterial.h>
 #include <System/PhysXSystem.h>
 
 namespace FirstPersonController
@@ -500,6 +501,8 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit MaterialId", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialId)
                 ->Event("Get Scene Query Hit Material Asset", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAsset)
                 ->Event("Get Scene Query Hit Material Asset Id", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAssetId)
+                ->Event("Get Scene Query Hit Dynamic Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitDynamicFriction)
+                ->Event("Get Scene Query Hit Static Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitStaticFriction)
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
                 ->Event("Get Scene Query Hit Simulated Body Handle", &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
@@ -3304,6 +3307,34 @@ namespace FirstPersonController
                 AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
 
         return material->GetMaterialAsset().GetId();
+    }
+    float FirstPersonControllerComponent::GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit hit) const
+    {
+        // Not working yet
+        AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
+            AZStd::rtti_pointer_cast<Physics::Material>(
+                AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId))->GetMaterialAsset();
+
+        AZStd::shared_ptr<PhysX::Material> physxMaterial = AZStd::rtti_pointer_cast<PhysX::Material>(
+            AZ::Interface<Physics::MaterialManager>::Get()->FindOrCreateMaterial(
+                hit.m_physicsMaterialId,
+                physicsMaterialAsset));
+
+        return physxMaterial->GetDynamicFriction();
+    }
+    float FirstPersonControllerComponent::GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit hit) const
+    {
+        // Not working yet
+        AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
+            AZStd::rtti_pointer_cast<Physics::Material>(
+                AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId))->GetMaterialAsset();
+
+        AZStd::shared_ptr<PhysX::Material> physxMaterial = AZStd::rtti_pointer_cast<PhysX::Material>(
+            AZ::Interface<Physics::MaterialManager>::Get()->FindOrCreateMaterial(
+                hit.m_physicsMaterialId,
+                physicsMaterialAsset));
+
+        return physxMaterial->GetStaticFriction();
     }
     Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const
     {

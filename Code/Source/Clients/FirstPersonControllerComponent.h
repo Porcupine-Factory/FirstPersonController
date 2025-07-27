@@ -141,6 +141,8 @@ namespace FirstPersonController
         Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const override;
         AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit hit) const override;
         AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit hit) const override;
+        float GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit hit) const override;
+        float GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit hit) const override;
         Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const override;
         AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const override;
         bool GetGroundClose() const override;

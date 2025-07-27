@@ -93,6 +93,8 @@ namespace FirstPersonController
         virtual Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit) const = 0;
+        virtual float GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit) const = 0;
+        virtual float GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit) const = 0;
         virtual Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit) const = 0;
         virtual bool GetGroundClose() const = 0;
