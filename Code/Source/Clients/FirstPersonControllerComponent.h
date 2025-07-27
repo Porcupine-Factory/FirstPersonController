@@ -129,8 +129,8 @@ namespace FirstPersonController
         void SetJumpInputValue(const float& new_jumpValue) override;
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
-        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const override;
-        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseSceneQueryHits() const override;
+        AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const override;
+        AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const override;
         AZ::Vector3 GetGroundSumNormalsDirection() const override;
         AZ::Vector3 GetGroundCloseSumNormalsDirection() const override;
         AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const override;
@@ -139,6 +139,8 @@ namespace FirstPersonController
         AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit hit) const override;
         float GetSceneQueryHitDistance(AzPhysics::SceneQueryHit hit) const override;
         Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const override;
+        AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit hit) const override;
+        AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit hit) const override;
         Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const override;
         AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const override;
         bool GetGroundClose() const override;
@@ -225,7 +227,7 @@ namespace FirstPersonController
         void SetCharacterHitCollisionGroupByName(const AZStd::string& new_characterHitCollisionGroupName) override;
         AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const override;
         void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& new_characterHitBy) override;
-        AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterSceneQueryHits() const override;
+        AzPhysics::SceneQueryHits GetCharacterSceneQueryHits() const override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         float GetJumpSecondInitialVelocity() const override;

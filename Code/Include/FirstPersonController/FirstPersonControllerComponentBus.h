@@ -12,6 +12,7 @@
 #include <AzCore/Component/TransformBus.h>
 
 #include <AzFramework/Physics/PhysicsScene.h>
+#include <AzFramework/Physics/Material/PhysicsMaterialManager.h>
 
 namespace FirstPersonController
 {
@@ -81,8 +82,8 @@ namespace FirstPersonController
         virtual void SetJumpInputValue(const float&) = 0;
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
-        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const = 0;
-        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseSceneQueryHits() const = 0;
+        virtual AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const = 0;
+        virtual AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const = 0;
         virtual AZ::Vector3 GetGroundSumNormalsDirection() const = 0;
         virtual AZ::Vector3 GetGroundCloseSumNormalsDirection() const = 0;
         virtual AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit) const = 0;
@@ -90,6 +91,8 @@ namespace FirstPersonController
         virtual AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit) const = 0;
         virtual float GetSceneQueryHitDistance(AzPhysics::SceneQueryHit) const = 0;
         virtual Physics::MaterialId GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit) const = 0;
+        virtual AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit) const = 0;
+        virtual AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit) const = 0;
         virtual Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit) const = 0;
         virtual bool GetGroundClose() const = 0;
@@ -176,7 +179,7 @@ namespace FirstPersonController
         virtual void SetCharacterHitCollisionGroupByName(const AZStd::string&) = 0;
         virtual AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const = 0;
         virtual void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType&) = 0;
-        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterSceneQueryHits() const = 0;
+        virtual AzPhysics::SceneQueryHits GetCharacterSceneQueryHits() const = 0;
         virtual float GetJumpInitialVelocity() const = 0;
         virtual void SetJumpInitialVelocity(const float&) = 0;
         virtual float GetJumpSecondInitialVelocity() const = 0;

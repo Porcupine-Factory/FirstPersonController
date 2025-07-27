@@ -498,6 +498,8 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit Position", &FirstPersonControllerComponentRequests::GetSceneQueryHitPosition)
                 ->Event("Get Scene Query Hit Distance", &FirstPersonControllerComponentRequests::GetSceneQueryHitDistance)
                 ->Event("Get Scene Query Hit MaterialId", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialId)
+                ->Event("Get Scene Query Hit Material Asset", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAsset)
+                ->Event("Get Scene Query Hit Material Asset Id", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAssetId)
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
                 ->Event("Get Scene Query Hit Simulated Body Handle", &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
@@ -3233,13 +3235,17 @@ namespace FirstPersonController
         m_scriptGrounded = new_grounded;
         m_scriptSetGroundTick = true;
     }
-    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundSceneQueryHits() const
+    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundSceneQueryHits() const
     {
-        return m_groundHits;
+        AzPhysics::SceneQueryHits groundHits;
+        groundHits.m_hits = m_groundHits;
+        return groundHits;
     }
-    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundCloseSceneQueryHits() const
+    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundCloseSceneQueryHits() const
     {
-        return m_groundCloseHits;
+        AzPhysics::SceneQueryHits groundCloseHits;
+        groundCloseHits.m_hits = m_groundCloseHits;
+        return groundCloseHits;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetGroundSumNormalsDirection() const
     {
@@ -3282,6 +3288,22 @@ namespace FirstPersonController
     Physics::MaterialId FirstPersonControllerComponent::GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const
     {
         return hit.m_physicsMaterialId;
+    }
+    AZ::Data::Asset<Physics::MaterialAsset> FirstPersonControllerComponent::GetSceneQueryHitMaterialAsset(AzPhysics::SceneQueryHit hit) const
+    {
+        AZStd::shared_ptr<Physics::Material> material =
+            AZStd::rtti_pointer_cast<Physics::Material>(
+                AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
+
+        return material->GetMaterialAsset();
+    }
+    AZ::Data::AssetId FirstPersonControllerComponent::GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit hit) const
+    {
+        AZStd::shared_ptr<Physics::Material> material =
+            AZStd::rtti_pointer_cast<Physics::Material>(
+                AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
+
+        return material->GetMaterialAsset().GetId();
     }
     Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const
     {
@@ -3712,9 +3734,11 @@ namespace FirstPersonController
         // 2 = StaticAndDynamic
         m_characterHitBy = new_characterHitBy;
     }
-    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
+    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
     {
-        return m_characterHits;
+        AzPhysics::SceneQueryHits characterHits;
+        characterHits.m_hits = m_groundCloseHits;
+        return characterHits;
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const
     {
