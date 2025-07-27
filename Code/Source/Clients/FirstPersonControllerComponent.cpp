@@ -395,7 +395,7 @@ namespace FirstPersonController
                         "Enable Impulses", "Determines whether impulses can be applied to the character via the EBus (e.g. scripts). Dynamic / simulated rigid bodies will not apply impulses to the character without using the EBus.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impluseDecelUsesFriction,
-                        "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction to determine the deceleration the character will experience when an impulse is applied.")
+                        "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction beneath the cahracter to determine the constant deceleration the character will experience when an impulse is applied. This calculation will be used instead of value entered in 'Impulse Constant Deceleration', but can still be used along with 'Impulse Linear Damping' if it is non-zero.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterMass,
                         "Mass", "Mass of the character for impulse calculations.")
