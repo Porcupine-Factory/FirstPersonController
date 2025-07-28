@@ -1133,6 +1133,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
+        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepStart);
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
         m_prevTimeStep = physicsTimestep;
     }
@@ -1140,6 +1141,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnSceneSimulationFinish([[maybe_unused]] float physicsTimestep)
     {
         CaptureCharacterEyeTranslation();
+        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepFinish);
     }
 
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
@@ -3560,6 +3562,12 @@ namespace FirstPersonController
                 [this]([[maybe_unused]] AzPhysics::SceneHandle sceneHandle, float fixedDeltaTime)
                 {
                     OnSceneSimulationStart(fixedDeltaTime);
+                }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
+
+            m_sceneSimulationFinishHandler = AzPhysics::SceneEvents::OnSceneSimulationFinishHandler(
+                [this]([[maybe_unused]] AzPhysics::SceneHandle sceneHandle, [[maybe_unused]] float fixedDeltaTime)
+                {
+                    OnSceneSimulationFinish(fixedDeltaTime);
                 }, aznumeric_cast<int32_t>(AzPhysics::SceneEvents::PhysicsStartFinishSimulationPriority::Physics));
 
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();

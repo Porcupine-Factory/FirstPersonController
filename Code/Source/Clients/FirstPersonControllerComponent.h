@@ -447,6 +447,8 @@ namespace FirstPersonController
         void ProcessCharacterHits();
 
         // FirstPersonControllerNotificationBus
+        void OnPhysicsTimestepStart();
+        void OnPhysicsTimestepFinish();
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
