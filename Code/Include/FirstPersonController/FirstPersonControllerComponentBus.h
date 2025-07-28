@@ -98,6 +98,7 @@ namespace FirstPersonController
         virtual float GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit) const = 0;
         virtual float GetSceneQueryHitRestitution(AzPhysics::SceneQueryHit) const = 0;
         virtual Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit) const = 0;
+        virtual bool GetSceneQueryHitIsInGroupName(AzPhysics::SceneQueryHit, AZStd::string) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit) const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;
@@ -222,6 +223,7 @@ namespace FirstPersonController
         virtual void SetStandIgnoreDynamicRigidBodies(const bool&) = 0;
         virtual AZStd::string GetStandCollisionGroupName() const = 0;
         virtual void SetStandCollisionGroupByName(const AZStd::string&) = 0;
+        virtual AZStd::string GetCollisionGroupName(AzPhysics::CollisionGroup&) const = 0;
         virtual AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const = 0;
         virtual float GetGroundSphereCastsRadiusPercentageIncrease() const = 0;
         virtual void SetGroundSphereCastsRadiusPercentageIncrease(const float&) = 0;

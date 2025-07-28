@@ -510,6 +510,7 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit Static Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitStaticFriction)
                 ->Event("Get Scene Query Hit Restitution", &FirstPersonControllerComponentRequests::GetSceneQueryHitRestitution)
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
+                ->Event("Get Scene Query Hit Is In Group Name", &FirstPersonControllerComponentRequests::GetSceneQueryHitIsInGroupName)
                 ->Event("Get Scene Query Hit Simulated Body Handle", &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
@@ -633,6 +634,7 @@ namespace FirstPersonController
                 ->Event("Set Stand Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::SetStandIgnoreDynamicRigidBodies)
                 ->Event("Get Stand Collision Group Name", &FirstPersonControllerComponentRequests::GetStandCollisionGroupName)
                 ->Event("Set Stand Collision Group By Name", &FirstPersonControllerComponentRequests::SetStandCollisionGroupByName)
+                ->Event("Get Collision Group Name", &FirstPersonControllerComponentRequests::GetCollisionGroupName)
                 ->Event("Get Stand Prevented EntityIds", &FirstPersonControllerComponentRequests::GetStandPreventedEntityIds)
                 ->Event("Get Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::GetGroundSphereCastsRadiusPercentageIncrease)
                 ->Event("Set Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
@@ -3368,6 +3370,16 @@ namespace FirstPersonController
     {
         return hit.m_shape;
     }
+    bool FirstPersonControllerComponent::GetSceneQueryHitIsInGroupName(AzPhysics::SceneQueryHit hit, AZStd::string groupName) const
+    {
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(success, &Physics::CollisionRequests::TryGetCollisionGroupByName, groupName, collisionGroup);
+        if(success)
+            return collisionGroup.IsSet(hit.m_shape->GetCollisionLayer());
+        else
+            return false;
+    }
     AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const
     {
         return hit.m_bodyHandle;
@@ -3980,6 +3992,13 @@ namespace FirstPersonController
             const AzPhysics::CollisionConfiguration& configuration = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
             m_standCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_standCollisionGroupName);
         }
+    }
+    AZStd::string FirstPersonControllerComponent::GetCollisionGroupName(AzPhysics::CollisionGroup& collisionGroup) const
+    {
+        AZStd::string groupName;
+        Physics::CollisionRequestBus::BroadcastResult(
+            groupName, &Physics::CollisionRequests::GetCollisionGroupName, collisionGroup);
+        return groupName;
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetStandPreventedEntityIds() const
     {
