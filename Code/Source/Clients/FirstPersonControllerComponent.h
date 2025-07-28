@@ -227,9 +227,11 @@ namespace FirstPersonController
         bool GetEnableCharacterHits() const override;
         void SetEnableCharacterHits(const bool& new_enableCharacterHits) override;
         float GetHitRadiusPercentageIncrease() const override;
-        void SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentIncrease) override;
+        void SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentageIncrease) override;
         float GetHitHeightPercentageIncrease() const override;
-        void SetHitHeightPercentageIncrease(const float& new_hitHeightPercentIncrease) override;
+        void SetHitHeightPercentageIncrease(const float& new_hitHeightPercentageIncrease) override;
+        float GetHitExtraProjectionPercentage() const override;
+        void SetHitExtraProjectionPercentage(const float& new_hitExtraProjectionPercentage) override;
         AZStd::string GetCharacterHitCollisionGroupName() const override;
         void SetCharacterHitCollisionGroupByName(const AZStd::string& new_characterHitCollisionGroupName) override;
         AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const override;
@@ -446,11 +448,11 @@ namespace FirstPersonController
         void CrouchManager(const float& deltaTime);
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
-        void ProcessCharacterHits();
+        void ProcessCharacterHits(const float& deltaTime);
 
         // FirstPersonControllerNotificationBus
-        void OnPhysicsTimestepStart();
-        void OnPhysicsTimestepFinish();
+        float OnPhysicsTimestepStart(const float& timeStep);
+        float OnPhysicsTimestepFinish(const float& timeStep);
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
@@ -500,6 +502,7 @@ namespace FirstPersonController
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_currentVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prevPrevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
@@ -654,8 +657,9 @@ namespace FirstPersonController
         float m_impulseLerpTime = 0.f;
         float m_characterMass = 80.f;
         bool m_enableCharacterHits = true;
-        float m_hitRadiusPercentIncrease = 5.f;
-        float m_hitHeightPercentIncrease = 5.f;
+        float m_hitRadiusPercentageIncrease = 5.f;
+        float m_hitHeightPercentageIncrease = 5.f;
+        float m_hitExtraProjectionPercentage = 10.f;
         AzPhysics::CollisionGroups::Id m_characterHitCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_characterHitCollisionGroup = AzPhysics::CollisionGroup::All;
         AzPhysics::SceneQuery::QueryType m_characterHitBy = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;

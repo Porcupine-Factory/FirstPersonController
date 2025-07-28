@@ -150,10 +150,10 @@ namespace FirstPersonController
 
               // Collision Detection group
               ->Field("Enable Hit Detection", &FirstPersonControllerComponent::m_enableCharacterHits)
-              ->Field("Capsule Radius Detection Percentage Increase", &FirstPersonControllerComponent::m_hitRadiusPercentIncrease)
+              ->Field("Capsule Radius Detection Percentage Increase", &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease)
                   ->Attribute(AZ::Edit::Attributes::Min, -100.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " %")
-              ->Field("Capsule Height Detection Percentage Increase", &FirstPersonControllerComponent::m_hitHeightPercentIncrease)
+              ->Field("Capsule Height Detection Percentage Increase", &FirstPersonControllerComponent::m_hitHeightPercentageIncrease)
                   ->Attribute(AZ::Edit::Attributes::Min, -100.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " %")
               ->Field("Hit Detection Group", &FirstPersonControllerComponent::m_characterHitCollisionGroupId)
@@ -412,10 +412,10 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_enableCharacterHits,
                         "Enable Hit Detection", "Determines whether collisions with the character will be detected by a capsule shapecast.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_hitRadiusPercentIncrease,
+                        &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease,
                         "Capsule Radius Detection Percentage Increase", "Percentage to increase the character's capsule collider radius by to determine hits / collisions.")
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_hitHeightPercentIncrease,
+                        &FirstPersonControllerComponent::m_hitHeightPercentageIncrease,
                         "Capsule Height Detection Percentage Increase", "Percentage to increase the character's capsule collider height by to determine hits / collisions.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterHitCollisionGroupId,
@@ -594,6 +594,8 @@ namespace FirstPersonController
                 ->Event("Set Hit Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetHitRadiusPercentageIncrease)
                 ->Event("Get Hit Height Percentage Increase", &FirstPersonControllerComponentRequests::GetHitHeightPercentageIncrease)
                 ->Event("Set Hit Height Percentage Increase", &FirstPersonControllerComponentRequests::SetHitHeightPercentageIncrease)
+                ->Event("Get Hit Extra Projection Percentage", &FirstPersonControllerComponentRequests::GetHitExtraProjectionPercentage)
+                ->Event("Set Hit Extra Projection Percentage", &FirstPersonControllerComponentRequests::SetHitExtraProjectionPercentage)
                 ->Event("Get Character Hit Collision Group Name", &FirstPersonControllerComponentRequests::GetCharacterHitCollisionGroupName)
                 ->Event("Set Character Hit Collision Group By Name", &FirstPersonControllerComponentRequests::SetCharacterHitCollisionGroupByName)
                 ->Event("Get Character Hit By", &FirstPersonControllerComponentRequests::GetCharacterHitBy)
@@ -1135,15 +1137,15 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
-        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepStart);
+        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
-        m_prevTimeStep = physicsTimestep;
     }
 
-    void FirstPersonControllerComponent::OnSceneSimulationFinish([[maybe_unused]] float physicsTimestep)
+    void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
     {
         CaptureCharacterEyeTranslation();
-        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepFinish);
+        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepFinish, physicsTimestep * m_physicsTimestepScaleFactor);
+        m_prevTimeStep = physicsTimestep * m_physicsTimestepScaleFactor;
     }
 
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
@@ -2067,7 +2069,7 @@ namespace FirstPersonController
         // Obtain the last applied velocity if the target velocity changed
         if((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
                                         : (m_prevTargetVelocityXY != targetVelocityXYWorld))
-            || (!m_velocityXYIgnoresObstacles && m_hitSomething)
+            || (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_hitSomething)
             || (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
         {
             if(m_instantVelocityRotation)
@@ -2075,7 +2077,7 @@ namespace FirstPersonController
                 // Set the previous target velocity to the new one
                 m_prevTargetVelocityXY = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
-                if(!m_velocityXYIgnoresObstacles && m_hitSomething)
+                if(!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_hitSomething)
                 {
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
                     m_correctedVelocityXY = AZ::Vector2::CreateZero();
@@ -2087,7 +2089,7 @@ namespace FirstPersonController
                 // Set the previous target velocity to the new one
                 m_prevTargetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
-                if(!m_velocityXYIgnoresObstacles && m_hitSomething)
+                if(!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_hitSomething)
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
 
                 m_prevApplyVelocityXY = m_applyVelocityXY;
@@ -2147,26 +2149,25 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::CheckCharacterMovementObstructed()
     {
         // Get the current velocity to determine if something was hit
-        AZ::Vector3 currentVelocity = AZ::Vector3::CreateZero();
-        Physics::CharacterRequestBus::EventResult(currentVelocity, GetEntityId(),
+        Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(),
             &Physics::CharacterRequestBus::Events::GetVelocity);
 
-        if(!m_prevPrevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance))
+        if(!m_prevPrevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
         {
             // If enabled, cause the character's applied velocity to match the current velocity from Physics
             m_hitSomething = true;
 
             if(m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
-                m_correctedVelocityXY = AZ::Vector2(currentVelocity);
+                m_correctedVelocityXY = AZ::Vector2(m_currentVelocity);
             else
-                m_correctedVelocityXY = AZ::Vector2(currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)), currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
+                m_correctedVelocityXY = AZ::Vector2(m_currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)), m_currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
 
             if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
-                m_correctedVelocityZ = currentVelocity.GetZ();
+                m_correctedVelocityZ = m_currentVelocity.GetZ();
             else
-                m_correctedVelocityZ = currentVelocity.Dot(m_velocityZPosDirection);
+                m_correctedVelocityZ = m_currentVelocity.Dot(m_velocityZPosDirection);
 
-            if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(currentVelocity.Dot(m_velocityZPosDirection), 0.f))
+            if(!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance) && m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(m_currentVelocity.Dot(m_velocityZPosDirection), 0.f))
             {
                 // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
                 if(m_gravityPrevented[0])
@@ -2183,7 +2184,11 @@ namespace FirstPersonController
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
         }
         else
+        {
+            m_correctedVelocityXY = m_applyVelocityXY;
+            m_correctedVelocityZ = m_applyVelocityZ;
             m_hitSomething = false;
+        }
     }
 
     void FirstPersonControllerComponent::CheckGrounded(const float& deltaTime)
@@ -2670,7 +2675,7 @@ namespace FirstPersonController
         m_linearImpulse = AZ::Vector3::CreateZero();
     }
 
-    void FirstPersonControllerComponent::ProcessCharacterHits()
+    void FirstPersonControllerComponent::ProcessCharacterHits(const float& deltaTime)
     {
         if(m_enableCharacterHits)
         {
@@ -2688,11 +2693,11 @@ namespace FirstPersonController
             capsulePose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-                m_capsuleRadius * (1.f + m_hitRadiusPercentIncrease / 100.f),
-                m_capsuleCurrentHeight * (1.f + m_hitHeightPercentIncrease / 100.f),
+                m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
+                m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
                 capsulePose,
-                m_sphereCastsAxisDirectionPose,
-                0.f,
+                m_currentVelocity.GetNormalized(),
+                (m_currentVelocity * deltaTime).GetLength() + m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
                 m_characterHitBy,
                 m_characterHitCollisionGroup,
                 nullptr);
@@ -2804,7 +2809,6 @@ namespace FirstPersonController
         {
             UpdateRotation();
             LerpCameraToCharacter(deltaTime);
-            CheckCharacterMovementObstructed();
         }
 
         // Keep track of the last two target velocity values for the obstruction check logic
@@ -2813,6 +2817,8 @@ namespace FirstPersonController
         // Handle motion on either the physics fixed timestep or the frame tick, depending on which is selected and which is currently executing
         if(timestepElseTick == m_addVelocityForTimestepVsTick)
         {
+            CheckCharacterMovementObstructed();
+
             if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
             {
                 // Reset camera to latest physics translation before physics update
@@ -2874,11 +2880,16 @@ namespace FirstPersonController
             else
                 ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
 
-            ProcessCharacterHits();
+            if(m_addVelocityForTimestepVsTick)
+                ProcessCharacterHits((deltaTime + m_prevTimeStep) / 2.f);
+            else
+                ProcessCharacterHits((deltaTime + m_prevDeltaTime) / 2.f);
         }
     }
 
     // Event Notification methods for use in scripts
+    float FirstPersonControllerComponent::OnPhysicsTimestepStart(const float& timeStep){ return timeStep; }
+    float FirstPersonControllerComponent::OnPhysicsTimestepFinish(const float& timeStep){ return timeStep; }
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
@@ -3772,19 +3783,27 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetHitRadiusPercentageIncrease() const
     {
-        return m_hitRadiusPercentIncrease;
+        return m_hitRadiusPercentageIncrease;
     }
-    void FirstPersonControllerComponent::SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentIncrease)
+    void FirstPersonControllerComponent::SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentageIncrease)
     {
-        m_hitRadiusPercentIncrease = new_hitRadiusPercentIncrease;
+        m_hitRadiusPercentageIncrease = new_hitRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetHitHeightPercentageIncrease() const
     {
-        return m_hitHeightPercentIncrease;
+        return m_hitHeightPercentageIncrease;
     }
-    void FirstPersonControllerComponent::SetHitHeightPercentageIncrease(const float& new_hitHeightPercentIncrease)
+    void FirstPersonControllerComponent::SetHitHeightPercentageIncrease(const float& new_hitHeightPercentageIncrease)
     {
-        m_hitHeightPercentIncrease = new_hitHeightPercentIncrease;
+        m_hitHeightPercentageIncrease = new_hitHeightPercentageIncrease;
+    }
+    float FirstPersonControllerComponent::GetHitExtraProjectionPercentage() const
+    {
+        return m_hitExtraProjectionPercentage;
+    }
+    void FirstPersonControllerComponent::SetHitExtraProjectionPercentage(const float& new_hitExtraProjectionPercentage)
+    {
+        m_hitExtraProjectionPercentage = new_hitExtraProjectionPercentage;
     }
     AZStd::string FirstPersonControllerComponent::GetCharacterHitCollisionGroupName() const
     {

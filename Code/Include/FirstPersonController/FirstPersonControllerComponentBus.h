@@ -182,6 +182,8 @@ namespace FirstPersonController
         virtual void SetHitRadiusPercentageIncrease(const float&) = 0;
         virtual float GetHitHeightPercentageIncrease() const = 0;
         virtual void SetHitHeightPercentageIncrease(const float&) = 0;
+        virtual float GetHitExtraProjectionPercentage() const = 0;
+        virtual void SetHitExtraProjectionPercentage(const float&) = 0;
         virtual AZStd::string GetCharacterHitCollisionGroupName() const = 0;
         virtual void SetCharacterHitCollisionGroupByName(const AZStd::string&) = 0;
         virtual AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const = 0;
@@ -365,8 +367,8 @@ namespace FirstPersonController
         : public AZ::ComponentBus
     {
     public:
-        virtual void OnPhysicsTimestepStart() = 0;
-        virtual void OnPhysicsTimestepFinish() = 0;
+        virtual void OnPhysicsTimestepStart(const float&) = 0;
+        virtual void OnPhysicsTimestepFinish(const float&) = 0;
         virtual void OnGroundHit() = 0;
         virtual void OnGroundSoonHit() = 0;
         virtual void OnUngrounded() = 0;
@@ -405,13 +407,13 @@ namespace FirstPersonController
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
             AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
 
-        void OnPhysicsTimestepStart() override
+        void OnPhysicsTimestepStart(const float& timeStep) override
         {
-            Call(FN_OnPhysicsTimestepStart);
+            Call(FN_OnPhysicsTimestepStart, timeStep);
         }
-        void OnPhysicsTimestepFinish() override
+        void OnPhysicsTimestepFinish(const float& timeStep) override
         {
-            Call(FN_OnPhysicsTimestepFinish);
+            Call(FN_OnPhysicsTimestepFinish, timeStep);
         }
         void OnGroundHit() override
         {
