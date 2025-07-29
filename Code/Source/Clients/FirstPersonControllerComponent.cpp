@@ -1467,13 +1467,13 @@ namespace FirstPersonController
             const bool vXCrossYPos = (m_velocityXCrossYDirection.GetZ() >= 0.f);
             if(newVelocityXY.GetLength() == 0.f)
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStopped);
-            else if(vXCrossYPos && (newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength()))
+            else if(vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength())))
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
-            else if(!vXCrossYPos && (newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength()))
+            else if(!vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength())))
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
-            else if(vXCrossYPos && newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())
+            else if(vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())))
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
-            else if(!vXCrossYPos && newVelocityXY.GetLength() == m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())
+            else if(!vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())))
                 FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
         }
 
