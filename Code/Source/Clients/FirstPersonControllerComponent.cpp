@@ -942,7 +942,7 @@ namespace FirstPersonController
             m_activeCameraEntity = GetEntityPtr(entityId);
             if(m_activeCameraEntity)
             {
-                // Calculate initial eye height based on the difference between the 
+                // Calculate initial eye height based on the difference between the
                 // camera and character entities' translations, projected along the pose axis.
                 AZ::Vector3 characterWorldTranslation;
                 AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
@@ -1246,7 +1246,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
-        AZ::TransformBus::Event(m_cameraEntityId, 
+        AZ::TransformBus::Event(m_cameraEntityId,
             &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
     }
 
@@ -1254,7 +1254,7 @@ namespace FirstPersonController
     {
         if(m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
         {
-            // Capture character's translation after each physics simulation step. This ensures camera lerp uses 
+            // Capture character's translation after each physics simulation step. This ensures camera lerp uses
             // the most recent post-simulation transform.
             m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation;
             AZ::TransformBus::EventResult(m_currentCharacterEyeTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
