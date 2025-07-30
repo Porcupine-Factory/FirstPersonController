@@ -218,7 +218,7 @@ namespace FirstPersonController
                         "Pitch Sensitivity", "Camera up/down rotation sensitivity.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_rotationDamp,
-                        "Camera Rotation Damp Factor", "The ‘smoothness’ of the camera rotation. Applies a damp factor to the camera rotation. Setting this to anything greater than or equal to 100 will disable this effect.")
+                        "Camera Rotation Damp Factor", "The 'smoothness' of the camera rotation. Applies a damp factor to the camera rotation. Setting this to anything greater than or equal to 100 will disable this effect.")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "X&Y Movement")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
