@@ -476,6 +476,7 @@ namespace FirstPersonController
         void OnStaminaCapped();
         void OnStaminaReachedZero();
         void OnSprintStarted();
+        void OnSprintStopped();
         void OnCooldownStarted();
         void OnCooldownDone();
 

@@ -1569,6 +1569,8 @@ namespace FirstPersonController
 
         if(m_sprintPrevValue == 0.f && !AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
             FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintStarted);
+        else if(m_sprintPrevValue == 1.f && m_sprintValue == 0.f && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
+            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintStopped);
 
         m_sprintPrevValue = m_sprintValue;
 
@@ -2913,6 +2915,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnStaminaCapped(){}
     void FirstPersonControllerComponent::OnStaminaReachedZero(){}
     void FirstPersonControllerComponent::OnSprintStarted(){}
+    void FirstPersonControllerComponent::OnSprintStopped(){}
     void FirstPersonControllerComponent::OnCooldownStarted(){}
     void FirstPersonControllerComponent::OnCooldownDone(){}
 

@@ -392,6 +392,7 @@ namespace FirstPersonController
         virtual void OnStaminaCapped() = 0;
         virtual void OnStaminaReachedZero() = 0;
         virtual void OnSprintStarted() = 0;
+        virtual void OnSprintStopped() = 0;
         virtual void OnCooldownStarted() = 0;
         virtual void OnCooldownDone() = 0;
     };
@@ -405,7 +406,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
 
         void OnPhysicsTimestepStart(const float& timeStep) override
         {
@@ -506,6 +507,10 @@ namespace FirstPersonController
         void OnSprintStarted() override
         {
             Call(FN_OnSprintStarted);
+        }
+        void OnSprintStopped() override
+        {
+            Call(FN_OnSprintStopped);
         }
         void OnCooldownStarted() override
         {
