@@ -1343,10 +1343,10 @@ namespace FirstPersonController
         }
 
         // Update heading and pitch
-        if(!m_scriptSetcurrentHeadingTick)
+        if(!m_scriptSetCurrentHeadingTick)
             m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
         else
-            m_scriptSetcurrentHeadingTick = false;
+            m_scriptSetCurrentHeadingTick = false;
 
         if(m_activeCameraEntity)
             m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotationQuaternion().GetEulerRadians().GetX();
@@ -4624,7 +4624,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetHeadingForTick(const float& new_currentHeading)
     {
         m_currentHeading = new_currentHeading;
-        m_scriptSetcurrentHeadingTick = true;
+        m_scriptSetCurrentHeadingTick = true;
     }
     float FirstPersonControllerComponent::GetPitch() const
     {
