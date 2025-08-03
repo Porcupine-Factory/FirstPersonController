@@ -164,7 +164,7 @@ namespace FirstPersonController
             {
                 using namespace AZ::Edit::Attributes;
                 ec->Class<FirstPersonControllerComponent>("First Person Controller",
-                    "First person character controller")
+                    "First Person Character")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person Controller")
@@ -425,8 +425,8 @@ namespace FirstPersonController
 
         if(auto bc = azrtti_cast<AZ::BehaviorContext*>(rc))
         {
-            bc->EBus<FirstPersonControllerNotificationBus>("FirstPersonNotificationBus")
-                ->Handler<FirstPersonControllerNotificationHandler>();
+            bc->EBus<FirstPersonControllerComponentNotificationBus>("FirstPersonControllerComponentNotificationBus")
+                ->Handler<FirstPersonControllerComponentNotificationHandler>();
 
             bc->EBus<FirstPersonControllerComponentRequestBus>("FirstPersonControllerComponentRequestBus")
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
@@ -1137,14 +1137,14 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
-        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
+        FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
         ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
     {
         CaptureCharacterEyeTranslation();
-        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnPhysicsTimestepFinish, physicsTimestep * m_physicsTimestepScaleFactor);
+        FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepFinish, physicsTimestep * m_physicsTimestepScaleFactor);
         m_prevTimeStep = physicsTimestep * m_physicsTimestepScaleFactor;
     }
 
@@ -1458,23 +1458,23 @@ namespace FirstPersonController
             m_sprintAccumulatedAccel = 0.f;
 
         if(m_applyVelocityXY == AZ::Vector2::CreateZero())
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedMoving);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedMoving);
 
         if(newVelocityXY == targetVelocityXY)
         {
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTargetVelocityReached);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnTargetVelocityReached);
 
             const bool vXCrossYPos = (m_velocityXCrossYDirection.GetZ() >= 0.f);
             if(newVelocityXY.GetLength() == 0.f)
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStopped);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStopped);
             else if(vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength())))
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnTopWalkSpeedReached);
             else if(!vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale).GetLength())))
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopWalkSpeedReached);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnTopWalkSpeedReached);
             else if(vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector(newVelocityXY.GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())))
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnTopSprintSpeedReached);
             else if(!vXCrossYPos && (AZ::IsClose(newVelocityXY.GetLength(), m_speed * CreateEllipseScaledVector((-newVelocityXY).GetNormalized(), m_sprintScaleForward*m_forwardScale, m_sprintScaleBack*m_backScale, m_sprintScaleLeft*m_leftScale, m_sprintScaleRight*m_rightScale).GetLength())))
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnTopSprintSpeedReached);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnTopSprintSpeedReached);
         }
 
         return newVelocityXY;
@@ -1568,9 +1568,9 @@ namespace FirstPersonController
         }
 
         if(m_sprintPrevValue == 0.f && !AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldown == 0.f)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintStarted);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnSprintStarted);
         else if(m_sprintPrevValue == 1.f && m_sprintValue == 0.f && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSprintStopped);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnSprintStopped);
 
         m_sprintPrevValue = m_sprintValue;
 
@@ -1613,7 +1613,7 @@ namespace FirstPersonController
             if(m_sprintHeldDuration >= m_sprintMaxTime)
             {
                 m_sprintHeldDuration = m_sprintMaxTime;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaReachedZero);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStaminaReachedZero);
             }
 
             m_sprintPause = m_sprintPauseTime;
@@ -1684,7 +1684,7 @@ namespace FirstPersonController
             {
                 m_sprintVelocityAdjust = 1.f;
                 m_sprintCooldown = m_sprintCooldownTime;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownStarted);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnCooldownStarted);
             }
 
             m_sprintPause -= deltaTime;
@@ -1704,7 +1704,7 @@ namespace FirstPersonController
                 if(m_sprintHeldDuration <= 0.f)
                 {
                     m_sprintHeldDuration = 0.f;
-                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
+                    FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStaminaCapped);
                 }
             }
             else
@@ -1717,12 +1717,12 @@ namespace FirstPersonController
                 {
                     m_sprintCooldown = 0.f;
                     m_sprintPause = 0.f;
-                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCooldownDone);
+                    FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnCooldownDone);
                     if(m_regenerateStaminaAutomatically)
                     {
                         m_sprintHeldDuration = 0.f;
                         m_staminaIncreasing = true;
-                        FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStaminaCapped);
+                        FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStaminaCapped);
                     }
                 }
             }
@@ -1822,7 +1822,7 @@ namespace FirstPersonController
             m_crouchingDownMove = true;
 
             if(m_cameraLocalZTravelDistance == 0.f)
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedCrouching);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedCrouching);
 
             float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
             // Calculate the current crouch height
@@ -1839,7 +1839,7 @@ namespace FirstPersonController
                 m_crouchCurrentUpDownTime = m_crouchTime;
                 m_crouchingDownMove = false;
                 m_crouched = true;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnCrouched);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnCrouched);
             }
 
             // Adjust the height of the collider capsule based on the crouching height
@@ -1884,7 +1884,7 @@ namespace FirstPersonController
             m_standingUpMove = true;
 
             if(m_cameraLocalZTravelDistance == -1.f * m_crouchDistance)
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedStanding);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedStanding);
 
             // Create a shapecast sphere that will be used to detect whether there is an obstruction
             // above the players head, and prevent them from fully standing up if there is
@@ -1968,7 +1968,7 @@ namespace FirstPersonController
             {
                 m_crouchPrevValue = m_crouchValue;
                 m_standPrevented = true;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStandPrevented);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStandPrevented);
                 return;
             }
             m_standPrevented = false;
@@ -1988,7 +1988,7 @@ namespace FirstPersonController
                 m_crouchCurrentUpDownTime = 0.f;
                 m_standingUpMove = false;
                 m_standing = true;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStoodUp);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStoodUp);
             }
 
             // Adjust the height of the collider capsule based on the standing height
@@ -2175,7 +2175,7 @@ namespace FirstPersonController
                 if(m_gravityPrevented[0])
                 {
                     m_gravityPrevented[1] = true;
-                    FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGravityPrevented);
+                    FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGravityPrevented);
                 }
                 else
                     m_gravityPrevented[0] = true;
@@ -2183,7 +2183,7 @@ namespace FirstPersonController
             else
                 m_gravityPrevented[0] = m_gravityPrevented[1] = false;
 
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHitSomething);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnHitSomething);
         }
         else
         {
@@ -2338,11 +2338,11 @@ namespace FirstPersonController
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
         if(!prevGrounded && m_grounded)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGroundHit);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGroundHit);
         else if(!prevGroundClose && m_groundClose)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnGroundSoonHit);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGroundSoonHit);
         else if(prevGrounded && !m_grounded)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnUngrounded);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnUngrounded);
     }
 
     void FirstPersonControllerComponent::UpdateJumpMaxHoldTime()
@@ -2447,7 +2447,7 @@ namespace FirstPersonController
                 m_headHitEntityIds.push_back(hit.m_entityId);
 
         if(m_headHit && !m_grounded && m_applyVelocityZ >= 0.f)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnHeadHit);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnHeadHit);
 
         if(m_gravityPrevented[0] && m_gravityPrevented[1])
         {
@@ -2484,7 +2484,7 @@ namespace FirstPersonController
                 initialJump = true;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnFirstJump);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFirstJump);
             }
             else
             {
@@ -2541,7 +2541,7 @@ namespace FirstPersonController
                 m_applyVelocityZCurrentDelta = 0.f;
                 m_secondJump = true;
                 m_jumpHeld = true;
-                FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnSecondJump);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnSecondJump);
             }
         }
 
@@ -2579,9 +2579,9 @@ namespace FirstPersonController
         }
 
         if(prevApplyVelocityZ == 0.f && m_applyVelocityZ < 0.f)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnStartedFalling);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedFalling);
         if(prevApplyVelocityZ > 0.f && m_applyVelocityZ <= 0.f)
-            FirstPersonControllerNotificationBus::Broadcast(&FirstPersonControllerNotificationBus::Events::OnJumpApogeeReached);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnJumpApogeeReached);
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();

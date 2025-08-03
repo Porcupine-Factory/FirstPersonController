@@ -363,7 +363,7 @@ namespace FirstPersonController
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;
 
-    class FirstPersonControllerNotifications
+    class FirstPersonControllerComponentNotifications
         : public AZ::ComponentBus
     {
     public:
@@ -397,14 +397,14 @@ namespace FirstPersonController
         virtual void OnCooldownDone() = 0;
     };
 
-    using FirstPersonControllerNotificationBus = AZ::EBus<FirstPersonControllerNotifications>;
+    using FirstPersonControllerComponentNotificationBus = AZ::EBus<FirstPersonControllerComponentNotifications>;
 
-    class FirstPersonControllerNotificationHandler
-        : public FirstPersonControllerNotificationBus::Handler
+    class FirstPersonControllerComponentNotificationHandler
+        : public FirstPersonControllerComponentNotificationBus::Handler
         , public AZ::BehaviorEBusHandler
     {
     public:
-        AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerNotificationHandler,
+        AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerComponentNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
             AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
 

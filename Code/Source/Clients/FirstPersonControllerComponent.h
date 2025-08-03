@@ -450,7 +450,7 @@ namespace FirstPersonController
         void ProcessLinearImpulse(const float& deltaTime);
         void ProcessCharacterHits(const float& deltaTime);
 
-        // FirstPersonControllerNotificationBus
+        // FirstPersonControllerComponentNotificationBus
         float OnPhysicsTimestepStart(const float& timeStep);
         float OnPhysicsTimestepFinish(const float& timeStep);
         void OnGroundHit();
