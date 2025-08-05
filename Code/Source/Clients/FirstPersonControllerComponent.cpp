@@ -33,11 +33,6 @@ namespace FirstPersonController
         if(auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
         {
             sc->Class<FirstPersonControllerComponent, AZ::Component>()
-              // Camera Configuration group
-              ->Field("Camera Entity", &FirstPersonControllerComponent::m_cameraEntityId)
-                  ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
-              ->Field("Camera Smooth Follow", &FirstPersonControllerComponent::m_cameraSmoothFollow)
-
               // Input Bindings group
               ->Field("Forward Key", &FirstPersonControllerComponent::m_strForward)
               ->Field("Back Key", &FirstPersonControllerComponent::m_strBack)
@@ -49,7 +44,10 @@ namespace FirstPersonController
               ->Field("Crouch Key", &FirstPersonControllerComponent::m_strCrouch)
               ->Field("Jump Key", &FirstPersonControllerComponent::m_strJump)
 
-              // Camera Rotation group
+              // Camera group
+              ->Field("Camera Entity", &FirstPersonControllerComponent::m_cameraEntityId)
+                  ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
+              ->Field("Camera Smooth Follow", &FirstPersonControllerComponent::m_cameraSmoothFollow)
               ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yawSensitivity)
               ->Field("Pitch Sensitivity", &FirstPersonControllerComponent::m_pitchSensitivity)
               ->Field("Camera Rotation Damp Factor", &FirstPersonControllerComponent::m_rotationDamp)
@@ -170,14 +168,6 @@ namespace FirstPersonController
                     ->Attribute(Category, "First Person Controller")
                     ->Attribute(AZ::Edit::Attributes::HelpPageURL, "https://www.youtube.com/watch?v=O7rtXNlCNQQ")
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Configuration")
-                    ->Attribute(AutoExpand, false)
-                    ->DataElement(0,
-                        &FirstPersonControllerComponent::m_cameraEntityId,
-                        "Camera Entity", "The camera entity to use for the first-person view.")
-                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothFollow,
-                        "Camera Smooth Follow", "If enabled, the camera follows the character using linear interpolation on the frame tick; otherwise, the camera follows its parent transform.")
-
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Input Bindings")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
@@ -208,7 +198,13 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_strJump,
                         "Jump Key", "Key for jumping. Must match an Event Name in the .inputbindings file.")
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera Rotation")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Camera")
+                    ->Attribute(AutoExpand, false)
+                    ->DataElement(0,
+                        &FirstPersonControllerComponent::m_cameraEntityId,
+                        "Camera Entity", "The camera entity to use for the first-person view.")
+                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_cameraSmoothFollow,
+                        "Camera Smooth Follow", "If enabled, the camera follows the character using linear interpolation on the frame tick; otherwise, the camera follows its parent transform.")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_yawSensitivity,
@@ -350,7 +346,7 @@ namespace FirstPersonController
                         "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpFallingGravityFactor,
-                        "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the character is falling.")
+                        "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the character is falling. This applies during any ungrounded descent, whereas during a jump ascent, the Gravity value is used along with the Jump Held Gravity Factor.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
                         "X&Y Acceleration Jump Factor", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
@@ -395,7 +391,7 @@ namespace FirstPersonController
                         "Enable Impulses", "Determines whether impulses can be applied to the character via the EBus (e.g. scripts). Dynamic / simulated rigid bodies will not apply impulses to the character without using the EBus.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impluseDecelUsesFriction,
-                        "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction beneath the cahracter to determine the constant deceleration the character will experience when an impulse is applied. This calculation will be used instead of value entered in 'Impulse Constant Deceleration', but can still be used along with 'Impulse Linear Damping' if it is non-zero.")
+                        "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction beneath the character to determine the constant deceleration the character will experience when an impulse is applied. This calculation will be used instead of value entered in 'Impulse Constant Deceleration', but can still be used along with 'Impulse Linear Damping' if it is non-zero.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterMass,
                         "Mass", "Mass of the character for impulse calculations.")
@@ -532,8 +528,8 @@ namespace FirstPersonController
                 ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
                 ->Event("Get Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
                 ->Event("Set Sphere Casts' Axis Direction", &FirstPersonControllerComponentRequests::SetSphereCastsAxisDirectionPose)
-                ->Event("Get Vector Angles Between Vectors (Radians)", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsRadians)
-                ->Event("Get Vector Angles Between Vectors (Degrees)", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsDegrees)
+                ->Event("Get Vector Angles Between Vectors Radians", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsRadians)
+                ->Event("Get Vector Angles Between Vectors Degrees", &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsDegrees)
                 ->Event("Create Ellipse Scaled Vector2", &FirstPersonControllerComponentRequests::CreateEllipseScaledVector)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
@@ -638,10 +634,10 @@ namespace FirstPersonController
                 ->Event("Set Stand Collision Group By Name", &FirstPersonControllerComponentRequests::SetStandCollisionGroupByName)
                 ->Event("Get Collision Group Name", &FirstPersonControllerComponentRequests::GetCollisionGroupName)
                 ->Event("Get Stand Prevented EntityIds", &FirstPersonControllerComponentRequests::GetStandPreventedEntityIds)
-                ->Event("Get Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::GetGroundSphereCastsRadiusPercentageIncrease)
-                ->Event("Set Ground Sphere Casts' Radius Percentage Increase (%)", &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
-                ->Event("Get Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
-                ->Event("Set Max Grounded Angle (Degrees)", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
+                ->Event("Get Ground Sphere Casts Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetGroundSphereCastsRadiusPercentageIncrease)
+                ->Event("Set Ground Sphere Casts Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
+                ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
+                ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
                 ->Event("Set Top Walk Speed", &FirstPersonControllerComponentRequests::SetTopWalkSpeed)
                 ->Event("Get Walk Acceleration", &FirstPersonControllerComponentRequests::GetWalkAcceleration)
@@ -689,8 +685,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Held Time", &FirstPersonControllerComponentRequests::SetSprintHeldTime)
                 ->Event("Get Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::GetSprintRegenRate)
                 ->Event("Set Sprint Regeneration Rate", &FirstPersonControllerComponentRequests::SetSprintRegenRate)
-                ->Event("Get Stamina Percentage (%)", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
-                ->Event("Set Stamina Percentage (%)", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
+                ->Event("Get Stamina Percentage", &FirstPersonControllerComponentRequests::GetStaminaPercentage)
+                ->Event("Set Stamina Percentage", &FirstPersonControllerComponentRequests::SetStaminaPercentage)
                 ->Event("Get Stamina Increasing", &FirstPersonControllerComponentRequests::GetStaminaIncreasing)
                 ->Event("Get Stamina Decreasing", &FirstPersonControllerComponentRequests::GetStaminaDecreasing)
                 ->Event("Get Sprint Uses Stamina", &FirstPersonControllerComponentRequests::GetSprintUsesStamina)
@@ -753,14 +749,14 @@ namespace FirstPersonController
                 ->Event("Set Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCharacterAndCameraYawSensitivity)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
                 ->Event("Set Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::SetCameraPitchSensitivity)
-                ->Event("Get Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleRadians)
-                ->Event("Set Camera Pitch Max Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngleRadians)
-                ->Event("Get Camera Pitch Max Angle (Degrees)", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleDegrees)
-                ->Event("Set Camera Pitch Max Angle (Degrees)", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngleDegrees)
-                ->Event("Get Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngleRadians)
-                ->Event("Set Camera Pitch Min Angle (Radians)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleRadians)
-                ->Event("Get Camera Pitch Min Angle (Degrees)", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngleDegrees)
-                ->Event("Set Camera Pitch Min Angle (Degrees)", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleDegrees)
+                ->Event("Get Camera Pitch Max Angle Radians", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleRadians)
+                ->Event("Set Camera Pitch Max Angle Radians", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngleRadians)
+                ->Event("Get Camera Pitch Max Angle Degrees", &FirstPersonControllerComponentRequests::GetCameraPitchMaxAngleDegrees)
+                ->Event("Set Camera Pitch Max Angle Degrees", &FirstPersonControllerComponentRequests::SetCameraPitchMaxAngleDegrees)
+                ->Event("Get Camera Pitch Min Angle Radians", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngleRadians)
+                ->Event("Set Camera Pitch Min Angle Radians", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleRadians)
+                ->Event("Get Camera Pitch Min Angle Degrees", &FirstPersonControllerComponentRequests::GetCameraPitchMinAngleDegrees)
+                ->Event("Set Camera Pitch Min Angle Degrees", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleDegrees)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
                 ->Event("Update Character And Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCharacterAndCameraYaw)
