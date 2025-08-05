@@ -3497,11 +3497,13 @@ namespace FirstPersonController
     {
         if(v1 == v2)
             return AZ::Vector3::CreateZero();
+        if(v1 == -v2)
+            return AZ::Vector3(AZ::Constants::Pi, AZ::Constants::Pi, AZ::Constants::Pi);
         AZ::Vector3 angle = AZ::Vector3::CreateZero();
         if(v1.AngleSafe(v2) <= AZ::Constants::HalfPi)
             angle = AZ::Quaternion::CreateShortestArc(v1, v2).ConvertToScaledAxisAngle();
         else
-            angle = AZ::Quaternion::CreateShortestArc(v1, v1.Lerp(v2, 0.5f)).ConvertToScaledAxisAngle() + AZ::Quaternion::CreateShortestArc(v1.Lerp(v2, 0.5f), v2).ConvertToScaledAxisAngle();
+            angle = AZ::Quaternion::CreateShortestArc(v1, -v2).ConvertToScaledAxisAngle();
         return angle;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2)
