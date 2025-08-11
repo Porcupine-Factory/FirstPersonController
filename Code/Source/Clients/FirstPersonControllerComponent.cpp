@@ -1060,9 +1060,7 @@ namespace FirstPersonController
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
         if(inputId == nullptr)
-        {
             return;
-        }
 
         if(*inputId == m_rotateYawEventId)
         {
