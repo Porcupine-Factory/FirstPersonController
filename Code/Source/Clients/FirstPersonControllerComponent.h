@@ -452,10 +452,6 @@ namespace FirstPersonController
 
         // GetCameraNotSmoothFollow() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
         bool GetCameraNotSmoothFollow() const;
-        // GetDisableImpulses() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
-        bool GetDisableImpulses() const;
-        // GetDisableCharacterHits() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
-        bool GetDisableCharacterHits() const;
 
         // FirstPersonControllerComponentNotificationBus
         float OnPhysicsTimestepStart(const float& timeStep);

@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <AzCore/Serialization/EditContextConstants.inl>
 #include <Clients/FirstPersonControllerComponent.h>
 
 #include <AzCore/Component/Entity.h>
@@ -395,19 +396,19 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impluseDecelUsesFriction,
                         "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction beneath the character to determine the constant deceleration the character will experience when an impulse is applied. This calculation will be used instead of value entered in 'Impulse Constant Deceleration', but can still be used along with 'Impulse Linear Damping' if it is non-zero.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableImpulses)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterMass,
                         "Mass", "Mass of the character for impulse calculations.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableImpulses)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseLinearDamp,
                         "Impulse Linear Damping", "Slows down the character after an impulse the same way as is done by the PhysX Dynamic Rigid Body component, using a first-order homogeneous linear recurrence relation. Specifically, the velocity decays by a factor of (1 - Linear Damping / Fixed Time Step). Linear damping behaves like to Stokes' Law whereas constant deceleration behaves the same as kinetic friction. This is used in combination with Impulse Constant Deceleration, set either to zero to use just one or the other.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableImpulses)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseConstantDecel,
                         "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other. If 'Use Friction For Deceleration' is turned on then this constant will not be used.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableImpulses)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Collision Detection")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -418,15 +419,15 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease,
                         "Capsule Radius Detection Percentage Increase", "Percentage to increase the character's capsule collider radius by to determine hits / collisions.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableCharacterHits)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableCharacterHits)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_hitHeightPercentageIncrease,
                         "Capsule Height Detection Percentage Increase", "Percentage to increase the character's capsule collider height by to determine hits / collisions.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableCharacterHits)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableCharacterHits)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterHitCollisionGroupId,
                         "Hit Detection Group", "Collision group that will be detected by the capsule shapecast.")
-                        ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetDisableCharacterHits);
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableCharacterHits);
             }
         }
 
@@ -3740,11 +3741,6 @@ namespace FirstPersonController
         if(!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
     }
-    // GetDisableImpulses() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
-    bool FirstPersonControllerComponent::GetDisableImpulses() const
-    {
-        return !m_enableImpulses;
-    }
     bool FirstPersonControllerComponent::GetImpulseDecelUsesFriction() const
     {
         return m_impluseDecelUsesFriction;
@@ -3802,11 +3798,6 @@ namespace FirstPersonController
         m_enableCharacterHits = new_enableCharacterHits;
         if(!m_enableCharacterHits)
             m_characterHits.clear();
-    }
-    // GetDisableCharacterHits() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
-    bool FirstPersonControllerComponent::GetDisableCharacterHits() const
-    {
-        return !m_enableCharacterHits;
     }
     float FirstPersonControllerComponent::GetHitRadiusPercentageIncrease() const
     {
