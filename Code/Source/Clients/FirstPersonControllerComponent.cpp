@@ -147,7 +147,7 @@ namespace FirstPersonController
                   ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" m%ss%s%s", Physics::NameConstants::GetInterpunct().c_str(), Physics::NameConstants::GetSuperscriptMinus().c_str(), Physics::NameConstants::GetSuperscriptTwo().c_str()))
 
-              // Collision Detection group
+              // Hit Detection group
               ->Field("Enable Hit Detection", &FirstPersonControllerComponent::m_enableCharacterHits)
               ->Field("Capsule Radius Detection Percentage Increase", &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease)
                   ->Attribute(AZ::Edit::Attributes::Min, -100.f)
@@ -410,7 +410,7 @@ namespace FirstPersonController
                         "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other. If 'Use Friction For Deceleration' is turned on then this constant will not be used.")
                         ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Collision Detection")
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Hit Detection")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_enableCharacterHits,
@@ -2609,7 +2609,11 @@ namespace FirstPersonController
     {
         // Only apply impulses if it's enabled
         if(!m_enableImpulses)
+        {
             m_linearImpulse = AZ::Vector3::CreateZero();
+            if(m_velocityFromImpulse.IsZero())
+                return;
+        }
 
         if(m_impluseDecelUsesFriction && !m_groundHits.empty())
             m_impulseConstantDecel = -1.f * m_gravity * GetSceneQueryHitDynamicFriction(m_groundHits.front());
@@ -2685,62 +2689,62 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ProcessCharacterHits(const float& deltaTime)
     {
-        if(m_enableCharacterHits)
-        {
-            // Create a capsule cast that will be used to detect when the character is hit
-            auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
+        if(!m_enableCharacterHits)
+            return;
 
-            // Follow the character's transform
-            AZ::Transform capsulePose = AZ::Transform::CreateIdentity();
+        // Create a capsule cast that will be used to detect when the character is hit
+        auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-            // Set the pose rotation based on the angle between the X axis and the m_sphereCastsAxisDirectionPose,
-            // this was experimentally found to be necessary to get the capsule orientation correct
-            capsulePose.SetRotation(AZ::Quaternion::CreateFromEulerAnglesRadians(GetVectorAnglesBetweenVectorsRadians(AZ::Vector3::CreateAxisX(), m_sphereCastsAxisDirectionPose)));
+        // Follow the character's transform
+        AZ::Transform capsulePose = AZ::Transform::CreateIdentity();
 
-            // Set the translation and shift the capsule based on the character's capsule height
-            capsulePose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
+        // Set the pose rotation based on the angle between the X axis and the m_sphereCastsAxisDirectionPose,
+        // this was experimentally found to be necessary to get the capsule orientation correct
+        capsulePose.SetRotation(AZ::Quaternion::CreateFromEulerAnglesRadians(GetVectorAnglesBetweenVectorsRadians(AZ::Vector3::CreateAxisX(), m_sphereCastsAxisDirectionPose)));
 
-            AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-                m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
-                m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
-                capsulePose,
-                m_currentVelocity.GetNormalized(),
-                (m_currentVelocity * deltaTime).GetLength() + m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
-                m_characterHitBy,
-                m_characterHitCollisionGroup,
-                nullptr);
+        // Set the translation and shift the capsule based on the character's capsule height
+        capsulePose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
-            request.m_reportMultipleHits = true;
+        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+            m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
+            m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
+            capsulePose,
+            m_currentVelocity.GetNormalized(),
+            (m_currentVelocity * deltaTime).GetLength() + m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
+            m_characterHitBy,
+            m_characterHitCollisionGroup,
+            nullptr);
 
-            AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
-            AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+        request.m_reportMultipleHits = true;
 
-            // Disregard intersections with the character's collider and its child entities
-            auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
+        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
+        // Disregard intersections with the character's collider and its child entities
+        auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
+            {
+                if(hit.m_entityId == GetEntityId())
+                    return true;
+
+                // Obtain the child IDs if we don't already have them
+                if(!m_obtainedChildIds)
                 {
-                    if(hit.m_entityId == GetEntityId())
+                    AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                    m_obtainedChildIds = true;
+                }
+
+                for(AZ::EntityId id: m_children)
+                {
+                    if(hit.m_entityId == id)
                         return true;
+                }
 
-                    // Obtain the child IDs if we don't already have them
-                    if(!m_obtainedChildIds)
-                    {
-                        AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
-                        m_obtainedChildIds = true;
-                    }
+                return false;
+            };
 
-                    for(AZ::EntityId id: m_children)
-                    {
-                        if(hit.m_entityId == id)
-                            return true;
-                    }
+        AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
 
-                    return false;
-                };
-
-            AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
-
-            m_characterHits = hits.m_hits;
-        }
+        m_characterHits = hits.m_hits;
     }
 
     // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
