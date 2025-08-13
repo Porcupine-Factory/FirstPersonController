@@ -720,8 +720,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint While Crouched", &FirstPersonControllerComponentRequests::SetSprintWhileCrouched)
                 ->Event("Get Sprint Via Script", &FirstPersonControllerComponentRequests::GetSprintViaScript)
                 ->Event("Set Sprint Via Script", &FirstPersonControllerComponentRequests::SetSprintViaScript)
-                ->Event("Get Enable Disable Sprint", &FirstPersonControllerComponentRequests::GetSprintEnableDisableScript)
-                ->Event("Set Enable Disable Sprint", &FirstPersonControllerComponentRequests::SetSprintEnableDisableScript)
+                ->Event("Get Enable Disable Sprint", &FirstPersonControllerComponentRequests::GetSprintEnableDisable)
+                ->Event("Set Enable Disable Sprint", &FirstPersonControllerComponentRequests::SetSprintEnableDisable)
                 ->Event("Get Crouching", &FirstPersonControllerComponentRequests::GetCrouching)
                 ->Event("Set Crouching", &FirstPersonControllerComponentRequests::SetCrouching)
                 ->Event("Get Crouched", &FirstPersonControllerComponentRequests::GetCrouched)
@@ -757,6 +757,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::SetCrouchPriorityWhenSprintPressed)
                 ->Event("Get Crouch When Not Grounded", &FirstPersonControllerComponentRequests::GetCrouchWhenNotGrounded)
                 ->Event("Set Crouch When Not Grounded", &FirstPersonControllerComponentRequests::SetCrouchWhenNotGrounded)
+                ->Event("Get Enable Camera And Character Rotation", &FirstPersonControllerComponentRequests::GetEnableCameraCharacterRotation)
+                ->Event("Set Enable Camera And Character Rotation", &FirstPersonControllerComponentRequests::SetEnableCameraCharacterRotation)
                 ->Event("Get Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::GetCharacterAndCameraYawSensitivity)
                 ->Event("Set Character And Camera Yaw Sensitivity", &FirstPersonControllerComponentRequests::SetCharacterAndCameraYawSensitivity)
                 ->Event("Get Camera Pitch Sensitivity", &FirstPersonControllerComponentRequests::GetCameraPitchSensitivity)
@@ -1295,6 +1297,9 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateRotation()
     {
+        if(!m_enableCameraCharacterRotation)
+            return;
+
         SmoothRotation();
         const AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
 
@@ -1551,12 +1556,12 @@ namespace FirstPersonController
                    (targetVelocityXY.GetY() < 0.f)) ))
             m_sprintValue = 0.f;
 
-        if((m_sprintViaScript && m_sprintEnableDisableScript) && (targetVelocityXY.GetY() > 0.f || m_sprintBackwards))
+        if((m_sprintViaScript && m_sprintEnableDisable) && (targetVelocityXY.GetY() > 0.f || m_sprintBackwards))
         {
             m_sprintValue = 1.f;
             m_sprintAccelValue = m_sprintAccelScale;
         }
-        else if(m_sprintViaScript && !m_sprintEnableDisableScript)
+        else if(m_sprintViaScript && !m_sprintEnableDisable)
             m_sprintValue = 0.f;
 
         // Reset the counter if there is no movement
@@ -4374,13 +4379,13 @@ namespace FirstPersonController
     {
         m_sprintViaScript = new_sprintViaScript;
     }
-    bool FirstPersonControllerComponent::GetSprintEnableDisableScript() const
+    bool FirstPersonControllerComponent::GetSprintEnableDisable() const
     {
-        return m_sprintEnableDisableScript;
+        return m_sprintEnableDisable;
     }
-    void FirstPersonControllerComponent::SetSprintEnableDisableScript(const bool& new_sprintEnableDisableScript)
+    void FirstPersonControllerComponent::SetSprintEnableDisable(const bool& new_sprintEnableDisable)
     {
-        m_sprintEnableDisableScript = new_sprintEnableDisableScript;
+        m_sprintEnableDisable = new_sprintEnableDisable;
     }
     bool FirstPersonControllerComponent::GetCrouching() const
     {
@@ -4561,6 +4566,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchWhenNotGrounded(const bool& new_crouchWhenNotGrounded)
     {
         m_crouchWhenNotGrounded = new_crouchWhenNotGrounded;
+    }
+    bool FirstPersonControllerComponent::GetEnableCameraCharacterRotation() const
+    {
+        return m_enableCameraCharacterRotation;
+    }
+    void FirstPersonControllerComponent::SetEnableCameraCharacterRotation(const bool& new_enableCameraCharacterRotation)
+    {
+        m_enableCameraCharacterRotation = new_enableCameraCharacterRotation;
     }
     float FirstPersonControllerComponent::GetCharacterAndCameraYawSensitivity() const
     {

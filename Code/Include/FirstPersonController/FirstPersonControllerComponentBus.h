@@ -338,8 +338,10 @@ namespace FirstPersonController
         virtual void SetCrouchWhenNotGrounded(const bool&) = 0;
         virtual bool GetSprintViaScript() const = 0;
         virtual void SetSprintViaScript(const bool&) = 0;
-        virtual bool GetSprintEnableDisableScript() const = 0;
-        virtual void SetSprintEnableDisableScript(const bool&) = 0;
+        virtual bool GetSprintEnableDisable() const = 0;
+        virtual void SetSprintEnableDisable(const bool&) = 0;
+        virtual bool GetEnableCameraCharacterRotation() const = 0;
+        virtual void SetEnableCameraCharacterRotation(const bool&) = 0;
         virtual float GetCharacterAndCameraYawSensitivity() const = 0;
         virtual void SetCharacterAndCameraYawSensitivity(const float&) = 0;
         virtual float GetCameraPitchSensitivity() const = 0;

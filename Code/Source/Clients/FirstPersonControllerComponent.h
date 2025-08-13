@@ -385,8 +385,10 @@ namespace FirstPersonController
         void SetCrouchWhenNotGrounded(const bool& new_crouchWhenNotGrounded) override;
         bool GetSprintViaScript() const override;
         void SetSprintViaScript(const bool& new_sprintViaScript) override;
-        bool GetSprintEnableDisableScript() const override;
-        void SetSprintEnableDisableScript(const bool& new_sprintEnableDisableScript) override;
+        bool GetSprintEnableDisable() const override;
+        void SetSprintEnableDisable(const bool& new_sprintEnableDisable) override;
+        bool GetEnableCameraCharacterRotation() const override;
+        void SetEnableCameraCharacterRotation(const bool& new_enableCameraCharacterRotation) override;
         float GetCharacterAndCameraYawSensitivity() const override;
         void SetCharacterAndCameraYawSensitivity(const float& new_yawSensitivity) override;
         float GetCameraPitchSensitivity() const override;
@@ -559,7 +561,7 @@ namespace FirstPersonController
         bool m_sprintBackwards = true;
         bool m_sprintWhileCrouched = true;
         bool m_sprintViaScript = false;
-        bool m_sprintEnableDisableScript = false;
+        bool m_sprintEnableDisable = false;
         bool m_staminaIncreasing = false;
         bool m_staminaDecreasing = false;
         bool m_sprintUsesStamina = true;
@@ -680,6 +682,7 @@ namespace FirstPersonController
         float m_yawSensitivity = 0.0035f;
 
         // Rotation-related variables
+        bool m_enableCameraCharacterRotation = true;
         float m_currentHeading = 0.f;
         bool m_scriptSetCurrentHeadingTick = false;
         float m_currentPitch = 0.f;
