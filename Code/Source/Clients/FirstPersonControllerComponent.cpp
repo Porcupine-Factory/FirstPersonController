@@ -353,7 +353,7 @@ namespace FirstPersonController
                         "Jump Falling Gravity Factor", "The factor applied to the character's gravity when the character is falling. This applies during any ungrounded descent, whereas during a jump ascent, the Gravity value is used along with the Jump Held Gravity Factor.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpAccelFactor,
-                        "X&Y Acceleration Jump Factor", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending is enabled, Update X&Y Velocity When Descending is enabled, and Update X&Y Velocity Only When Ground Close is enabled.")
+                        "X&Y Acceleration Jump Factor", "X&Y acceleration factor while in the air. This depends on whether Update X&Y Velocity When Ascending, Update X&Y Velocity When Descending, or Update X&Y Velocity Only When Ground Close is enabled.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHoldDistance,
                         "Jump Hold Distance", "Effectively determines the time that jump may be held. During this initial period of the jump, the Jump Held Gravity Factor is applied, making the maximum height greater. If the number entered here exceeds the calculated apogee, you will get a warning message.")
