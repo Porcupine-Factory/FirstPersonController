@@ -775,6 +775,8 @@ namespace FirstPersonController
                 ->Event("Set Camera Pitch Min Angle Degrees", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleDegrees)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
+                ->Event("Get Character World Translation", &FirstPersonControllerComponentRequests::GetCharacterWorldTranslation)
+                ->Event("Set Character World Translation", &FirstPersonControllerComponentRequests::SetCharacterWorldTranslation)
                 ->Event("Update Character And Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCharacterAndCameraYaw)
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
@@ -4632,6 +4634,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCameraRotationDampFactor(const float& new_rotationDamp)
     {
         m_rotationDamp = new_rotationDamp;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetCharacterWorldTranslation() const
+    {
+        return GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
+    }
+    void FirstPersonControllerComponent::SetCharacterWorldTranslation(const AZ::Vector3& new_characterWorldTranslation)
+    {
+        GetEntity()->GetTransform()->SetWorldTranslation(new_characterWorldTranslation);
     }
     void FirstPersonControllerComponent::UpdateCharacterAndCameraYaw(const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput)
     {

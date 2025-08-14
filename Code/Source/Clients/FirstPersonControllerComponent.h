@@ -403,6 +403,8 @@ namespace FirstPersonController
         void SetCameraPitchMinAngleDegrees(const float& new_pitchMinAngleDegrees) override;
         float GetCameraRotationDampFactor() const override;
         void SetCameraRotationDampFactor(const float& new_rotationDamp) override;
+        AZ::Vector3 GetCharacterWorldTranslation() const override;
+        void SetCharacterWorldTranslation(const AZ::Vector3& new_characterWorldTranslation) override;
         void UpdateCharacterAndCameraYaw(const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput = true) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput = true) override;
         float GetHeading() const override;
