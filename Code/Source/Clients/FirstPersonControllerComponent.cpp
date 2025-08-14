@@ -344,6 +344,7 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpSecondInitialVelocity,
                         "Second Jump Initial Velocity", "The initial velocity that's used for the second jump.")
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetDoubleJump)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeldGravityFactor,
                         "Jump Held Gravity Factor", "The factor applied to the character's gravity for the beginning of the jump.")
@@ -377,6 +378,7 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
                         "Enable Double Jump", "Turn this on to enable double jumping.")
+                        ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYAscending,
                         "Update X&Y Velocity When Ascending", "Allows movement in X&Y during a jump’s ascent.")
