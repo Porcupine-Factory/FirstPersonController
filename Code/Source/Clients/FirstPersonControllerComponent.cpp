@@ -2682,19 +2682,6 @@ namespace FirstPersonController
         // Accumulate half of the deltaTime if the total lerp time hasn't been reached
         if(m_impulseLerpTime != m_impulseTotalLerpTime)
             m_impulseLerpTime += deltaTime * 0.5f;
-
-        // Add the velocity to the character
-        if(m_addVelocityForTimestepVsTick)
-            Physics::CharacterRequestBus::Event(GetEntityId(),
-                &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep,
-                m_velocityFromImpulse);
-        else
-            Physics::CharacterRequestBus::Event(GetEntityId(),
-                &Physics::CharacterRequestBus::Events::AddVelocityForTick,
-                m_velocityFromImpulse);
-
-        // Zero the impulse vector since it's been applied for this update
-        m_linearImpulse = AZ::Vector3::CreateZero();
     }
 
     void FirstPersonControllerComponent::ProcessCharacterHits(const float& deltaTime)
@@ -2874,6 +2861,12 @@ namespace FirstPersonController
             else
                 UpdateVelocityZ((deltaTime + m_prevDeltaTime) / 2.f);
 
+            // Apply any linear impulses to the character that have been set via the EBus
+            if(m_addVelocityForTimestepVsTick)
+                ProcessLinearImpulse((deltaTime + m_prevTimeStep) / 2.f);
+            else
+                ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
+
             // Track the sum of the normal vectors for the velocity's XY plane if it's set
             if(m_velocityXCrossYTracksNormal)
                 SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
@@ -2885,7 +2878,7 @@ namespace FirstPersonController
             // Tilt the XY velocity plane based on m_velocityXCrossYDirection
             m_prevTargetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
             // Change the +Z direction based on m_velocityZPosDirection
-            m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+            m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection + m_velocityFromImpulse;
 
             if(m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(GetEntityId(),
@@ -2896,11 +2889,8 @@ namespace FirstPersonController
                     &Physics::CharacterRequestBus::Events::AddVelocityForTick,
                     m_prevTargetVelocity);
 
-            // Apply any linear impulses to the character that have been set via the EBus
-            if(m_addVelocityForTimestepVsTick)
-                ProcessLinearImpulse((deltaTime + m_prevTimeStep) / 2.f);
-            else
-                ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
+            // Zero the impulse vector since it's been applied for this update
+            m_linearImpulse = AZ::Vector3::CreateZero();
 
             if(m_addVelocityForTimestepVsTick)
                 ProcessCharacterHits((deltaTime + m_prevTimeStep) / 2.f);
