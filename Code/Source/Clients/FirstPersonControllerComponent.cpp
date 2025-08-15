@@ -442,8 +442,9 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Controller")
-                ->Event("Get Pointer To Active Camera Entity", &FirstPersonControllerComponentRequests::GetActiveCameraEntityPtr)
+                ->Event("Get Character EntityId", &FirstPersonControllerComponentRequests::GetCharacterEntityId)
                 ->Event("Get Active Camera EntityId", &FirstPersonControllerComponentRequests::GetActiveCameraEntityId)
+                ->Event("Get Active Camera Entity Pointer", &FirstPersonControllerComponentRequests::GetActiveCameraEntityPtr)
                 ->Event("Set Camera Entity", &FirstPersonControllerComponentRequests::SetCameraEntity)
                 ->Event("Get Camera Smooth Follow", &FirstPersonControllerComponentRequests::GetCameraSmoothFollow)
                 ->Event("Set Camera Smooth Follow", &FirstPersonControllerComponentRequests::SetCameraSmoothFollow)
@@ -455,6 +456,7 @@ namespace FirstPersonController
                 ->Event("Get Camera Local Z Travel Distance", &FirstPersonControllerComponentRequests::GetCameraLocalZTravelDistance)
                 ->Event("Get Camera Rotation Transform", &FirstPersonControllerComponentRequests::GetCameraRotationTransform)
                 ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
+                ->Event("Get Child EntityIds", &FirstPersonControllerComponentRequests::GetChildEntityIds)
                 ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
                 ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
                 ->Event("Get Forward Event Name", &FirstPersonControllerComponentRequests::GetForwardEventName)
@@ -1187,18 +1189,6 @@ namespace FirstPersonController
     {
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
         return ca ? ca->FindEntity(pointer) : nullptr;
-    }
-
-    AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
-    {
-        if(m_activeCameraEntity)
-        {
-            return m_activeCameraEntity;
-        }
-        AZ::EntityId activeCameraId;
-        Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId, &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
-        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
-        return ca->FindEntity(activeCameraId);
     }
 
     void FirstPersonControllerComponent::InitializeCameraTranslation()
@@ -2930,9 +2920,24 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnCooldownDone(){}
 
     // Request Bus getter and setter methods for use in scripts
+    AZ::EntityId FirstPersonControllerComponent::GetCharacterEntityId() const
+    {
+        return GetEntityId();
+    }
     AZ::EntityId FirstPersonControllerComponent::GetActiveCameraEntityId() const
     {
         return m_activeCameraEntity->GetId();
+    }
+    AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
+    {
+        if(m_activeCameraEntity)
+        {
+            return m_activeCameraEntity;
+        }
+        AZ::EntityId activeCameraId;
+        Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId, &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
+        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+        return ca->FindEntity(activeCameraId);
     }
     void FirstPersonControllerComponent::SetCameraEntity(const AZ::EntityId new_cameraEntityId)
     {
@@ -3066,6 +3071,10 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::ReacquireChildEntityIds()
     {
         AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetChildEntityIds() const
+    {
+        return m_children;
     }
     void FirstPersonControllerComponent::ReacquireCapsuleDimensions()
     {

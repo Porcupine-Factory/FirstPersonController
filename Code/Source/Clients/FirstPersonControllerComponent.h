@@ -67,9 +67,9 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // FirstPersonControllerRequestBus
-        AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
-        AZ::Entity* GetActiveCameraEntityPtr() const override;
+        AZ::EntityId GetCharacterEntityId() const override;
         AZ::EntityId GetActiveCameraEntityId() const override;
+        AZ::Entity* GetActiveCameraEntityPtr() const override;
         void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
         bool GetCameraSmoothFollow() const;
         void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow);
@@ -81,6 +81,7 @@ namespace FirstPersonController
         float GetCameraLocalZTravelDistance() const override;
         AZ::TransformInterface* GetCameraRotationTransform() const override;
         void ReacquireChildEntityIds() override;
+        AZStd::vector<AZ::EntityId> GetChildEntityIds() const override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
         AZStd::string GetForwardEventName() const override;
@@ -454,6 +455,9 @@ namespace FirstPersonController
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
         void ProcessCharacterHits(const float& deltaTime);
+
+        // Method for getting a pointer to an entity
+        AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
 
         // GetCameraNotSmoothFollow() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
         bool GetCameraNotSmoothFollow() const;

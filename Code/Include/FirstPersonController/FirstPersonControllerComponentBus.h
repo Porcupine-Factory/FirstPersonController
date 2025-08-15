@@ -21,6 +21,7 @@ namespace FirstPersonController
     public:
         ~FirstPersonControllerComponentRequests() override = default;
 
+        virtual AZ::EntityId GetCharacterEntityId() const = 0;
         virtual AZ::Entity* GetActiveCameraEntityPtr() const = 0;
         virtual AZ::EntityId GetActiveCameraEntityId() const = 0;
         virtual void SetCameraEntity(const AZ::EntityId) = 0;
@@ -34,6 +35,7 @@ namespace FirstPersonController
         virtual float GetCameraLocalZTravelDistance() const = 0;
         virtual AZ::TransformInterface* GetCameraRotationTransform() const = 0;
         virtual void ReacquireChildEntityIds() = 0;
+        virtual AZStd::vector<AZ::EntityId> GetChildEntityIds() const = 0;
         virtual void ReacquireCapsuleDimensions() = 0;
         virtual void ReacquireMaxSlopeAngle() = 0;
         virtual AZStd::string GetForwardEventName() const = 0;
