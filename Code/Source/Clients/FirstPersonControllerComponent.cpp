@@ -565,6 +565,7 @@ namespace FirstPersonController
                 ->Event("Set Script Sets Target Velocity XY", &FirstPersonControllerComponentRequests::SetScriptSetsTargetVelocityXY)
                 ->Event("Get Target XY Velocity", &FirstPersonControllerComponentRequests::GetTargetVelocityXY)
                 ->Event("Set Target XY Velocity", &FirstPersonControllerComponentRequests::SetTargetVelocityXY)
+                ->Event("Get Target XY Velocity Using World", &FirstPersonControllerComponentRequests::GetTargetVelocityXYWorld)
                 ->Event("Get Corrected Velocity XY", &FirstPersonControllerComponentRequests::GetCorrectedVelocityXY)
                 ->Event("Set Corrected Velocity XY", &FirstPersonControllerComponentRequests::SetCorrectedVelocityXY)
                 ->Event("Get Corrected Velocity Z", &FirstPersonControllerComponentRequests::GetCorrectedVelocityZ)
@@ -3658,6 +3659,10 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY)
     {
         m_scriptTargetVelocityXY = new_scriptTargetVelocityXY;
+    }
+    AZ::Vector2 FirstPersonControllerComponent::GetTargetVelocityXYWorld() const
+    {
+        return AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(m_scriptTargetVelocityXY)));
     }
     AZ::Vector2 FirstPersonControllerComponent::GetCorrectedVelocityXY() const
     {
