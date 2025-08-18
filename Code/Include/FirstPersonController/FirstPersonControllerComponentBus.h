@@ -359,6 +359,9 @@ namespace FirstPersonController
         virtual void SetCameraPitchMinAngleDegrees(const float&) = 0;
         virtual float GetCameraRotationDampFactor() const = 0;
         virtual void SetCameraRotationDampFactor(const float&) = 0;
+        virtual AZ::TransformInterface* GetCharacterTransformInterfacePtr() const = 0 ;
+        virtual AZ::Transform GetCharacterTransform() const = 0;
+        virtual void SetCharacterTransform(const AZ::Transform&) = 0;
         virtual AZ::Vector3 GetCharacterWorldTranslation() const = 0;
         virtual void SetCharacterWorldTranslation(const AZ::Vector3&) = 0;
         virtual void UpdateCharacterAndCameraYaw(const float&, const bool&) = 0;

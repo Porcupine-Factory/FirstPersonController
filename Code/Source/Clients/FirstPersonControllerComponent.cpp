@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <AzCore/Serialization/EditContextConstants.inl>
 #include <Clients/FirstPersonControllerComponent.h>
 
 #include <AzCore/Component/Entity.h>
@@ -778,6 +777,9 @@ namespace FirstPersonController
                 ->Event("Set Camera Pitch Min Angle Degrees", &FirstPersonControllerComponentRequests::SetCameraPitchMinAngleDegrees)
                 ->Event("Get Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::GetCameraRotationDampFactor)
                 ->Event("Set Camera Rotation Damp Factor", &FirstPersonControllerComponentRequests::SetCameraRotationDampFactor)
+                ->Event("Get Character Transform Interface Pointer", &FirstPersonControllerComponentRequests::GetCharacterTransformInterfacePtr)
+                ->Event("Get Character Transform", &FirstPersonControllerComponentRequests::GetCharacterTransform)
+                ->Event("Set Character Transform", &FirstPersonControllerComponentRequests::SetCharacterTransform)
                 ->Event("Get Character World Translation", &FirstPersonControllerComponentRequests::GetCharacterWorldTranslation)
                 ->Event("Set Character World Translation", &FirstPersonControllerComponentRequests::SetCharacterWorldTranslation)
                 ->Event("Update Character And Camera Yaw", &FirstPersonControllerComponentRequests::UpdateCharacterAndCameraYaw)
@@ -4638,6 +4640,18 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCameraRotationDampFactor(const float& new_rotationDamp)
     {
         m_rotationDamp = new_rotationDamp;
+    }
+    AZ::TransformInterface* FirstPersonControllerComponent::GetCharacterTransformInterfacePtr() const
+    {
+        return GetEntity()->GetTransform();
+    }
+    AZ::Transform FirstPersonControllerComponent::GetCharacterTransform() const
+    {
+        return GetEntity()->GetTransform()->GetWorldTM();
+    }
+    void FirstPersonControllerComponent::SetCharacterTransform(const AZ::Transform& new_characterTransform)
+    {
+        GetEntity()->GetTransform()->SetWorldTM(new_characterTransform);
     }
     AZ::Vector3 FirstPersonControllerComponent::GetCharacterWorldTranslation() const
     {
