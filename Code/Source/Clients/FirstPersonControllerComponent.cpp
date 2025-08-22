@@ -1162,7 +1162,7 @@ namespace FirstPersonController
     {
         CaptureCharacterEyeTranslation();
         FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepFinish, physicsTimestep * m_physicsTimestepScaleFactor);
-        m_prevTimeStep = physicsTimestep * m_physicsTimestepScaleFactor;
+        m_prevTimestep = physicsTimestep * m_physicsTimestepScaleFactor;
     }
 
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
@@ -1220,15 +1220,15 @@ namespace FirstPersonController
         m_physicsTimeAccumulator += deltaTime;
 
         // Calculate interpolation factor
-        float const alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimeStep, 0.f, 1.f);
+        float const alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
 
         // Interpolate translation
         AZ::Vector3 const interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedCameraTranslation);
 
         // Reset accumulator if it exceeds physics timestep
-        if(m_physicsTimeAccumulator >= m_prevTimeStep)
-            m_physicsTimeAccumulator -= m_prevTimeStep;
+        if(m_physicsTimeAccumulator >= m_prevTimestep)
+            m_physicsTimeAccumulator -= m_prevTimestep;
     }
 
     // Helper function to check if camera is a child of the character
@@ -2827,12 +2827,12 @@ namespace FirstPersonController
             }
 
             if(m_addVelocityForTimestepVsTick)
-                CheckGrounded((deltaTime + m_prevTimeStep) / 2.f);
+                CheckGrounded((deltaTime + m_prevTimestep) / 2.f);
             else
                 CheckGrounded((deltaTime + m_prevDeltaTime) / 2.f);
 
             if(m_addVelocityForTimestepVsTick)
-                CrouchManager((deltaTime + m_prevTimeStep) / 2.f);
+                CrouchManager((deltaTime + m_prevTimestep) / 2.f);
             else
                 CrouchManager((deltaTime + m_prevDeltaTime) / 2.f);
 
@@ -2843,19 +2843,19 @@ namespace FirstPersonController
                || ((m_updateXYDescending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
             {
                 if(m_addVelocityForTimestepVsTick)
-                    UpdateVelocityXY((deltaTime + m_prevTimeStep) / 2.f);
+                    UpdateVelocityXY((deltaTime + m_prevTimestep) / 2.f);
                 else
                     UpdateVelocityXY((deltaTime + m_prevDeltaTime) / 2.f);
             }
 
             if(m_addVelocityForTimestepVsTick)
-                UpdateVelocityZ((deltaTime + m_prevTimeStep) / 2.f);
+                UpdateVelocityZ((deltaTime + m_prevTimestep) / 2.f);
             else
                 UpdateVelocityZ((deltaTime + m_prevDeltaTime) / 2.f);
 
             // Apply any linear impulses to the character that have been set via the EBus
             if(m_addVelocityForTimestepVsTick)
-                ProcessLinearImpulse((deltaTime + m_prevTimeStep) / 2.f);
+                ProcessLinearImpulse((deltaTime + m_prevTimestep) / 2.f);
             else
                 ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
 
@@ -2885,7 +2885,7 @@ namespace FirstPersonController
             m_linearImpulse = AZ::Vector3::CreateZero();
 
             if(m_addVelocityForTimestepVsTick)
-                ProcessCharacterHits((deltaTime + m_prevTimeStep) / 2.f);
+                ProcessCharacterHits((deltaTime + m_prevTimestep) / 2.f);
             else
                 ProcessCharacterHits((deltaTime + m_prevDeltaTime) / 2.f);
         }
