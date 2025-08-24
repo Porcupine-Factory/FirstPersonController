@@ -4440,6 +4440,40 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchDistance(const float& new_crouchDistance)
     {
         m_crouchDistance = new_crouchDistance;
+
+        // Calculate the crouch down final velocity
+        m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
+        // Check to make sure that the crouching is decelerated, if not then force a constant velocity to meet m_crouchTime
+        if(m_crouchDownFinalVelocity > m_crouchDownInitVelocity)
+        {
+            m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
+            m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead.");
+        }
+        // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
+        else if(m_crouchDownFinalVelocity < 0)
+        {
+            m_crouchDownInitVelocity = 2.f * m_crouchDistance / m_crouchTime;
+            m_crouchDownFinalVelocity = 0.f;
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too fast to reach the crouching position at crouch time, setting the start crouch speed to something slower (%.3f m/s) that ends at a speed of zero.", m_crouchDownInitVelocity);
+        }
+
+        // Calculate the crouch up (stand) final velocity
+        m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
+        // Check to make sure that the standing is decelerated, if not then force a constant velocity to meet m_standTime
+        if(m_crouchUpFinalVelocity > m_crouchUpInitVelocity)
+        {
+            m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
+            m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
+            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead.");
+        }
+        // Check to make sure that the final standing velocity isn't negative, and fix it if it is
+        else if(m_crouchUpFinalVelocity < 0)
+        {
+            m_crouchUpInitVelocity = 2.f * m_crouchDistance / m_standTime;
+            m_crouchUpFinalVelocity = 0.f;
+            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too fast to reach the standing position at stand time, setting the start stand speed to something slower (%.3f m/s) that ends at a speed of zero.", m_crouchUpInitVelocity);
+        }
     }
     float FirstPersonControllerComponent::GetCrouchTime() const
     {

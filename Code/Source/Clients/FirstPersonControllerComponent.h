@@ -497,7 +497,7 @@ namespace FirstPersonController
 
         // Stores the previous tick deltaTime and previous physics timestep
         float m_prevDeltaTime = 1.f / 60.f;
-        float m_prevTimeStep = 1.f / 60.f;
+        float m_prevTimestep = 1.f / 60.f;
 
         // Provides the functionality when AddVelocityForPhysicsTimestep is used
         void OnSceneSimulationStart(float physicsTimestep);
