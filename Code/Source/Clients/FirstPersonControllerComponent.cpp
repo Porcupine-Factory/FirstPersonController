@@ -894,7 +894,7 @@ namespace FirstPersonController
         {
             m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
             m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
-            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead.");
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead (%.3f m/s).", m_crouchDownInitVelocity);
         }
         // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
         else if(m_crouchDownFinalVelocity < 0)
@@ -911,7 +911,7 @@ namespace FirstPersonController
         {
             m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
             m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
-            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead.");
+            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead (%.3f m/s).", m_crouchUpInitVelocity);
         }
         // Check to make sure that the final standing velocity isn't negative, and fix it if it is
         else if(m_crouchUpFinalVelocity < 0)
@@ -3086,7 +3086,7 @@ namespace FirstPersonController
             &PhysX::CharacterControllerRequestBus::Events::GetRadius);
 
         if(m_crouchDistance > m_capsuleHeight - 2.f*m_capsuleRadius)
-            m_crouchDistance = m_capsuleHeight - 2.f*m_capsuleRadius;
+            SetCrouchDistance(m_capsuleHeight - 2.f*m_capsuleRadius);
 
         m_capsuleCurrentHeight = m_capsuleHeight;
     }
@@ -4448,7 +4448,7 @@ namespace FirstPersonController
         {
             m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
             m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
-            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead.");
+            AZ_Warning("First Person Controller Component", false, "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the crouch speed to the crouch distance divide by the crouch time instead (%.3f m/s).", m_crouchDownInitVelocity);
         }
         // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
         else if(m_crouchDownFinalVelocity < 0)
@@ -4465,7 +4465,7 @@ namespace FirstPersonController
         {
             m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
             m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
-            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead.");
+            AZ_Warning("First Person Controller Component", false, "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand speed to the crouch distance divide by the stand time instead (%.3f m/s).", m_crouchUpInitVelocity);
         }
         // Check to make sure that the final standing velocity isn't negative, and fix it if it is
         else if(m_crouchUpFinalVelocity < 0)
