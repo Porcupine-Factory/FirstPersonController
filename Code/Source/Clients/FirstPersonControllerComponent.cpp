@@ -162,7 +162,7 @@ namespace FirstPersonController
             {
                 using namespace AZ::Edit::Attributes;
                 ec->Class<FirstPersonControllerComponent>("First Person Controller",
-                    "First Person Character")
+                    "The First Person Controller component gives you a fully-featured character controller for your first person game")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person Controller")
