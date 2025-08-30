@@ -71,11 +71,11 @@ namespace FirstPersonController
         AZ::EntityId GetActiveCameraEntityId() const override;
         AZ::Entity* GetActiveCameraEntityPtr() const override;
         void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
-        bool GetCameraSmoothFollow() const;
-        void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow);
-        void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId);
-        void SetParentChangeUpdate(const AZ::EntityId& entityId);
-        AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const;
+        bool GetCameraSmoothFollow() const override;
+        void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow) override;
+        void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) override;
+        void SetParentChangeUpdate(const AZ::EntityId& entityId) override;
+        AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const override;
         float GetEyeHeight() const override;
         void SetEyeHeight(const float& new_eyeHeight) override;
         float GetCameraLocalZTravelDistance() const override;
