@@ -466,8 +466,8 @@ namespace FirstPersonController
         bool GetCameraNotSmoothFollow() const;
 
         // FirstPersonControllerComponentNotificationBus
-        float OnPhysicsTimestepStart(const float& timeStep);
-        float OnPhysicsTimestepFinish(const float& timeStep);
+        void OnPhysicsTimestepStart(const float& timeStep);
+        void OnPhysicsTimestepFinish(const float& timeStep);
         void OnGroundHit();
         void OnGroundSoonHit();
         void OnUngrounded();
