@@ -202,6 +202,8 @@ namespace FirstPersonController
         virtual void SetJumpHeld(const bool&) = 0;
         virtual bool GetDoubleJump() const = 0;
         virtual void SetDoubleJump(const bool&) = 0;
+        virtual bool GetFinalJumpPerformed() const = 0;
+        virtual void SetFinalJumpPerformed(const bool&) = 0;
         virtual float GetGroundedOffset() const = 0;
         virtual void SetGroundedOffset(const float&) = 0;
         virtual float GetGroundCloseOffset() const = 0;
@@ -398,7 +400,7 @@ namespace FirstPersonController
         virtual void OnStartedCrouching() = 0;
         virtual void OnStartedStanding() = 0;
         virtual void OnFirstJump() = 0;
-        virtual void OnSecondJump() = 0;
+        virtual void OnFinalJump() = 0;
         virtual void OnStaminaCapped() = 0;
         virtual void OnStaminaReachedZero() = 0;
         virtual void OnSprintStarted() = 0;
@@ -416,7 +418,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerComponentNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnSecondJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnFinalJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
 
         void OnPhysicsTimestepStart(const float& timeStep) override
         {
@@ -502,9 +504,9 @@ namespace FirstPersonController
         {
             Call(FN_OnFirstJump);
         }
-        void OnSecondJump() override
+        void OnFinalJump() override
         {
-            Call(FN_OnSecondJump);
+            Call(FN_OnFinalJump);
         }
         void OnStaminaCapped() override
         {

@@ -249,6 +249,8 @@ namespace FirstPersonController
         void SetJumpHeld(const bool& new_jumpHeld) override;
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_doubleJumpEnabled) override;
+        bool GetFinalJumpPerformed() const override;
+        void SetFinalJumpPerformed(const bool& new_finalJump) override;
         float GetGroundedOffset() const override;
         void SetGroundedOffset(const float& new_groundedSphereCastOffset) override;
         float GetGroundCloseOffset() const override;
@@ -487,7 +489,7 @@ namespace FirstPersonController
         void OnStartedCrouching();
         void OnStartedStanding();
         void OnFirstJump();
-        void OnSecondJump();
+        void OnFinalJump();
         void OnStaminaCapped();
         void OnStaminaReachedZero();
         void OnSprintStarted();
@@ -650,7 +652,7 @@ namespace FirstPersonController
         float m_jumpCounter = 0.f;
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
-        bool m_secondJump = false;
+        bool m_finalJump = false;
         bool m_jumpHeadIgnoreDynamicRigidBodies = true;
         bool m_jumpWhileCrouched = false;
         bool m_headHit = false;

@@ -623,6 +623,8 @@ namespace FirstPersonController
                 ->Event("Set Jump Held", &FirstPersonControllerComponentRequests::SetJumpHeld)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
                 ->Event("Set Double Jump", &FirstPersonControllerComponentRequests::SetDoubleJump)
+                ->Event("Get Final Jump Performed", &FirstPersonControllerComponentRequests::GetFinalJumpPerformed)
+                ->Event("Set Final Jump Performed", &FirstPersonControllerComponentRequests::SetFinalJumpPerformed)
                 ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
                 ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
                 ->Event("Get Ground Close Offset", &FirstPersonControllerComponentRequests::GetGroundCloseOffset)
@@ -2503,8 +2505,8 @@ namespace FirstPersonController
                 if(m_jumpValue == 0.f && m_jumpHeld)
                     m_jumpHeld = false;
 
-                if(m_doubleJumpEnabled && m_secondJump)
-                    m_secondJump = false;
+                if(m_doubleJumpEnabled && m_finalJump)
+                    m_finalJump = false;
             }
         }
         else if((m_jumpCounter + deltaTime/2.f) < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
@@ -2537,7 +2539,7 @@ namespace FirstPersonController
             if(m_jumpHeld && m_jumpValue == 0.f)
                 m_jumpHeld = false;
 
-            if(m_doubleJumpEnabled && !m_secondJump && !m_jumpHeld && m_jumpValue != 0.f)
+            if(m_doubleJumpEnabled && !m_finalJump && !m_jumpHeld && m_jumpValue != 0.f)
             {
                 if(!m_standing)
                 {
@@ -2547,9 +2549,9 @@ namespace FirstPersonController
                 }
                 m_applyVelocityZ = m_jumpSecondInitialVelocity;
                 m_applyVelocityZCurrentDelta = 0.f;
-                m_secondJump = true;
+                m_finalJump = true;
                 m_jumpHeld = true;
-                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnSecondJump);
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFinalJump);
             }
         }
 
@@ -2913,7 +2915,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnStartedCrouching(){}
     void FirstPersonControllerComponent::OnStartedStanding(){}
     void FirstPersonControllerComponent::OnFirstJump(){}
-    void FirstPersonControllerComponent::OnSecondJump(){}
+    void FirstPersonControllerComponent::OnFinalJump(){}
     void FirstPersonControllerComponent::OnStaminaCapped(){}
     void FirstPersonControllerComponent::OnStaminaReachedZero(){}
     void FirstPersonControllerComponent::OnSprintStarted(){}
@@ -3919,6 +3921,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetDoubleJump(const bool& new_doubleJumpEnabled)
     {
         m_doubleJumpEnabled = new_doubleJumpEnabled;
+    }
+    bool FirstPersonControllerComponent::GetFinalJumpPerformed() const
+    {
+        return m_doubleJumpEnabled;
+    }
+    void FirstPersonControllerComponent::SetFinalJumpPerformed(const bool& new_finalJump)
+    {
+        m_finalJump = new_finalJump;
     }
     float FirstPersonControllerComponent::GetGroundedOffset() const
     {
