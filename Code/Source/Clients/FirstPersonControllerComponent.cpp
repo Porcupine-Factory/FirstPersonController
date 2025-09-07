@@ -2986,8 +2986,8 @@ namespace FirstPersonController
     }
 
     // Event Notification methods for use in scripts
-    void FirstPersonControllerComponent::OnPhysicsTimestepStart(const float& timeStep){}
-    void FirstPersonControllerComponent::OnPhysicsTimestepFinish(const float& timeStep){}
+    void FirstPersonControllerComponent::OnPhysicsTimestepStart([[maybe_unused]] const float& timeStep){}
+    void FirstPersonControllerComponent::OnPhysicsTimestepFinish([[maybe_unused]] const float& timeStep){}
     void FirstPersonControllerComponent::OnGroundHit(){}
     void FirstPersonControllerComponent::OnGroundSoonHit(){}
     void FirstPersonControllerComponent::OnUngrounded(){}
