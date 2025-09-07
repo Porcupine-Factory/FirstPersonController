@@ -67,6 +67,7 @@ namespace FirstPersonController
               ->Field("Opposing Direction Deceleration Factor", &FirstPersonControllerComponent::m_opposingDecel)
               ->Field("Add Velocity For Physics Timestep Instead Of Tick", &FirstPersonControllerComponent::m_addVelocityForTimestepVsTick)
               ->Field("X&Y Movement Tracks Surface Inclines", &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal)
+              ->Field("Speed Reduced When Moving Up Inclines", &FirstPersonControllerComponent::m_movingUpInclineSlowed)
               ->Field("Instant Velocity Rotation", &FirstPersonControllerComponent::m_instantVelocityRotation)
 
               // Sprinting group
@@ -238,6 +239,11 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal,
                         "X&Y Movement Tracks Surface Inclines", "Determines whether the character's X&Y movement will be tilted in order to follow inclines. This will apply up to the max angle that is specified in the PhysX Character Controller component.")
+                        ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+                      ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_movingUpInclineSlowed,
+                        "Speed Reduced When Moving Up Inclines", "Determines whether the character's X&Y movement speed is reduced when going up inclines.")
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetVelocityXCrossYTracksNormal)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_instantVelocityRotation,
                         "Instant Velocity Rotation", "Determines whether the velocity vector can rotate instantaneously with respect to the world coordinate system, if set to false then the acceleration and deceleration will apply when rotating the character.")
@@ -539,6 +545,8 @@ namespace FirstPersonController
                 ->Event("Set Velocity XcrossY Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
                 ->Event("Get Velocity XcrossY Tracks Normal", &FirstPersonControllerComponentRequests::GetVelocityXCrossYTracksNormal)
                 ->Event("Set Velocity XcrossY Tracks Normal", &FirstPersonControllerComponentRequests::SetVelocityXCrossYTracksNormal)
+                ->Event("Get Speed Reduced When Moving Up Inclines", &FirstPersonControllerComponentRequests::GetSpeedReducedWhenMovingUpInclines)
+                ->Event("Set Speed Reduced When Moving Up Inclines", &FirstPersonControllerComponentRequests::SetSpeedReducedWhenMovingUpInclines)
                 ->Event("Get Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::GetVelocityZPosDirection)
                 ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
                 ->Event("Get Sphere Casts Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
@@ -1538,6 +1546,86 @@ namespace FirstPersonController
         return scaledVector;
     }
 
+    void FirstPersonControllerComponent::ApplyMovingUpInclineXYSpeedFactor()
+    {
+        if(m_grounded)
+        {
+            // The character is not on an incline, so don't apply an incline factor
+            if(m_velocityXCrossYDirection.IsClose(AZ::Vector3::CreateAxisZ()))
+            {
+                m_movingUpInclineFactor = 1.f;
+                m_prevGroundCloseSumNormals = AZ::Vector3::CreateAxisZ();
+                return;
+            }
+
+            if(AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(m_velocityXCrossYDirection) > AZ::Constants::HalfPi)
+            {
+                m_prevGroundCloseSumNormals = m_velocityXCrossYDirection;
+
+                // Calculate the steepness of the incline
+                const float steepness = AZ::Vector3::CreateAxisZ().Angle(m_velocityXCrossYDirection) / AZ::Constants::HalfPi;
+
+                // Get the component of the velocity vector pointing towards the incline
+                const AZ::Vector2 currentXYVelocityTowardsIncline =
+                                            AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY()).
+                                                GetProjected(AZ::Vector2(-m_velocityXCrossYDirection.GetX(), -m_velocityXCrossYDirection.GetY()).GetNormalized());
+
+                // Calculate the maximum expected velocity when moving directly towards the incline
+                AZ::Vector2 maxXYVelocityTowardsIncline =
+                                            m_prevTargetVelocity.GetLength()*
+                                                AZ::Vector2(-m_velocityXCrossYDirection.GetX(), -m_velocityXCrossYDirection.GetY()).GetNormalized();
+                const AZ::Vector3 tiltedMaxXYVelocityTowardsIncline = TiltVectorXCrossY(maxXYVelocityTowardsIncline, m_velocityXCrossYDirection);
+                maxXYVelocityTowardsIncline = AZ::Vector2(tiltedMaxXYVelocityTowardsIncline.GetX(), tiltedMaxXYVelocityTowardsIncline.GetY());
+
+                // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
+                m_movingUpInclineFactor = (1.f - steepness * currentXYVelocityTowardsIncline.GetLength() / maxXYVelocityTowardsIncline.GetLength());
+
+                m_prevTargetVelocity *= m_movingUpInclineFactor;
+            }
+        }
+        else
+        {
+            const AZ::Vector3 groundCloseSumNormals = GetGroundCloseSumNormalsDirection();
+
+            // An incline isn't below the character, so don't apply an incline factor
+            if(groundCloseSumNormals.IsZero() && m_movingUpInclineFactor == 1.f)
+            {
+                return;
+            }
+            else if(!groundCloseSumNormals.IsZero())
+            {
+                m_prevGroundCloseSumNormals = groundCloseSumNormals;
+            }
+
+            if(AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(m_prevGroundCloseSumNormals) > AZ::Constants::HalfPi)
+            {
+                // Calculate the steepness of the incline
+                const float steepness = AZ::Vector3::CreateAxisZ().Angle(m_prevGroundCloseSumNormals) / AZ::Constants::HalfPi;
+
+                // Get the component of the velocity vector pointing towards the incline
+                AZ::Vector2 currentXYVelocityTowardsIncline =
+                                            AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY()).
+                                                GetProjected(AZ::Vector2(-m_prevGroundCloseSumNormals.GetX(), -m_prevGroundCloseSumNormals.GetY()).GetNormalized());
+                const AZ::Vector3 tiltedCurrentXYVelocityTowardsIncline = TiltVectorXCrossY(currentXYVelocityTowardsIncline, m_prevGroundCloseSumNormals);
+                currentXYVelocityTowardsIncline = AZ::Vector2(tiltedCurrentXYVelocityTowardsIncline.GetX(), tiltedCurrentXYVelocityTowardsIncline.GetY());
+
+                // Calculate the maximum expected velocity when moving directly towards the incline
+                AZ::Vector2 maxXYVelocityTowardsIncline =
+                                            m_prevTargetVelocity.GetLength()*
+                                                AZ::Vector2(-m_prevGroundCloseSumNormals.GetX(), -m_prevGroundCloseSumNormals.GetY()).GetNormalized();
+                const AZ::Vector3 tiltedMaxXYVelocityTowardsIncline = TiltVectorXCrossY(maxXYVelocityTowardsIncline, m_prevGroundCloseSumNormals);
+                maxXYVelocityTowardsIncline = AZ::Vector2(tiltedMaxXYVelocityTowardsIncline.GetX(), tiltedMaxXYVelocityTowardsIncline.GetY());
+
+                // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
+                m_movingUpInclineFactor = (1.f - steepness * currentXYVelocityTowardsIncline.GetLength() / maxXYVelocityTowardsIncline.GetLength());
+                const float jumpInclineCompensationFactor = maxXYVelocityTowardsIncline.GetLength() / AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY()).GetLength();
+
+                m_prevTargetVelocity.SetX(m_prevTargetVelocity.GetX()*m_movingUpInclineFactor*jumpInclineCompensationFactor);
+                m_prevTargetVelocity.SetY(m_prevTargetVelocity.GetY()*m_movingUpInclineFactor*jumpInclineCompensationFactor);
+            }
+        }
+    }
+
     // Here target velocity is with respect to the character's frame of reference
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
@@ -2068,15 +2156,14 @@ namespace FirstPersonController
 
         if(m_scriptSetsTargetVelocityXY)
         {
-            targetVelocityXY.SetX(m_scriptTargetVelocityXY.GetX());
-            targetVelocityXY.SetY(m_scriptTargetVelocityXY.GetY());
+            targetVelocityXY = m_scriptTargetVelocityXY;
             SprintManager(targetVelocityXY, deltaTime);
         }
         else
             m_scriptTargetVelocityXY = targetVelocityXY;
 
         // Rotate the target velocity vector so that it can be compared against the applied velocity
-        AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
+        const AZ::Vector2 targetVelocityXYWorld = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
         // Obtain the last applied velocity if the target velocity changed
         if((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
@@ -2871,6 +2958,11 @@ namespace FirstPersonController
                 addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
             // Tilt the XY velocity plane based on m_velocityXCrossYDirection
             m_prevTargetVelocity = TiltVectorXCrossY((m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
+
+            // Calculate the walking up incline factor if it's enabled, otherwise set it to one
+            if(m_velocityXCrossYTracksNormal && m_movingUpInclineSlowed && !m_prevTargetVelocityXY.IsZero())
+                ApplyMovingUpInclineXYSpeedFactor();
+
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection + m_velocityFromImpulse;
 
@@ -3319,7 +3411,7 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonControllerComponent::GetGroundCloseSumNormalsDirection() const
     {
         if(m_groundCloseHits.empty())
-            return AZ::Vector3::CreateAxisZ();
+            return AZ::Vector3::CreateZero();
         AZ::Vector3 sumNormals = AZ::Vector3::CreateZero();
         for(AzPhysics::SceneQueryHit hit: m_groundCloseHits)
             sumNormals += hit.m_normal;
@@ -3524,6 +3616,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetVelocityXCrossYTracksNormal(const bool& new_velocityXCrossYTracksNormal)
     {
         m_velocityXCrossYTracksNormal = new_velocityXCrossYTracksNormal;
+    }
+    bool FirstPersonControllerComponent::GetSpeedReducedWhenMovingUpInclines() const
+    {
+        return m_movingUpInclineSlowed;
+    }
+    void FirstPersonControllerComponent::SetSpeedReducedWhenMovingUpInclines(const bool& new_movingUpInclineSlowed)
+    {
+        m_movingUpInclineSlowed = new_movingUpInclineSlowed;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2)
     {

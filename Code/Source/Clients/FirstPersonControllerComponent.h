@@ -165,6 +165,8 @@ namespace FirstPersonController
         void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
         bool GetVelocityXCrossYTracksNormal() const override;
         void SetVelocityXCrossYTracksNormal(const bool& new_velocityXCrossYTracksNormal) override;
+        bool GetSpeedReducedWhenMovingUpInclines() const override;
+        void SetSpeedReducedWhenMovingUpInclines(const bool& new_movingUpInclineSlowed) override;
         AZ::Vector3 GetVelocityZPosDirection() const override;
         void SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection) override;
         AZ::Vector3 GetSphereCastsAxisDirectionPose() const override;
@@ -449,6 +451,7 @@ namespace FirstPersonController
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation();
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
+        void ApplyMovingUpInclineXYSpeedFactor();
         void LerpCameraToCharacter(float deltaTime);
         bool IsCameraChildOfCharacter();
         void SmoothRotation();
@@ -612,8 +615,11 @@ namespace FirstPersonController
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
+        float m_movingUpInclineFactor = 1.f;
+        AZ::Vector3 m_prevGroundCloseSumNormals = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
         bool m_velocityXCrossYTracksNormal = true;
+        bool m_movingUpInclineSlowed = true;
         AZ::Vector3 m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
         AzPhysics::CollisionGroups::Id m_groundedCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_groundedCollisionGroup = AzPhysics::CollisionGroup::All;
