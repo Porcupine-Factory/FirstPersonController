@@ -616,6 +616,7 @@ namespace FirstPersonController
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         float m_movingUpInclineFactor = 1.f;
+        bool m_jumpInclineVelocityXYCaptured = false;
         AZ::Vector3 m_prevGroundCloseSumNormals = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
         bool m_velocityXCrossYTracksNormal = true;

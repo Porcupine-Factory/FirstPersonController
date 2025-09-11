@@ -1566,19 +1566,15 @@ namespace FirstPersonController
                 const float steepness = AZ::Vector3::CreateAxisZ().Angle(m_velocityXCrossYDirection) / AZ::Constants::HalfPi;
 
                 // Get the component of the velocity vector pointing towards the incline
-                const AZ::Vector2 currentXYVelocityTowardsIncline =
-                                            AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY()).
-                                                GetProjected(AZ::Vector2(-m_velocityXCrossYDirection.GetX(), -m_velocityXCrossYDirection.GetY()).GetNormalized());
+                const AZ::Vector2 currentVelocityXYTowardsIncline = AZ::Vector2(m_prevTargetVelocity).GetProjected(AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized());
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxXYVelocityTowardsIncline =
-                                            m_prevTargetVelocity.GetLength()*
-                                                AZ::Vector2(-m_velocityXCrossYDirection.GetX(), -m_velocityXCrossYDirection.GetY()).GetNormalized();
-                const AZ::Vector3 tiltedMaxXYVelocityTowardsIncline = TiltVectorXCrossY(maxXYVelocityTowardsIncline, m_velocityXCrossYDirection);
-                maxXYVelocityTowardsIncline = AZ::Vector2(tiltedMaxXYVelocityTowardsIncline.GetX(), tiltedMaxXYVelocityTowardsIncline.GetY());
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_prevTargetVelocity.GetLength()*AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized();
+                const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline = TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_velocityXCrossYDirection);
+                maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
-                m_movingUpInclineFactor = (1.f - steepness * currentXYVelocityTowardsIncline.GetLength() / maxXYVelocityTowardsIncline.GetLength());
+                m_movingUpInclineFactor = (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength());
 
                 m_prevTargetVelocity *= m_movingUpInclineFactor;
             }
@@ -1602,26 +1598,22 @@ namespace FirstPersonController
                 // Calculate the steepness of the incline
                 const float steepness = AZ::Vector3::CreateAxisZ().Angle(m_prevGroundCloseSumNormals) / AZ::Constants::HalfPi;
 
+                // Get the velocity that would be tilted if the character were grounded
+                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_prevTargetVelocityXY, m_prevGroundCloseSumNormals));
+
                 // Get the component of the velocity vector pointing towards the incline
-                AZ::Vector2 currentXYVelocityTowardsIncline =
-                                            AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY()).
-                                                GetProjected(AZ::Vector2(-m_prevGroundCloseSumNormals.GetX(), -m_prevGroundCloseSumNormals.GetY()).GetNormalized());
-                const AZ::Vector3 tiltedCurrentXYVelocityTowardsIncline = TiltVectorXCrossY(currentXYVelocityTowardsIncline, m_prevGroundCloseSumNormals);
-                currentXYVelocityTowardsIncline = AZ::Vector2(tiltedCurrentXYVelocityTowardsIncline.GetX(), tiltedCurrentXYVelocityTowardsIncline.GetY());
+                const AZ::Vector2 currentVelocityXYTowardsIncline = AZ::Vector2(velocityXYTilted).GetProjected(AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized());
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxXYVelocityTowardsIncline =
-                                            m_prevTargetVelocity.GetLength()*
-                                                AZ::Vector2(-m_prevGroundCloseSumNormals.GetX(), -m_prevGroundCloseSumNormals.GetY()).GetNormalized();
-                const AZ::Vector3 tiltedMaxXYVelocityTowardsIncline = TiltVectorXCrossY(maxXYVelocityTowardsIncline, m_prevGroundCloseSumNormals);
-                maxXYVelocityTowardsIncline = AZ::Vector2(tiltedMaxXYVelocityTowardsIncline.GetX(), tiltedMaxXYVelocityTowardsIncline.GetY());
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_prevTargetVelocityXY.GetLength()*AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized();
+                const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline = TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_prevGroundCloseSumNormals);
+                maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
-                m_movingUpInclineFactor = (1.f - steepness * currentXYVelocityTowardsIncline.GetLength() / maxXYVelocityTowardsIncline.GetLength());
-                const float jumpInclineCompensationFactor = maxXYVelocityTowardsIncline.GetLength() / AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY()).GetLength();
+                m_movingUpInclineFactor = (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength());
 
-                m_prevTargetVelocity.SetX(m_prevTargetVelocity.GetX()*m_movingUpInclineFactor*jumpInclineCompensationFactor);
-                m_prevTargetVelocity.SetY(m_prevTargetVelocity.GetY()*m_movingUpInclineFactor*jumpInclineCompensationFactor);
+                m_prevTargetVelocity.SetX(velocityXYTilted.GetX()*m_movingUpInclineFactor);
+                m_prevTargetVelocity.SetY(velocityXYTilted.GetY()*m_movingUpInclineFactor);
             }
         }
     }
@@ -2204,6 +2196,27 @@ namespace FirstPersonController
         }
 
         m_prevVelocityXCrossYDirection = m_velocityXCrossYDirection;
+
+        // Logic to determine if the lateral velocity on X&Y when jumping on inclines is to be captured
+        if(!m_grounded && !m_jumpInclineVelocityXYCaptured && m_velocityXCrossYTracksNormal)
+        {
+            const AZ::Vector3 groundCloseSumNormals = GetGroundCloseSumNormalsDirection();
+            // If either moving up inclines isn't slowed or the character is jumping down an incline, then capture the velocity on X&Y
+            if((groundCloseSumNormals != AZ::Vector3::CreateAxisZ() && !groundCloseSumNormals.IsZero()) &&
+               ((!m_movingUpInclineSlowed) ||
+                (m_movingUpInclineSlowed && AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(groundCloseSumNormals) < AZ::Constants::HalfPi)))
+            {
+                // Capture the X&Y components of the velocity vector when jumping on an inclined surface
+                m_prevApplyVelocityXY = AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY());
+                m_applyVelocityXY = m_prevApplyVelocityXY;
+                // Set the flag which says that the lateral velocity has been captured
+                m_jumpInclineVelocityXYCaptured = true;
+                // Set the lerp time to zero since the a new initial velocity is to be used inside LerpVelocityXY()
+                m_lerpTime = 0.f;
+            }
+        }
+        else if(m_grounded)
+            m_jumpInclineVelocityXYCaptured = false;
 
         // Lerp to the velocity if we're not already there
         if(m_applyVelocityXY != targetVelocityXYWorld)
