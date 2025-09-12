@@ -25,7 +25,8 @@
     "documentation_url": "https://github.com/Porcupine-Factory/FirstPersonController/wiki",
     "dependencies": [
         "PhysX5",
-        "StartingPointInput"
+        "StartingPointInput",
+        "Atom_RPI"
     ],
     "repo_uri": "https://github.com/Porcupine-Factory/FirstPersonController.git",
     "restricted": "FirstPersonController",
