@@ -1579,7 +1579,7 @@ namespace FirstPersonController
                 m_prevTargetVelocity *= m_movingUpInclineFactor;
             }
         }
-        else
+        else if(!m_instantVelocityRotation)
         {
             const AZ::Vector3 groundCloseSumNormals = GetGroundCloseSumNormalsDirection();
 
@@ -2198,7 +2198,7 @@ namespace FirstPersonController
         m_prevVelocityXCrossYDirection = m_velocityXCrossYDirection;
 
         // Logic to determine if the lateral velocity on X&Y when jumping on inclines is to be captured
-        if(!m_grounded && !m_jumpInclineVelocityXYCaptured && m_velocityXCrossYTracksNormal)
+        if(!m_grounded && !m_jumpInclineVelocityXYCaptured && m_velocityXCrossYTracksNormal && !m_instantVelocityRotation)
         {
             const AZ::Vector3 groundCloseSumNormals = GetGroundCloseSumNormalsDirection();
             // If either moving up inclines isn't slowed or the character is jumping down an incline, then capture the velocity on X&Y

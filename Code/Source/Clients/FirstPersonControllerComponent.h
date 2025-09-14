@@ -532,7 +532,7 @@ namespace FirstPersonController
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_correctedVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 1.f;
-        bool m_instantVelocityRotation = true;
+        bool m_instantVelocityRotation = false;
         bool m_velocityXYIgnoresObstacles = true;
         bool m_gravityIgnoresObstacles = false;
         bool m_posZIgnoresObstacles = true;
@@ -574,7 +574,7 @@ namespace FirstPersonController
         float m_sprintPauseTime = (m_sprintCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintCooldownTime;
         float m_sprintPause = 0.f;
         bool m_sprintBackwards = true;
-        bool m_sprintWhileCrouched = true;
+        bool m_sprintWhileCrouched = false;
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisable = false;
         bool m_staminaIncreasing = false;
@@ -605,7 +605,7 @@ namespace FirstPersonController
         bool m_crouchJumpCausesStanding = true;
         bool m_crouchPendJumps = true;
         bool m_crouchJumpPending = false;
-        bool m_crouchSprintCausesStanding = false;
+        bool m_crouchSprintCausesStanding = true;
         bool m_crouchPriorityWhenSprintPressed = true;
         bool m_crouchScriptLocked = false;
         bool m_crouchWhenNotGrounded = false;
