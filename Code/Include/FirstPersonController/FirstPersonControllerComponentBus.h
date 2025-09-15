@@ -102,6 +102,7 @@ namespace FirstPersonController
         virtual Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit) const = 0;
         virtual bool GetSceneQueryHitIsInGroupName(AzPhysics::SceneQueryHit, AZStd::string) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit) const = 0;
+        virtual bool GetLayerNameIsInGroupName(AZStd::string, AZStd::string) const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;
         virtual AZStd::string GetGroundedCollisionGroupName() const = 0;

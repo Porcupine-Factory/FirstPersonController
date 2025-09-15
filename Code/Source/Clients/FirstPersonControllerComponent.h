@@ -149,6 +149,7 @@ namespace FirstPersonController
         Physics::Shape* GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const override;
         bool GetSceneQueryHitIsInGroupName(AzPhysics::SceneQueryHit hit, AZStd::string groupName) const override;
         AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const override;
+        bool GetLayerNameIsInGroupName(AZStd::string layerName, AZStd::string groupName) const override;
         bool GetGroundClose() const override;
         void SetGroundCloseForTick(const bool& new_groundClose) override;
         AZStd::string GetGroundedCollisionGroupName() const override;

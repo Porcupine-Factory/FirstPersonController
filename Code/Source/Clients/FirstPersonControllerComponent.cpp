@@ -529,6 +529,7 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
                 ->Event("Get Scene Query Hit Is In Group Name", &FirstPersonControllerComponentRequests::GetSceneQueryHitIsInGroupName)
                 ->Event("Get Scene Query Hit Simulated Body Handle", &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
+                ->Event("Get Layer Name Is In Group Name", &FirstPersonControllerComponentRequests::GetLayerNameIsInGroupName)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
                 ->Event("Get Grounded Collision Group Name", &FirstPersonControllerComponentRequests::GetGroundedCollisionGroupName)
@@ -3530,6 +3531,24 @@ namespace FirstPersonController
     AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const
     {
         return hit.m_bodyHandle;
+    }
+    bool FirstPersonControllerComponent::GetLayerNameIsInGroupName(AZStd::string layerName, AZStd::string groupName) const
+    {
+        bool groupSuccess = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(groupSuccess, &Physics::CollisionRequests::TryGetCollisionGroupByName, groupName, collisionGroup);
+        if(groupSuccess)
+        {
+            bool layerSuccess = false;
+            AzPhysics::CollisionLayer collisionLayer;
+            Physics::CollisionRequestBus::BroadcastResult(
+                layerSuccess, &Physics::CollisionRequests::TryGetCollisionLayerByName, layerName, collisionLayer);
+            if(layerSuccess)
+                return collisionGroup.IsSet(collisionLayer);
+            else return false;
+        }
+        else
+            return false;
     }
     bool FirstPersonControllerComponent::GetGroundClose() const
     {
