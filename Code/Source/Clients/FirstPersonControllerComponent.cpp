@@ -1552,10 +1552,10 @@ namespace FirstPersonController
         if(m_grounded)
         {
             // The character is not on an incline, so don't apply an incline factor
-            if(m_velocityXCrossYDirection.IsClose(AZ::Vector3::CreateAxisZ()))
+            if(m_velocityXCrossYDirection.IsClose(m_velocityZPosDirection))
             {
                 m_movingUpInclineFactor = 1.f;
-                m_prevGroundCloseSumNormals = AZ::Vector3::CreateAxisZ();
+                m_prevGroundCloseSumNormals = m_velocityZPosDirection;
                 return;
             }
 
@@ -1564,7 +1564,7 @@ namespace FirstPersonController
                 m_prevGroundCloseSumNormals = m_velocityXCrossYDirection;
 
                 // Calculate the steepness of the incline
-                const float steepness = AZ::Vector3::CreateAxisZ().Angle(m_velocityXCrossYDirection) / AZ::Constants::HalfPi;
+                const float steepness = m_velocityZPosDirection.Angle(m_velocityXCrossYDirection) / AZ::Constants::HalfPi;
 
                 // Get the component of the velocity vector pointing towards the incline
                 const AZ::Vector2 currentVelocityXYTowardsIncline = AZ::Vector2(m_prevTargetVelocity).GetProjected(AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized());
@@ -1597,7 +1597,7 @@ namespace FirstPersonController
             if(AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(m_prevGroundCloseSumNormals) > AZ::Constants::HalfPi)
             {
                 // Calculate the steepness of the incline
-                const float steepness = AZ::Vector3::CreateAxisZ().Angle(m_prevGroundCloseSumNormals) / AZ::Constants::HalfPi;
+                const float steepness = m_velocityZPosDirection.Angle(m_prevGroundCloseSumNormals) / AZ::Constants::HalfPi;
 
                 // Get the velocity that would be tilted if the character were grounded
                 const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_prevTargetVelocityXY, m_prevGroundCloseSumNormals));
@@ -2203,7 +2203,7 @@ namespace FirstPersonController
         {
             const AZ::Vector3 groundCloseSumNormals = GetGroundCloseSumNormalsDirection();
             // If either moving up inclines isn't slowed or the character is jumping down an incline, then capture the velocity on X&Y
-            if((groundCloseSumNormals != AZ::Vector3::CreateAxisZ() && !groundCloseSumNormals.IsZero()) &&
+            if((groundCloseSumNormals != m_velocityZPosDirection && !groundCloseSumNormals.IsZero()) &&
                ((!m_movingUpInclineSlowed) ||
                 (m_movingUpInclineSlowed && AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(groundCloseSumNormals) < AZ::Constants::HalfPi)))
             {
