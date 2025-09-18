@@ -217,6 +217,8 @@ namespace FirstPersonController
         virtual void SetJumpHeadSphereCastOffset(const float&) = 0;
         virtual bool GetHeadHitSetsApogee() const = 0;
         virtual void SetHeadHitSetsApogee(const bool&) = 0;
+        virtual float GetFellFromHeight() const = 0;
+        virtual void SetFellFromHeight(const float&) = 0;
         virtual bool GetHeadHit() const = 0;
         virtual void SetHeadHit(const bool&) = 0;
         virtual bool GetJumpHeadIgnoreDynamicRigidBodies() const = 0;
@@ -384,8 +386,8 @@ namespace FirstPersonController
     public:
         virtual void OnPhysicsTimestepStart(const float&) = 0;
         virtual void OnPhysicsTimestepFinish(const float&) = 0;
-        virtual void OnGroundHit() = 0;
-        virtual void OnGroundSoonHit() = 0;
+        virtual void OnGroundHit(const float&) = 0;
+        virtual void OnGroundSoonHit(const float&) = 0;
         virtual void OnUngrounded() = 0;
         virtual void OnStartedFalling() = 0;
         virtual void OnJumpApogeeReached() = 0;
@@ -431,13 +433,13 @@ namespace FirstPersonController
         {
             Call(FN_OnPhysicsTimestepFinish, timeStep);
         }
-        void OnGroundHit() override
+        void OnGroundHit(const float& fellDistance) override
         {
-            Call(FN_OnGroundHit);
+            Call(FN_OnGroundHit, fellDistance);
         }
-        void OnGroundSoonHit() override
+        void OnGroundSoonHit(const float& soonFellDistance) override
         {
-            Call(FN_OnGroundSoonHit);
+            Call(FN_OnGroundSoonHit, soonFellDistance);
         }
         void OnUngrounded() override
         {

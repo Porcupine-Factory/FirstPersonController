@@ -264,6 +264,8 @@ namespace FirstPersonController
         void SetJumpHeadSphereCastOffset(const float& new_jumpHeadSphereCastOffset) override;
         bool GetHeadHitSetsApogee() const override;
         void SetHeadHitSetsApogee(const bool& new_headHitSetsApogee) override;
+        float GetFellFromHeight() const override;
+        void SetFellFromHeight(const float& new_fellFromHeight) override;
         bool GetHeadHit() const override;
         void SetHeadHit(const bool& new_headHit) override;
         bool GetJumpHeadIgnoreDynamicRigidBodies() const override;
@@ -474,8 +476,8 @@ namespace FirstPersonController
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);
         void OnPhysicsTimestepFinish(const float& timeStep);
-        void OnGroundHit();
-        void OnGroundSoonHit();
+        void OnGroundHit(const float& fellDistance);
+        void OnGroundSoonHit(const float& soonFellDistance);
         void OnUngrounded();
         void OnStartedFalling();
         void OnJumpApogeeReached();
@@ -665,6 +667,9 @@ namespace FirstPersonController
         bool m_jumpWhileCrouched = false;
         bool m_headHit = false;
         bool m_headHitSetsApogee = true;
+        float m_fellFromHeight = 0.f;
+        float m_fellDistance = 0.f;
+        float m_soonFellDistance = 0.f;
         AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;

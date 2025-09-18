@@ -644,6 +644,8 @@ namespace FirstPersonController
                 ->Event("Set Jump Head Hit Sphere Cast Offset", &FirstPersonControllerComponentRequests::SetJumpHeadSphereCastOffset)
                 ->Event("Get Head Hit Sets Apogee", &FirstPersonControllerComponentRequests::GetHeadHitSetsApogee)
                 ->Event("Set Head Hit Sets Apogee", &FirstPersonControllerComponentRequests::SetHeadHitSetsApogee)
+                ->Event("Get Fell From Height", &FirstPersonControllerComponentRequests::GetFellFromHeight)
+                ->Event("Set Fell From Height", &FirstPersonControllerComponentRequests::SetFellFromHeight)
                 ->Event("Get Head Hit", &FirstPersonControllerComponentRequests::GetHeadHit)
                 ->Event("Set Head Hit", &FirstPersonControllerComponentRequests::SetHeadHit)
                 ->Event("Get Jump Head Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::GetJumpHeadIgnoreDynamicRigidBodies)
@@ -2449,9 +2451,21 @@ namespace FirstPersonController
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
         if(!prevGrounded && m_grounded)
-            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGroundHit);
+        {
+            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                m_fellDistance = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ() - m_fellFromHeight;
+            else
+                m_fellDistance = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() - m_fellFromHeight;
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGroundHit, m_fellDistance);
+        }
         else if(!prevGroundClose && m_groundClose)
-            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGroundSoonHit);
+        {
+            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                m_soonFellDistance = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ() - m_fellFromHeight;
+            else
+                m_soonFellDistance = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() - m_fellFromHeight;
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnGroundSoonHit, m_soonFellDistance);
+        }
         else if(prevGrounded && !m_grounded)
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnUngrounded);
     }
@@ -2690,14 +2704,25 @@ namespace FirstPersonController
         }
 
         if(prevApplyVelocityZ == 0.f && m_applyVelocityZ < 0.f)
+        {
+            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ();
+            else
+                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength();
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedFalling);
+        }
         if(prevApplyVelocityZ > 0.f && m_applyVelocityZ <= 0.f)
+        {
+            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ();
+            else
+                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength();
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnJumpApogeeReached);
+        }
 
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("First Person Controller Component", "Z Translation = %.10f", pos.GetZ());
-        //AZ_Printf("First Person Controller Component", "currentVelocity.GetZ() = %.10f", currentVelocity.GetZ());
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZPrevDelta = %.10f", m_applyVelocityZPrevDelta);
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZ = %.10f", m_applyVelocityZ);
@@ -3002,8 +3027,8 @@ namespace FirstPersonController
     // Event Notification methods for use in scripts
     void FirstPersonControllerComponent::OnPhysicsTimestepStart([[maybe_unused]] const float& timeStep){}
     void FirstPersonControllerComponent::OnPhysicsTimestepFinish([[maybe_unused]] const float& timeStep){}
-    void FirstPersonControllerComponent::OnGroundHit(){}
-    void FirstPersonControllerComponent::OnGroundSoonHit(){}
+    void FirstPersonControllerComponent::OnGroundHit([[maybe_unused]] const float& fellDistance){}
+    void FirstPersonControllerComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance){}
     void FirstPersonControllerComponent::OnUngrounded(){}
     void FirstPersonControllerComponent::OnStartedFalling(){}
     void FirstPersonControllerComponent::OnJumpApogeeReached(){}
@@ -4102,6 +4127,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetHeadHitSetsApogee(const bool& new_headHitSetsApogee)
     {
         m_headHitSetsApogee = new_headHitSetsApogee;
+    }
+    float FirstPersonControllerComponent::GetFellFromHeight() const
+    {
+        return m_fellFromHeight;
+    }
+    void FirstPersonControllerComponent::SetFellFromHeight(const float& new_fellFromHeight)
+    {
+        m_fellFromHeight = new_fellFromHeight;
     }
     bool FirstPersonControllerComponent::GetHeadHit() const
     {
