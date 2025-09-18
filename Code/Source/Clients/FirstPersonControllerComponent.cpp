@@ -2036,7 +2036,7 @@ namespace FirstPersonController
                     if(m_standIgnoreDynamicRigidBodies)
                     {
                         // Check to see if the entity hit is dynamic
-                        AzPhysics::RigidBody* bodyHit;
+                        AzPhysics::RigidBody* bodyHit = NULL;
                         Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId,
                             &Physics::RigidBodyRequests::GetRigidBody);
 
@@ -2549,7 +2549,7 @@ namespace FirstPersonController
                 if(m_jumpHeadIgnoreDynamicRigidBodies)
                 {
                     // Check to see if the entity hit is dynamic
-                    AzPhysics::RigidBody* bodyHit;
+                    AzPhysics::RigidBody* bodyHit = NULL;
                     Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId,
                         &Physics::RigidBodyRequests::GetRigidBody);
 
