@@ -1161,14 +1161,14 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(deltaTime, false);
+        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), false);
         m_prevDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
         FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
-        ProcessInput(physicsTimestep * m_physicsTimestepScaleFactor, true);
+        ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), true);
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
@@ -2967,15 +2967,9 @@ namespace FirstPersonController
                 ResetCameraToCharacter();
             }
 
-            if(m_addVelocityForTimestepVsTick)
-                CheckGrounded((deltaTime + m_prevTimestep) / 2.f);
-            else
-                CheckGrounded((deltaTime + m_prevDeltaTime) / 2.f);
+            CheckGrounded(deltaTime);
 
-            if(m_addVelocityForTimestepVsTick)
-                CrouchManager((deltaTime + m_prevTimestep) / 2.f);
-            else
-                CrouchManager((deltaTime + m_prevDeltaTime) / 2.f);
+            CrouchManager(deltaTime);
 
             // So long as the character is grounded or depending on how the update X&Y velocity while jumping
             // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
@@ -2983,22 +2977,13 @@ namespace FirstPersonController
                || ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))
                || ((m_updateXYDescending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) )
             {
-                if(m_addVelocityForTimestepVsTick)
-                    UpdateVelocityXY((deltaTime + m_prevTimestep) / 2.f);
-                else
-                    UpdateVelocityXY((deltaTime + m_prevDeltaTime) / 2.f);
+                UpdateVelocityXY(deltaTime);
             }
 
-            if(m_addVelocityForTimestepVsTick)
-                UpdateVelocityZ((deltaTime + m_prevTimestep) / 2.f);
-            else
-                UpdateVelocityZ((deltaTime + m_prevDeltaTime) / 2.f);
+            UpdateVelocityZ(deltaTime);
 
             // Apply any linear impulses to the character that have been set via the EBus
-            if(m_addVelocityForTimestepVsTick)
-                ProcessLinearImpulse((deltaTime + m_prevTimestep) / 2.f);
-            else
-                ProcessLinearImpulse((deltaTime + m_prevDeltaTime) / 2.f);
+            ProcessLinearImpulse(deltaTime);
 
             // Track the sum of the normal vectors for the velocity's XY plane if it's set
             if(m_velocityXCrossYTracksNormal)
@@ -3015,6 +3000,8 @@ namespace FirstPersonController
             if(m_velocityXCrossYTracksNormal && m_movingUpInclineSlowed && !m_prevTargetVelocityXY.IsZero())
                 ApplyMovingUpInclineXYSpeedFactor();
 
+            ProcessCharacterHits(deltaTime);
+
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
@@ -3026,11 +3013,6 @@ namespace FirstPersonController
                 Physics::CharacterRequestBus::Event(GetEntityId(),
                     &Physics::CharacterRequestBus::Events::AddVelocityForTick,
                     m_prevTargetVelocity);
-
-            if(m_addVelocityForTimestepVsTick)
-                ProcessCharacterHits((deltaTime + m_prevTimestep) / 2.f);
-            else
-                ProcessCharacterHits((deltaTime + m_prevDeltaTime) / 2.f);
         }
     }
 
