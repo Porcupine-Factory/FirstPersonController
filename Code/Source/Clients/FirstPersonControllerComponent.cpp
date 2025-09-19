@@ -2417,11 +2417,11 @@ namespace FirstPersonController
             m_scriptSetGroundTick = false;
         }
 
+        // Accumulate airtime if the character isn't grounded, otherwise set it to zero
         if(m_grounded)
             m_airTime = 0.f;
-
-        // Check to see if the character is close to an acceptable ground
-        m_airTime += deltaTime;
+        else
+            m_airTime += deltaTime;
 
         request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
             (1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius,
