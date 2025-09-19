@@ -211,7 +211,7 @@ namespace FirstPersonController
         bool GetEnableImpulses() const override;
         void SetEnableImpulses(const bool& new_enableImpulses) override;
         bool GetImpulseDecelUsesFriction() const override;
-        void SetImpulseDecelUsesFriction(const bool& new_impluseDecelUsesFriction) override;
+        void SetImpulseDecelUsesFriction(const bool& new_impulseDecelUsesFriction) override;
         AZ::Vector3 GetLinearImpulse() const override;
         void SetLinearImpulse(const AZ::Vector3& new_linearImpulse) override;
         void ApplyLinearImpulse(const AZ::Vector3& new_addLinearImpulse) override;
@@ -677,7 +677,7 @@ namespace FirstPersonController
 
         // Variables used for impulses and hit detection
         bool m_enableImpulses = true;
-        bool m_impluseDecelUsesFriction = true;
+        bool m_impulseDecelUsesFriction = true;
         AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();

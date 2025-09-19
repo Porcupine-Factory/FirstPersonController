@@ -137,7 +137,7 @@ namespace FirstPersonController
 
               // Impulse group
               ->Field("Enable Impulse", &FirstPersonControllerComponent::m_enableImpulses)
-              ->Field("Use Friction For Deceleration", &FirstPersonControllerComponent::m_impluseDecelUsesFriction)
+              ->Field("Use Friction For Deceleration", &FirstPersonControllerComponent::m_impulseDecelUsesFriction)
               ->Field("Mass", &FirstPersonControllerComponent::m_characterMass)
                   ->Attribute(AZ::Edit::Attributes::Min, 0.00001f)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetMassUnit())
@@ -401,7 +401,7 @@ namespace FirstPersonController
                         "Enable Impulses", "Determines whether impulses can be applied to the character via the EBus (e.g. scripts). Dynamic / simulated rigid bodies will not apply impulses to the character without using the EBus.")
                         ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_impluseDecelUsesFriction,
+                        &FirstPersonControllerComponent::m_impulseDecelUsesFriction,
                         "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction beneath the character to determine the constant deceleration the character will experience when an impulse is applied. This calculation will be used instead of value entered in 'Impulse Constant Deceleration', but can still be used along with 'Impulse Linear Damping' if it is non-zero.")
                         ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
                     ->DataElement(nullptr,
@@ -2738,7 +2738,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ProcessLinearImpulse(const float& deltaTime)
     {
-        // Only apply impulses if it's enabled
+        // Only apply impulses if it's enabled, allow any residual velocity from a previous impulse to decay
         if(!m_enableImpulses)
         {
             m_linearImpulse = AZ::Vector3::CreateZero();
@@ -2746,8 +2746,10 @@ namespace FirstPersonController
                 return;
         }
 
-        if(m_impluseDecelUsesFriction && !m_groundHits.empty())
+        if(m_impulseDecelUsesFriction && !m_groundHits.empty())
             m_impulseConstantDecel = -1.f * m_gravity * GetSceneQueryHitDynamicFriction(m_groundHits.front());
+        else if(m_groundHits.empty())
+            m_impulseConstantDecel = 0.f;
 
         // Convert the linear impulse to a velocity based on the character's mass and accumulate it
         const AZ::Vector3 impulseVelocity = m_linearImpulse / m_characterMass;
@@ -2776,6 +2778,10 @@ namespace FirstPersonController
             }
         }
 
+        // Apply the velocity from the impulse
+        m_applyVelocityXY += AZ::Vector2(m_velocityFromImpulse.GetX(), m_velocityFromImpulse.GetY());
+        m_applyVelocityZ += m_velocityFromImpulse.GetZ();
+
         // Accumulate half of the deltaTime
         m_impulseLerpTime += deltaTime * 0.5f;
 
@@ -2799,6 +2805,12 @@ namespace FirstPersonController
         //prevVelocity = m_velocityFromImpulse;
         //AZ_Printf("First Person Controller Component", "m_impulseTotalLerpTime = %.10f", m_impulseTotalLerpTime);
         //AZ_Printf("First Person Controller Component", "m_impulseLerpTime = %.10f", m_impulseLerpTime);
+
+        // Set the Z component of the velocity from the impulse to zero after it's applied
+        m_velocityFromImpulse.SetZ(0.f);
+
+        // Zero the impulse vector since it's been applied for this update
+        m_linearImpulse = AZ::Vector3::CreateZero();
 
         // Accumulate half of the deltaTime if the total lerp time hasn't been reached
         if(m_impulseLerpTime != m_impulseTotalLerpTime)
@@ -3004,7 +3016,7 @@ namespace FirstPersonController
                 ApplyMovingUpInclineXYSpeedFactor();
 
             // Change the +Z direction based on m_velocityZPosDirection
-            m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection + m_velocityFromImpulse;
+            m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
             if(m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(GetEntityId(),
@@ -3014,9 +3026,6 @@ namespace FirstPersonController
                 Physics::CharacterRequestBus::Event(GetEntityId(),
                     &Physics::CharacterRequestBus::Events::AddVelocityForTick,
                     m_prevTargetVelocity);
-
-            // Zero the impulse vector since it's been applied for this update
-            m_linearImpulse = AZ::Vector3::CreateZero();
 
             if(m_addVelocityForTimestepVsTick)
                 ProcessCharacterHits((deltaTime + m_prevTimestep) / 2.f);
@@ -3920,11 +3929,11 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetImpulseDecelUsesFriction() const
     {
-        return m_impluseDecelUsesFriction;
+        return m_impulseDecelUsesFriction;
     }
-    void FirstPersonControllerComponent::SetImpulseDecelUsesFriction(const bool& new_impluseDecelUsesFriction)
+    void FirstPersonControllerComponent::SetImpulseDecelUsesFriction(const bool& new_impulseDecelUsesFriction)
     {
-        m_impluseDecelUsesFriction = new_impluseDecelUsesFriction;
+        m_impulseDecelUsesFriction = new_impulseDecelUsesFriction;
     }
     float FirstPersonControllerComponent::GetImpulseLinearDamp() const
     {
