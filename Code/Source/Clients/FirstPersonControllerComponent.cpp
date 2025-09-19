@@ -2703,14 +2703,6 @@ namespace FirstPersonController
                 m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
         }
 
-        if(prevApplyVelocityZ == 0.f && m_applyVelocityZ < 0.f)
-        {
-            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
-                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ();
-            else
-                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength();
-            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedFalling);
-        }
         if(prevApplyVelocityZ > 0.f && m_applyVelocityZ <= 0.f)
         {
             if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
@@ -2718,6 +2710,15 @@ namespace FirstPersonController
             else
                 m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength();
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnJumpApogeeReached);
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedFalling);
+        }
+        else if(prevApplyVelocityZ == 0.f && m_applyVelocityZ < 0.f)
+        {
+            if(m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
+                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ();
+            else
+                m_fellFromHeight = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength();
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedFalling);
         }
 
         // Debug print statements to observe the jump mechanic
