@@ -376,6 +376,17 @@ namespace FirstPersonController
         virtual float GetHeading() const = 0;
         virtual void SetHeadingForTick(const float&) = 0;
         virtual float GetPitch() const = 0;
+        virtual float GetCoyoteTime() const = 0;
+        virtual void SetCoyoteTime(const float& new_coyoteTime) = 0;
+        virtual float GetTimeSinceUngrounded() const = 0;
+        virtual void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) = 0;
+        virtual float GetTimeSinceJumpRequest() const = 0;
+        virtual void SetTimeSinceJumpRequest(const float& new_timeSinceJumpRequest) = 0;
+        virtual bool GetUngroundedDueToJump() const = 0;
+        virtual void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) = 0;
+        virtual bool GetApplyGravityDuringCoyote() const = 0;
+        virtual void SetApplyGravityDuringCoyote(const bool& new_applyGravityDuringCoyote) = 0;
+        virtual bool GetWasRequestingJump() const = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;

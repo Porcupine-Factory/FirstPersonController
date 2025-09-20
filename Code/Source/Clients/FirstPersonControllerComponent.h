@@ -422,6 +422,17 @@ namespace FirstPersonController
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
+        float GetCoyoteTime() const override;
+        void SetCoyoteTime(const float& new_coyoteTime) override;
+        float GetTimeSinceUngrounded() const override;
+        void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) override;
+        float GetTimeSinceJumpRequest() const override;
+        void SetTimeSinceJumpRequest(const float& new_timeSinceJumpRequest) override;
+        bool GetUngroundedDueToJump() const override;
+        void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) override;
+        bool GetApplyGravityDuringCoyote() const override;
+        void SetApplyGravityDuringCoyote(const bool& new_applyGravityDuringCoyote) override;
+        bool GetWasRequestingJump() const override;
 
     private:
         // Input event assignment and notification bus connection
@@ -674,6 +685,13 @@ namespace FirstPersonController
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
         float m_jumpHeadSphereCastOffset = 0.1f;
+        float m_coyoteTime = 0.2f;
+        float m_timeSinceUngrounded = 0.0f;
+        float m_timeSinceJumpRequest = 0.0f;
+        bool m_ungroundedDueToJump = false;
+        bool m_applyGravityDuringCoyote = true;
+        AZ::Vector3 m_graceVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
+        bool m_wasRequestingJump = false;
 
         // Variables used for impulses and hit detection
         bool m_enableImpulses = true;
