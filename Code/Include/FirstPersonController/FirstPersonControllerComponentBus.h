@@ -380,8 +380,6 @@ namespace FirstPersonController
         virtual void SetCoyoteTime(const float& new_coyoteTime) = 0;
         virtual float GetTimeSinceUngrounded() const = 0;
         virtual void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) = 0;
-        virtual float GetTimeSinceJumpRequest() const = 0;
-        virtual void SetTimeSinceJumpRequest(const float& new_timeSinceJumpRequest) = 0;
         virtual bool GetUngroundedDueToJump() const = 0;
         virtual void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) = 0;
         virtual bool GetApplyGravityDuringCoyote() const = 0;

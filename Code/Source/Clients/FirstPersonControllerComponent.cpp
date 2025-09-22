@@ -816,8 +816,6 @@ namespace FirstPersonController
                 ->Event("Set Coyote Time", &FirstPersonControllerComponentRequests::SetCoyoteTime)
                 ->Event("Get Time Since Ungrounded", &FirstPersonControllerComponentRequests::GetTimeSinceUngrounded)
                 ->Event("Set Time Since Ungrounded", &FirstPersonControllerComponentRequests::SetTimeSinceUngrounded)
-                ->Event("Get Time Since Jump Request", &FirstPersonControllerComponentRequests::GetTimeSinceJumpRequest)
-                ->Event("Set Time Since Jump Request", &FirstPersonControllerComponentRequests::SetTimeSinceJumpRequest)
                 ->Event("Get Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::GetUngroundedDueToJump)
                 ->Event("Set Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::SetUngroundedDueToJump)
                 ->Event("Get Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::GetApplyGravityDuringCoyote)
@@ -1619,7 +1617,8 @@ namespace FirstPersonController
                 m_prevGroundCloseSumNormals = groundCloseSumNormals;
             }
             // Use captured grace normal during coyote time if walking off ledge
-            else if (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump) {
+            else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump)
+            {
                 m_prevGroundCloseSumNormals = m_graceVelocityXCrossYDirection;
             }
 
@@ -2445,22 +2444,18 @@ namespace FirstPersonController
         }
 
         // Update coyote timers and flags based on grounded state transition
-        if (prevGrounded && !m_grounded) {
+        if(prevGrounded && !m_grounded)
+        {
             m_timeSinceUngrounded = 0.f;
-            if (m_jumpHeld) {
+            if(m_jumpHeld)
                 m_ungroundedDueToJump = true;
-            }
-            else {
+            else
                 m_ungroundedDueToJump = false;
-                if (m_velocityXCrossYTracksNormal) {
-                    m_graceVelocityXCrossYDirection = GetGroundSumNormalsDirection();
-                }
-            }
         }
-        else if (!m_grounded) {
+        else if(!m_grounded)
             m_timeSinceUngrounded += deltaTime;
-        }
-        else {
+        else
+        {
             m_ungroundedDueToJump = false;
             // Reset to prevent coyote triggering when grounded
             m_timeSinceUngrounded = m_coyoteTime + 1.f;
@@ -2541,11 +2536,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateVelocityZ(const float& deltaTime)
     {
-        // Detect new jump requests and reset buffer timer
-        bool requestedJump = (m_jumpValue || m_crouchJumpPending);
-        if (requestedJump && !m_wasRequestingJump) {
-            m_timeSinceJumpRequest = 0.f;
-        }
         // Create a shapecast sphere that will be used to detect whether there is an obstruction
         // above the players head, and prevent them from fully standing up if there is
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
@@ -2641,114 +2631,103 @@ namespace FirstPersonController
 
         const float prevApplyVelocityZ = m_applyVelocityZ;
 
-        bool performedJump = false;
-        // Determine if jump is allowed (grounded or in coyote grace, not due to prior jump)
-        bool canJump = m_grounded || (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump);
-        bool jumpBuffered = (m_timeSinceJumpRequest < m_coyoteTime);
-        if (canJump && (m_jumpReqRepress || m_applyVelocityZ <= 0.f))
+        bool initialJump = false;
+
+        if((m_grounded || (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyote)) && m_jumpReqRepress && m_applyVelocityZ <= 0.f)
         {
-            if ((requestedJump || jumpBuffered) && !m_jumpHeld && !m_headHit)
+            if((m_jumpValue || m_crouchJumpPending) && !m_jumpHeld && !m_headHit)
             {
-                if (!m_standing)
+                if(!m_standing)
                 {
-                    if (m_crouchJumpCausesStanding)
+                    if(m_crouchJumpCausesStanding)
                     {
                         m_crouching = false;
-                        if (m_crouchPendJumps && m_crouchEnableToggle)
-                            m_crouchJumpPending = true;
+                        if(m_crouchPendJumps && m_crouchEnableToggle)
+                          m_crouchJumpPending = true;
                     }
-                    if (!m_jumpWhileCrouched)
+                    if(!m_jumpWhileCrouched)
                         return;
                 }
                 m_crouchJumpPending = false;
-                m_applyVelocityZ = m_jumpInitialVelocity;
-                m_applyVelocityZCurrentDelta = 0.f;
-                m_applyVelocityZPrevDelta = 0.f;
-                performedJump = true;
+                m_applyVelocityZCurrentDelta = m_jumpInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
+                initialJump = true;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
-                // Mark ungrounding as due to this jump
-                m_ungroundedDueToJump = true;
-                if (jumpBuffered)
-                {
-                    // Consume buffer
-                    m_timeSinceJumpRequest = m_coyoteTime + 1.f;
-                }
                 FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFirstJump);
             }
             else
             {
                 m_applyVelocityZ = 0.f;
                 m_applyVelocityZCurrentDelta = 0.f;
-                m_jumpCounter = 0.f;
-                if (m_doubleJumpEnabled && m_finalJump)
-                    m_finalJump = false;
-            }
-        }
-        // Handle double jump (in else to original structure)
-        else
-        {
-            if (m_doubleJumpEnabled && !m_finalJump && !m_jumpHeld && m_jumpValue != 0.f)
-            {
-                if (!m_standing)
-                {
-                    if (m_crouchJumpCausesStanding)
-                        m_crouching = false;
-                    return;
-                }
-                m_applyVelocityZ = m_jumpSecondInitialVelocity;
-                m_applyVelocityZCurrentDelta = 0.f;
                 m_applyVelocityZPrevDelta = 0.f;
-                performedJump = true;
-                m_finalJump = true;
-                m_jumpHeld = true;
-                m_ungroundedDueToJump = true;
-                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFinalJump);
-            }
-        }
-        // Set held to false if not pressing (after perform for correct factor)
-        if (m_jumpValue == 0.f && m_jumpHeld)
-            m_jumpHeld = false;
-        // Set delta based on state, prioritizing performed jumps
-        if (performedJump)
-        {
-            float factor = m_jumpHeld ? m_jumpHeldGravityFactor : m_jumpFallingGravityFactor;
-            m_applyVelocityZCurrentDelta = m_gravity * factor * deltaTime;
-        }
-        else if (m_grounded || (!m_applyGravityDuringCoyote && m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && !m_jumpHeld))
-        {
-            m_applyVelocityZ = 0.f;
-            m_applyVelocityZCurrentDelta = 0.f;
-            if (m_grounded)
-            {
-                m_jumpCounter = 0.f;
-                if (m_doubleJumpEnabled && m_finalJump)
+                m_jumpTimer = 0.f;
+
+                if(m_jumpValue == 0.f && m_jumpHeld)
+                    m_jumpHeld = false;
+
+                if(m_doubleJumpEnabled && m_finalJump)
                     m_finalJump = false;
             }
         }
-        else if (m_jumpCounter + deltaTime / 2.f < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
+        else if((m_jumpTimer + deltaTime/2.f) < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
         {
-            m_jumpCounter += deltaTime;
-            m_applyVelocityZCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
+            if(m_jumpValue == 0.f)
+            {
+                m_jumpHeld = false;
+                m_jumpTimer = 0.f;
+                m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
+            }
+            else
+            {
+                m_jumpTimer += deltaTime;
+                m_applyVelocityZCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
+            }
         }
         else
         {
-            if (!m_jumpReqRepress)
+            if(!m_jumpReqRepress)
                 m_jumpReqRepress = true;
-            if (m_jumpCounter != 0.f)
-                m_jumpCounter = 0.f;
-            if (m_applyVelocityZ <= 0.f)
+
+            if(m_jumpTimer != 0.f)
+                m_jumpTimer = 0.f;
+
+            if(m_applyVelocityZ <= 0.f)
                 m_applyVelocityZCurrentDelta = m_gravity * m_jumpFallingGravityFactor * deltaTime;
             else
                 m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
+
+            if(m_jumpHeld && m_jumpValue == 0.f)
+                m_jumpHeld = false;
+
+            if(m_doubleJumpEnabled && !m_finalJump && !m_jumpHeld && m_jumpValue != 0.f)
+            {
+                if(!m_standing)
+                {
+                    if(m_crouchJumpCausesStanding)
+                        m_crouching = false;
+                    return;
+                }
+                m_applyVelocityZ = m_jumpSecondInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
+                m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
+                m_applyVelocityZCurrentDelta = -m_gravity * deltaTime;
+                m_finalJump = true;
+                m_jumpHeld = true;
+                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFinalJump);
+            }
         }
-        if (requestedJump)
-            m_timeSinceJumpRequest += deltaTime;
 
         // Perform an average of the current and previous Z velocity delta
         // as described by Verlet integration, which should reduce accumulated error
-        m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
-        m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
+        if(!initialJump)
+        {
+            m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
+            m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
+        }
+        else
+        {
+            m_applyVelocityZ += m_applyVelocityZCurrentDelta;
+            m_applyVelocityZCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
+        }
 
         if(m_headHit && m_applyVelocityZ > 0.f && m_headHitSetsApogee)
             m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
@@ -2791,9 +2770,6 @@ namespace FirstPersonController
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStartedFalling);
         }
 
-        // Update wasRequestingJump for next frame
-        m_wasRequestingJump = requestedJump;
-
         // Debug print statements to observe the jump mechanic
         //AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         //AZ_Printf("First Person Controller Component", "Z Translation = %.10f", pos.GetZ());
@@ -2801,7 +2777,7 @@ namespace FirstPersonController
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
         //AZ_Printf("First Person Controller Component", "m_applyVelocityZ = %.10f", m_applyVelocityZ);
         //AZ_Printf("First Person Controller Component", "m_grounded = %s", m_grounded ? "true" : "false");
-        //AZ_Printf("First Person Controller Component", "m_jumpCounter = %.10f", m_jumpCounter);
+        //AZ_Printf("First Person Controller Component", "m_jumpTimer = %.10f", m_jumpTimer);
         //AZ_Printf("First Person Controller Component", "deltaTime = %.10f", deltaTime);
         //AZ_Printf("First Person Controller Component", "m_jumpMaxHoldTime = %.10f", m_jumpMaxHoldTime);
         //AZ_Printf("First Person Controller Component", "m_jumpHoldDistance = %.10f", m_jumpHoldDistance);
@@ -3044,22 +3020,6 @@ namespace FirstPersonController
 
             CrouchManager(deltaTime);
 
-            // If tracking inclines, set the velocity cross direction appropriately, using grace normal during coyote
-            if (m_velocityXCrossYTracksNormal) {
-                if (m_grounded) {
-                    SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
-                }
-                else if (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump) {
-                    SetVelocityXCrossYDirection(m_graceVelocityXCrossYDirection);
-                }
-                else if (m_groundClose) {
-                    SetVelocityXCrossYDirection(GetGroundCloseSumNormalsDirection());
-                }
-                else {
-                    SetVelocityXCrossYDirection(AZ::Vector3::CreateAxisZ());
-                }
-            }
-
             // So long as the character is grounded or depending on how the update X&Y velocity while jumping
             // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
             if(m_grounded || (m_updateXYAscending && m_updateXYDescending && !m_updateXYOnlyNearGround)
@@ -3076,7 +3036,20 @@ namespace FirstPersonController
 
             // Track the sum of the normal vectors for the velocity's XY plane if it's set
             if(m_velocityXCrossYTracksNormal)
-                SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+            {
+                if(m_grounded || m_coyoteTime == 0.f || m_applyGravityDuringCoyote)
+                {
+                    SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+                    m_graceVelocityXCrossYDirection = m_velocityXCrossYDirection;
+                }
+                else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump)
+                    SetVelocityXCrossYDirection(m_graceVelocityXCrossYDirection);
+                else
+                {
+                    SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+                    m_graceVelocityXCrossYDirection = m_velocityXCrossYDirection;
+                }
+            }
 
             AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
             // Rotate addVelocityHeading so it's with respect to the character's heading
@@ -4995,14 +4968,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetTimeSinceUngrounded(const float& new_timeSinceUngrounded)
     {
         m_timeSinceUngrounded = new_timeSinceUngrounded;
-    }
-    float FirstPersonControllerComponent::GetTimeSinceJumpRequest() const
-    {
-        return m_timeSinceJumpRequest;
-    }
-    void FirstPersonControllerComponent::SetTimeSinceJumpRequest(const float& new_timeSinceJumpRequest)
-    {
-        m_timeSinceJumpRequest = new_timeSinceJumpRequest;
     }
     bool FirstPersonControllerComponent::GetUngroundedDueToJump() const
     {

@@ -426,8 +426,6 @@ namespace FirstPersonController
         void SetCoyoteTime(const float& new_coyoteTime) override;
         float GetTimeSinceUngrounded() const override;
         void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) override;
-        float GetTimeSinceJumpRequest() const override;
-        void SetTimeSinceJumpRequest(const float& new_timeSinceJumpRequest) override;
         bool GetUngroundedDueToJump() const override;
         void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) override;
         bool GetApplyGravityDuringCoyote() const override;
@@ -670,7 +668,7 @@ namespace FirstPersonController
         float m_jumpHeldGravityFactor = 0.1f;
         // The m_jumpMaxHoldTime is computed inside UpdateJumpMaxHoldTime()
         float m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity + sqrt(m_jumpInitialVelocity*m_jumpInitialVelocity + 2.f*m_gravity*m_jumpHeldGravityFactor*m_jumpHoldDistance)) / 2.f);
-        float m_jumpCounter = 0.f;
+        float m_jumpTimer = 0.f;
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
         bool m_finalJump = false;
@@ -687,7 +685,6 @@ namespace FirstPersonController
         float m_jumpHeadSphereCastOffset = 0.1f;
         float m_coyoteTime = 0.2f;
         float m_timeSinceUngrounded = 0.0f;
-        float m_timeSinceJumpRequest = 0.0f;
         bool m_ungroundedDueToJump = false;
         bool m_applyGravityDuringCoyote = true;
         AZ::Vector3 m_graceVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
