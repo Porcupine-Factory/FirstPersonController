@@ -964,8 +964,11 @@ namespace FirstPersonController
         }
 
         // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
-        // maximum slope angle value
+        // maximum slope angle value in the editor
         m_maxGroundedAngleDegrees += 0.01f;
+
+        Physics::CharacterRequestBus::Event(GetEntityId(),
+            &Physics::CharacterRequestBus::Events::SetSlopeLimitDegrees, m_maxGroundedAngleDegrees);
 
         // Set the sprint pause time based on whether the cooldown time or the max consecutive sprint time is longer
         // This number can be altered using the RequestBus
@@ -3320,8 +3323,11 @@ namespace FirstPersonController
             &Physics::CharacterRequestBus::Events::GetSlopeLimitDegrees);
 
         // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
-        // maximum slope angle value
+        // maximum slope angle value in the editor
         m_maxGroundedAngleDegrees += 0.01f;
+
+        Physics::CharacterRequestBus::Event(GetEntityId(),
+            &Physics::CharacterRequestBus::Events::SetSlopeLimitDegrees, m_maxGroundedAngleDegrees);
     }
     AZStd::string FirstPersonControllerComponent::GetForwardEventName() const
     {
