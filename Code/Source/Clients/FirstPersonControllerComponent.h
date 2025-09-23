@@ -277,6 +277,17 @@ namespace FirstPersonController
         void SetStandPrevented(const bool& new_standPrevented) override;
         bool GetJumpWhileCrouched() const override;
         void SetJumpWhileCrouched(const bool& new_jumpWhileCrouched) override;
+        float GetCoyoteTime() const override;
+        void SetCoyoteTime(const float& new_coyoteTime) override;
+        float GetTimeSinceUngrounded() const override;
+        void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) override;
+        bool GetUngroundedDueToJump() const override;
+        void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) override;
+        bool GetApplyGravityDuringCoyoteTime() const override;
+        bool GetNotApplyGravityDuringCoyoteTime() const;
+        void SetApplyGravityDuringCoyoteTime(const bool& new_applyGravityDuringCoyoteTime) override;
+        bool GetCoyoteTimeTracksLastNormal() const override;
+        void SetCoyoteTimeTracksLastNormal(const bool& new_coyoteTimeTracksLastNormal) override;
         bool GetStandIgnoreDynamicRigidBodies() const override;
         void SetStandIgnoreDynamicRigidBodies(const bool& new_standIgnoreDynamicRigidBodies) override;
         AZStd::string GetStandCollisionGroupName() const override;
@@ -422,15 +433,6 @@ namespace FirstPersonController
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
-        float GetCoyoteTime() const override;
-        void SetCoyoteTime(const float& new_coyoteTime) override;
-        float GetTimeSinceUngrounded() const override;
-        void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) override;
-        bool GetUngroundedDueToJump() const override;
-        void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) override;
-        bool GetApplyGravityDuringCoyote() const override;
-        void SetApplyGravityDuringCoyote(const bool& new_applyGravityDuringCoyote) override;
-        bool GetWasRequestingJump() const override;
 
     private:
         // Input event assignment and notification bus connection
@@ -459,6 +461,7 @@ namespace FirstPersonController
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float& deltaTime);
         void UpdateVelocityXY(const float& deltaTime);
+        void AcquireSumOfGroundNormals();
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
         void UpdateRotation();
@@ -627,6 +630,7 @@ namespace FirstPersonController
         bool m_grounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
+        AZ::Vector3 m_coyoteVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         float m_movingUpInclineFactor = 1.f;
         bool m_jumpInclineVelocityXYCaptured = false;
         AZ::Vector3 m_prevGroundCloseSumNormals = AZ::Vector3::CreateAxisZ();
@@ -672,6 +676,12 @@ namespace FirstPersonController
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
         bool m_finalJump = false;
+        float m_coyoteTime = 0.2f;
+        float m_timeSinceUngrounded = 0.0f;
+        bool m_coyoteTimeTracksLastNormal = true;
+        bool m_ungroundedDueToJump = false;
+        bool m_jumpCoyoteGravityPending = false;
+        bool m_applyGravityDuringCoyoteTime = true;
         bool m_jumpHeadIgnoreDynamicRigidBodies = true;
         bool m_jumpWhileCrouched = false;
         bool m_headHit = false;
@@ -683,12 +693,6 @@ namespace FirstPersonController
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
         float m_jumpHeadSphereCastOffset = 0.1f;
-        float m_coyoteTime = 0.2f;
-        float m_timeSinceUngrounded = 0.0f;
-        bool m_ungroundedDueToJump = false;
-        bool m_applyGravityDuringCoyote = true;
-        AZ::Vector3 m_graceVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
-        bool m_wasRequestingJump = false;
 
         // Variables used for impulses and hit detection
         bool m_enableImpulses = true;

@@ -26,7 +26,7 @@ namespace FirstPersonController
         virtual AZ::EntityId GetActiveCameraEntityId() const = 0;
         virtual void SetCameraEntity(const AZ::EntityId) = 0;
         virtual bool GetCameraSmoothFollow() const = 0;
-        virtual void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow) = 0;
+        virtual void SetCameraSmoothFollow(const bool&) = 0;
         virtual void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) = 0;
         virtual void SetParentChangeUpdate(const AZ::EntityId& entityId) = 0;
         virtual AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const = 0;
@@ -231,6 +231,16 @@ namespace FirstPersonController
         virtual void SetStandPrevented(const bool&) = 0;
         virtual bool GetJumpWhileCrouched() const = 0;
         virtual void SetJumpWhileCrouched(const bool&) = 0;
+        virtual float GetCoyoteTime() const = 0;
+        virtual void SetCoyoteTime(const float&) = 0;
+        virtual float GetTimeSinceUngrounded() const = 0;
+        virtual void SetTimeSinceUngrounded(const float&) = 0;
+        virtual bool GetUngroundedDueToJump() const = 0;
+        virtual void SetUngroundedDueToJump(const bool&) = 0;
+        virtual bool GetApplyGravityDuringCoyoteTime() const = 0;
+        virtual void SetApplyGravityDuringCoyoteTime(const bool&) = 0;
+        virtual bool GetCoyoteTimeTracksLastNormal() const = 0;
+        virtual void SetCoyoteTimeTracksLastNormal(const bool&) = 0;
         virtual bool GetStandIgnoreDynamicRigidBodies() const = 0;
         virtual void SetStandIgnoreDynamicRigidBodies(const bool&) = 0;
         virtual AZStd::string GetStandCollisionGroupName() const = 0;
@@ -246,9 +256,9 @@ namespace FirstPersonController
         virtual float GetWalkAcceleration() const = 0;
         virtual void SetWalkAcceleration(const float&) = 0;
         virtual float GetTotalLerpTime() const = 0;
-        virtual void SetTotalLerpTime(const float& new_totalLerpTime) = 0;
+        virtual void SetTotalLerpTime(const float&) = 0;
         virtual float GetLerpTime() const = 0;
-        virtual void SetLerpTime(const float& new_lerpTime) = 0;
+        virtual void SetLerpTime(const float&) = 0;
         virtual float GetDecelerationFactor() const = 0;
         virtual void SetDecelerationFactor(const float&) = 0;
         virtual float GetOpposingDecel() const = 0;
@@ -376,15 +386,6 @@ namespace FirstPersonController
         virtual float GetHeading() const = 0;
         virtual void SetHeadingForTick(const float&) = 0;
         virtual float GetPitch() const = 0;
-        virtual float GetCoyoteTime() const = 0;
-        virtual void SetCoyoteTime(const float& new_coyoteTime) = 0;
-        virtual float GetTimeSinceUngrounded() const = 0;
-        virtual void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) = 0;
-        virtual bool GetUngroundedDueToJump() const = 0;
-        virtual void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) = 0;
-        virtual bool GetApplyGravityDuringCoyote() const = 0;
-        virtual void SetApplyGravityDuringCoyote(const bool& new_applyGravityDuringCoyote) = 0;
-        virtual bool GetWasRequestingJump() const = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;

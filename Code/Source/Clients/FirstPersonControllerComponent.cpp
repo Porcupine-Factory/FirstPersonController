@@ -134,7 +134,8 @@ namespace FirstPersonController
               ->Field("Coyote Time", &FirstPersonControllerComponent::m_coyoteTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
-              ->Field("Apply Gravity During Coyote Time", &FirstPersonControllerComponent::m_applyGravityDuringCoyote)
+              ->Field("Apply Gravity During Coyote Time", &FirstPersonControllerComponent::m_applyGravityDuringCoyoteTime)
+              ->Field("Last Ground Normal Applies During Coyote Time", &FirstPersonControllerComponent::m_coyoteTimeTracksLastNormal)
               ->Field("Update X&Y Velocity When Ascending", &FirstPersonControllerComponent::m_updateXYAscending)
               ->Field("Update X&Y Velocity When Descending", &FirstPersonControllerComponent::m_updateXYDescending)
               ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_updateXYOnlyNearGround)
@@ -394,8 +395,14 @@ namespace FirstPersonController
                         ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                         ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->DataElement(nullptr,
-                        &FirstPersonControllerComponent::m_applyGravityDuringCoyote,
+                        &FirstPersonControllerComponent::m_applyGravityDuringCoyoteTime,
                         "Apply Gravity During Coyote Time", "If disabled, gravity is not applied during the coyote time, allowing the character to 'hang' briefly when walking off a ledge.")
+                        ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+
+                    ->DataElement(nullptr,
+                        &FirstPersonControllerComponent::m_coyoteTimeTracksLastNormal,
+                        "Last Ground Normal Applies During Coyote Time", "Determines if the last normal vector that the character was in contact with when walking off a ledge is kept applied during coyote time.")
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetNotApplyGravityDuringCoyoteTime)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYAscending,
                         "Update X&Y Velocity When Ascending", "Allows movement in X&Y during a jump’s ascent.")
@@ -667,6 +674,16 @@ namespace FirstPersonController
                 ->Event("Get Head Hit EntityIds", &FirstPersonControllerComponentRequests::GetHeadHitEntityIds)
                 ->Event("Get Jump While Crouched", &FirstPersonControllerComponentRequests::GetJumpWhileCrouched)
                 ->Event("Set Jump While Crouched", &FirstPersonControllerComponentRequests::SetJumpWhileCrouched)
+                ->Event("Get Coyote Time", &FirstPersonControllerComponentRequests::GetCoyoteTime)
+                ->Event("Set Coyote Time", &FirstPersonControllerComponentRequests::SetCoyoteTime)
+                ->Event("Get Time Since Ungrounded", &FirstPersonControllerComponentRequests::GetTimeSinceUngrounded)
+                ->Event("Set Time Since Ungrounded", &FirstPersonControllerComponentRequests::SetTimeSinceUngrounded)
+                ->Event("Get Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::GetUngroundedDueToJump)
+                ->Event("Set Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::SetUngroundedDueToJump)
+                ->Event("Get Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::GetApplyGravityDuringCoyoteTime)
+                ->Event("Set Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::SetApplyGravityDuringCoyoteTime)
+                ->Event("Get Coyote Time Tracks Last Normal", &FirstPersonControllerComponentRequests::GetCoyoteTimeTracksLastNormal)
+                ->Event("Set Coyote Time Tracks Last Normal", &FirstPersonControllerComponentRequests::SetCoyoteTimeTracksLastNormal)
                 ->Event("Get Stand Prevented", &FirstPersonControllerComponentRequests::GetStandPrevented)
                 ->Event("Set Stand Prevented", &FirstPersonControllerComponentRequests::SetStandPrevented)
                 ->Event("Get Stand Ignore Dynamic Rigid Bodies", &FirstPersonControllerComponentRequests::GetStandIgnoreDynamicRigidBodies)
@@ -811,16 +828,7 @@ namespace FirstPersonController
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
-                ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
-                ->Event("Get Coyote Time", &FirstPersonControllerComponentRequests::GetCoyoteTime)
-                ->Event("Set Coyote Time", &FirstPersonControllerComponentRequests::SetCoyoteTime)
-                ->Event("Get Time Since Ungrounded", &FirstPersonControllerComponentRequests::GetTimeSinceUngrounded)
-                ->Event("Set Time Since Ungrounded", &FirstPersonControllerComponentRequests::SetTimeSinceUngrounded)
-                ->Event("Get Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::GetUngroundedDueToJump)
-                ->Event("Set Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::SetUngroundedDueToJump)
-                ->Event("Get Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::GetApplyGravityDuringCoyote)
-                ->Event("Set Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::SetApplyGravityDuringCoyote)
-                ->Event("Get Was Requesting Jump", &FirstPersonControllerComponentRequests::GetWasRequestingJump);
+                ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -1617,9 +1625,13 @@ namespace FirstPersonController
                 m_prevGroundCloseSumNormals = groundCloseSumNormals;
             }
             // Use captured grace normal during coyote time if walking off ledge
-            else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump)
+            else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
             {
-                m_prevGroundCloseSumNormals = m_graceVelocityXCrossYDirection;
+                m_prevGroundCloseSumNormals = m_coyoteVelocityXCrossYDirection;
+            }
+            else if(!m_ungroundedDueToJump && !m_coyoteTimeTracksLastNormal)
+            {
+                m_prevGroundCloseSumNormals = m_velocityZPosDirection;
             }
 
             if(AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(m_prevGroundCloseSumNormals) > AZ::Constants::HalfPi)
@@ -1641,8 +1653,13 @@ namespace FirstPersonController
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
                 m_movingUpInclineFactor = (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength());
 
-                m_prevTargetVelocity.SetX(velocityXYTilted.GetX()*m_movingUpInclineFactor);
-                m_prevTargetVelocity.SetY(velocityXYTilted.GetY()*m_movingUpInclineFactor);
+                if(!(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump))
+                {
+                    m_prevTargetVelocity.SetX(velocityXYTilted.GetX()*m_movingUpInclineFactor);
+                    m_prevTargetVelocity.SetY(velocityXYTilted.GetY()*m_movingUpInclineFactor);
+                }
+                else
+                    m_prevTargetVelocity *= m_movingUpInclineFactor;
             }
         }
     }
@@ -2287,6 +2304,28 @@ namespace FirstPersonController
         //AZ_Printf("First Person Controller Component","");
     }
 
+    // Update m_velocityXCrossYDirection based on the sum of the normal vectors beneath the character
+    void FirstPersonControllerComponent::AcquireSumOfGroundNormals()
+    {
+        if(m_velocityXCrossYTracksNormal)
+        {
+            if(m_grounded || m_coyoteTime == 0.f || !m_coyoteTimeTracksLastNormal || m_applyGravityDuringCoyoteTime)
+            {
+                SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+                if(m_coyoteTimeTracksLastNormal)
+                    m_coyoteVelocityXCrossYDirection = m_velocityXCrossYDirection;
+            }
+            else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
+                SetVelocityXCrossYDirection(m_coyoteVelocityXCrossYDirection);
+            else
+            {
+                SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
+                if(m_coyoteTimeTracksLastNormal)
+                    m_coyoteVelocityXCrossYDirection = m_velocityXCrossYDirection;
+            }
+        }
+    }
+
     void FirstPersonControllerComponent::CheckCharacterMovementObstructed()
     {
         // Get the current velocity to determine if something was hit
@@ -2633,9 +2672,12 @@ namespace FirstPersonController
 
         bool initialJump = false;
 
-        if((m_grounded || (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyote)) && m_jumpReqRepress && m_applyVelocityZ <= 0.f)
+        if((m_grounded ||
+            (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyoteTime) ||
+             m_jumpCoyoteGravityPending) &&
+              m_jumpReqRepress && m_applyVelocityZ <= 0.f)
         {
-            if((m_jumpValue || m_crouchJumpPending) && !m_jumpHeld && !m_headHit)
+            if((m_jumpValue || m_crouchJumpPending || m_jumpCoyoteGravityPending) && !m_jumpHeld && !m_headHit)
             {
                 if(!m_standing)
                 {
@@ -2643,7 +2685,7 @@ namespace FirstPersonController
                     {
                         m_crouching = false;
                         if(m_crouchPendJumps && m_crouchEnableToggle)
-                          m_crouchJumpPending = true;
+                            m_crouchJumpPending = true;
                     }
                     if(!m_jumpWhileCrouched)
                         return;
@@ -2653,6 +2695,12 @@ namespace FirstPersonController
                 initialJump = true;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
+                m_timeSinceUngrounded = m_coyoteTime;
+                if(m_jumpCoyoteGravityPending)
+                {
+                    m_applyVelocityZ = 0.f;
+                    m_jumpCoyoteGravityPending = false;
+                }
                 FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFirstJump);
             }
             else
@@ -2714,6 +2762,9 @@ namespace FirstPersonController
                 m_jumpHeld = true;
                 FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFinalJump);
             }
+
+            if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && m_applyGravityDuringCoyoteTime && m_jumpValue)
+                m_jumpCoyoteGravityPending = true;
         }
 
         // Perform an average of the current and previous Z velocity delta
@@ -3034,22 +3085,8 @@ namespace FirstPersonController
             // Apply any linear impulses to the character that have been set via the EBus
             ProcessLinearImpulse(deltaTime);
 
-            // Track the sum of the normal vectors for the velocity's XY plane if it's set
-            if(m_velocityXCrossYTracksNormal)
-            {
-                if(m_grounded || m_coyoteTime == 0.f || m_applyGravityDuringCoyote)
-                {
-                    SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
-                    m_graceVelocityXCrossYDirection = m_velocityXCrossYDirection;
-                }
-                else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump)
-                    SetVelocityXCrossYDirection(m_graceVelocityXCrossYDirection);
-                else
-                {
-                    SetVelocityXCrossYDirection(GetGroundSumNormalsDirection());
-                    m_graceVelocityXCrossYDirection = m_velocityXCrossYDirection;
-                }
-            }
+            // Acquire the sum of the normal vectors for the velocity's XY plane if it's set
+            AcquireSumOfGroundNormals();
 
             AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
             // Rotate addVelocityHeading so it's with respect to the character's heading
@@ -4237,6 +4274,50 @@ namespace FirstPersonController
     {
         m_jumpWhileCrouched = new_jumpWhileCrouched;
     }
+    float FirstPersonControllerComponent::GetCoyoteTime() const
+    {
+        return m_coyoteTime;
+    }
+    void FirstPersonControllerComponent::SetCoyoteTime(const float& new_coyoteTime)
+    {
+        m_coyoteTime = new_coyoteTime;
+    }
+    float FirstPersonControllerComponent::GetTimeSinceUngrounded() const
+    {
+        return m_timeSinceUngrounded;
+    }
+    void FirstPersonControllerComponent::SetTimeSinceUngrounded(const float& new_timeSinceUngrounded)
+    {
+        m_timeSinceUngrounded = new_timeSinceUngrounded;
+    }
+    bool FirstPersonControllerComponent::GetUngroundedDueToJump() const
+    {
+        return m_ungroundedDueToJump;
+    }
+    void FirstPersonControllerComponent::SetUngroundedDueToJump(const bool& new_ungroundedDueToJump)
+    {
+        m_ungroundedDueToJump = new_ungroundedDueToJump;
+    }
+    bool FirstPersonControllerComponent::GetApplyGravityDuringCoyoteTime() const
+    {
+        return m_applyGravityDuringCoyoteTime;
+    }
+    bool FirstPersonControllerComponent::GetNotApplyGravityDuringCoyoteTime() const
+    {
+        return !m_applyGravityDuringCoyoteTime;
+    }
+    void FirstPersonControllerComponent::SetApplyGravityDuringCoyoteTime(const bool& new_applyGravityDuringCoyoteTime)
+    {
+        m_applyGravityDuringCoyoteTime = new_applyGravityDuringCoyoteTime;
+    }
+    bool FirstPersonControllerComponent::GetCoyoteTimeTracksLastNormal() const
+    {
+        return m_coyoteTimeTracksLastNormal;
+    }
+    void FirstPersonControllerComponent::SetCoyoteTimeTracksLastNormal(const bool& new_coyoteTimeTracksLastNormal)
+    {
+        m_coyoteTimeTracksLastNormal = new_coyoteTimeTracksLastNormal;
+    }
     bool FirstPersonControllerComponent::GetStandPrevented() const
     {
         return m_standPrevented;
@@ -4952,41 +5033,5 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetPitch() const
     {
         return m_currentPitch;
-    }
-    float FirstPersonControllerComponent::GetCoyoteTime() const
-    {
-        return m_coyoteTime;
-    }
-    void FirstPersonControllerComponent::SetCoyoteTime(const float& new_coyoteTime)
-    {
-        m_coyoteTime = new_coyoteTime;
-    }
-    float FirstPersonControllerComponent::GetTimeSinceUngrounded() const
-    {
-        return m_timeSinceUngrounded;
-    }
-    void FirstPersonControllerComponent::SetTimeSinceUngrounded(const float& new_timeSinceUngrounded)
-    {
-        m_timeSinceUngrounded = new_timeSinceUngrounded;
-    }
-    bool FirstPersonControllerComponent::GetUngroundedDueToJump() const
-    {
-        return m_ungroundedDueToJump;
-    }
-    void FirstPersonControllerComponent::SetUngroundedDueToJump(const bool& new_ungroundedDueToJump)
-    {
-        m_ungroundedDueToJump = new_ungroundedDueToJump;
-    }
-    bool FirstPersonControllerComponent::GetApplyGravityDuringCoyote() const
-    {
-        return m_applyGravityDuringCoyote;
-    }
-    void FirstPersonControllerComponent::SetApplyGravityDuringCoyote(const bool& new_applyGravityDuringCoyote)
-    {
-        m_applyGravityDuringCoyote = new_applyGravityDuringCoyote;
-    }
-    bool FirstPersonControllerComponent::GetWasRequestingJump() const
-    {
-        return m_wasRequestingJump;
     }
 }
