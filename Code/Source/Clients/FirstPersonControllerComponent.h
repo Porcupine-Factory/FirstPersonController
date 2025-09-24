@@ -282,7 +282,6 @@ namespace FirstPersonController
         bool GetUngroundedDueToJump() const override;
         void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) override;
         bool GetApplyGravityDuringCoyoteTime() const override;
-        bool GetNotApplyGravityDuringCoyoteTime() const;
         void SetApplyGravityDuringCoyoteTime(const bool& new_applyGravityDuringCoyoteTime) override;
         bool GetCoyoteTimeTracksLastNormal() const override;
         void SetCoyoteTimeTracksLastNormal(const bool& new_coyoteTimeTracksLastNormal) override;
@@ -480,8 +479,10 @@ namespace FirstPersonController
         // Method for getting a pointer to an entity
         AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
 
-        // GetCameraNotSmoothFollow() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
+        // These getter methods are not exposed to the request bus, they're used for the visibility attribute in the editor
         bool GetCameraNotSmoothFollow() const;
+        bool GetCoyoteTimeGreaterThanZero() const;
+        bool GetNoGravityDuringCoyoteAndTimeGreaterThanZero() const;
 
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);

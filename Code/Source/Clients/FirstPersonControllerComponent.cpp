@@ -394,15 +394,17 @@ namespace FirstPersonController
                         "Coyote Time", "Grace period after walking off a ledge during which a jump is still allowed.")
                         ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                         ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                        ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_applyGravityDuringCoyoteTime,
                         "Apply Gravity During Coyote Time", "If disabled, gravity is not applied during the coyote time, allowing the character to 'hang' briefly when walking off a ledge.")
                         ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZero)
 
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_coyoteTimeTracksLastNormal,
                         "Last Ground Normal Applies During Coyote Time", "Determines if the last normal vector that the character was in contact with when walking off a ledge is kept applied during coyote time.")
-                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetNotApplyGravityDuringCoyoteTime)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetNoGravityDuringCoyoteAndTimeGreaterThanZero)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYAscending,
                         "Update X&Y Velocity When Ascending", "Allows movement in X&Y during a jump’s ascent.")
@@ -967,6 +969,15 @@ namespace FirstPersonController
 
         Physics::CharacterRequestBus::Event(GetEntityId(),
             &Physics::CharacterRequestBus::Events::SetSlopeLimitDegrees, m_maxGroundedAngleDegrees);
+
+        // If using coyote time with gravity not applied then check if the character isn't grounded when activated
+        // and if they're not then set m_ungroundedDueToJump to true to prevent the character from floating when activated
+        if(m_coyoteTime > 0.f && !m_applyGravityDuringCoyoteTime)
+        {
+            CheckGrounded(0.f);
+            if(!m_grounded)
+                m_ungroundedDueToJump = true;
+        }
 
         // Set the sprint pause time based on whether the cooldown time or the max consecutive sprint time is longer
         // This number can be altered using the RequestBus
@@ -3209,7 +3220,7 @@ namespace FirstPersonController
             }
         }
     }
-    // GetCameraNotSmoothFollow() is not exposed to the request bus, it's used for the ReadOnly attribute in the editor
+    // GetCameraNotSmoothFollow() is not exposed to the request bus, it's used for the visibility attribute in the editor
     bool FirstPersonControllerComponent::GetCameraNotSmoothFollow() const
     {
         return !m_cameraSmoothFollow;
@@ -4273,6 +4284,11 @@ namespace FirstPersonController
     {
         m_coyoteTime = new_coyoteTime;
     }
+    // GetCoyoteTimeNotZero() is not exposed to the request bus, it's used for the visibility attribute in the editor
+    bool FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZero() const
+    {
+        return m_coyoteTime > 0.f;
+    }
     bool FirstPersonControllerComponent::GetUngroundedDueToJump() const
     {
         return m_ungroundedDueToJump;
@@ -4285,10 +4301,6 @@ namespace FirstPersonController
     {
         return m_applyGravityDuringCoyoteTime;
     }
-    bool FirstPersonControllerComponent::GetNotApplyGravityDuringCoyoteTime() const
-    {
-        return !m_applyGravityDuringCoyoteTime;
-    }
     void FirstPersonControllerComponent::SetApplyGravityDuringCoyoteTime(const bool& new_applyGravityDuringCoyoteTime)
     {
         m_applyGravityDuringCoyoteTime = new_applyGravityDuringCoyoteTime;
@@ -4296,6 +4308,11 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetCoyoteTimeTracksLastNormal() const
     {
         return m_coyoteTimeTracksLastNormal;
+    }
+    // GetNoGravityDuringCoyoteAndTimeGreaterThanZero() is not exposed to the request bus, it's used for the visibility attribute in the editor
+    bool FirstPersonControllerComponent::GetNoGravityDuringCoyoteAndTimeGreaterThanZero() const
+    {
+        return !m_applyGravityDuringCoyoteTime && GetCoyoteTimeGreaterThanZero();
     }
     void FirstPersonControllerComponent::SetCoyoteTimeTracksLastNormal(const bool& new_coyoteTimeTracksLastNormal)
     {
