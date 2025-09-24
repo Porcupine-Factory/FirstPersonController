@@ -676,8 +676,6 @@ namespace FirstPersonController
                 ->Event("Set Jump While Crouched", &FirstPersonControllerComponentRequests::SetJumpWhileCrouched)
                 ->Event("Get Coyote Time", &FirstPersonControllerComponentRequests::GetCoyoteTime)
                 ->Event("Set Coyote Time", &FirstPersonControllerComponentRequests::SetCoyoteTime)
-                ->Event("Get Time Since Ungrounded", &FirstPersonControllerComponentRequests::GetTimeSinceUngrounded)
-                ->Event("Set Time Since Ungrounded", &FirstPersonControllerComponentRequests::SetTimeSinceUngrounded)
                 ->Event("Get Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::GetUngroundedDueToJump)
                 ->Event("Set Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::SetUngroundedDueToJump)
                 ->Event("Get Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::GetApplyGravityDuringCoyoteTime)
@@ -1628,7 +1626,7 @@ namespace FirstPersonController
                 m_prevGroundCloseSumNormals = groundCloseSumNormals;
             }
             // Use captured grace normal during coyote time if walking off ledge
-            else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
+            else if(m_airTime < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
             {
                 m_prevGroundCloseSumNormals = m_coyoteVelocityXCrossYDirection;
             }
@@ -1656,7 +1654,7 @@ namespace FirstPersonController
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
                 m_movingUpInclineFactor = (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength());
 
-                if(!(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump))
+                if(!(m_airTime < m_coyoteTime && !m_ungroundedDueToJump))
                 {
                     m_prevTargetVelocity.SetX(velocityXYTilted.GetX()*m_movingUpInclineFactor);
                     m_prevTargetVelocity.SetY(velocityXYTilted.GetY()*m_movingUpInclineFactor);
@@ -2318,7 +2316,7 @@ namespace FirstPersonController
                 if(m_coyoteTimeTracksLastNormal)
                     m_coyoteVelocityXCrossYDirection = m_velocityXCrossYDirection;
             }
-            else if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
+            else if(m_airTime < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
                 SetVelocityXCrossYDirection(m_coyoteVelocityXCrossYDirection);
             else
             {
@@ -2485,23 +2483,11 @@ namespace FirstPersonController
             m_scriptSetGroundTick = false;
         }
 
-        // Update coyote timers and flags based on grounded state transition
-        if(prevGrounded && !m_grounded)
-        {
-            m_timeSinceUngrounded = 0.f;
-            if(m_jumpHeld)
-                m_ungroundedDueToJump = true;
-            else
-                m_ungroundedDueToJump = false;
-        }
-        else if(!m_grounded)
-            m_timeSinceUngrounded += deltaTime;
-        else
-        {
+        // Set m_ungroundedDueToJump to true if the character is ungrounded do to a jump, otherwise set it to false if the character is grounded
+        if(prevGrounded && !m_grounded && m_jumpValue)
+            m_ungroundedDueToJump = true;
+        else if(m_grounded)
             m_ungroundedDueToJump = false;
-            // Reset to prevent coyote triggering when grounded
-            m_timeSinceUngrounded = m_coyoteTime + 1.f;
-        }
 
         // Accumulate airtime if the character isn't grounded, otherwise set it to zero
         if(m_grounded)
@@ -2676,7 +2662,7 @@ namespace FirstPersonController
         bool initialJump = false;
 
         if((m_grounded ||
-            (m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyoteTime) ||
+            (m_airTime < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyoteTime) ||
              m_jumpCoyoteGravityPending) &&
               m_jumpReqRepress && m_applyVelocityZ <= 0.f)
         {
@@ -2698,7 +2684,7 @@ namespace FirstPersonController
                 initialJump = true;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
-                m_timeSinceUngrounded = m_coyoteTime;
+                m_ungroundedDueToJump = true;
                 if(m_jumpCoyoteGravityPending)
                 {
                     m_applyVelocityZ = 0.f;
@@ -2766,7 +2752,7 @@ namespace FirstPersonController
                 FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnFinalJump);
             }
 
-            if(m_timeSinceUngrounded < m_coyoteTime && !m_ungroundedDueToJump && m_applyGravityDuringCoyoteTime && m_jumpValue)
+            if(m_airTime < m_coyoteTime && !m_ungroundedDueToJump && m_applyGravityDuringCoyoteTime && m_jumpValue)
                 m_jumpCoyoteGravityPending = true;
         }
 
@@ -4287,14 +4273,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCoyoteTime(const float& new_coyoteTime)
     {
         m_coyoteTime = new_coyoteTime;
-    }
-    float FirstPersonControllerComponent::GetTimeSinceUngrounded() const
-    {
-        return m_timeSinceUngrounded;
-    }
-    void FirstPersonControllerComponent::SetTimeSinceUngrounded(const float& new_timeSinceUngrounded)
-    {
-        m_timeSinceUngrounded = new_timeSinceUngrounded;
     }
     bool FirstPersonControllerComponent::GetUngroundedDueToJump() const
     {

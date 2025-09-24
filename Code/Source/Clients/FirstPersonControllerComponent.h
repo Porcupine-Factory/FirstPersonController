@@ -279,8 +279,6 @@ namespace FirstPersonController
         void SetJumpWhileCrouched(const bool& new_jumpWhileCrouched) override;
         float GetCoyoteTime() const override;
         void SetCoyoteTime(const float& new_coyoteTime) override;
-        float GetTimeSinceUngrounded() const override;
-        void SetTimeSinceUngrounded(const float& new_timeSinceUngrounded) override;
         bool GetUngroundedDueToJump() const override;
         void SetUngroundedDueToJump(const bool& new_ungroundedDueToJump) override;
         bool GetApplyGravityDuringCoyoteTime() const override;
@@ -677,7 +675,6 @@ namespace FirstPersonController
         bool m_doubleJumpEnabled = false;
         bool m_finalJump = false;
         float m_coyoteTime = 0.2f;
-        float m_timeSinceUngrounded = 0.0f;
         bool m_coyoteTimeTracksLastNormal = true;
         bool m_ungroundedDueToJump = false;
         bool m_jumpCoyoteGravityPending = false;
