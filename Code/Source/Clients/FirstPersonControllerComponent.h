@@ -678,7 +678,7 @@ namespace FirstPersonController
         bool m_coyoteTimeTracksLastNormal = true;
         bool m_ungroundedDueToJump = false;
         bool m_jumpCoyoteGravityPending = false;
-        bool m_applyGravityDuringCoyoteTime = true;
+        bool m_applyGravityDuringCoyoteTime = false;
         bool m_jumpHeadIgnoreDynamicRigidBodies = true;
         bool m_jumpWhileCrouched = false;
         bool m_headHit = false;
