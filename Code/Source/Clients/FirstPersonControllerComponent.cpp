@@ -404,7 +404,7 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_coyoteTimeTracksLastNormal,
                         "Last Ground Normal Applies During Coyote Time", "Determines if the last normal vector that the character was in contact with when walking off a ledge is kept applied during coyote time.")
-                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetNoGravityDuringCoyoteAndTimeGreaterThanZero)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZeroAndNoGravityDuring)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_updateXYAscending,
                         "Update X&Y Velocity When Ascending", "Allows movement in X&Y during a jump’s ascent.")
@@ -424,6 +424,7 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseDecelUsesFriction,
                         "Use Friction For Deceleration", "Use the PhysX collider's coefficient of friction beneath the character to determine the constant deceleration the character will experience when an impulse is applied. This calculation will be used instead of value entered in 'Impulse Constant Deceleration', but can still be used along with 'Impulse Linear Damping' if it is non-zero.")
+                        ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                         ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_characterMass,
@@ -436,7 +437,7 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_impulseConstantDecel,
                         "Impulse Constant Deceleration", "The constant rate at which the component of the character's velocity that's due to impulses is reduced over time. A constant deceleration behaves the same as kinetic friction whereas linear damping behaves like Stokes' Law. This is used in combination with Impulse Linear Damping, set either to zero to use just one or the other. If 'Use Friction For Deceleration' is turned on then this constant will not be used.")
-                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulses)
+                        ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulsesAndNotDecelUsesFriction)
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Hit Detection")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -4010,6 +4011,11 @@ namespace FirstPersonController
         if(!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
     }
+    // GetEnableImpulsesAndNotDecelUsesFriction() is not exposed to the request bus, it's used for the visibility attribute in the editor
+    bool FirstPersonControllerComponent::GetEnableImpulsesAndNotDecelUsesFriction() const
+    {
+        return GetEnableImpulses() && !m_impulseDecelUsesFriction;
+    }
     bool FirstPersonControllerComponent::GetImpulseDecelUsesFriction() const
     {
         return m_impulseDecelUsesFriction;
@@ -4309,8 +4315,8 @@ namespace FirstPersonController
     {
         return m_coyoteTimeTracksLastNormal;
     }
-    // GetNoGravityDuringCoyoteAndTimeGreaterThanZero() is not exposed to the request bus, it's used for the visibility attribute in the editor
-    bool FirstPersonControllerComponent::GetNoGravityDuringCoyoteAndTimeGreaterThanZero() const
+    // GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() is not exposed to the request bus, it's used for the visibility attribute in the editor
+    bool FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() const
     {
         return !m_applyGravityDuringCoyoteTime && GetCoyoteTimeGreaterThanZero();
     }

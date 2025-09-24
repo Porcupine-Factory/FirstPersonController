@@ -481,8 +481,9 @@ namespace FirstPersonController
 
         // These getter methods are not exposed to the request bus, they're used for the visibility attribute in the editor
         bool GetCameraNotSmoothFollow() const;
+        bool GetEnableImpulsesAndNotDecelUsesFriction() const;
         bool GetCoyoteTimeGreaterThanZero() const;
-        bool GetNoGravityDuringCoyoteAndTimeGreaterThanZero() const;
+        bool GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() const;
 
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);
