@@ -2706,6 +2706,7 @@ namespace FirstPersonController
         }
         else if((m_jumpTimer + deltaTime/2.f) < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
         {
+            m_ungroundedDueToJump = true;
             if(m_jumpValue == 0.f)
             {
                 m_jumpHeld = false;
