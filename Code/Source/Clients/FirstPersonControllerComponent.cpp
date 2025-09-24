@@ -2483,10 +2483,8 @@ namespace FirstPersonController
             m_scriptSetGroundTick = false;
         }
 
-        // Set m_ungroundedDueToJump to true if the character is ungrounded do to a jump, otherwise set it to false if the character is grounded
-        if(prevGrounded && !m_grounded && m_jumpValue)
-            m_ungroundedDueToJump = true;
-        else if(m_grounded)
+        // Set m_ungroundedDueToJump to false when the character is grounded
+        if(m_grounded)
             m_ungroundedDueToJump = false;
 
         // Accumulate airtime if the character isn't grounded, otherwise set it to zero
