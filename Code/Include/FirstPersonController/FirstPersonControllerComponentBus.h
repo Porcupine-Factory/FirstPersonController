@@ -274,8 +274,8 @@ namespace FirstPersonController
         virtual void SetPosZIgnoresObstacles(const bool&) = 0;
         virtual bool GetJumpAllowedWhenGravityPrevented() const = 0;
         virtual void SetJumpAllowedWhenGravityPrevented(const bool&) = 0;
-        virtual bool GetHitSomething() const = 0;
-        virtual void SetHitSomething(const bool&) = 0;
+        virtual bool GetVelocityXYObstructed() const = 0;
+        virtual void SetVelocityXYObstructed(const bool&) = 0;
         virtual bool GetGravityPrevented() const = 0;
         virtual void SetGravityPrevented(const bool&) = 0;
         virtual float GetSprintScaleForward() const = 0;
@@ -405,8 +405,9 @@ namespace FirstPersonController
         virtual void OnTopWalkSpeedReached() = 0;
         virtual void OnTopSprintSpeedReached() = 0;
         virtual void OnHeadHit() = 0;
-        virtual void OnHitSomething() = 0;
-        virtual void OnGravityPrevented() = 0;
+        virtual void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit>) = 0;
+        virtual void OnVelocityXYObstructed() = 0;
+        virtual void OnCharacterGravityObstructed() = 0;
         virtual void OnCrouched() = 0;
         virtual void OnStoodUp() = 0;
         virtual void OnStandPrevented() = 0;
@@ -431,7 +432,7 @@ namespace FirstPersonController
     public:
         AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerComponentNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnHitSomething, OnGravityPrevented, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnFinalJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnCharacterShapecastHitSomething, OnVelocityXYObstructed, OnCharacterGravityObstructed, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnFinalJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
 
         void OnPhysicsTimestepStart(const float& timeStep) override
         {
@@ -461,23 +462,23 @@ namespace FirstPersonController
         {
             Call(FN_OnJumpApogeeReached);
         }
-        void OnStartedMoving()
+        void OnStartedMoving() override
         {
             Call(FN_OnStartedMoving);
         }
-        void OnTargetVelocityReached()
+        void OnTargetVelocityReached() override
         {
             Call(FN_OnTargetVelocityReached);
         }
-        void OnStopped()
+        void OnStopped() override
         {
             Call(FN_OnStopped);
         }
-        void OnTopWalkSpeedReached()
+        void OnTopWalkSpeedReached() override
         {
             Call(FN_OnTopWalkSpeedReached);
         }
-        void OnTopSprintSpeedReached()
+        void OnTopSprintSpeedReached() override
         {
             Call(FN_OnTopSprintSpeedReached);
         }
@@ -485,13 +486,17 @@ namespace FirstPersonController
         {
             Call(FN_OnHeadHit);
         }
-        void OnHitSomething() override
+        void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit> characterHits) override
         {
-            Call(FN_OnHitSomething);
+            Call(FN_OnCharacterShapecastHitSomething, characterHits);
         }
-        void OnGravityPrevented() override
+        void OnVelocityXYObstructed() override
         {
-            Call(FN_OnGravityPrevented);
+            Call(FN_OnVelocityXYObstructed);
+        }
+        void OnCharacterGravityObstructed() override
+        {
+            Call(FN_OnCharacterGravityObstructed);
         }
         void OnCrouched() override
         {

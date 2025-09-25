@@ -320,8 +320,8 @@ namespace FirstPersonController
         void SetPosZIgnoresObstacles(const bool& new_posZIgnoresObstacles) override;
         bool GetJumpAllowedWhenGravityPrevented() const override;
         void SetJumpAllowedWhenGravityPrevented(const bool& new_jumpAllowedWhenGravityPrevented) override;
-        bool GetHitSomething() const override;
-        void SetHitSomething(const bool& new_hitSomething) override;
+        bool GetVelocityXYObstructed() const override;
+        void SetVelocityXYObstructed(const bool& new_velocityXYObstructed) override;
         bool GetGravityPrevented() const override;
         void SetGravityPrevented(const bool& new_gravityPrevented) override;
         float GetSprintScaleForward() const override;
@@ -499,8 +499,9 @@ namespace FirstPersonController
         void OnTopWalkSpeedReached();
         void OnTopSprintSpeedReached();
         void OnHeadHit();
-        void OnHitSomething();
-        void OnGravityPrevented();
+        void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit> characterHits);
+        void OnVelocityXYObstructed();
+        void OnCharacterGravityObstructed();
         void OnCrouched();
         void OnStoodUp();
         void OnStandPrevented();
@@ -552,7 +553,7 @@ namespace FirstPersonController
         bool m_gravityIgnoresObstacles = false;
         bool m_posZIgnoresObstacles = true;
         bool m_jumpAllowedWhenGravityPrevented = true;
-        bool m_hitSomething = false;
+        bool m_velocityXYObstructed = false;
         bool m_gravityPrevented[2] = {false, false};
 
         // Determines whether the character's X&Y target velocity
