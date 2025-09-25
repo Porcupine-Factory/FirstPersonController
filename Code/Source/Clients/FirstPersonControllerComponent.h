@@ -351,10 +351,10 @@ namespace FirstPersonController
         bool GetRegenerateStaminaAutomatically() const override;
         void SetRegenerateStaminaAutomatically(const bool& new_regenerateStaminaAutomatically) override;
         bool GetSprinting() const override;
-        float GetSprintCooldownTime() const override;
-        void SetSprintCooldownTime(const float& new_sprintCooldownTime) override;
-        float GetSprintCooldown() const override;
-        void SetSprintCooldown(const float& new_sprintCooldown) override;
+        float GetSprintTotalCooldownTime() const override;
+        void SetSprintTotalCooldownTime(const float& new_sprintCooldownTimerTime) override;
+        float GetSprintCooldownTimer() const override;
+        void SetSprintCooldownTimer(const float& new_sprintCooldownTimer) override;
         float GetSprintPauseTime() const override;
         void SetSprintPauseTime(const float& new_sprintPauseTime) override;
         float GetSprintPause() const override;
@@ -585,9 +585,9 @@ namespace FirstPersonController
         float m_sprintHeldDuration = 0.f;
         float m_sprintRegenRate = 1.f;
         float m_sprintMaxTime = 120.f;
-        float m_sprintCooldown = 0.f;
-        float m_sprintCooldownTime = 1.f;
-        float m_sprintPauseTime = (m_sprintCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintCooldownTime;
+        float m_sprintCooldownTimer = 0.f;
+        float m_sprintTotalCooldownTime = 1.f;
+        float m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
         float m_sprintPause = 0.f;
         bool m_sprintBackwards = true;
         bool m_sprintWhileCrouched = false;
@@ -599,7 +599,7 @@ namespace FirstPersonController
         bool m_regenerateStaminaAutomatically = true;
 
         // Stamina application variables
-        float m_staminaPercentage = (m_sprintCooldown == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        float m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
 
         // Crouch application variables
         float m_crouchDistance = 0.5f;
