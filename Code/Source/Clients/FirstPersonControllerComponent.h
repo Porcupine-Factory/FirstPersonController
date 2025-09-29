@@ -677,7 +677,7 @@ namespace FirstPersonController
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
         bool m_finalJump = false;
-        float m_coyoteTime = 0.2f;
+        float m_coyoteTime = 0.f;
         bool m_coyoteTimeTracksLastNormal = true;
         bool m_ungroundedDueToJump = false;
         bool m_jumpCoyoteGravityPending = false;

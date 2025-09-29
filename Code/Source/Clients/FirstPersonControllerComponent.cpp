@@ -2672,7 +2672,7 @@ namespace FirstPersonController
         bool initialJump = false;
 
         if((m_grounded ||
-            (m_airTime < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyoteTime) ||
+            (m_airTime < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyoteTime && !m_groundClose) ||
              m_jumpCoyoteGravityPending) &&
               m_jumpReqRepress && m_applyVelocityZ <= 0.f)
         {
