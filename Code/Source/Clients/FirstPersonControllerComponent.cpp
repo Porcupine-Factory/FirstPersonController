@@ -120,6 +120,9 @@ namespace FirstPersonController
                   ->Attribute(AZ::Edit::Attributes::Suffix, " %")
               ->Field("Grounded Offset", &FirstPersonControllerComponent::m_groundedSphereCastOffset)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
+              ->Field("Ground Close Sphere Cast Radius Percentage Increase", &FirstPersonControllerComponent::m_groundCloseSphereCastRadiusPercentageIncrease)
+                  ->Attribute(AZ::Edit::Attributes::Min, -100.f)
+                  ->Attribute(AZ::Edit::Attributes::Suffix, " %")
               ->Field("Ground Close Offset", &FirstPersonControllerComponent::m_groundCloseSphereCastOffset)
                   ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
               ->Field("Jump Hold Distance", &FirstPersonControllerComponent::m_jumpHoldDistance)
@@ -376,6 +379,8 @@ namespace FirstPersonController
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_groundSphereCastsRadiusPercentageIncrease,
                         "Ground Sphere Casts' Radius Percentage Increase", "The percentage increase in the radius of the ground and ground close sphere casts over the PhysX Character Controller's capsule radius.")
+                    ->DataElement(nullptr, &FirstPersonControllerComponent::m_groundCloseSphereCastRadiusPercentageIncrease,
+                        "Ground Close Sphere Cast Radius Percentage Increase", "Percentage increase (or decrease if negative) in the radius of the ground close sphere cast over the PhysX Character Controller's capsule radius.")
                     ->DataElement(nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadSphereCastOffset,
                         "Jump Head Hit Detection Distance", "The distance above the character's head where an obstruction will be detected for jumping. The apogee of the jump occurs when there is a collision.")
@@ -2505,30 +2510,49 @@ namespace FirstPersonController
         else
             m_airTime += deltaTime;
 
-        request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            (1.f + m_groundSphereCastsRadiusPercentageIncrease/100.f)*m_capsuleRadius,
-            sphereCastPose,
-            sphereCastDirection,
-            m_groundCloseSphereCastOffset,
-            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-            m_groundedCollisionGroup,
-            nullptr);
-
-        request.m_reportMultipleHits = true;
-
         groundedOtherwiseGroundClose = false;
 
-        hits = sceneInterface->QueryScene(sceneHandle, &request);
+        // Small threshold (0.001m) to prevent errors from sphere casts with near-zero radius
+        const float minSphereRadiusThreshold = 0.001f;
+        const float groundCloseRadius = m_capsuleRadius * (1.f + m_groundCloseSphereCastRadiusPercentageIncrease / 100.f);
+        // If reduced radius <=0 (or small threshold), fallback to raycast
+        if (groundCloseRadius <= minSphereRadiusThreshold) {
+            AzPhysics::RayCastRequest rayRequest;
+            rayRequest.m_start = sphereCastPose.GetTranslation();
+            rayRequest.m_direction = sphereCastDirection;
+            rayRequest.m_distance = m_groundCloseSphereCastOffset;
+            rayRequest.m_queryType = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;
+            rayRequest.m_collisionGroup = m_groundedCollisionGroup;
+            rayRequest.m_reportMultipleHits = true;
+            rayRequest.m_filterCallback = nullptr;
+            hits = sceneInterface->QueryScene(sceneHandle, &rayRequest);
+        }
+        else {
+            // Use sphere cast with reduced radius
+            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                groundCloseRadius,
+                sphereCastPose,
+                sphereCastDirection,
+                m_groundCloseSphereCastOffset,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                m_groundedCollisionGroup,
+                nullptr);
+            request.m_reportMultipleHits = true;
+            hits = sceneInterface->QueryScene(sceneHandle, &request);
+        }
+
         m_groundCloseHits.clear();
         AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
         m_groundClose = hits ? true : false;
-
+ 
         if(m_scriptSetGroundCloseTick)
         {
             m_groundClose = m_scriptGroundClose;
             m_scriptSetGroundCloseTick = false;
         }
         //AZ_Printf("First Person Controller Component", "m_groundClose = %s", m_groundClose ? "true" : "false");
+        //AZ_Printf("First Person Controller Component", "Ground Close Radius = %.10f", groundCloseRadius);
+        AZ_Printf("First Person Controller Component", "groundCloseRadius = %.10f", groundCloseRadius);
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
