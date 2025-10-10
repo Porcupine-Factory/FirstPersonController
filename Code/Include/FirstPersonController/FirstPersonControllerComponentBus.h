@@ -86,6 +86,7 @@ namespace FirstPersonController
         virtual void SetGroundedForTick(const bool&) = 0;
         virtual AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const = 0;
         virtual AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const = 0;
+        virtual AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const = 0;
         virtual AZ::Vector3 GetGroundSumNormalsDirection() const = 0;
         virtual AZ::Vector3 GetGroundCloseSumNormalsDirection() const = 0;
         virtual AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit) const = 0;
@@ -211,6 +212,8 @@ namespace FirstPersonController
         virtual void SetGroundedOffset(const float&) = 0;
         virtual float GetGroundCloseOffset() const = 0;
         virtual void SetGroundCloseOffset(const float&) = 0;
+        virtual float GetGroundCloseCoyoteTimeOffset() const = 0;
+        virtual void SetGroundCloseCoyoteTimeOffset(const float&) = 0;
         virtual float GetJumpHoldDistance() const = 0;
         virtual void SetJumpHoldDistance(const float&) = 0;
         virtual float GetJumpHeadSphereCastOffset() const = 0;
@@ -247,6 +250,8 @@ namespace FirstPersonController
         virtual AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const = 0;
         virtual float GetGroundSphereCastsRadiusPercentageIncrease() const = 0;
         virtual void SetGroundSphereCastsRadiusPercentageIncrease(const float&) = 0;
+        virtual float GetGroundCloseCoyoteTimeRadiusPercentageIncrease() const = 0;
+        virtual void SetGroundCloseCoyoteTimeRadiusPercentageIncrease(const float&) = 0;
         virtual float GetMaxGroundedAngleDegrees() const = 0;
         virtual void SetMaxGroundedAngleDegrees(const float&) = 0;
         virtual float GetTopWalkSpeed() const = 0;
