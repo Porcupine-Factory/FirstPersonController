@@ -2987,15 +2987,26 @@ namespace FirstPersonController
         // Set the translation and shift the capsule based on the character's capsule height
         capsulePose.SetTranslation(GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
-        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-            m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
-            m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
-            capsulePose,
-            m_currentVelocity.GetNormalized(),
-            (m_currentVelocity * deltaTime).GetLength() + m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
-            m_characterHitBy,
-            m_characterHitCollisionGroup,
-            nullptr);
+        AzPhysics::ShapeCastRequest request = !m_applyVelocityXY.IsZero() || m_applyVelocityZ != 0.f || !m_currentVelocity.IsZero() ?
+            AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+                m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
+                m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
+                capsulePose,
+                AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_currentVelocity,
+                ((AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_currentVelocity) * deltaTime).GetLength() + m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
+                m_characterHitBy,
+                m_characterHitCollisionGroup,
+                nullptr)
+            :
+            AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+                m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
+                m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
+                capsulePose,
+                AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()),
+                0.001f,
+                m_characterHitBy,
+                m_characterHitCollisionGroup,
+                nullptr);
 
         request.m_reportMultipleHits = true;
 
