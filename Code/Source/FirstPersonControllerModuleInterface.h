@@ -6,6 +6,7 @@
 #include <AzCore/Module/Module.h>
 #include <Clients/FirstPersonControllerSystemComponent.h>
 #include <Clients/FirstPersonControllerComponent.h>
+#include <Clients/FirstPersonExtrasComponent.h>
 
 namespace FirstPersonController
 {
@@ -24,7 +25,8 @@ namespace FirstPersonController
             // This happens through the [MyComponent]::Reflect() function.
             m_descriptors.insert(m_descriptors.end(), {
                 FirstPersonControllerSystemComponent::CreateDescriptor(),
-                FirstPersonControllerComponent::CreateDescriptor()
+                FirstPersonControllerComponent::CreateDescriptor(),
+                FirstPersonExtrasComponent::CreateDescriptor()
                 });
         }
 

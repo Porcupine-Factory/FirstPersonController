@@ -7,12 +7,14 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
 #include <FirstPersonController/FirstPersonControllerBus.h>
+#include <FirstPersonController/FirstPersonExtrasBus.h>
 
 namespace FirstPersonController
 {
     class FirstPersonControllerSystemComponent
         : public AZ::Component
         , protected FirstPersonControllerRequestBus::Handler
+        , protected FirstPersonExtrasRequestBus::Handler
         , public AZ::TickBus::Handler
     {
     public:

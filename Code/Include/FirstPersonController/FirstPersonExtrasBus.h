@@ -9,15 +9,15 @@
 
 namespace FirstPersonController
 {
-    class FirstPersonControllerRequests
+    class FirstPersonExtrasRequests
     {
     public:
-        AZ_RTTI(FirstPersonControllerRequests, "{2880DB3D-3966-4C87-8777-BC9028E3F48D}");
-        virtual ~FirstPersonControllerRequests() = default;
+        AZ_RTTI(FirstPersonExtrasRequests, "{E6F98502-3291-46C7-87AD-91BCE83A68BF}");
+        virtual ~FirstPersonExtrasRequests() = default;
         // Put your public methods here
     };
 
-    class FirstPersonControllerBusTraits
+    class FirstPersonExtrasBusTraits
         : public AZ::EBusTraits
     {
     public:
@@ -28,7 +28,7 @@ namespace FirstPersonController
         //////////////////////////////////////////////////////////////////////////
     };
 
-    using FirstPersonControllerRequestBus = AZ::EBus<FirstPersonControllerRequests, FirstPersonControllerBusTraits>;
-    using FirstPersonControllerInterface = AZ::Interface<FirstPersonControllerRequests>;
+    using FirstPersonExtrasRequestBus = AZ::EBus<FirstPersonExtrasRequests, FirstPersonExtrasBusTraits>;
+    using FirstPersonExtrasInterface = AZ::Interface<FirstPersonExtrasRequests>;
 
 } // namespace FirstPersonController
