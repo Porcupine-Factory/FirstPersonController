@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "Clients/FirstPersonControllerComponent.h"
 #include <Clients/FirstPersonExtrasComponent.h>
 
 #include <AzCore/Component/Entity.h>
@@ -47,12 +48,26 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::Activate()
     {
+        AZ::TickBus::Handler::BusConnect();
         FirstPersonControllerComponentNotificationBus::Handler::BusConnect(GetEntityId());
         FirstPersonExtrasComponentRequestBus::Handler::BusConnect(GetEntityId());
+
+        AZ::Entity* e = GetEntity();
+        m_firstPersonControllerObject = e->FindComponent<FirstPersonControllerComponent>();
+
+        if(m_firstPersonControllerObject)
+        {
+            m_jumpValue = &(m_firstPersonControllerObject->m_jumpValue);
+            m_grounded = &(m_firstPersonControllerObject->m_grounded);
+        }
+
+        AssignConnectInputEvents();
     }
 
     void FirstPersonExtrasComponent::Deactivate()
     {
+        InputEventNotificationBus::MultiHandler::BusDisconnect();
+        AZ::TickBus::Handler::BusDisconnect();
         FirstPersonControllerComponentNotificationBus::Handler::BusDisconnect();
         FirstPersonExtrasComponentRequestBus::Handler::BusDisconnect();
     }
@@ -72,6 +87,82 @@ namespace FirstPersonController
     {
         incompatible.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
         incompatible.push_back(AZ_CRC_CE("InputService"));
+    }
+
+    void FirstPersonExtrasComponent::AssignConnectInputEvents()
+    {
+        // Disconnect prior to connecting since this may be a reassignment
+        InputEventNotificationBus::MultiHandler::BusDisconnect();
+
+        if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
+        {
+            AZ_Error("First Person Extras Component", false, "Number of input IDs not equal to number of input names!");
+        }
+        else
+        {
+            for(auto& it_event: m_controlMap)
+            {
+                *(it_event.first) = StartingPointInput::InputEventNotificationId(
+                    (m_inputNames[std::distance(m_controlMap.begin(), m_controlMap.find(it_event.first))])->c_str());
+                InputEventNotificationBus::MultiHandler::BusConnect(*(it_event.first));
+            }
+        }
+    }
+
+    void FirstPersonExtrasComponent::OnPressed(float value)
+    {
+        const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
+        if(inputId == nullptr)
+            return;
+
+        for(auto& it_event: m_controlMap)
+        {
+            if(*inputId == *(it_event.first))
+            {
+                *(it_event.second) = value;
+                // print the local user ID and the action name CRC
+                //AZ_Printf("Pressed", it_event.first->ToString().c_str());
+            }
+        }
+    }
+
+    void FirstPersonExtrasComponent::OnReleased(float value)
+    {
+        const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
+        if(inputId == nullptr)
+            return;
+
+        for(auto& it_event: m_controlMap)
+        {
+            if(*inputId == *(it_event.first))
+            {
+                *(it_event.second) = value;
+                // print the local user ID and the action name CRC
+                //AZ_Printf("Released", it_event.first->ToString().c_str());
+            }
+        }
+    }
+
+    void FirstPersonExtrasComponent::OnHeld(float value)
+    {
+        const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
+        if(inputId == nullptr)
+            return;
+    }
+
+    void FirstPersonExtrasComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
+    {
+        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), false);
+        m_prevDeltaTime = deltaTime;
+    }
+
+    void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
+    {
+        if(!timestepElseTick && !m_prevJumpValue && *m_jumpValue && !*m_grounded)
+        {
+            AZ_Printf("First Person Extras Component", "Trying to jump!");
+        }
+        m_prevJumpValue = *m_jumpValue;
     }
 
     // Event Notification methods for use in scripts

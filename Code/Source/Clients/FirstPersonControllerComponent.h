@@ -836,6 +836,10 @@ namespace FirstPersonController
             {&m_rotatePitchEventId, &m_pitchValue},
             {&m_sprintEventId, &m_sprintValue},
             {&m_crouchEventId, &m_crouchValue},
-            {&m_jumpEventId, &m_jumpValue}};
+            {&m_jumpEventId, &m_jumpValue}
+        };
+
+        // Make this class a friend of the FirstPersonExtrasComponent to give it access to private members
+        friend class FirstPersonExtrasComponent;
     };
 }

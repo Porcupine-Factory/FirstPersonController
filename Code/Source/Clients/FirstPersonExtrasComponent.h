@@ -6,8 +6,12 @@
 #include <FirstPersonController/FirstPersonExtrasComponentBus.h>
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
 
+#include <Clients/FirstPersonControllerComponent.h>
+
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityBus.h>
+#include <AzCore/Component/TickBus.h>
+#include <AzCore/std/containers/map.h>
 
 #include <StartingPointInput/InputEventNotificationBus.h>
 
@@ -15,6 +19,7 @@ namespace FirstPersonController
 {
     class FirstPersonExtrasComponent
         : public AZ::Component
+        , public AZ::TickBus::Handler
         , public AZ::EntityBus::Handler
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentNotificationBus::Handler
@@ -33,9 +38,54 @@ namespace FirstPersonController
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
 
+        // AZ::InputEventNotificationBus interface
+        void OnPressed(float value) override;
+        void OnReleased(float value) override;
+        void OnHeld(float value) override;
+
     private:
+        // Input event assignment and notification bus connection
+        void AssignConnectInputEvents();
+
+        // TickBus interface
+        void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
+
+        // Called on each tick
+        void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);
+
         // FirstPersonExtrasComponentNotificationBus
         void OnPlaceholder();
+
+        // Stores the previous tick deltaTime and previous physics timestep
+        float m_prevDeltaTime = 1.f / 60.f;
+        float m_prevTimestep = 1.f / 60.f;
+
+        // Jumping and gravity FirstPersonController attributes
+        bool* m_grounded;
+
+        // FirstPersonExtrasComponent object
+        FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
+
+        // FirstPersonController event value multipliers
+        float* m_jumpValue = nullptr;
+        float m_prevJumpValue = 0.f;
+
+        // Event value multipliers
+        float m_interactValue = 0.f;
+
+        // Event IDs and action names
+        StartingPointInput::InputEventNotificationId m_interactEventId;
+        AZStd::string m_strInteract = "Interact";
+
+        // Array of action names
+        AZStd::string* m_inputNames[1] = {
+            &m_strInteract
+        };
+
+        // Map of event IDs and event value multipliers
+        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
+            {&m_interactEventId, &m_interactValue}
+        };
 
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);
