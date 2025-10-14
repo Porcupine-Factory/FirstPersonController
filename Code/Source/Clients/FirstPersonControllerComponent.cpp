@@ -2430,7 +2430,15 @@ namespace FirstPersonController
 
         AZStd::vector<AzPhysics::SceneQueryHit> steepNormals;
 
-        AZ::u8 groundedGroundCloseOrGroundCloseCoyoteTime = 0;
+        // Enumerator for filtering the various scene query hit vectors
+        enum groundSphereCasts : AZ::u8 {
+            grounded = 0,
+            groundClose = 1,
+            coyoteTimeGroundClose = 2,
+        };
+
+        groundSphereCasts groundedGroundCloseOrGroundCloseCoyoteTime = grounded;
+
         // Disregard intersections with the character's collider, its child entities,
         // and if the slope angle of the thing that's intersecting is greater than the max grounded angle
         auto selfChildSlopeEntityCheck = [this, &steepNormals, &groundedGroundCloseOrGroundCloseCoyoteTime](AzPhysics::SceneQueryHit& hit)
@@ -2459,11 +2467,11 @@ namespace FirstPersonController
                     return true;
                 }
 
-                if(groundedGroundCloseOrGroundCloseCoyoteTime == 0)
+                if(groundedGroundCloseOrGroundCloseCoyoteTime == grounded)
                     m_groundHits.push_back(hit);
-                else if(groundedGroundCloseOrGroundCloseCoyoteTime == 1)
+                else if(groundedGroundCloseOrGroundCloseCoyoteTime == groundClose)
                     m_groundCloseHits.push_back(hit);
-                else if(groundedGroundCloseOrGroundCloseCoyoteTime == 2)
+                else if(groundedGroundCloseOrGroundCloseCoyoteTime == coyoteTimeGroundClose)
                     m_groundCloseCoyoteTimeHits.push_back(hit);
 
                 return false;
@@ -2524,7 +2532,7 @@ namespace FirstPersonController
         request.m_reportMultipleHits = true;
 
         // Filter the ground close hits
-        groundedGroundCloseOrGroundCloseCoyoteTime = 1;
+        groundedGroundCloseOrGroundCloseCoyoteTime = groundClose;
 
         hits = sceneInterface->QueryScene(sceneHandle, &request);
 
@@ -2571,7 +2579,7 @@ namespace FirstPersonController
             request.m_reportMultipleHits = true;
 
             // Filter the ground close coyote time hits
-            groundedGroundCloseOrGroundCloseCoyoteTime = 2;
+            groundedGroundCloseOrGroundCloseCoyoteTime = coyoteTimeGroundClose;
 
             hits = sceneInterface->QueryScene(sceneHandle, &request);
 
