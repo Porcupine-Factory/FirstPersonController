@@ -69,7 +69,7 @@ namespace FirstPersonController
         bool m_queueJump = false;
         bool m_prevQueueJump = false;
         float m_jumpPressedInAirTimer = 0.f;
-        float m_jumpPressedInAirQueueTimeThreshold = 0.5f;
+        float m_jumpPressedInAirQueueTimeThreshold = 0.35f;
 
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;

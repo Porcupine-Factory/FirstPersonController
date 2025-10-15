@@ -192,6 +192,9 @@ namespace FirstPersonController
 
         if(!timestepElseTick && !*m_grounded && m_prevJumpValue == 0.f && *m_jumpValue != 0.f)
         {
+            // Reset the timer
+            m_jumpPressedInAirTimer = 0.f;
+
             // Queue up the jump when it's pressed while in the air
             m_prevQueueJump = m_queueJump;
             m_queueJump = true;

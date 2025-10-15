@@ -2752,7 +2752,6 @@ namespace FirstPersonController
                         return;
                 }
                 m_crouchJumpPending = false;
-                m_applyVelocityZCurrentDelta = m_jumpInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
                 initialJump = true;
                 m_jumpHeld = true;
                 m_jumpReqRepress = false;
@@ -2838,7 +2837,7 @@ namespace FirstPersonController
         }
         else
         {
-            m_applyVelocityZ += m_applyVelocityZCurrentDelta;
+            m_applyVelocityZ = m_jumpInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
             m_applyVelocityZCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
         }
 
