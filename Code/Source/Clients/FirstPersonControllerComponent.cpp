@@ -532,6 +532,8 @@ namespace FirstPersonController
                 ->Event("Set Jump Input Value", &FirstPersonControllerComponentRequests::SetJumpInputValue)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
+                ->Event("Get Script Jump", &FirstPersonControllerComponentRequests::GetScriptJump)
+                ->Event("Set Script Jump", &FirstPersonControllerComponentRequests::SetScriptJump)
                 ->Event("Get Ground Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundSceneQueryHits)
                 ->Event("Get Ground Close Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundCloseSceneQueryHits)
                 ->Event("Get Ground Close Coyote Time Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundCloseCoyoteTimeSceneQueryHits)
@@ -2736,7 +2738,7 @@ namespace FirstPersonController
              m_jumpCoyoteGravityPending) &&
               m_jumpReqRepress && m_applyVelocityZ <= 0.f)
         {
-            if((m_jumpValue || m_crouchJumpPending || m_jumpCoyoteGravityPending) && !m_jumpHeld && !m_headHit)
+            if((m_jumpValue || m_scriptJump || m_crouchJumpPending || m_jumpCoyoteGravityPending) && !m_jumpHeld && !m_headHit)
             {
                 if(!m_standing)
                 {
@@ -3595,6 +3597,14 @@ namespace FirstPersonController
         m_scriptGrounded = new_grounded;
         m_scriptSetGroundTick = true;
     }
+    bool FirstPersonControllerComponent::GetScriptJump() const
+    {
+        return m_scriptJump;
+    }
+    void FirstPersonControllerComponent::SetScriptJump(const bool& new_scriptJump)
+    {
+        m_scriptJump = new_scriptJump;
+    }
     AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundSceneQueryHits() const
     {
         AzPhysics::SceneQueryHits groundHits;
@@ -3963,6 +3973,7 @@ namespace FirstPersonController
             if(sceneInterface != nullptr)
             {
                 sceneInterface->RegisterSceneSimulationStartHandler(m_attachedSceneHandle, m_sceneSimulationStartHandler);
+                sceneInterface->RegisterSceneSimulationFinishHandler(m_attachedSceneHandle, m_sceneSimulationFinishHandler);
             }
         }
         else

@@ -84,6 +84,8 @@ namespace FirstPersonController
         virtual void SetJumpInputValue(const float&) = 0;
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
+        virtual bool GetScriptJump() const = 0;
+        virtual void SetScriptJump(const bool&) = 0;
         virtual AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const = 0;
         virtual AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const = 0;
         virtual AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const = 0;

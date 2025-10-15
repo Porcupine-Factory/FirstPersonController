@@ -14,6 +14,9 @@ namespace FirstPersonController
     {
     public:
         ~FirstPersonExtrasComponentRequests() override = default;
+
+        virtual float GetJumpPressedInAirQueueTimeThreshold() const = 0;
+        virtual void SetJumpPressedInAirQueueTimeThreshold(const float&) = 0;
     };
 
     using FirstPersonExtrasComponentRequestBus = AZ::EBus<FirstPersonExtrasComponentRequests>;

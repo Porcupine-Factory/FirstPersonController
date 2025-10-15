@@ -130,6 +130,8 @@ namespace FirstPersonController
         void SetJumpInputValue(const float& new_jumpValue) override;
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
+        bool GetScriptJump() const override;
+        void SetScriptJump(const bool& new_scriptJump) override;
         AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const override;
         AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const override;
         AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const override;
@@ -651,6 +653,7 @@ namespace FirstPersonController
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundCloseCoyoteTimeHits;
         float m_maxGroundedAngleDegrees = 30.f;
         bool m_scriptGrounded = true;
+        bool m_scriptJump = false;
         bool m_scriptSetGroundTick = false;
         bool m_groundClose = true;
         bool m_groundCloseCoyoteTime = true;

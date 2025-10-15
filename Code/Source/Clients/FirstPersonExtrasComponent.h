@@ -43,6 +43,10 @@ namespace FirstPersonController
         void OnReleased(float value) override;
         void OnHeld(float value) override;
 
+        // FirstPersonExtrasRequestBus
+        float GetJumpPressedInAirQueueTimeThreshold() const override;
+        void SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold) override;
+
     private:
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
@@ -60,6 +64,13 @@ namespace FirstPersonController
         float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;
 
+        // Jump queuing
+        void QueueJump(const float& deltaTime, const bool& timestepElseTick);
+        bool m_queueJump = false;
+        bool m_prevQueueJump = false;
+        float m_jumpPressedInAirTimer = 0.f;
+        float m_jumpPressedInAirQueueTimeThreshold = 0.5f;
+
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;
 
@@ -68,6 +79,7 @@ namespace FirstPersonController
 
         // FirstPersonController event value multipliers
         float* m_jumpValue = nullptr;
+        bool* m_scriptJump = nullptr;
         float m_prevJumpValue = 0.f;
 
         // Event value multipliers
