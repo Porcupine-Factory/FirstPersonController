@@ -655,6 +655,8 @@ namespace FirstPersonController
                 ->Event("Set Jump Requires Repress For Current Jump", &FirstPersonControllerComponentRequests::SetJumpReqRepress)
                 ->Event("Get Jump Repress Hold Causes Jump", &FirstPersonControllerComponentRequests::GetJumpRepressHoldCausesJump)
                 ->Event("Set Jump Repress Hold Causes Jump", &FirstPersonControllerComponentRequests::SetJumpRepressHoldCausesJump)
+                ->Event("Get Jump Held Keeps Jumping", &FirstPersonControllerComponentRequests::GetJumpHeldKeepsJumping)
+                ->Event("Set Jump Held Keeps Jumping", &FirstPersonControllerComponentRequests::SetJumpHeldKeepsJumping)
                 ->Event("Get Jump Held", &FirstPersonControllerComponentRequests::GetJumpHeld)
                 ->Event("Set Jump Held", &FirstPersonControllerComponentRequests::SetJumpHeld)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
@@ -2795,10 +2797,21 @@ namespace FirstPersonController
         }
         else
         {
-            if(m_jumpRepressHoldCausesJump)
+            if(m_jumpRepressHoldCausesJump && !m_jumpHeldKeepsJumping)
             {
                 if(!m_jumpReqRepress)
                     m_jumpReqRepress = true;
+
+                if(m_jumpTimer != 0.f)
+                    m_jumpTimer = 0.f;
+            }
+            else if(m_jumpHeldKeepsJumping)
+            {
+                if(!m_jumpReqRepress)
+                    m_jumpReqRepress = true;
+
+                if(m_jumpHeld)
+                    m_jumpHeld = false;
 
                 if(m_jumpTimer != 0.f)
                     m_jumpTimer = 0.f;
@@ -4276,6 +4289,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetJumpRepressHoldCausesJump(const bool& new_jumpRepressHoldCausesJump)
     {
         m_jumpRepressHoldCausesJump = new_jumpRepressHoldCausesJump;
+    }
+    bool FirstPersonControllerComponent::GetJumpHeldKeepsJumping() const
+    {
+        return m_jumpHeldKeepsJumping;
+    }
+    void FirstPersonControllerComponent::SetJumpHeldKeepsJumping(const bool& new_jumpHeldKeepsJumping)
+    {
+        m_jumpHeldKeepsJumping = new_jumpHeldKeepsJumping;
     }
     bool FirstPersonControllerComponent::GetJumpHeld() const
     {

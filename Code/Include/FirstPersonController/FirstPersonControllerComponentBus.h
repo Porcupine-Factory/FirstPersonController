@@ -206,6 +206,8 @@ namespace FirstPersonController
         virtual void SetJumpReqRepress(const bool&) = 0;
         virtual bool GetJumpRepressHoldCausesJump() const = 0;
         virtual void SetJumpRepressHoldCausesJump(const bool&) = 0;
+        virtual bool GetJumpHeldKeepsJumping() const = 0;
+        virtual void SetJumpHeldKeepsJumping(const bool&) = 0;
         virtual bool GetJumpHeld() const = 0;
         virtual void SetJumpHeld(const bool&) = 0;
         virtual bool GetDoubleJump() const = 0;

@@ -253,6 +253,8 @@ namespace FirstPersonController
         void SetJumpReqRepress(const bool& new_jumpReqRepress) override;
         bool GetJumpRepressHoldCausesJump() const override;
         void SetJumpRepressHoldCausesJump(const bool& new_jumpRepressHoldCausesJump) override;
+        bool GetJumpHeldKeepsJumping() const override;
+        void SetJumpHeldKeepsJumping(const bool& new_jumpHeldKeepsJumping) override;
         bool GetJumpHeld() const override;
         void SetJumpHeld(const bool& new_jumpHeld) override;
         bool GetDoubleJump() const override;
@@ -667,6 +669,7 @@ namespace FirstPersonController
         bool m_jumpHeld = false;
         bool m_jumpReqRepress = true;
         bool m_jumpRepressHoldCausesJump = true;
+        bool m_jumpHeldKeepsJumping = false;
         float m_applyVelocityZ = 0.f;
         float m_applyVelocityZCurrentDelta = 0.f;
         float m_applyVelocityZPrevDelta = 0.f;
