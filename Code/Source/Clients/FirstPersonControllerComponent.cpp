@@ -653,6 +653,8 @@ namespace FirstPersonController
                 ->Event("Set Second Jump Initial Velocity", &FirstPersonControllerComponentRequests::SetJumpSecondInitialVelocity)
                 ->Event("Get Jump Requires Repress For Current Jump", &FirstPersonControllerComponentRequests::GetJumpReqRepress)
                 ->Event("Set Jump Requires Repress For Current Jump", &FirstPersonControllerComponentRequests::SetJumpReqRepress)
+                ->Event("Get Jump Repress Hold Causes Jump", &FirstPersonControllerComponentRequests::GetJumpRepressHoldCausesJump)
+                ->Event("Set Jump Repress Hold Causes Jump", &FirstPersonControllerComponentRequests::SetJumpRepressHoldCausesJump)
                 ->Event("Get Jump Held", &FirstPersonControllerComponentRequests::GetJumpHeld)
                 ->Event("Set Jump Held", &FirstPersonControllerComponentRequests::SetJumpHeld)
                 ->Event("Get Double Jump", &FirstPersonControllerComponentRequests::GetDoubleJump)
@@ -2779,7 +2781,6 @@ namespace FirstPersonController
         }
         else if((m_jumpTimer + deltaTime/2.f) < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
         {
-            m_ungroundedDueToJump = true;
             if(m_jumpValue == 0.f)
             {
                 m_jumpHeld = false;
@@ -2794,11 +2795,26 @@ namespace FirstPersonController
         }
         else
         {
-            if(!m_jumpReqRepress)
-                m_jumpReqRepress = true;
+            if(m_jumpRepressHoldCausesJump)
+            {
+                if(!m_jumpReqRepress)
+                    m_jumpReqRepress = true;
 
-            if(m_jumpTimer != 0.f)
-                m_jumpTimer = 0.f;
+                if(m_jumpTimer != 0.f)
+                    m_jumpTimer = 0.f;
+            }
+            else
+            {
+                if(!m_jumpReqRepress && m_grounded && m_jumpValue == 0.f)
+                {
+                    m_jumpReqRepress = true;
+
+                    if(m_jumpTimer != 0.f)
+                        m_jumpTimer = 0.f;
+                }
+                else
+                    m_jumpTimer = m_jumpMaxHoldTime;
+            }
 
             if(m_applyVelocityZ <= 0.f)
                 m_applyVelocityZCurrentDelta = m_gravity * m_jumpFallingGravityFactor * deltaTime;
@@ -4252,6 +4268,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetJumpReqRepress(const bool& new_jumpReqRepress)
     {
         m_jumpReqRepress = new_jumpReqRepress;
+    }
+    bool FirstPersonControllerComponent::GetJumpRepressHoldCausesJump() const
+    {
+        return m_jumpRepressHoldCausesJump;
+    }
+    void FirstPersonControllerComponent::SetJumpRepressHoldCausesJump(const bool& new_jumpRepressHoldCausesJump)
+    {
+        m_jumpRepressHoldCausesJump = new_jumpRepressHoldCausesJump;
     }
     bool FirstPersonControllerComponent::GetJumpHeld() const
     {
