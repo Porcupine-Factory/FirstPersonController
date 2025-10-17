@@ -3,8 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #pragma once
-#include <FirstPersonController/FirstPersonExtrasComponentBus.h>
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
+#include <FirstPersonController/FirstPersonExtrasComponentBus.h>
 
 #include <Clients/FirstPersonControllerComponent.h>
 
@@ -90,14 +90,10 @@ namespace FirstPersonController
         AZStd::string m_strInteract = "Interact";
 
         // Array of action names
-        AZStd::string* m_inputNames[1] = {
-            &m_strInteract
-        };
+        AZStd::string* m_inputNames[1] = { &m_strInteract };
 
         // Map of event IDs and event value multipliers
-        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
-            {&m_interactEventId, &m_interactValue}
-        };
+        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = { { &m_interactEventId, &m_interactValue } };
 
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);

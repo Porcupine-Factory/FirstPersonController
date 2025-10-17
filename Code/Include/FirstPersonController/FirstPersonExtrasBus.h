@@ -17,8 +17,7 @@ namespace FirstPersonController
         // Put your public methods here
     };
 
-    class FirstPersonExtrasBusTraits
-        : public AZ::EBusTraits
+    class FirstPersonExtrasBusTraits : public AZ::EBusTraits
     {
     public:
         //////////////////////////////////////////////////////////////////////////

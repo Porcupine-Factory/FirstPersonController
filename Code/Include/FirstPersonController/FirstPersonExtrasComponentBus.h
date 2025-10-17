@@ -21,8 +21,7 @@ namespace FirstPersonController
 
     using FirstPersonExtrasComponentRequestBus = AZ::EBus<FirstPersonExtrasComponentRequests>;
 
-    class FirstPersonExtrasComponentNotifications
-        : public AZ::ComponentBus
+    class FirstPersonExtrasComponentNotifications : public AZ::ComponentBus
     {
     public:
         virtual void OnPlaceholder() = 0;
@@ -35,9 +34,8 @@ namespace FirstPersonController
         , public AZ::BehaviorEBusHandler
     {
     public:
-        AZ_EBUS_BEHAVIOR_BINDER(FirstPersonExtrasComponentNotificationHandler,
-            "{3fafe1bc-50bb-42ba-bd1f-f20df1706517}",
-            AZ::SystemAllocator, OnPlaceholder);
+        AZ_EBUS_BEHAVIOR_BINDER(
+            FirstPersonExtrasComponentNotificationHandler, "{3fafe1bc-50bb-42ba-bd1f-f20df1706517}", AZ::SystemAllocator, OnPlaceholder);
 
         void OnPlaceholder() override
         {

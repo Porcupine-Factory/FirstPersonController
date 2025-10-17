@@ -5,8 +5,8 @@
 #include "Clients/FirstPersonControllerComponent.h"
 #include <Clients/FirstPersonExtrasComponent.h>
 
-#include <AzCore/Component/Entity.h>
 #include <AzCore/Component/ComponentApplicationBus.h>
+#include <AzCore/Component/Entity.h>
 #include <AzCore/Serialization/EditContext.h>
 
 namespace FirstPersonController
@@ -15,20 +15,21 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::Reflect(AZ::ReflectContext* rc)
     {
-        if(auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
+        if (auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
         {
             sc->Class<FirstPersonExtrasComponent, AZ::Component>()
-              // Jumping group
-              ->Field("Jump Pressed In Air Queue Time Threshold", &FirstPersonExtrasComponent::m_jumpPressedInAirQueueTimeThreshold)
+                // Jumping group
+                ->Field("Jump Pressed In Air Queue Time Threshold", &FirstPersonExtrasComponent::m_jumpPressedInAirQueueTimeThreshold)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
-              ->Version(1);
+                ->Version(1);
 
-            if(AZ::EditContext* ec = sc->GetEditContext())
+            if (AZ::EditContext* ec = sc->GetEditContext())
             {
                 using namespace AZ::Edit::Attributes;
-                ec->Class<FirstPersonExtrasComponent>("First Person Extras",
-                    "The First Person Extras component provides you with extra features for your first person character controller")
+                ec->Class<FirstPersonExtrasComponent>(
+                      "First Person Extras",
+                      "The First Person Extras component provides you with extra features for your first person character controller")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person Controller")
@@ -36,15 +37,19 @@ namespace FirstPersonController
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
-                    ->DataElement(nullptr,
+                    ->DataElement(
+                        nullptr,
                         &FirstPersonExtrasComponent::m_jumpPressedInAirQueueTimeThreshold,
-                        "Jump Pressed In Air Queue Time Threshold", "The duration prior to the character being grounded where pressing and releasing the jump key will be queued up for a jump once the character becomes grounded; if the jump key is pressed and released outside of this timing window then a jump will not be queued.")
-                        ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                        ->Attribute(AZ::Edit::Attributes::Min, 0.f);
+                        "Jump Pressed In Air Queue Time Threshold",
+                        "The duration prior to the character being grounded where pressing and releasing the jump key will be queued up "
+                        "for a jump once the character becomes grounded; if the jump key is pressed and released outside of this timing "
+                        "window then a jump will not be queued.")
+                    ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f);
             }
         }
 
-        if(auto bc = azrtti_cast<AZ::BehaviorContext*>(rc))
+        if (auto bc = azrtti_cast<AZ::BehaviorContext*>(rc))
         {
             bc->EBus<FirstPersonExtrasComponentNotificationBus>("FirstPersonExtrasComponentNotificationBus")
                 ->Handler<FirstPersonExtrasComponentNotificationHandler>();
@@ -53,8 +58,12 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "controller")
                 ->Attribute(AZ::Script::Attributes::Category, "First Person Extras")
-                ->Event("Get Jump Pressed In Air Queue Time Threshold", &FirstPersonExtrasComponentRequests::GetJumpPressedInAirQueueTimeThreshold)
-                ->Event("Set Jump Pressed In Air Queue Time Threshold", &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold);
+                ->Event(
+                    "Get Jump Pressed In Air Queue Time Threshold",
+                    &FirstPersonExtrasComponentRequests::GetJumpPressedInAirQueueTimeThreshold)
+                ->Event(
+                    "Set Jump Pressed In Air Queue Time Threshold",
+                    &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold);
 
             bc->Class<FirstPersonExtrasComponent>()->RequestBus("FirstPersonExtrasComponentRequestBus");
         }
@@ -71,7 +80,7 @@ namespace FirstPersonController
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
 
         // Assign pointer attributes to the associated attributes of the FirstPersonControllerComponent, accessible via friendship
-        if(m_firstPersonControllerObject)
+        if (m_firstPersonControllerObject)
         {
             m_jumpValue = &(m_firstPersonControllerObject->m_jumpValue);
             m_scriptJump = &(m_firstPersonControllerObject->m_scriptJump);
@@ -112,13 +121,13 @@ namespace FirstPersonController
         // Disconnect prior to connecting since this may be a reassignment
         InputEventNotificationBus::MultiHandler::BusDisconnect();
 
-        if(m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
+        if (m_controlMap.size() != (sizeof(m_inputNames) / sizeof(AZStd::string*)))
         {
             AZ_Error("First Person Extras Component", false, "Number of input IDs not equal to number of input names!");
         }
         else
         {
-            for(auto& it_event: m_controlMap)
+            for (auto& it_event : m_controlMap)
             {
                 *(it_event.first) = StartingPointInput::InputEventNotificationId(
                     (m_inputNames[std::distance(m_controlMap.begin(), m_controlMap.find(it_event.first))])->c_str());
@@ -130,16 +139,16 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnPressed(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if(inputId == nullptr)
+        if (inputId == nullptr)
             return;
 
-        for(auto& it_event: m_controlMap)
+        for (auto& it_event : m_controlMap)
         {
-            if(*inputId == *(it_event.first))
+            if (*inputId == *(it_event.first))
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                //AZ_Printf("Pressed", it_event.first->ToString().c_str());
+                // AZ_Printf("Pressed", it_event.first->ToString().c_str());
             }
         }
     }
@@ -147,16 +156,16 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnReleased(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if(inputId == nullptr)
+        if (inputId == nullptr)
             return;
 
-        for(auto& it_event: m_controlMap)
+        for (auto& it_event : m_controlMap)
         {
-            if(*inputId == *(it_event.first))
+            if (*inputId == *(it_event.first))
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                //AZ_Printf("Released", it_event.first->ToString().c_str());
+                // AZ_Printf("Released", it_event.first->ToString().c_str());
             }
         }
     }
@@ -164,7 +173,7 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnHeld(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if(inputId == nullptr)
+        if (inputId == nullptr)
             return;
     }
 
@@ -187,10 +196,10 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::QueueJump(const float& deltaTime, const bool& timestepElseTick)
     {
         // Bail if the threshold is set to zero
-        if(m_jumpPressedInAirQueueTimeThreshold == 0.f)
+        if (m_jumpPressedInAirQueueTimeThreshold == 0.f)
             return;
 
-        if(!timestepElseTick && !*m_grounded && m_prevJumpValue == 0.f && *m_jumpValue != 0.f)
+        if (!timestepElseTick && !*m_grounded && m_prevJumpValue == 0.f && *m_jumpValue != 0.f)
         {
             // Reset the timer
             m_jumpPressedInAirTimer = 0.f;
@@ -199,27 +208,27 @@ namespace FirstPersonController
             m_prevQueueJump = m_queueJump;
             m_queueJump = true;
         }
-        else if(timestepElseTick && m_queueJump && !*m_grounded)
+        else if (timestepElseTick && m_queueJump && !*m_grounded)
         {
             // Increment the timer when the jump is queued
             m_jumpPressedInAirTimer += deltaTime;
 
             // Check if the timer exceeds the threshold before hitting the ground and if it does then don't perform the jump
-            if(m_jumpPressedInAirTimer >= m_jumpPressedInAirQueueTimeThreshold)
+            if (m_jumpPressedInAirTimer >= m_jumpPressedInAirQueueTimeThreshold)
             {
                 m_jumpPressedInAirTimer = 0.f;
                 m_prevQueueJump = false;
                 m_queueJump = false;
             }
         }
-        else if(timestepElseTick && m_queueJump && *m_grounded)
+        else if (timestepElseTick && m_queueJump && *m_grounded)
         {
             // Perform the jump when the ground is hit
             m_prevQueueJump = m_queueJump;
             m_queueJump = false;
             *m_scriptJump = true;
         }
-        else if(timestepElseTick && m_prevQueueJump && !m_queueJump)
+        else if (timestepElseTick && m_prevQueueJump && !m_queueJump)
         {
             // Clear the previous queue and script jump variables
             m_prevQueueJump = m_queueJump;
@@ -227,7 +236,7 @@ namespace FirstPersonController
         }
 
         // Keep track of the previous jump value
-        if(!timestepElseTick)
+        if (!timestepElseTick)
             m_prevJumpValue = *m_jumpValue;
     }
 
@@ -237,36 +246,93 @@ namespace FirstPersonController
     }
 
     // Event Notification methods for use in scripts
-    void FirstPersonExtrasComponent::OnPlaceholder(){}
+    void FirstPersonExtrasComponent::OnPlaceholder()
+    {
+    }
 
     // Notification Events from the First Person Controller component
-    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellDistance){}
-    void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance){}
-    void FirstPersonExtrasComponent::OnUngrounded(){}
-    void FirstPersonExtrasComponent::OnStartedFalling(){}
-    void FirstPersonExtrasComponent::OnJumpApogeeReached(){}
-    void FirstPersonExtrasComponent::OnStartedMoving(){}
-    void FirstPersonExtrasComponent::OnTargetVelocityReached(){}
-    void FirstPersonExtrasComponent::OnStopped(){}
-    void FirstPersonExtrasComponent::OnTopWalkSpeedReached(){}
-    void FirstPersonExtrasComponent::OnTopSprintSpeedReached(){}
-    void FirstPersonExtrasComponent::OnHeadHit(){}
-    void FirstPersonExtrasComponent::OnCharacterShapecastHitSomething([[maybe_unused]] const AZStd::vector<AzPhysics::SceneQueryHit> characterHits){}
-    void FirstPersonExtrasComponent::OnVelocityXYObstructed(){}
-    void FirstPersonExtrasComponent::OnCharacterGravityObstructed(){}
-    void FirstPersonExtrasComponent::OnCrouched(){}
-    void FirstPersonExtrasComponent::OnStoodUp(){}
-    void FirstPersonExtrasComponent::OnStandPrevented(){}
-    void FirstPersonExtrasComponent::OnStartedCrouching(){}
-    void FirstPersonExtrasComponent::OnStartedStanding(){}
-    void FirstPersonExtrasComponent::OnFirstJump(){}
-    void FirstPersonExtrasComponent::OnFinalJump(){}
-    void FirstPersonExtrasComponent::OnStaminaCapped(){}
-    void FirstPersonExtrasComponent::OnStaminaReachedZero(){}
-    void FirstPersonExtrasComponent::OnSprintStarted(){}
-    void FirstPersonExtrasComponent::OnSprintStopped(){}
-    void FirstPersonExtrasComponent::OnCooldownStarted(){}
-    void FirstPersonExtrasComponent::OnCooldownDone(){}
+    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)
+    {
+    }
+    void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance)
+    {
+    }
+    void FirstPersonExtrasComponent::OnUngrounded()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStartedFalling()
+    {
+    }
+    void FirstPersonExtrasComponent::OnJumpApogeeReached()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStartedMoving()
+    {
+    }
+    void FirstPersonExtrasComponent::OnTargetVelocityReached()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStopped()
+    {
+    }
+    void FirstPersonExtrasComponent::OnTopWalkSpeedReached()
+    {
+    }
+    void FirstPersonExtrasComponent::OnTopSprintSpeedReached()
+    {
+    }
+    void FirstPersonExtrasComponent::OnHeadHit()
+    {
+    }
+    void FirstPersonExtrasComponent::OnCharacterShapecastHitSomething(
+        [[maybe_unused]] const AZStd::vector<AzPhysics::SceneQueryHit> characterHits)
+    {
+    }
+    void FirstPersonExtrasComponent::OnVelocityXYObstructed()
+    {
+    }
+    void FirstPersonExtrasComponent::OnCharacterGravityObstructed()
+    {
+    }
+    void FirstPersonExtrasComponent::OnCrouched()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStoodUp()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStandPrevented()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStartedCrouching()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStartedStanding()
+    {
+    }
+    void FirstPersonExtrasComponent::OnFirstJump()
+    {
+    }
+    void FirstPersonExtrasComponent::OnFinalJump()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStaminaCapped()
+    {
+    }
+    void FirstPersonExtrasComponent::OnStaminaReachedZero()
+    {
+    }
+    void FirstPersonExtrasComponent::OnSprintStarted()
+    {
+    }
+    void FirstPersonExtrasComponent::OnSprintStopped()
+    {
+    }
+    void FirstPersonExtrasComponent::OnCooldownStarted()
+    {
+    }
+    void FirstPersonExtrasComponent::OnCooldownDone()
+    {
+    }
 
     float FirstPersonExtrasComponent::GetJumpPressedInAirQueueTimeThreshold() const
     {
@@ -274,7 +340,7 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold)
     {
-        if(new_jumpPressedInAirQueueTimeThreshold < 0.f)
+        if (new_jumpPressedInAirQueueTimeThreshold < 0.f)
             m_jumpPressedInAirQueueTimeThreshold = 0.f;
         else
             m_jumpPressedInAirQueueTimeThreshold = new_jumpPressedInAirQueueTimeThreshold;

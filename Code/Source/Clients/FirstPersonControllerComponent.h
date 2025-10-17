@@ -8,14 +8,14 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityBus.h>
 #include <AzCore/Component/TickBus.h>
-#include <AzCore/Math/Vector3.h>
 #include <AzCore/Math/Quaternion.h>
+#include <AzCore/Math/Vector3.h>
 #include <AzCore/std/containers/map.h>
 
-#include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
 #include <AzFramework/Components/CameraBus.h>
-#include <AzFramework/Physics/CharacterBus.h>
 #include <AzFramework/Input/Events/InputChannelEventListener.h>
+#include <AzFramework/Physics/CharacterBus.h>
+#include <AzFramework/Physics/Common/PhysicsSceneQueries.h>
 
 #include <StartingPointInput/InputEventNotificationBus.h>
 
@@ -177,7 +177,8 @@ namespace FirstPersonController
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
-        AZ::Vector2 CreateEllipseScaledVector(const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) override;
+        AZ::Vector2 CreateEllipseScaledVector(
+            const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -436,7 +437,8 @@ namespace FirstPersonController
         void SetCharacterTransform(const AZ::Transform& new_characterTransform) override;
         AZ::Vector3 GetCharacterWorldTranslation() const override;
         void SetCharacterWorldTranslation(const AZ::Vector3& new_characterWorldTranslation) override;
-        void UpdateCharacterAndCameraYaw(const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput = true) override;
+        void UpdateCharacterAndCameraYaw(
+            const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput = true) override;
         void UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput = true) override;
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
@@ -481,7 +483,8 @@ namespace FirstPersonController
         void ResetCameraToCharacter();
         void CaptureCharacterEyeTranslation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
-        void SmoothCriticallyDampedFloat(float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
+        void SmoothCriticallyDampedFloat(
+            float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
@@ -565,14 +568,14 @@ namespace FirstPersonController
         bool m_posZIgnoresObstacles = true;
         bool m_jumpAllowedWhenGravityPrevented = true;
         bool m_velocityXYObstructed = false;
-        bool m_gravityPrevented[2] = {false, false};
+        bool m_gravityPrevented[2] = { false, false };
 
         // Determines whether the character's X&Y target velocity
         // will be set the request bus (script), in effect the entire time this variable is true
         bool m_scriptSetsTargetVelocityXY = false;
 
         // Angles used to rotate the camera
-        float m_cameraRotationAngles[3] = {0.f, 0.f, 0.f};
+        float m_cameraRotationAngles[3] = { 0.f, 0.f, 0.f };
 
         // Top walk speed
         float m_speed = 5.f;
@@ -610,7 +613,8 @@ namespace FirstPersonController
         bool m_regenerateStaminaAutomatically = true;
 
         // Stamina application variables
-        float m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        float m_staminaPercentage =
+            (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
 
         // Crouch application variables
         float m_crouchDistance = 0.5f;
@@ -681,7 +685,8 @@ namespace FirstPersonController
         float m_groundedSphereCastOffset = 0.001f;
         // The ground close sphere cast offset determines how far below the character's feet the ground is considered to be close
         float m_groundCloseSphereCastOffset = 0.5f;
-        // The ground close coyote time offset determines how far below the character's feet the ground is considered to be close for Coyote Time application
+        // The ground close coyote time offset determines how far below the character's feet the ground is considered to be close for Coyote
+        // Time application
         float m_groundCloseCoyoteTimeOffset = 0.4f;
         // The sphere cast jump hold offset is used to determine initial (ascending) distance of the of the jump
         // where the m_jumpHeldGravityFactor is applied to the gravity
@@ -692,7 +697,10 @@ namespace FirstPersonController
         float m_groundCloseCoyoteTimeRadiusPercentageIncrease = 20.f;
         float m_jumpHeldGravityFactor = 0.1f;
         // The m_jumpMaxHoldTime is computed inside UpdateJumpMaxHoldTime()
-        float m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity + sqrt(m_jumpInitialVelocity*m_jumpInitialVelocity + 2.f*m_gravity*m_jumpHeldGravityFactor*m_jumpHoldDistance)) / 2.f);
+        float m_jumpMaxHoldTime = m_jumpHoldDistance /
+            ((m_jumpInitialVelocity +
+              sqrt(m_jumpInitialVelocity * m_jumpInitialVelocity + 2.f * m_gravity * m_jumpHeldGravityFactor * m_jumpHoldDistance)) /
+             2.f);
         float m_jumpTimer = 0.f;
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
@@ -827,28 +835,17 @@ namespace FirstPersonController
         AZStd::string m_strJump = "Jump";
 
         // Array of action names
-        AZStd::string* m_inputNames[9] = {
-            &m_strForward, &m_strBack,
-            &m_strLeft, &m_strRight,
-            &m_strYaw, &m_strPitch,
-            &m_strSprint, &m_strCrouch,
-            &m_strJump
-        };
+        AZStd::string* m_inputNames[9] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight, &m_strYaw,
+                                           &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump };
 
         // Map of event IDs and event value multipliers
         AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
-            {&m_moveForwardEventId, &m_forwardValue},
-            {&m_moveBackEventId, &m_backValue},
-            {&m_moveLeftEventId, &m_leftValue},
-            {&m_moveRightEventId, &m_rightValue},
-            {&m_rotateYawEventId, &m_yawValue},
-            {&m_rotatePitchEventId, &m_pitchValue},
-            {&m_sprintEventId, &m_sprintValue},
-            {&m_crouchEventId, &m_crouchValue},
-            {&m_jumpEventId, &m_jumpValue}
+            { &m_moveForwardEventId, &m_forwardValue }, { &m_moveBackEventId, &m_backValue }, { &m_moveLeftEventId, &m_leftValue },
+            { &m_moveRightEventId, &m_rightValue },     { &m_rotateYawEventId, &m_yawValue }, { &m_rotatePitchEventId, &m_pitchValue },
+            { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
         };
 
         // Make this class a friend of the FirstPersonExtrasComponent to give it access to private members
         friend class FirstPersonExtrasComponent;
     };
-}
+} // namespace FirstPersonController

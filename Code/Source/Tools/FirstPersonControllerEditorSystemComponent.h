@@ -16,6 +16,7 @@ namespace FirstPersonController
         , protected AzToolsFramework::EditorEvents::Bus::Handler
     {
         using BaseSystemComponent = FirstPersonControllerSystemComponent;
+
     public:
         AZ_COMPONENT(FirstPersonControllerEditorSystemComponent, "{AF02CA9C-C8AC-4F6C-84EC-111722575DB1}", BaseSystemComponent);
         static void Reflect(AZ::ReflectContext* context);

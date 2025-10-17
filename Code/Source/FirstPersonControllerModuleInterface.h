@@ -4,14 +4,13 @@
 
 #include <AzCore/Memory/SystemAllocator.h>
 #include <AzCore/Module/Module.h>
-#include <Clients/FirstPersonControllerSystemComponent.h>
 #include <Clients/FirstPersonControllerComponent.h>
+#include <Clients/FirstPersonControllerSystemComponent.h>
 #include <Clients/FirstPersonExtrasComponent.h>
 
 namespace FirstPersonController
 {
-    class FirstPersonControllerModuleInterface
-        : public AZ::Module
+    class FirstPersonControllerModuleInterface : public AZ::Module
     {
     public:
         AZ_RTTI(FirstPersonControllerModuleInterface, "{2D84A6BC-BAE1-4557-9CE2-7EBDCF692301}", AZ::Module);
@@ -21,13 +20,13 @@ namespace FirstPersonController
         {
             // Push results of [MyComponent]::CreateDescriptor() into m_descriptors here.
             // Add ALL components descriptors associated with this gem to m_descriptors.
-            // This will associate the AzTypeInfo information for the components with the the SerializeContext, BehaviorContext and EditContext.
-            // This happens through the [MyComponent]::Reflect() function.
-            m_descriptors.insert(m_descriptors.end(), {
-                FirstPersonControllerSystemComponent::CreateDescriptor(),
-                FirstPersonControllerComponent::CreateDescriptor(),
-                FirstPersonExtrasComponent::CreateDescriptor()
-                });
+            // This will associate the AzTypeInfo information for the components with the the SerializeContext, BehaviorContext and
+            // EditContext. This happens through the [MyComponent]::Reflect() function.
+            m_descriptors.insert(
+                m_descriptors.end(),
+                { FirstPersonControllerSystemComponent::CreateDescriptor(),
+                  FirstPersonControllerComponent::CreateDescriptor(),
+                  FirstPersonExtrasComponent::CreateDescriptor() });
         }
 
         /**
@@ -40,4 +39,4 @@ namespace FirstPersonController
             };
         }
     };
-}// namespace FirstPersonController
+} // namespace FirstPersonController

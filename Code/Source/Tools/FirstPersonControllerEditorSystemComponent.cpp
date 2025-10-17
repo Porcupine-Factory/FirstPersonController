@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <AzCore/Serialization/SerializeContext.h>
 #include "FirstPersonControllerEditorSystemComponent.h"
+#include <AzCore/Serialization/SerializeContext.h>
 
 namespace FirstPersonController
 {
@@ -11,8 +11,7 @@ namespace FirstPersonController
     {
         if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serializeContext->Class<FirstPersonControllerEditorSystemComponent, FirstPersonControllerSystemComponent>()
-                ->Version(0);
+            serializeContext->Class<FirstPersonControllerEditorSystemComponent, FirstPersonControllerSystemComponent>()->Version(0);
         }
     }
 
@@ -32,12 +31,14 @@ namespace FirstPersonController
         incompatible.push_back(AZ_CRC_CE("FirstPersonControllerEditorService"));
     }
 
-    void FirstPersonControllerEditorSystemComponent::GetRequiredServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& required)
+    void FirstPersonControllerEditorSystemComponent::GetRequiredServices(
+        [[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& required)
     {
         BaseSystemComponent::GetRequiredServices(required);
     }
 
-    void FirstPersonControllerEditorSystemComponent::GetDependentServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    void FirstPersonControllerEditorSystemComponent::GetDependentServices(
+        [[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& dependent)
     {
         BaseSystemComponent::GetDependentServices(dependent);
     }

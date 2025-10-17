@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AzCore/Component/ComponentBus.h>
-#include <AzCore/RTTI/BehaviorContext.h>
-#include <AzCore/Math/Vector3.h>
 #include <AzCore/Component/TransformBus.h>
+#include <AzCore/Math/Vector3.h>
+#include <AzCore/RTTI/BehaviorContext.h>
 
-#include <AzFramework/Physics/PhysicsScene.h>
 #include <AzFramework/Physics/Material/PhysicsMaterialManager.h>
+#include <AzFramework/Physics/PhysicsScene.h>
 
 namespace FirstPersonController
 {
@@ -122,7 +122,7 @@ namespace FirstPersonController
         virtual void SetVelocityXCrossYDirection(const AZ::Vector3&) = 0;
         virtual bool GetVelocityXCrossYTracksNormal() const = 0;
         virtual void SetVelocityXCrossYTracksNormal(const bool&) = 0;
-        virtual bool GetSpeedReducedWhenMovingUpInclines() const = 0 ;
+        virtual bool GetSpeedReducedWhenMovingUpInclines() const = 0;
         virtual void SetSpeedReducedWhenMovingUpInclines(const bool&) = 0;
         virtual AZ::Vector3 GetVelocityZPosDirection() const = 0;
         virtual void SetVelocityZPosDirection(const AZ::Vector3&) = 0;
@@ -385,7 +385,7 @@ namespace FirstPersonController
         virtual void SetCameraPitchMinAngleDegrees(const float&) = 0;
         virtual float GetCameraRotationDampFactor() const = 0;
         virtual void SetCameraRotationDampFactor(const float&) = 0;
-        virtual AZ::TransformInterface* GetCharacterTransformInterfacePtr() const = 0 ;
+        virtual AZ::TransformInterface* GetCharacterTransformInterfacePtr() const = 0;
         virtual AZ::Transform GetCharacterTransform() const = 0;
         virtual void SetCharacterTransform(const AZ::Transform&) = 0;
         virtual AZ::Vector3 GetCharacterWorldTranslation() const = 0;
@@ -399,8 +399,7 @@ namespace FirstPersonController
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;
 
-    class FirstPersonControllerComponentNotifications
-        : public AZ::ComponentBus
+    class FirstPersonControllerComponentNotifications : public AZ::ComponentBus
     {
     public:
         virtual void OnPhysicsTimestepStart(const float&) = 0;
@@ -441,9 +440,39 @@ namespace FirstPersonController
         , public AZ::BehaviorEBusHandler
     {
     public:
-        AZ_EBUS_BEHAVIOR_BINDER(FirstPersonControllerComponentNotificationHandler,
+        AZ_EBUS_BEHAVIOR_BINDER(
+            FirstPersonControllerComponentNotificationHandler,
             "{b6d9e703-2c1b-4282-81a9-249123f3eee8}",
-            AZ::SystemAllocator, OnPhysicsTimestepStart, OnPhysicsTimestepFinish, OnGroundHit, OnGroundSoonHit, OnUngrounded, OnStartedFalling, OnJumpApogeeReached, OnStartedMoving, OnTargetVelocityReached, OnStopped, OnTopWalkSpeedReached, OnTopSprintSpeedReached, OnHeadHit, OnCharacterShapecastHitSomething, OnVelocityXYObstructed, OnCharacterGravityObstructed, OnCrouched, OnStoodUp, OnStandPrevented, OnStartedCrouching, OnStartedStanding, OnFirstJump, OnFinalJump, OnStaminaCapped, OnStaminaReachedZero, OnSprintStarted, OnSprintStopped, OnCooldownStarted, OnCooldownDone);
+            AZ::SystemAllocator,
+            OnPhysicsTimestepStart,
+            OnPhysicsTimestepFinish,
+            OnGroundHit,
+            OnGroundSoonHit,
+            OnUngrounded,
+            OnStartedFalling,
+            OnJumpApogeeReached,
+            OnStartedMoving,
+            OnTargetVelocityReached,
+            OnStopped,
+            OnTopWalkSpeedReached,
+            OnTopSprintSpeedReached,
+            OnHeadHit,
+            OnCharacterShapecastHitSomething,
+            OnVelocityXYObstructed,
+            OnCharacterGravityObstructed,
+            OnCrouched,
+            OnStoodUp,
+            OnStandPrevented,
+            OnStartedCrouching,
+            OnStartedStanding,
+            OnFirstJump,
+            OnFinalJump,
+            OnStaminaCapped,
+            OnStaminaReachedZero,
+            OnSprintStarted,
+            OnSprintStopped,
+            OnCooldownStarted,
+            OnCooldownDone);
 
         void OnPhysicsTimestepStart(const float& timeStep) override
         {

@@ -4,9 +4,9 @@
 
 #include "FirstPersonControllerSystemComponent.h"
 
-#include <AzCore/Serialization/SerializeContext.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
+#include <AzCore/Serialization/SerializeContext.h>
 
 namespace FirstPersonController
 {
@@ -14,23 +14,21 @@ namespace FirstPersonController
     {
         if (AZ::SerializeContext* serialize = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serialize->Class<FirstPersonControllerSystemComponent, AZ::Component>()
-                ->Version(0)
-                ;
+            serialize->Class<FirstPersonControllerSystemComponent, AZ::Component>()->Version(0);
 
             if (AZ::EditContext* ec = serialize->GetEditContext())
             {
-                ec->Class<FirstPersonControllerSystemComponent>("FirstPersonController", "[Description of functionality provided by this System Component]")
+                ec->Class<FirstPersonControllerSystemComponent>(
+                      "FirstPersonController", "[Description of functionality provided by this System Component]")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
-                        ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
-                        ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ;
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
 
-                ec->Class<FirstPersonControllerSystemComponent>("FirstPersonExtras", "[Description of functionality provided by this System Component]")
+                ec->Class<FirstPersonControllerSystemComponent>(
+                      "FirstPersonExtras", "[Description of functionality provided by this System Component]")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
-                        ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
-                        ->Attribute(AZ::Edit::Attributes::AutoExpand, true)
-                    ;
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
             }
         }
     }
@@ -51,7 +49,8 @@ namespace FirstPersonController
     {
     }
 
-    void FirstPersonControllerSystemComponent::GetDependentServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    void FirstPersonControllerSystemComponent::GetDependentServices(
+        [[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& dependent)
     {
     }
 
