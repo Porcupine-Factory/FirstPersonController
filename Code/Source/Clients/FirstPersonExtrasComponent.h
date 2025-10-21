@@ -114,6 +114,7 @@ namespace FirstPersonController
         void OnCharacterGravityObstructed();
         void OnCrouched();
         void OnStoodUp();
+        void OnStoodUpFromJump();
         void OnStandPrevented();
         void OnStartedCrouching();
         void OnStartedStanding();

@@ -300,6 +300,9 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnStoodUp()
     {
     }
+    void FirstPersonExtrasComponent::OnStoodUpFromJump()
+    {
+    }
     void FirstPersonExtrasComponent::OnStandPrevented()
     {
     }

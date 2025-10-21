@@ -420,6 +420,7 @@ namespace FirstPersonController
         virtual void OnCharacterGravityObstructed() = 0;
         virtual void OnCrouched() = 0;
         virtual void OnStoodUp() = 0;
+        virtual void OnStoodUpFromJump() = 0;
         virtual void OnStandPrevented() = 0;
         virtual void OnStartedCrouching() = 0;
         virtual void OnStartedStanding() = 0;
@@ -462,6 +463,7 @@ namespace FirstPersonController
             OnCharacterGravityObstructed,
             OnCrouched,
             OnStoodUp,
+            OnStoodUpFromJump,
             OnStandPrevented,
             OnStartedCrouching,
             OnStartedStanding,
@@ -545,6 +547,10 @@ namespace FirstPersonController
         void OnStoodUp() override
         {
             Call(FN_OnStoodUp);
+        }
+        void OnStoodUpFromJump() override
+        {
+            Call(FN_OnStoodUpFromJump);
         }
         void OnStandPrevented() override
         {

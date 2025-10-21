@@ -3217,8 +3217,12 @@ namespace FirstPersonController
                     if (m_crouchJumpCausesStanding)
                     {
                         m_crouching = false;
-                        if (m_crouchPendJumps && m_crouchEnableToggle)
+                        if (m_crouchPendJumps && m_crouchEnableToggle && !m_crouchJumpPending)
+                        {
+                            FirstPersonControllerComponentNotificationBus::Broadcast(
+                                &FirstPersonControllerComponentNotificationBus::Events::OnStoodUpFromJump);
                             m_crouchJumpPending = true;
+                        }
                     }
                     if (!m_jumpWhileCrouched)
                         return;
@@ -3777,6 +3781,9 @@ namespace FirstPersonController
     {
     }
     void FirstPersonControllerComponent::OnStoodUp()
+    {
+    }
+    void FirstPersonControllerComponent::OnStoodUpFromJump()
     {
     }
     void FirstPersonControllerComponent::OnStandPrevented()
