@@ -1584,10 +1584,10 @@ namespace FirstPersonController
         m_physicsTimeAccumulator += deltaTime;
 
         // Calculate interpolation factor
-        float const alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
+        const float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
 
         // Interpolate translation
-        AZ::Vector3 const interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
+        const AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedCameraTranslation);
 
         // Reset accumulator if it exceeds physics timestep
@@ -1615,7 +1615,9 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
-        AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
+        // Set the translation of the camera to where the character is on each physics timestep
+        if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
     }
 
     void FirstPersonControllerComponent::CaptureCharacterEyeTranslation()
@@ -1963,6 +1965,9 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ApplyMovingUpInclineXYSpeedFactor()
     {
+        if (!m_velocityXCrossYTracksNormal || !m_movingUpInclineSlowed || m_prevTargetVelocityXY.IsZero())
+            return;
+
         if (m_grounded)
         {
             // The character is not on an incline, so don't apply an incline factor
@@ -2604,6 +2609,13 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateVelocityXY(const float& deltaTime)
     {
+        // So long as the character is grounded or depending on how the update X&Y velocity while jumping
+        // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
+        if (!(m_grounded || (m_updateXYAscending && m_updateXYDescending && !m_updateXYOnlyNearGround) ||
+              ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) ||
+              ((m_updateXYDescending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose))))
+            return;
+
         float forwardBack = m_forwardValue * m_forwardScale + -1.f * m_backValue * m_backScale;
         float leftRight = -1.f * m_leftValue * m_leftScale + m_rightValue * m_rightScale;
 
@@ -3661,7 +3673,11 @@ namespace FirstPersonController
         // Only update the rotation on each tick
         if (!timestepElseTick)
         {
+            // Update the camera and character rotation
             UpdateRotation();
+
+            // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
+            // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
             LerpCameraToCharacter(deltaTime);
         }
 
@@ -3672,27 +3688,22 @@ namespace FirstPersonController
         // executing
         if (timestepElseTick == m_addVelocityForTimestepVsTick)
         {
+            // Perform the check to see if the character's movement is obstructed
             CheckCharacterMovementObstructed();
 
-            if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
-            {
-                // Reset camera to latest physics translation before physics update
-                ResetCameraToCharacter();
-            }
+            // Reset the camera to the latest physics translation of the character
+            ResetCameraToCharacter();
 
+            // Check if the character is grounded
             CheckGrounded(deltaTime);
 
+            // Perform crouching or standing
             CrouchManager(deltaTime);
 
-            // So long as the character is grounded or depending on how the update X&Y velocity while jumping
-            // boolean values are set, and based on the state of jumping/falling, update the X&Y velocity accordingly
-            if (m_grounded || (m_updateXYAscending && m_updateXYDescending && !m_updateXYOnlyNearGround) ||
-                ((m_updateXYAscending && m_applyVelocityZ >= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)) ||
-                ((m_updateXYDescending && m_applyVelocityZ <= 0.f) && (!m_updateXYOnlyNearGround || m_groundClose)))
-            {
-                UpdateVelocityXY(deltaTime);
-            }
+            // Update the X&Y velocity
+            UpdateVelocityXY(deltaTime);
 
+            // Update the Z velocity
             UpdateVelocityZ(deltaTime);
 
             // Apply any linear impulses to the character that have been set via the EBus
@@ -3701,18 +3712,21 @@ namespace FirstPersonController
             // Acquire the sum of the normal vectors for the velocity's XY plane if it's set
             AcquireSumOfGroundNormals();
 
+            // Create a temporary addVelocityHeading variable since it will be manipulated (rotated),
+            // m_addVelocityHeading isn't manipulated since users of its getter likely expect it to be unaltered
             AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
             // Rotate addVelocityHeading so it's with respect to the character's heading
             if (!addVelocityHeading.IsZero())
                 addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
+
             // Tilt the XY velocity plane based on m_velocityXCrossYDirection
             m_prevTargetVelocity = TiltVectorXCrossY(
                 (m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
 
-            // Calculate the walking up incline factor if it's enabled, otherwise set it to one
-            if (m_velocityXCrossYTracksNormal && m_movingUpInclineSlowed && !m_prevTargetVelocityXY.IsZero())
-                ApplyMovingUpInclineXYSpeedFactor();
+            // Calculate the walking up incline factor
+            ApplyMovingUpInclineXYSpeedFactor();
 
+            // Detect any shapecast hits on the character
             ProcessCharacterHits(deltaTime);
 
             // Change the +Z direction based on m_velocityZPosDirection

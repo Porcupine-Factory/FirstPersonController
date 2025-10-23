@@ -241,6 +241,7 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
     {
+        // Queue up jumps
         QueueJump(deltaTime, timestepElseTick);
     }
 
