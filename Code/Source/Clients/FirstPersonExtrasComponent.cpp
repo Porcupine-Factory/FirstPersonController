@@ -170,7 +170,7 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonExtrasComponent::OnHeld(float value)
+    void FirstPersonExtrasComponent::OnHeld([[maybe_unused]] float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
         if (inputId == nullptr)
