@@ -171,9 +171,6 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnHeld([[maybe_unused]] float value)
     {
-        const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if (inputId == nullptr)
-            return;
     }
 
     void FirstPersonExtrasComponent::OnPhysicsTimestepStart([[maybe_unused]] const float& physicsTimestep)
@@ -226,6 +223,9 @@ namespace FirstPersonController
             m_prevQueueJump = m_queueJump;
             m_queueJump = false;
             *m_scriptJump = true;
+
+            // Broadcast a notification event that a jump is queued
+            FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnJumpFromQueue);
         }
         else if (timestepElseTick && m_prevQueueJump && !m_queueJump)
         {
@@ -245,7 +245,7 @@ namespace FirstPersonController
     }
 
     // Event Notification methods for use in scripts
-    void FirstPersonExtrasComponent::OnPlaceholder()
+    void FirstPersonExtrasComponent::OnJumpFromQueue()
     {
     }
 

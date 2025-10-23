@@ -24,7 +24,7 @@ namespace FirstPersonController
     class FirstPersonExtrasComponentNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnPlaceholder() = 0;
+        virtual void OnJumpFromQueue() = 0;
     };
 
     using FirstPersonExtrasComponentNotificationBus = AZ::EBus<FirstPersonExtrasComponentNotifications>;
@@ -35,11 +35,11 @@ namespace FirstPersonController
     {
     public:
         AZ_EBUS_BEHAVIOR_BINDER(
-            FirstPersonExtrasComponentNotificationHandler, "{3fafe1bc-50bb-42ba-bd1f-f20df1706517}", AZ::SystemAllocator, OnPlaceholder);
+            FirstPersonExtrasComponentNotificationHandler, "{3fafe1bc-50bb-42ba-bd1f-f20df1706517}", AZ::SystemAllocator, OnJumpFromQueue);
 
-        void OnPlaceholder() override
+        void OnJumpFromQueue() override
         {
-            Call(FN_OnPlaceholder);
+            Call(FN_OnJumpFromQueue);
         }
     };
 } // namespace FirstPersonController

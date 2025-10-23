@@ -58,7 +58,7 @@ namespace FirstPersonController
         void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);
 
         // FirstPersonExtrasComponentNotificationBus
-        void OnPlaceholder();
+        void OnJumpFromQueue();
 
         // Stores the previous tick deltaTime and previous physics timestep
         float m_prevDeltaTime = 1.f / 60.f;
