@@ -2560,6 +2560,7 @@ namespace FirstPersonController
             {
                 m_crouchPrevValue = m_crouchValue;
                 m_standPrevented = true;
+                m_crouchJumpPending = false;
                 FirstPersonControllerComponentNotificationBus::Broadcast(
                     &FirstPersonControllerComponentNotificationBus::Events::OnStandPrevented);
                 return;
@@ -5660,10 +5661,6 @@ namespace FirstPersonController
     {
         return m_crouchUpFinalVelocity;
     }
-    float FirstPersonControllerComponent::GetUncrouchHeadSphereCastOffset() const
-    {
-        return m_uncrouchHeadSphereCastOffset;
-    }
     bool FirstPersonControllerComponent::GetCrouchingDownMove() const
     {
         return m_crouchingDownMove;
@@ -5671,6 +5668,10 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetStandingUpMove() const
     {
         return m_standingUpMove;
+    }
+    float FirstPersonControllerComponent::GetUncrouchHeadSphereCastOffset() const
+    {
+        return m_uncrouchHeadSphereCastOffset;
     }
     void FirstPersonControllerComponent::SetUncrouchHeadSphereCastOffset(const float& new_uncrouchHeadSphereCastOffset)
     {
