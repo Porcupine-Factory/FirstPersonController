@@ -3462,7 +3462,7 @@ namespace FirstPersonController
         }
 
         // Apply the velocity from the impulse
-        m_applyVelocityXY += AZ::Vector2(m_velocityFromImpulse.GetX(), m_velocityFromImpulse.GetY());
+        m_applyVelocityXYFromImpulse = AZ::Vector2(m_velocityFromImpulse);
         m_applyVelocityZ += m_velocityFromImpulse.GetZ();
 
         // Accumulate half of the deltaTime
@@ -3722,7 +3722,8 @@ namespace FirstPersonController
 
             // Tilt the XY velocity plane based on m_velocityXCrossYDirection
             m_prevTargetVelocity = TiltVectorXCrossY(
-                (m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)), m_velocityXCrossYDirection);
+                (m_applyVelocityXY + m_applyVelocityXYFromImpulse + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)),
+                m_velocityXCrossYDirection);
 
             // Calculate the walking up incline factor
             ApplyMovingUpInclineXYSpeedFactor();
