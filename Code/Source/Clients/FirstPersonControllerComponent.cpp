@@ -450,30 +450,36 @@ namespace FirstPersonController
                     ->DataElement(
                         nullptr, 
                         &FirstPersonControllerComponent::m_crouchDownProportionalGain, 
-                        "PID P Gain", "")
+                        "PID P Gain", 
+                        "Proportional gain for crouch down PID (higher = faster response, more overshoot/oscillations).")
                     ->DataElement(
                         nullptr, 
                         &FirstPersonControllerComponent::m_crouchDownDerivativeGain, 
-                        "PID D Gain", "")
+                        "PID D Gain", 
+                        "Derivative gain for crouch down PID (higher = more damping, reduces oscillations but may slow response).")
                     ->DataElement(
                         nullptr, 
                         &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha, 
-                        "PID Deriv Filter Alpha", "")
+                        "PID Deriv Filter Alpha", 
+                        "Low-pass filter strength for derivative term (0-1; higher = smoother derivative, less noise).")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Stand Up PID")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(
                         nullptr, 
                         &FirstPersonControllerComponent::m_standUpProportionalGain, 
-                        "PID P Gain", "")
+                        "PID P Gain", 
+                        "Proportional gain for stand up PID (higher = faster response, more overshoot/oscillations).")
                     ->DataElement(
                         nullptr, 
                         &FirstPersonControllerComponent::m_standUpDerivativeGain, 
-                        "PID D Gain", "")
+                        "PID D Gain", 
+                        "Derivative gain for stand up PID (higher = more damping, reduces oscillations but may slow response).")
                     ->DataElement(
                         nullptr, 
                         &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha, 
-                        "PID Deriv Filter Alpha", "")
+                        "PID Deriv Filter Alpha", 
+                        "Low-pass filter strength for derivative term (0-1; higher = smoother derivative, less noise).")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
