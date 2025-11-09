@@ -14,6 +14,8 @@
 #include <AzFramework/Physics/Material/PhysicsMaterialManager.h>
 #include <AzFramework/Physics/PhysicsScene.h>
 
+#include <FirstPersonController/PidController.h>
+
 namespace FirstPersonController
 {
     class FirstPersonControllerComponentRequests : public AZ::ComponentBus
@@ -339,16 +341,6 @@ namespace FirstPersonController
         virtual void SetCrouchScale(const float&) = 0;
         virtual float GetCrouchDistance() const = 0;
         virtual void SetCrouchDistance(const float&) = 0;
-        virtual float GetCrouchTime() const = 0;
-        virtual void SetCrouchTime(const float&) = 0;
-        virtual float GetCrouchStartSpeed() const = 0;
-        virtual void SetCrouchStartSpeed(const float&) = 0;
-        virtual float GetCrouchEndSpeed() const = 0;
-        virtual float GetStandTime() const = 0;
-        virtual void SetStandTime(const float&) = 0;
-        virtual float GetStandStartSpeed() const = 0;
-        virtual void SetStandStartSpeed(const float&) = 0;
-        virtual float GetStandEndSpeed() const = 0;
         virtual bool GetCrouchingDownMove() const = 0;
         virtual bool GetStandingUpMove() const = 0;
         virtual float GetUncrouchHeadSphereCastOffset() const = 0;
@@ -395,6 +387,30 @@ namespace FirstPersonController
         virtual float GetHeading() const = 0;
         virtual void SetHeadingForTick(const float&) = 0;
         virtual float GetPitch() const = 0;
+        virtual float GetCrouchDownProportionalGain() const = 0;
+        virtual void SetCrouchDownProportionalGain(const float&) = 0;
+        virtual float GetCrouchDownIntegralGain() const = 0;
+        virtual void SetCrouchDownIntegralGain(const float&) = 0;
+        virtual float GetCrouchDownDerivativeGain() const = 0;
+        virtual void SetCrouchDownDerivativeGain(const float&) = 0;
+        virtual float GetCrouchDownIntegralWindupLimit() const = 0;
+        virtual void SetCrouchDownIntegralWindupLimit(const float&) = 0;
+        virtual float GetCrouchDownDerivativeFilterAlpha() const = 0;
+        virtual void SetCrouchDownDerivativeFilterAlpha(const float&) = 0;
+        virtual float GetStandUpProportionalGain() const = 0;
+        virtual void SetStandUpProportionalGain(const float&) = 0;
+        virtual float GetStandUpIntegralGain() const = 0;
+        virtual void SetStandUpIntegralGain(const float&) = 0;
+        virtual float GetStandUpDerivativeGain() const = 0;
+        virtual void SetStandUpDerivativeGain(const float&) = 0;
+        virtual float GetStandUpIntegralWindupLimit() const = 0;
+        virtual void SetStandUpIntegralWindupLimit(const float&) = 0;
+        virtual float GetStandUpDerivativeFilterAlpha() const = 0;
+        virtual void SetStandUpDerivativeFilterAlpha(const float&) = 0;
+        virtual PidController<float>::DerivativeCalculationMode GetCrouchDownDerivativeMode() const = 0;
+        virtual void SetCrouchDownDerivativeMode(const PidController<float>::DerivativeCalculationMode&) = 0;
+        virtual PidController<float>::DerivativeCalculationMode GetStandUpDerivativeMode() const = 0;
+        virtual void SetStandUpDerivativeMode(const PidController<float>::DerivativeCalculationMode&) = 0;
     };
 
     using FirstPersonControllerComponentRequestBus = AZ::EBus<FirstPersonControllerComponentRequests>;

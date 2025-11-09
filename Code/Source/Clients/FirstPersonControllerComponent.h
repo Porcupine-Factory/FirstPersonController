@@ -21,7 +21,7 @@
 
 #include <PhysXCharacters/API/CharacterController.h>
 
-#include "PidController.h"
+#include <FirstPersonController/PidController.h>
 
 namespace FirstPersonController
 {
@@ -388,16 +388,6 @@ namespace FirstPersonController
         void SetCrouchScale(const float& new_crouchScale) override;
         float GetCrouchDistance() const override;
         void SetCrouchDistance(const float& new_crouchDistance) override;
-        float GetCrouchTime() const override;
-        void SetCrouchTime(const float& new_crouchTime) override;
-        float GetCrouchStartSpeed() const override;
-        void SetCrouchStartSpeed(const float& new_crouchDownInitVelocity) override;
-        float GetCrouchEndSpeed() const override;
-        float GetStandTime() const override;
-        void SetStandTime(const float& new_standTime) override;
-        float GetStandStartSpeed() const override;
-        void SetStandStartSpeed(const float& new_crouchUpInitVelocity) override;
-        float GetStandEndSpeed() const override;
         bool GetCrouchingDownMove() const override;
         bool GetStandingUpMove() const override;
         float GetUncrouchHeadSphereCastOffset() const override;
@@ -445,6 +435,30 @@ namespace FirstPersonController
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
+        float GetCrouchDownProportionalGain() const override;
+        void SetCrouchDownProportionalGain(const float& new_crouchDownProportionalGain) override;
+        float GetCrouchDownIntegralGain() const override;
+        void SetCrouchDownIntegralGain(const float& new_crouchDownIntegralGain) override;
+        float GetCrouchDownDerivativeGain() const override;
+        void SetCrouchDownDerivativeGain(const float& new_crouchDownDerivativeGain) override;
+        float GetCrouchDownIntegralWindupLimit() const override;
+        void SetCrouchDownIntegralWindupLimit(const float& new_crouchDownIntegralWindupLimit) override;
+        float GetCrouchDownDerivativeFilterAlpha() const override;
+        void SetCrouchDownDerivativeFilterAlpha(const float& new_crouchDownDerivativeFilterAlpha) override;
+        float GetStandUpProportionalGain() const override;
+        void SetStandUpProportionalGain(const float& new_standUpProportionalGain) override;
+        float GetStandUpIntegralGain() const override;
+        void SetStandUpIntegralGain(const float& new_standUpIntegralGain) override;
+        float GetStandUpDerivativeGain() const override;
+        void SetStandUpDerivativeGain(const float& new_standUpDerivativeGain) override;
+        float GetStandUpIntegralWindupLimit() const override;
+        void SetStandUpIntegralWindupLimit(const float& new_standUpIntegralWindupLimit) override;
+        float GetStandUpDerivativeFilterAlpha() const override;
+        void SetStandUpDerivativeFilterAlpha(const float& new_standUpDerivativeFilterAlpha) override;
+        PidController<float>::DerivativeCalculationMode GetCrouchDownDerivativeMode() const override;
+        void SetCrouchDownDerivativeMode(const PidController<float>::DerivativeCalculationMode& new_crouchDownDerivativeMode) override;
+        PidController<float>::DerivativeCalculationMode GetStandUpDerivativeMode() const override;
+        void SetStandUpDerivativeMode(const PidController<float>::DerivativeCalculationMode& new_standUpDerivativeMode) override;
 
     private:
         // Input event assignment and notification bus connection
@@ -621,13 +635,6 @@ namespace FirstPersonController
 
         // Crouch application variables
         float m_crouchDistance = 0.5f;
-        float m_crouchTime = 0.2f;
-        float m_crouchCurrentUpDownTime = 0.f;
-        float m_crouchDownInitVelocity = 5.0f;
-        float m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
-        float m_standTime = 0.15f;
-        float m_crouchUpInitVelocity = 4.0f;
-        float m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
         float m_crouchPrevValue = 0.f;
         bool m_crouching = false;
         bool m_crouched = false;
@@ -651,7 +658,7 @@ namespace FirstPersonController
         float m_crouchDownDerivativeGain = 18.0f;
         float m_crouchDownIntegralWindupLimit = 100.0f;
         float m_crouchDownDerivativeFilterAlpha = 0.8f;
-        PidController<float> m_standUpPidController;
+        PidController<float> m_crouchDownPidController;
         PidController<float>::DerivativeCalculationMode m_crouchDownDerivativeMode = PidController<float>::Velocity;
 
         // Stand Up PID Parameters
@@ -660,7 +667,7 @@ namespace FirstPersonController
         float m_standUpDerivativeGain = 18.0f;
         float m_standUpIntegralWindupLimit = 100.0f;
         float m_standUpDerivativeFilterAlpha = 0.8f;
-        PidController<float> m_crouchDownPidController;
+        PidController<float> m_standUpPidController;
         PidController<float>::DerivativeCalculationMode m_standUpDerivativeMode = PidController<float>::Velocity;
 
         // Jumping and gravity

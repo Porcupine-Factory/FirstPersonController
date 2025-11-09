@@ -1059,16 +1059,6 @@ namespace FirstPersonController
                 ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
                 ->Event("Get Crouch Distance", &FirstPersonControllerComponentRequests::GetCrouchDistance)
                 ->Event("Set Crouch Distance", &FirstPersonControllerComponentRequests::SetCrouchDistance)
-                ->Event("Get Crouch Time", &FirstPersonControllerComponentRequests::GetCrouchTime)
-                ->Event("Set Crouch Time", &FirstPersonControllerComponentRequests::SetCrouchTime)
-                ->Event("Get Crouch Start Speed", &FirstPersonControllerComponentRequests::GetCrouchStartSpeed)
-                ->Event("Set Crouch Start Speed", &FirstPersonControllerComponentRequests::SetCrouchStartSpeed)
-                ->Event("Get Crouch End Speed", &FirstPersonControllerComponentRequests::GetCrouchEndSpeed)
-                ->Event("Get Stand Time", &FirstPersonControllerComponentRequests::GetStandTime)
-                ->Event("Set Stand Time", &FirstPersonControllerComponentRequests::SetStandTime)
-                ->Event("Get Stand Start Speed", &FirstPersonControllerComponentRequests::GetStandStartSpeed)
-                ->Event("Set Stand Start Speed", &FirstPersonControllerComponentRequests::SetStandStartSpeed)
-                ->Event("Get Stand End Speed", &FirstPersonControllerComponentRequests::GetStandEndSpeed)
                 ->Event("Get Crouching Down Move", &FirstPersonControllerComponentRequests::GetCrouchingDownMove)
                 ->Event("Get Standing Up Move", &FirstPersonControllerComponentRequests::GetStandingUpMove)
                 ->Event("Get Crouch Enable Toggle", &FirstPersonControllerComponentRequests::GetCrouchEnableToggle)
@@ -1117,7 +1107,31 @@ namespace FirstPersonController
                 ->Event("Update Camera Pitch", &FirstPersonControllerComponentRequests::UpdateCameraPitch)
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
-                ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch);
+                ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
+                ->Event("Get Crouch Down Proportional Gain", &FirstPersonControllerComponentRequests::GetCrouchDownProportionalGain)
+                ->Event("Set Crouch Down Proportional Gain", &FirstPersonControllerComponentRequests::SetCrouchDownProportionalGain)
+                ->Event("Get Crouch Down Integral Gain", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralGain)
+                ->Event("Set Crouch Down Integral Gain", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralGain)
+                ->Event("Get Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeGain)
+                ->Event("Set Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeGain)
+                ->Event("Get Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralWindupLimit)
+                ->Event("Set Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralWindupLimit)
+                ->Event("Get Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeFilterAlpha)
+                ->Event("Set Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeFilterAlpha)
+                ->Event("Get Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeMode)
+                ->Event("Set Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeMode)
+                ->Event("Get Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::GetStandUpProportionalGain)
+                ->Event("Set Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::SetStandUpProportionalGain)
+                ->Event("Get Stand Up Integral Gain", &FirstPersonControllerComponentRequests::GetStandUpIntegralGain)
+                ->Event("Set Stand Up Integral Gain", &FirstPersonControllerComponentRequests::SetStandUpIntegralGain)
+                ->Event("Get Stand Up Derivative Gain", &FirstPersonControllerComponentRequests::GetStandUpDerivativeGain)
+                ->Event("Set Stand Up Derivative Gain", &FirstPersonControllerComponentRequests::SetStandUpDerivativeGain)
+                ->Event("Get Stand Up Integral Windup Limit", &FirstPersonControllerComponentRequests::GetStandUpIntegralWindupLimit)
+                ->Event("Set Stand Up Integral Windup Limit", &FirstPersonControllerComponentRequests::SetStandUpIntegralWindupLimit)
+                ->Event("Get Stand Up Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetStandUpDerivativeFilterAlpha)
+                ->Event("Set Stand Up Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetStandUpDerivativeFilterAlpha)
+                ->Event("Get Stand Up Derivative Mode", &FirstPersonControllerComponentRequests::GetStandUpDerivativeMode)
+                ->Event("Set Stand Up Derivative Mode", &FirstPersonControllerComponentRequests::SetStandUpDerivativeMode);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -2478,7 +2492,8 @@ namespace FirstPersonController
             // Define tolerances similar to crouch down for consistency
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
             const float crouchVelocityTolerance = 0.1f;
-            const float crouchSettleDuration = 0.1f;
+            // 200ms standing settle time
+            const float crouchSettleDuration = 0.2f;
             // Early standing flag. Set if close enough to target for responsive feel
             const float earlyStandThreshold = 0.1f * fabs(m_crouchDistance);
 
@@ -5514,151 +5529,29 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetCrouchDistance(const float& new_crouchDistance)
     {
-        m_crouchDistance = new_crouchDistance;
+        // Calculate the maximum allowable crouch distance based on the capsule dimensions.
+        // The crouch distance cannot exceed the capsule height minus twice the radius to ensure
+        // the capsule remains valid (height must be at least 2 * radius).
+        const float maxCrouchDistance = m_capsuleHeight - 2.f * m_capsuleRadius;
 
-        // Calculate the crouch down final velocity
-        m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
-        // Check to make sure that the crouching is decelerated, if not then force a constant velocity to meet m_crouchTime
-        if (m_crouchDownFinalVelocity > m_crouchDownInitVelocity)
-        {
-            m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
-            m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Crouch start speed set to a value that's too slow to reach the crouched position within the crouch time, setting the "
-                "crouch speed to the crouch distance divide by the crouch time instead (%.3f m/s).",
-                m_crouchDownInitVelocity);
-        }
-        // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
-        else if (m_crouchDownFinalVelocity < 0)
-        {
-            m_crouchDownInitVelocity = 2.f * m_crouchDistance / m_crouchTime;
-            m_crouchDownFinalVelocity = 0.f;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Crouch start speed set to a value that's too fast to reach the crouching position at crouch time, setting the start "
-                "crouch speed to something slower (%.3f m/s) that ends at a speed of zero.",
-                m_crouchDownInitVelocity);
-        }
+        // Set the crouch distance, clamping it to the maximum allowable value if necessary.
+        // This prevents invalid collider states where the crouched height would be too small.
+        m_crouchDistance = AZ::GetMin(new_crouchDistance, maxCrouchDistance);
 
-        // Calculate the crouch up (stand) final velocity
-        m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
-        // Check to make sure that the standing is decelerated, if not then force a constant velocity to meet m_standTime
-        if (m_crouchUpFinalVelocity > m_crouchUpInitVelocity)
+        // Issue a warning if the provided distance was adjusted to fit within capsule limits.
+        // This helps users understand why their input was modified and avoid unexpected behavior.
+        if (new_crouchDistance > maxCrouchDistance)
         {
-            m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
-            m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
             AZ_Warning(
                 "First Person Controller Component",
                 false,
-                "Stand start speed set to a value that's too slow to reach the standing position within the stand time, setting the stand "
-                "speed to the crouch distance divide by the stand time instead (%.3f m/s).",
-                m_crouchUpInitVelocity);
+                "Requested crouch distance (%.3f) exceeds maximum allowable based on capsule dimensions (height: %.3f, radius: %.3f). "
+                "Clamping to maximum value of %.3f to maintain valid collider.",
+                new_crouchDistance,
+                m_capsuleHeight,
+                m_capsuleRadius,
+                maxCrouchDistance);
         }
-        // Check to make sure that the final standing velocity isn't negative, and fix it if it is
-        else if (m_crouchUpFinalVelocity < 0)
-        {
-            m_crouchUpInitVelocity = 2.f * m_crouchDistance / m_standTime;
-            m_crouchUpFinalVelocity = 0.f;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Stand start speed set to a value that's too fast to reach the standing position at stand time, setting the start stand "
-                "speed to something slower (%.3f m/s) that ends at a speed of zero.",
-                m_crouchUpInitVelocity);
-        }
-    }
-    float FirstPersonControllerComponent::GetCrouchTime() const
-    {
-        return m_crouchTime;
-    }
-    void FirstPersonControllerComponent::SetCrouchTime(const float& new_crouchTime)
-    {
-        m_crouchTime = new_crouchTime;
-    }
-    float FirstPersonControllerComponent::GetCrouchStartSpeed() const
-    {
-        return m_crouchDownInitVelocity;
-    }
-    void FirstPersonControllerComponent::SetCrouchStartSpeed(const float& new_crouchDownInitVelocity)
-    {
-        m_crouchDownInitVelocity = new_crouchDownInitVelocity;
-        // Recalculate the crouch down final velocity
-        m_crouchDownFinalVelocity = 2 * m_crouchDistance / m_crouchTime - m_crouchDownInitVelocity;
-        // Check to make sure that the crouching is decelerated, if not then force a constant velocity to meet m_crouchTime
-        if (m_crouchDownFinalVelocity > m_crouchDownInitVelocity)
-        {
-            m_crouchDownInitVelocity = m_crouchDistance / m_crouchTime;
-            m_crouchDownFinalVelocity = m_crouchDownInitVelocity;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Crouch start speed changed to a value that's too slow to reach the crouched position within the crouch time, setting the "
-                "crouch speed to the crouch distance divide by the crouch time instead.");
-        }
-        // Check to make sure that the final crouching velocity isn't negative, and fix it if it is
-        else if (m_crouchDownFinalVelocity < 0)
-        {
-            m_crouchDownInitVelocity = 2.f * m_crouchDistance / m_crouchTime;
-            m_crouchDownFinalVelocity = 0.f;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Crouch start speed changed to a value that's too fast to reach the crouching position at crouch time, setting the start "
-                "crouch speed to something slower (%.3f m/s) that ends at a speed of zero.",
-                m_crouchDownInitVelocity);
-        }
-    }
-    float FirstPersonControllerComponent::GetCrouchEndSpeed() const
-    {
-        return m_crouchDownFinalVelocity;
-    }
-    float FirstPersonControllerComponent::GetStandTime() const
-    {
-        return m_standTime;
-    }
-    void FirstPersonControllerComponent::SetStandTime(const float& new_standTime)
-    {
-        m_standTime = new_standTime;
-    }
-    float FirstPersonControllerComponent::GetStandStartSpeed() const
-    {
-        return m_crouchUpInitVelocity;
-    }
-    void FirstPersonControllerComponent::SetStandStartSpeed(const float& new_crouchUpInitVelocity)
-    {
-        m_crouchUpInitVelocity = new_crouchUpInitVelocity;
-        // Recalculate the crouch up (stand) final velocity
-        m_crouchUpFinalVelocity = (2 * m_crouchDistance) / m_standTime - m_crouchUpInitVelocity;
-        // Check to make sure that the standing is decelerated, if not then force a constant velocity to meet m_standTime
-        if (m_crouchUpFinalVelocity > m_crouchUpInitVelocity)
-        {
-            m_crouchUpInitVelocity = m_crouchDistance / m_standTime;
-            m_crouchUpFinalVelocity = m_crouchUpInitVelocity;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Stand start speed changed to a value that's too slow to reach the standing position within the stand time, setting the "
-                "stand speed to the crouch distance divide by the stand time instead.");
-        }
-        // Check to make sure that the final standing velocity isn't negative, and fix it if it is
-        else if (m_crouchUpFinalVelocity < 0)
-        {
-            m_crouchUpInitVelocity = 2.f * m_crouchDistance / m_standTime;
-            m_crouchUpFinalVelocity = 0.f;
-            AZ_Warning(
-                "First Person Controller Component",
-                false,
-                "Stand start speed changed to a value that's too fast to reach the standing position at stand time, setting the start "
-                "stand speed to something slower (%.3f m/s) that ends at a speed of zero.",
-                m_crouchUpInitVelocity);
-        }
-    }
-    float FirstPersonControllerComponent::GetStandEndSpeed() const
-    {
-        return m_crouchUpFinalVelocity;
     }
     bool FirstPersonControllerComponent::GetCrouchingDownMove() const
     {
@@ -5723,6 +5616,118 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchWhenNotGrounded(const bool& new_crouchWhenNotGrounded)
     {
         m_crouchWhenNotGrounded = new_crouchWhenNotGrounded;
+    }
+    float FirstPersonControllerComponent::GetCrouchDownProportionalGain() const
+    {
+        return m_crouchDownProportionalGain;
+    }
+    void FirstPersonControllerComponent::SetCrouchDownProportionalGain(const float& new_crouchDownProportionalGain)
+    {
+        m_crouchDownProportionalGain = new_crouchDownProportionalGain;
+        m_crouchDownPidController.SetProportionalGain(new_crouchDownProportionalGain);
+    }
+    float FirstPersonControllerComponent::GetCrouchDownIntegralGain() const
+    {
+        return m_crouchDownIntegralGain;
+    }
+    void FirstPersonControllerComponent::SetCrouchDownIntegralGain(const float& new_crouchDownIntegralGain)
+    {
+        m_crouchDownIntegralGain = new_crouchDownIntegralGain;
+        m_crouchDownPidController.SetIntegralGain(new_crouchDownIntegralGain);
+    }
+    float FirstPersonControllerComponent::GetCrouchDownDerivativeGain() const
+    {
+        return m_crouchDownDerivativeGain;
+    }
+    void FirstPersonControllerComponent::SetCrouchDownDerivativeGain(const float& new_crouchDownDerivativeGain)
+    {
+        m_crouchDownDerivativeGain = new_crouchDownDerivativeGain;
+        m_crouchDownPidController.SetDerivativeGain(new_crouchDownDerivativeGain);
+    }
+    float FirstPersonControllerComponent::GetCrouchDownIntegralWindupLimit() const
+    {
+        return m_crouchDownIntegralWindupLimit;
+    }
+    void FirstPersonControllerComponent::SetCrouchDownIntegralWindupLimit(const float& new_crouchDownIntegralWindupLimit)
+    {
+        m_crouchDownIntegralWindupLimit = new_crouchDownIntegralWindupLimit;
+        m_crouchDownPidController.SetIntegralWindupLimit(new_crouchDownIntegralWindupLimit);
+    }
+    float FirstPersonControllerComponent::GetCrouchDownDerivativeFilterAlpha() const
+    {
+        return m_crouchDownDerivativeFilterAlpha;
+    }
+    void FirstPersonControllerComponent::SetCrouchDownDerivativeFilterAlpha(const float& new_crouchDownDerivativeFilterAlpha)
+    {
+        m_crouchDownDerivativeFilterAlpha = new_crouchDownDerivativeFilterAlpha;
+        m_crouchDownPidController.SetDerivativeFilterAlpha(new_crouchDownDerivativeFilterAlpha);
+    }
+    PidController<float>::DerivativeCalculationMode FirstPersonControllerComponent::GetCrouchDownDerivativeMode() const
+    {
+        return m_crouchDownDerivativeMode;
+    }
+    void FirstPersonControllerComponent::SetCrouchDownDerivativeMode(
+        const PidController<float>::DerivativeCalculationMode& new_crouchDownDerivativeMode)
+    {
+        m_crouchDownDerivativeMode = new_crouchDownDerivativeMode;
+        m_crouchDownPidController.SetDerivativeMode(new_crouchDownDerivativeMode);
+        m_crouchDownPidController.Reset();
+    }
+    float FirstPersonControllerComponent::GetStandUpProportionalGain() const
+    {
+        return m_standUpProportionalGain;
+    }
+    void FirstPersonControllerComponent::SetStandUpProportionalGain(const float& new_standUpProportionalGain)
+    {
+        m_standUpProportionalGain = new_standUpProportionalGain;
+        m_standUpPidController.SetProportionalGain(new_standUpProportionalGain);
+    }
+    float FirstPersonControllerComponent::GetStandUpIntegralGain() const
+    {
+        return m_standUpIntegralGain;
+    }
+    void FirstPersonControllerComponent::SetStandUpIntegralGain(const float& new_standUpIntegralGain)
+    {
+        m_standUpIntegralGain = new_standUpIntegralGain;
+        m_standUpPidController.SetIntegralGain(new_standUpIntegralGain);
+    }
+    float FirstPersonControllerComponent::GetStandUpDerivativeGain() const
+    {
+        return m_standUpDerivativeGain;
+    }
+    void FirstPersonControllerComponent::SetStandUpDerivativeGain(const float& new_standUpDerivativeGain)
+    {
+        m_standUpDerivativeGain = new_standUpDerivativeGain;
+        m_standUpPidController.SetDerivativeGain(new_standUpDerivativeGain);
+    }
+    float FirstPersonControllerComponent::GetStandUpIntegralWindupLimit() const
+    {
+        return m_standUpIntegralWindupLimit;
+    }
+    void FirstPersonControllerComponent::SetStandUpIntegralWindupLimit(const float& new_standUpIntegralWindupLimit)
+    {
+        m_standUpIntegralWindupLimit = new_standUpIntegralWindupLimit;
+        m_standUpPidController.SetIntegralWindupLimit(new_standUpIntegralWindupLimit);
+    }
+    float FirstPersonControllerComponent::GetStandUpDerivativeFilterAlpha() const
+    {
+        return m_standUpDerivativeFilterAlpha;
+    }
+    void FirstPersonControllerComponent::SetStandUpDerivativeFilterAlpha(const float& new_standUpDerivativeFilterAlpha)
+    {
+        m_standUpDerivativeFilterAlpha = new_standUpDerivativeFilterAlpha;
+        m_standUpPidController.SetDerivativeFilterAlpha(new_standUpDerivativeFilterAlpha);
+    }
+    PidController<float>::DerivativeCalculationMode FirstPersonControllerComponent::GetStandUpDerivativeMode() const
+    {
+        return m_standUpDerivativeMode;
+    }
+    void FirstPersonControllerComponent::SetStandUpDerivativeMode(
+        const PidController<float>::DerivativeCalculationMode& new_standUpDerivativeMode)
+    {
+        m_standUpDerivativeMode = new_standUpDerivativeMode;
+        m_standUpPidController.SetDerivativeMode(new_standUpDerivativeMode);
+        m_standUpPidController.Reset();
     }
     bool FirstPersonControllerComponent::GetEnableCameraCharacterRotation() const
     {
