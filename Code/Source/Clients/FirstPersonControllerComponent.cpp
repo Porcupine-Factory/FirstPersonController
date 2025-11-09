@@ -95,14 +95,6 @@ namespace FirstPersonController
                 ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
-                ->Field("Crouch Time", &FirstPersonControllerComponent::m_crouchTime)
-                ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                ->Field("Crouch Start Speed", &FirstPersonControllerComponent::m_crouchDownInitVelocity)
-                ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
-                ->Field("Stand Time", &FirstPersonControllerComponent::m_standTime)
-                ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                ->Field("Stand Start Speed", &FirstPersonControllerComponent::m_crouchUpInitVelocity)
-                ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
                 ->Field("Crouch Standing Head Clearance", &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset)
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
@@ -110,6 +102,20 @@ namespace FirstPersonController
                 ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouchJumpCausesStanding)
                 ->Field("Crouch Sprint Causes Standing", &FirstPersonControllerComponent::m_crouchSprintCausesStanding)
                 ->Field("Crouch Priority When Sprint Pressed", &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed)
+
+                // Add Crouch Down PID group
+                ->Field("Crouch PID P Gain", &FirstPersonControllerComponent::m_crouchDownProportionalGain)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " N/m")
+                ->Field("Crouch PID D Gain", &FirstPersonControllerComponent::m_crouchDownDerivativeGain)
+                ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" N%ss/m", Physics::NameConstants::GetInterpunct().c_str()))
+                ->Field("Crouch PID Deriv Filter Alpha", &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha)
+
+                // Add Stand Up PID group
+                ->Field("Stand PID P Gain", &FirstPersonControllerComponent::m_standUpProportionalGain)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " N/m")
+                ->Field("Stand PID D Gain", &FirstPersonControllerComponent::m_standUpDerivativeGain)
+                ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" N%ss/m", Physics::NameConstants::GetInterpunct().c_str()))
+                ->Field("Stand PID Deriv Filter Alpha", &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha)
 
                 // Jumping group
                 ->Field("Grounded Collision Group", &FirstPersonControllerComponent::m_groundedCollisionGroupId)
@@ -411,32 +417,6 @@ namespace FirstPersonController
                         "capsule collider height. This number cannot be greater than the capsule's height minus two times its radius.")
                     ->DataElement(
                         nullptr,
-                        &FirstPersonControllerComponent::m_crouchTime,
-                        "Crouch Time",
-                        "Determines the time it takes to crouch down from standing.")
-                    ->DataElement(
-                        nullptr,
-                        &FirstPersonControllerComponent::m_crouchDownInitVelocity,
-                        "Crouch Start Speed",
-                        "The initial speed for the crouching motion. If this speed is too slow to reach the Crouch Distance within the "
-                        "Crouch Time then the slowest constant velocity will be used instead and a warning will be printed. If the Crouch "
-                        "Distance can be reached at a slower velocity then a constant deceleration will be applied to meet the Crouch "
-                        "Time.")
-                    ->DataElement(
-                        nullptr,
-                        &FirstPersonControllerComponent::m_standTime,
-                        "Stand Time",
-                        "Determines the time it takes to stand up from crouching.")
-                    ->DataElement(
-                        nullptr,
-                        &FirstPersonControllerComponent::m_crouchUpInitVelocity,
-                        "Stand Start Speed",
-                        "The initial speed for the standing motion. If this speed is too slow to reach the (standing) Crouch Distance "
-                        "within the Stand Time then the slowest constant velocity will be used instead and a warning will be printed. If "
-                        "the (standing) Crouch Distance can be reached at a slower velocity then a constant deceleration will be applied "
-                        "to meet the Stand Time.")
-                    ->DataElement(
-                        nullptr,
                         &FirstPersonControllerComponent::m_uncrouchHeadSphereCastOffset,
                         "Crouch Standing Head Clearance",
                         "Determines the distance above the player's head to detect whether there is an obstruction and prevent them from "
@@ -464,6 +444,36 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed,
                         "Crouch Priority When Sprint Pressed",
                         "Determines whether pressing crouch while sprint is held causes the character to crouch.")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Crouch Down PID")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        nullptr, 
+                        &FirstPersonControllerComponent::m_crouchDownProportionalGain, 
+                        "PID P Gain", "")
+                    ->DataElement(
+                        nullptr, 
+                        &FirstPersonControllerComponent::m_crouchDownDerivativeGain, 
+                        "PID D Gain", "")
+                    ->DataElement(
+                        nullptr, 
+                        &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha, 
+                        "PID Deriv Filter Alpha", "")
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "Stand Up PID")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        nullptr, 
+                        &FirstPersonControllerComponent::m_standUpProportionalGain, 
+                        "PID P Gain", "")
+                    ->DataElement(
+                        nullptr, 
+                        &FirstPersonControllerComponent::m_standUpDerivativeGain, 
+                        "PID D Gain", "")
+                    ->DataElement(
+                        nullptr, 
+                        &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha, 
+                        "PID Deriv Filter Alpha", "")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -1203,6 +1213,23 @@ namespace FirstPersonController
         // Debug log to verify m_cameraSmoothFollow value at activation
         // AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
         //    m_cameraSmoothFollow ? "true" : "false");
+
+        // Initialize PID controllers
+        m_crouchDownPidController = PidController<float>(
+            m_crouchDownProportionalGain,
+            m_crouchDownIntegralGain,
+            m_crouchDownDerivativeGain,
+            m_crouchDownIntegralWindupLimit,
+            m_crouchDownDerivativeFilterAlpha,
+            m_crouchDownDerivativeMode);
+
+        m_standUpPidController = PidController<float>(
+            m_standUpProportionalGain,
+            m_standUpIntegralGain,
+            m_standUpDerivativeGain,
+            m_standUpIntegralWindupLimit,
+            m_standUpDerivativeFilterAlpha,
+            m_standUpDerivativeMode);
     }
 
     void FirstPersonControllerComponent::OnCharacterActivated([[maybe_unused]] const AZ::EntityId& entityId)
@@ -2381,122 +2408,142 @@ namespace FirstPersonController
 
         // AZ_Printf("First Person Controller Component", "m_crouching = %s", m_crouching ? "true" : "false");
 
-        // Crouch down
-        if (m_crouching && (!m_crouched || m_grounded || m_crouchWhenNotGrounded) && m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
+        // Determine if starting or switching to crouch down movement. Initiates when crouching is active, not already moving down,
+        // and currently standing or near standing position
+        bool isStartingCrouchDown = m_crouching && !m_crouchingDownMove &&
+            (m_standing || AZ::IsClose(m_cameraLocalZTravelDistance, 0.f, 0.01f) ||
+             m_cameraLocalZTravelDistance > -m_crouchDistance + 0.01f);
+        bool isSwitchingToCrouchDown = m_crouching && m_standingUpMove;
+        // Start or switch to crouch down movement
+        if (isStartingCrouchDown || isSwitchingToCrouchDown)
         {
-            if (m_standing)
-            {
-                m_crouchCurrentUpDownTime = 0.f;
-                m_standing = false;
-            }
-            else if (m_standingUpMove)
-            {
-                // Back-calculate m_crouchCurrentUpDownTime based on the current crouching height
-                m_crouchCurrentUpDownTime = -1.f *
-                    ((sqrt(
-                          m_crouchTime * (m_crouchDownInitVelocity - m_crouchDownFinalVelocity) *
-                              (2.f * m_capsuleCurrentHeight - 2.f * m_capsuleHeight) +
-                          m_crouchTime * m_crouchTime * m_crouchDownInitVelocity * m_crouchDownInitVelocity) -
-                      m_crouchTime * m_crouchDownInitVelocity)) /
-                    (m_crouchDownInitVelocity - m_crouchDownFinalVelocity);
-                // Ensure the resulting calculation is real, otherwise set it to zero
-                if (isnan(m_crouchCurrentUpDownTime))
-                    m_crouchCurrentUpDownTime = 0.f;
-                m_standingUpMove = false;
-            }
-
+            // Reset the PID controller for fresh crouch down computation
+            m_crouchDownPidController.Reset();
+            // Initialize velocity to zero as PID handles acceleration (initial velocity not used in PID logic)
+            m_currentCrouchVelocity = 0.0f;
             m_crouchingDownMove = true;
-
-            if (m_cameraLocalZTravelDistance == 0.f)
+            m_standingUpMove = false;
+            m_standing = false;
+            m_crouched = false;
+            if (AZ::IsClose(m_cameraLocalZTravelDistance, 0.f, 0.01f))
                 FirstPersonControllerComponentNotificationBus::Broadcast(
                     &FirstPersonControllerComponentNotificationBus::Events::OnStartedCrouching);
+        }
 
-            float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
-            // Calculate the current crouch height
-            m_capsuleCurrentHeight = m_capsuleHeight -
-                (m_crouchCurrentUpDownTime *
-                 (2 * m_crouchTime * m_crouchDownInitVelocity - m_crouchCurrentUpDownTime * m_crouchDownInitVelocity +
-                  m_crouchCurrentUpDownTime * m_crouchDownFinalVelocity)) /
-                    (2 * m_crouchTime);
-            cameraTravelDelta += m_capsuleCurrentHeight;
+        // Static timer for settling after reaching target during crouch down (ensures stability before state change)
+        static float crouchDownSettleTimer = 0.0f;
+
+        // Handle ongoing crouch down movement using PID control
+        if (m_crouchingDownMove)
+        {
+            // Define position tolerance. Set to 2% of the total crouch distance to determine when the position is "close enough" to the
+            // target.
+            // This prevents minor floating-point errors or small oscillations from delaying state transitions.
+            const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
+            // Define velocity tolerance. A small threshold (0.1 m/s) to check if velocity has sufficiently damped near zero,
+            // indicating the movement has stabilized and is not still accelerating or oscillating.
+            const float crouchVelocityTolerance = 0.1f;
+            // Define settle duration. 200ms period after tolerances are met to allow any residual PID damping or minor adjustments
+            // to occur, ensuring smooth stopping without abrupt snaps or state changes.
+            const float crouchSettleDuration = 0.2f;
+
+            // Target Z offset for crouch: Negative distance to lower camera
+            float targetLocalZOffset = -m_crouchDistance;
+            // Current PID error along Z: Difference between target and current Z travel
+            float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+            // Get acceleration from PID controller based on error, time step, and current position
+            float zAcceleration = m_crouchDownPidController.Output(currentZError, deltaTime, m_cameraLocalZTravelDistance);
+            // Update velocity with acceleration over time
+            m_currentCrouchVelocity += zAcceleration * deltaTime;
+            // Compute delta travel for this frame
+            float cameraTravelDelta = m_currentCrouchVelocity * deltaTime;
+            // Apply delta to local Z travel distance
             m_cameraLocalZTravelDistance += cameraTravelDelta;
 
-            m_crouchCurrentUpDownTime += deltaTime;
-
-            if (m_cameraLocalZTravelDistance <= -1.f * m_crouchDistance || m_crouchCurrentUpDownTime > m_crouchTime)
-            {
-                cameraTravelDelta += abs(m_cameraLocalZTravelDistance) - m_crouchDistance;
-                m_cameraLocalZTravelDistance = -1.f * m_crouchDistance;
-                m_crouchCurrentUpDownTime = m_crouchTime;
-                m_crouchingDownMove = false;
-                m_crouched = true;
-                FirstPersonControllerComponentNotificationBus::Broadcast(
-                    &FirstPersonControllerComponentNotificationBus::Events::OnCrouched);
-            }
-
-            // Adjust the height of the collider capsule based on the crouching height
-            PhysX::CharacterControllerRequestBus::EventResult(
-                m_capsuleCurrentHeight, GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-
-            float stepHeight = 0.f;
-            Physics::CharacterRequestBus::EventResult(stepHeight, GetEntityId(), &Physics::CharacterRequestBus::Events::GetStepHeight);
-
-            // Subtract the distance to get down to the crouching height
-            m_capsuleCurrentHeight += cameraTravelDelta;
+            // Update capsule height based on current Z travel (ensures collider matches visual crouch)
+            m_capsuleCurrentHeight = m_capsuleHeight + m_cameraLocalZTravelDistance;
             if (m_capsuleCurrentHeight < (2.f * m_capsuleRadius + 0.00001f))
                 m_capsuleCurrentHeight = 2.f * m_capsuleRadius + 0.00001f;
+            float stepHeight = 0.f;
+            Physics::CharacterRequestBus::EventResult(stepHeight, GetEntityId(), &Physics::CharacterRequestBus::Events::GetStepHeight);
             if (m_capsuleCurrentHeight < (stepHeight + 0.00001f))
                 m_capsuleCurrentHeight = stepHeight + 0.00001f;
-            // AZ_Printf("First Person Controller Component", "Crouching capsule height = %.10f", m_capsuleCurrentHeight);
 
+            // Resize the PhysX character controller capsule to match current height
             PhysX::CharacterControllerRequestBus::Event(
                 GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-
             cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
+
+            // Post-update error for settle check
+            currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+            // Check if within tolerance for position and velocity to start settling
+            if (fabs(currentZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
+            {
+                // Accumulate settle time
+                crouchDownSettleTimer += deltaTime;
+                // Complete settle if duration met. Reset velocity, end movement, set crouched state, and notify
+                if (crouchDownSettleTimer >= crouchSettleDuration)
+                {
+                    // Snap camera to target position
+                    m_cameraLocalZTravelDistance = targetLocalZOffset;
+                    // Zero velocity after settle
+                    m_currentCrouchVelocity = 0.f;
+                    // End crouch down phase
+                    m_crouchingDownMove = false;
+                    // Mark as fully crouched
+                    m_crouched = true;
+                    // Reset timer for next use
+                    crouchDownSettleTimer = 0.0f;
+                    FirstPersonControllerComponentNotificationBus::Broadcast(
+                        &FirstPersonControllerComponentNotificationBus::Events::OnCrouched);
+                }
+            }
+            else
+            {
+                // Reset settle timer if not within tolerance
+                crouchDownSettleTimer = 0.0f;
+            }
         }
-        // Stand up
-        else if (!m_crouching && m_cameraLocalZTravelDistance != 0.f)
+        // Determine if starting or switching to stand up movement. Initiates when not crouching, not already standing up,
+        // and currently crouched or near crouched position
+        bool isStartingStandUp = !m_crouching && !m_standingUpMove &&
+            (m_crouched || AZ::IsClose(m_cameraLocalZTravelDistance, -m_crouchDistance, 0.01f) ||
+             fabs(m_cameraLocalZTravelDistance) > 0.01f);
+        bool isSwitchingToStandUp = !m_crouching && m_crouchingDownMove;
+        // Start or switch to stand up movement if conditions are met
+        if (isStartingStandUp || isSwitchingToStandUp)
         {
-            if (m_crouched)
-            {
-                m_crouchCurrentUpDownTime = m_standTime;
-                m_crouched = false;
-            }
-            else if (m_crouchingDownMove)
-            {
-                // Back-calculate m_crouchCurrentUpDownTime based on the current crouching height
-                m_crouchCurrentUpDownTime = ((sqrt(
-                                                  m_standTime * (m_crouchUpInitVelocity - m_crouchUpFinalVelocity) *
-                                                      (2.f * m_capsuleHeight - 2.f * m_capsuleCurrentHeight) +
-                                                  m_standTime * m_standTime * m_crouchUpFinalVelocity * m_crouchUpFinalVelocity) -
-                                              sqrt(m_standTime * m_standTime * m_crouchUpFinalVelocity * m_crouchUpFinalVelocity))) /
-                    (m_crouchUpInitVelocity - m_crouchUpFinalVelocity);
-                // Ensure the resulting calculation is real, otherwise set it to m_standTime
-                if (isnan(m_crouchCurrentUpDownTime))
-                    m_crouchCurrentUpDownTime = m_standTime;
-                m_crouchingDownMove = false;
-            }
-
+            // Reset the PID controller for fresh stand up computation
+            m_standUpPidController.Reset();
+            // Initialize velocity to zero as PID handles acceleration
+            m_currentCrouchVelocity = 0.0f;
             m_standingUpMove = true;
-
-            if (m_cameraLocalZTravelDistance == -1.f * m_crouchDistance)
+            m_crouchingDownMove = false;
+            m_crouched = false;
+            if (AZ::IsClose(m_cameraLocalZTravelDistance, -m_crouchDistance, 0.01f))
                 FirstPersonControllerComponentNotificationBus::Broadcast(
                     &FirstPersonControllerComponentNotificationBus::Events::OnStartedStanding);
+        }
 
-            // Create a shapecast sphere that will be used to detect whether there is an obstruction
-            // above the players head, and prevent them from fully standing up if there is
+        // Static timer for settling after reaching target during stand up
+        static float standUpSettleTimer = 0.0f;
+        if (m_standingUpMove)
+        {
+            // Define tolerances similar to crouch down for consistency
+            const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
+            const float crouchVelocityTolerance = 0.1f;
+            const float crouchSettleDuration = 0.1f;
+            // Early standing flag. Set if close enough to target for responsive feel
+            const float earlyStandThreshold = 0.1f * fabs(m_crouchDistance);
+
+            // Perform head obstruction check to prevent standing into obstacles
             auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
-
             AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
-
-            // Move the sphere to the location of the character and apply the Z offset
             sphereCastPose.SetTranslation(
                 GetEntity()->GetTransform()->GetWorldTM().GetTranslation() +
                 AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius));
-
             AZ::Vector3 sphereCastDirection = AZ::Vector3::CreateAxisZ();
-
-            // Adjust the pose and direction of the sphere cast based on m_sphereCastsAxisDirectionPose
+            // Adjust pose and direction if custom axis is used for sphere casts
             if (m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
             {
                 sphereCastDirection = m_sphereCastsAxisDirectionPose;
@@ -2511,7 +2558,6 @@ namespace FirstPersonController
                         AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(-1.f), m_sphereCastsAxisDirectionPose)
                             .TransformVector(-AZ::Vector3::CreateAxisZ(m_capsuleCurrentHeight - m_capsuleRadius)));
             }
-
             AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
                 m_capsuleRadius,
                 sphereCastPose,
@@ -2520,43 +2566,28 @@ namespace FirstPersonController
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                 m_standCollisionGroup,
                 nullptr);
-
             request.m_reportMultipleHits = true;
-
             AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
             AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
-
-            // Disregard intersections with the character's collider and its child entities
             auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
             {
                 if (hit.m_entityId == GetEntityId())
                     return true;
-
-                // Obtain the child IDs if we don't already have them
                 if (!m_obtainedChildIds)
                 {
                     AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
                     m_obtainedChildIds = true;
                 }
-
                 for (AZ::EntityId id : m_children)
-                {
                     if (hit.m_entityId == id)
                         return true;
-                }
-
                 if (m_standIgnoreDynamicRigidBodies)
                 {
-                    // Check to see if the entity hit is dynamic
-                    AzPhysics::RigidBody* bodyHit = NULL;
+                    AzPhysics::RigidBody* bodyHit = nullptr;
                     Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId, &Physics::RigidBodyRequests::GetRigidBody);
-
-                    // Static Rigid Bodies are not connected to the RigidBodyRequestBus and therefore
-                    // do not have a handler for it
-                    if (bodyHit != NULL && !bodyHit->IsKinematic())
+                    if (bodyHit != nullptr && !bodyHit->IsKinematic())
                         return true;
                 }
-
                 return false;
             };
 
@@ -2570,53 +2601,62 @@ namespace FirstPersonController
             // Bail if something is detected above the player
             if (hits || m_standPreventedViaScript)
             {
-                m_crouchPrevValue = m_crouchValue;
                 m_standPrevented = true;
-                m_crouchJumpPending = false;
                 FirstPersonControllerComponentNotificationBus::Broadcast(
                     &FirstPersonControllerComponentNotificationBus::Events::OnStandPrevented);
-                return;
+                // Stop on obstruction
+                m_currentCrouchVelocity = 0.f;
             }
-            m_standPrevented = false;
-
-            float cameraTravelDelta = -1.f * m_capsuleCurrentHeight;
-            // Calculate the current crouch height
-            m_capsuleCurrentHeight = m_capsuleHeight -
-                (m_crouchCurrentUpDownTime *
-                 (2 * m_standTime * m_crouchUpFinalVelocity + m_crouchCurrentUpDownTime * m_crouchUpInitVelocity -
-                  m_crouchCurrentUpDownTime * m_crouchUpFinalVelocity)) /
-                    (2 * m_standTime);
-            cameraTravelDelta += m_capsuleCurrentHeight;
-            m_cameraLocalZTravelDistance += cameraTravelDelta;
-
-            m_crouchCurrentUpDownTime -= deltaTime;
-
-            if (m_cameraLocalZTravelDistance >= 0.f || m_crouchCurrentUpDownTime <= 0.f)
+            else
             {
-                cameraTravelDelta -= m_cameraLocalZTravelDistance;
-                m_cameraLocalZTravelDistance = 0.f;
-                m_crouchCurrentUpDownTime = 0.f;
-                m_standingUpMove = false;
-                m_standing = true;
-                FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnStoodUp);
+                m_standPrevented = false;
+
+                // Target Z offset for standing: Reset to zero
+                float targetLocalZOffset = 0.0f;
+                // Compute current PID error
+                float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                // Get acceleration from PID
+                float zAcceleration = m_standUpPidController.Output(currentZError, deltaTime, m_cameraLocalZTravelDistance);
+                m_currentCrouchVelocity += zAcceleration * deltaTime;
+                float cameraTravelDelta = m_currentCrouchVelocity * deltaTime;
+                m_cameraLocalZTravelDistance += cameraTravelDelta;
+                // Capsule update (max height guard)
+                m_capsuleCurrentHeight = m_capsuleHeight + m_cameraLocalZTravelDistance;
+                if (m_capsuleCurrentHeight > m_capsuleHeight)
+                    m_capsuleCurrentHeight = m_capsuleHeight;
+                PhysX::CharacterControllerRequestBus::Event(
+                    GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
+                cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
+
+                // Early standing for speed
+                float postZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                if (!m_standing && fabs(postZError) < earlyStandThreshold)
+                {
+                    m_standing = true;
+                }
+                // Settle check. If within tolerance, accumulate time
+                if (fabs(postZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
+                {
+                    // Accumulate settle time. Allows final damping before state change.
+                    standUpSettleTimer += deltaTime;
+                    // Complete if settled. Reset velocity, end movement, set standing
+                    if (standUpSettleTimer >= crouchSettleDuration)
+                    {
+                        m_cameraLocalZTravelDistance = targetLocalZOffset;
+                        m_currentCrouchVelocity = 0.f;
+                        m_standingUpMove = false;
+                        standUpSettleTimer = 0.0f;
+                        FirstPersonControllerComponentNotificationBus::Broadcast(
+                            &FirstPersonControllerComponentNotificationBus::Events::OnStoodUp);
+                    }
+                }
+                else
+                {
+                    // Reset if not settled
+                    standUpSettleTimer = 0.0f;
+                }
             }
-
-            // Adjust the height of the collider capsule based on the standing height
-            PhysX::CharacterControllerRequestBus::EventResult(
-                m_capsuleCurrentHeight, GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::GetHeight);
-
-            // Add the distance to get back to the standing height
-            m_capsuleCurrentHeight += cameraTravelDelta;
-            if (m_capsuleCurrentHeight > m_capsuleHeight)
-                m_capsuleCurrentHeight = m_capsuleHeight;
-            // AZ_Printf("First Person Controller Component", "Standing capsule height = %.10f", m_capsuleCurrentHeight);
-
-            PhysX::CharacterControllerRequestBus::Event(
-                GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-
-            cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
         }
-
         m_crouchPrevValue = m_crouchValue;
     }
 

@@ -21,6 +21,8 @@
 
 #include <PhysXCharacters/API/CharacterController.h>
 
+#include "PidController.h"
+
 namespace FirstPersonController
 {
     class FirstPersonControllerComponent
@@ -641,6 +643,25 @@ namespace FirstPersonController
         bool m_crouchPriorityWhenSprintPressed = true;
         bool m_crouchScriptLocked = false;
         bool m_crouchWhenNotGrounded = false;
+        float m_currentCrouchVelocity = 0.f;
+
+        // Crouch Down PID Parameters
+        float m_crouchDownProportionalGain = 200.0f;
+        float m_crouchDownIntegralGain = 0.0f;
+        float m_crouchDownDerivativeGain = 18.0f;
+        float m_crouchDownIntegralWindupLimit = 100.0f;
+        float m_crouchDownDerivativeFilterAlpha = 0.8f;
+        PidController<float> m_standUpPidController;
+        PidController<float>::DerivativeCalculationMode m_crouchDownDerivativeMode = PidController<float>::Velocity;
+
+        // Stand Up PID Parameters
+        float m_standUpProportionalGain = 200.0f;
+        float m_standUpIntegralGain = 0.0f;
+        float m_standUpDerivativeGain = 18.0f;
+        float m_standUpIntegralWindupLimit = 100.0f;
+        float m_standUpDerivativeFilterAlpha = 0.8f;
+        PidController<float> m_crouchDownPidController;
+        PidController<float>::DerivativeCalculationMode m_standUpDerivativeMode = PidController<float>::Velocity;
 
         // Jumping and gravity
         float m_gravity = -30.f;
