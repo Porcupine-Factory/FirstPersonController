@@ -6,7 +6,7 @@ You can install this gem in your project using O3DE's project manager. Navigate 
 
 NOTE: You may need to disable the PhysX4 gem if it is enabled for your project. This gem has PhysX5 set as a dependency and both cannot be enabled simultaneously.
 
-For more information, see the instructions found in O3DE's documentation: https://www.o3de.org/docs/user-guide/gems/repositories/overview/#add-a-gem-repository-in-project-manager
+For more information, see the instructions found in O3DE's documentation: https://www.docs.o3de.org/docs/user-guide/remote-content/use-a-remote-repository
 
 ## How To Use This Gem
 [![O3DE First Person Controller Gem - Full Setup + Tutorial](https://porcupinesystems.com/wp-content/uploads/2025/10/first-person-controller.gif)](https://www.youtube.com/watch?v=O7rtXNlCNQQ)
