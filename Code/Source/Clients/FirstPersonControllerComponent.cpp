@@ -102,20 +102,16 @@ namespace FirstPersonController
                 ->Field("Crouch Jump Causes Standing", &FirstPersonControllerComponent::m_crouchJumpCausesStanding)
                 ->Field("Crouch Sprint Causes Standing", &FirstPersonControllerComponent::m_crouchSprintCausesStanding)
                 ->Field("Crouch Priority When Sprint Pressed", &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed)
-
-                // Add Crouch Down PID group
                 ->Field("Crouch PID P Gain", &FirstPersonControllerComponent::m_crouchDownProportionalGain)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " N/m")
                 ->Field("Crouch PID D Gain", &FirstPersonControllerComponent::m_crouchDownDerivativeGain)
                 ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" N%ss/m", Physics::NameConstants::GetInterpunct().c_str()))
-                ->Field("Crouch PID Deriv Filter Alpha", &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha)
-
-                // Add Stand Up PID group
+                ->Field("Crouch PID Derivative Filter Alpha", &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha)
                 ->Field("Stand PID P Gain", &FirstPersonControllerComponent::m_standUpProportionalGain)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " N/m")
                 ->Field("Stand PID D Gain", &FirstPersonControllerComponent::m_standUpDerivativeGain)
                 ->Attribute(AZ::Edit::Attributes::Suffix, AZStd::string::format(" N%ss/m", Physics::NameConstants::GetInterpunct().c_str()))
-                ->Field("Stand PID Deriv Filter Alpha", &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha)
+                ->Field("Stand PID Derivative Filter Alpha", &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha)
 
                 // Jumping group
                 ->Field("Grounded Collision Group", &FirstPersonControllerComponent::m_groundedCollisionGroupId)
@@ -445,34 +441,34 @@ namespace FirstPersonController
                         "Crouch Priority When Sprint Pressed",
                         "Determines whether pressing crouch while sprint is held causes the character to crouch.")
                     ->DataElement(
-                        nullptr, 
-                        &FirstPersonControllerComponent::m_crouchDownProportionalGain, 
-                        "Crouch PID P Gain", 
+                        nullptr,
+                        &FirstPersonControllerComponent::m_crouchDownProportionalGain,
+                        "Crouch PID P Gain",
                         "Proportional gain for crouch down PID (higher = faster response, more overshoot/oscillations).")
                     ->DataElement(
-                        nullptr, 
-                        &FirstPersonControllerComponent::m_crouchDownDerivativeGain, 
-                        "Crouch PID D Gain", 
+                        nullptr,
+                        &FirstPersonControllerComponent::m_crouchDownDerivativeGain,
+                        "Crouch PID D Gain",
                         "Derivative gain for crouch down PID (higher = more damping, reduces oscillations but may slow response).")
                     ->DataElement(
-                        nullptr, 
-                        &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha, 
-                        "Crouch PID Deriv Filter Alpha", 
+                        nullptr,
+                        &FirstPersonControllerComponent::m_crouchDownDerivativeFilterAlpha,
+                        "Crouch PID Derivative Filter Alpha",
                         "Low-pass filter strength for derivative term (0-1; higher = smoother derivative, less noise).")
                     ->DataElement(
-                        nullptr, 
-                        &FirstPersonControllerComponent::m_standUpProportionalGain, 
-                        "Stand PID P Gain", 
+                        nullptr,
+                        &FirstPersonControllerComponent::m_standUpProportionalGain,
+                        "Stand PID P Gain",
                         "Proportional gain for stand up PID (higher = faster response, more overshoot/oscillations).")
                     ->DataElement(
-                        nullptr, 
-                        &FirstPersonControllerComponent::m_standUpDerivativeGain, 
-                        "Stand PID D Gain", 
+                        nullptr,
+                        &FirstPersonControllerComponent::m_standUpDerivativeGain,
+                        "Stand PID D Gain",
                         "Derivative gain for stand up PID (higher = more damping, reduces oscillations but may slow response).")
                     ->DataElement(
-                        nullptr, 
-                        &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha, 
-                        "Stand PID Deriv Filter Alpha", 
+                        nullptr,
+                        &FirstPersonControllerComponent::m_standUpDerivativeFilterAlpha,
+                        "Stand PID Derivative Filter Alpha",
                         "Low-pass filter strength for derivative term (0-1; higher = smoother derivative, less noise).")
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Jumping")
@@ -1116,8 +1112,10 @@ namespace FirstPersonController
                 ->Event("Set Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeGain)
                 ->Event("Get Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralWindupLimit)
                 ->Event("Set Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralWindupLimit)
-                ->Event("Get Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeFilterAlpha)
-                ->Event("Set Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeFilterAlpha)
+                ->Event(
+                    "Get Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeFilterAlpha)
+                ->Event(
+                    "Set Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeFilterAlpha)
                 ->Event("Get Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeMode)
                 ->Event("Set Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeMode)
                 ->Event("Get Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::GetStandUpProportionalGain)
