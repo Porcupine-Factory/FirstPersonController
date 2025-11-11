@@ -91,6 +91,7 @@ namespace FirstPersonController
                 ->Field("Sprint While Crouched", &FirstPersonControllerComponent::m_sprintWhileCrouched)
 
                 // Crouching group
+                ->Field("Stand Collision Group", &FirstPersonControllerComponent::m_standCollisionGroupId)
                 ->Field("Crouch Movement Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
                 ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
@@ -302,8 +303,8 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_opposingDecel,
                         "Opposing Direction Deceleration Factor",
                         "Determines the deceleration when opposing the current direction of motion. The product of this number and Walking "
-                        "Acceleration creates the deceleration that's used. It is suggested to use a number greater than or equal to 1.0 "
-                        "for this.")
+                        "Acceleration creates the deceleration that's used. It is suggested to use a number greater than or equal to "
+                        "1.0 for this.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_addVelocityForTimestepVsTick,
@@ -381,8 +382,8 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_sprintTotalCooldownTime,
                         "Sprint Cooldown Time",
-                        "The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or Stamina hits "
-                        "0%.")
+                        "The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or "
+                        "Stamina hits 0%.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_sprintBackwards,
@@ -399,6 +400,12 @@ namespace FirstPersonController
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonControllerComponent::m_standCollisionGroupId,
+                        "Stand Collision Group",
+                        "Collision group that can prevent the character from standing up when the character's head hits "
+                        "something in this group.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_crouchScale,
@@ -433,8 +440,8 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_crouchSprintCausesStanding,
                         "Crouch Sprint Causes Standing",
-                        "Determines whether pressing sprint while crouched causes the character to stand up, and then sprint once fully "
-                        "standing.")
+                        "Determines whether pressing sprint while crouched causes the character to stand up, "
+                        "and then sprint once fully standing.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_crouchPriorityWhenSprintPressed,
@@ -492,8 +499,8 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_gravity,
                         "Gravity",
-                        "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay component's gravity "
-                        "instead.")
+                        "Z Acceleration due to gravity, set this to zero if using the PhysX Character Gameplay "
+                        "component's gravity instead.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_jumpInitialVelocity,
@@ -561,8 +568,8 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_jumpHeadIgnoreDynamicRigidBodies,
                         "Jump Head Hit Ignore Dynamic Rigid Bodies",
-                        "Determines whether or not non-kinematic (dynamic) rigid bodies are ignored by the jump head collision detection "
-                        "system.")
+                        "Determines whether or not non-kinematic (dynamic) rigid bodies are ignored by the "
+                        "jump head collision detection system.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_doubleJumpEnabled,
@@ -581,8 +588,8 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_applyGravityDuringCoyoteTime,
                         "Apply Gravity During Coyote Time",
-                        "If disabled, gravity is not applied during the coyote time, allowing the character to 'hang' briefly when walking "
-                        "off a ledge.")
+                        "If disabled, gravity is not applied during the coyote time, allowing the character to 'hang' briefly when "
+                        "walking off a ledge.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZero)
 
@@ -1197,6 +1204,8 @@ namespace FirstPersonController
         }
 
         Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
+        Physics::CollisionRequestBus::BroadcastResult(
+            m_standCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_standCollisionGroupId);
         Physics::CollisionRequestBus::BroadcastResult(
             m_groundedCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_groundedCollisionGroupId);
         Physics::CollisionRequestBus::BroadcastResult(
