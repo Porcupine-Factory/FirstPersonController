@@ -17,6 +17,9 @@ namespace FirstPersonController
 
         virtual float GetJumpPressedInAirQueueTimeThreshold() const = 0;
         virtual void SetJumpPressedInAirQueueTimeThreshold(const float&) = 0;
+        virtual bool GetEnableHeadBob() const = 0;
+        virtual AZ::EntityId GetHeadBobEntityId() const = 0;
+        virtual void SetHeadBobEntityId(const AZ::EntityId&) = 0;
     };
 
     using FirstPersonExtrasComponentRequestBus = AZ::EBus<FirstPersonExtrasComponentRequests>;

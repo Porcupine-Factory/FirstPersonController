@@ -21,6 +21,23 @@ namespace FirstPersonController
                 ->Field("Jump Pressed In Air Queue Time Threshold", &FirstPersonExtrasComponent::m_jumpPressedInAirQueueTimeThreshold)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+
+                // HeadBob group
+                ->Field("Enable HeadBob", &FirstPersonExtrasComponent::m_enableHeadBob)
+                ->Field("HeadBob Entity", &FirstPersonExtrasComponent::m_headBobEntityId)
+                ->Field("Frequency", &FirstPersonExtrasComponent::m_headBobFrequency)
+                ->Field("Horizontal Amplitude", &FirstPersonExtrasComponent::m_headBobHorizontalAmplitude)
+                ->Field("Vertical Amplitude", &FirstPersonExtrasComponent::m_headBobVerticalAmplitude)
+                ->Field("Backwards Frequency Scale", &FirstPersonExtrasComponent::m_backwardsFrequencyScale)
+                ->Field("Backwards Horizontal Amplitude Scale", &FirstPersonExtrasComponent::m_backwardsHorizontalAmplitudeScale)
+                ->Field("Backwards Vertical Amplitude Scale", &FirstPersonExtrasComponent::m_backwardsVerticalAmplitudeScale)
+                ->Field("Crouch Frequency Scale", &FirstPersonExtrasComponent::m_crouchFrequencyScale)
+                ->Field("Crouch Horizontal Amplitude Scale", &FirstPersonExtrasComponent::m_crouchHorizontalAmplitudeScale)
+                ->Field("Crouch Vertical Amplitude Scale", &FirstPersonExtrasComponent::m_crouchVerticalAmplitudeScale)
+                ->Field("Sprint Frequency Scale", &FirstPersonExtrasComponent::m_sprintFrequencyScale)
+                ->Field("Sprint Horizontal Amplitude Scale", &FirstPersonExtrasComponent::m_sprintHorizontalAmplitudeScale)
+                ->Field("Sprint Vertical Amplitude Scale", &FirstPersonExtrasComponent::m_sprintVerticalAmplitudeScale)
+                ->Field("Smoothing", &FirstPersonExtrasComponent::m_headBobSmoothing)
                 ->Version(1);
 
             if (AZ::EditContext* ec = sc->GetEditContext())
@@ -44,7 +61,85 @@ namespace FirstPersonController
                         "for a jump once the character becomes grounded; if the jump key is pressed and released outside of this timing "
                         "window then a jump will not be queued.")
                     ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                    ->Attribute(AZ::Edit::Attributes::Min, 0.f);
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+
+                    ->ClassElement(AZ::Edit::ClassElements::Group, "HeadBob")
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(nullptr, &FirstPersonExtrasComponent::m_enableHeadBob, "Enable HeadBob", "Toggle headbob effect.")
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_headBobEntityId,
+                        "Head Bob Entity",
+                        "Entity to apply head bob to (e.g., camera). Defaults to active camera if blank.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(nullptr, &FirstPersonExtrasComponent::m_headBobFrequency, "Frequency", "Speed of the headbob.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_headBobHorizontalAmplitude,
+                        "Horizontal Amplitude",
+                        "Left/right bob distance.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr, &FirstPersonExtrasComponent::m_headBobVerticalAmplitude, "Vertical Amplitude", "Up/down headbob distance.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_backwardsFrequencyScale,
+                        "Backwards Frequency Scale",
+                        "Scale factor for frequency when moving backwards.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_backwardsHorizontalAmplitudeScale,
+                        "Backwards Horizontal Amplitude Scale",
+                        "Scale factor for horizontal amplitude when moving backwards.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_backwardsVerticalAmplitudeScale,
+                        "Backwards Vertical Amplitude Scale",
+                        "Scale factor for vertical amplitude when moving backwards.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_crouchFrequencyScale,
+                        "Crouch Frequency Scale",
+                        "Scale factor for frequency when crouching.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_crouchHorizontalAmplitudeScale,
+                        "Crouch Horizontal Amplitude Scale",
+                        "Scale factor for horizontal amplitude when crouching.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_crouchVerticalAmplitudeScale,
+                        "Crouch Vertical Amplitude Scale",
+                        "Scale factor for vertical amplitude when crouching.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_sprintFrequencyScale,
+                        "Sprint Frequency Scale",
+                        "Scale factor for frequency when sprinting.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_sprintHorizontalAmplitudeScale,
+                        "Sprint Horizontal Amplitude Scale",
+                        "Scale factor for horizontal amplitude when sprinting.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_sprintVerticalAmplitudeScale,
+                        "Sprint Vertical Amplitude Scale",
+                        "Scale factor for vertical amplitude when sprinting.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob)
+                    ->DataElement(nullptr, &FirstPersonExtrasComponent::m_headBobSmoothing, "Smoothing", "Lower values decrease intensity.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadBob);
             }
         }
 
@@ -62,7 +157,10 @@ namespace FirstPersonController
                     &FirstPersonExtrasComponentRequests::GetJumpPressedInAirQueueTimeThreshold)
                 ->Event(
                     "Set Jump Pressed In Air Queue Time Threshold",
-                    &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold);
+                    &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold)
+                ->Event("Get Enable HeadBob", &FirstPersonExtrasComponentRequests::GetEnableHeadBob)
+                ->Event("Get Head Bob Entity Id", &FirstPersonExtrasComponentRequests::GetHeadBobEntityId)
+                ->Event("Set Head Bob Entity Id", &FirstPersonExtrasComponentRequests::SetHeadBobEntityId);
 
             bc->Class<FirstPersonExtrasComponent>()->RequestBus("FirstPersonExtrasComponentRequestBus");
         }
@@ -88,6 +186,32 @@ namespace FirstPersonController
 
         // Assign the FirstPersonExtrasComponent specific inputs
         AssignConnectInputEvents();
+
+        // Head Bob activation
+        if (m_enableHeadBob)
+        {
+            // Setup HeadBob entity
+            if (!m_headBobEntityId.IsValid())
+            {
+                m_headBobEntityPtr = GetActiveCamera();
+                if (m_headBobEntityPtr == nullptr)
+                {
+                    m_needsHeadBobFallback = true;
+                    Camera::CameraNotificationBus::Handler::BusConnect();
+                }
+            }
+            else
+            {
+                AZ::EntityBus::Handler::BusConnect(m_headBobEntityId);
+            }
+
+            // Initialize original translation and offsets if pointer is set
+            if (m_headBobEntityPtr)
+            {
+                m_originalCameraTranslation = m_headBobEntityPtr->GetTransform()->GetLocalTranslation();
+                m_previousOffset = AZ::Vector3::CreateZero();
+            }
+        }
     }
 
     void FirstPersonExtrasComponent::Deactivate()
@@ -96,6 +220,56 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusDisconnect();
         FirstPersonControllerComponentNotificationBus::Handler::BusDisconnect();
         FirstPersonExtrasComponentRequestBus::Handler::BusDisconnect();
+
+        // Head Bob deactivation
+        if (m_enableHeadBob)
+        {
+            if (m_needsHeadBobFallback)
+            {
+                Camera::CameraNotificationBus::Handler::BusDisconnect();
+            }
+            AZ::EntityBus::Handler::BusDisconnect();
+        }
+        m_headBobEntityPtr = nullptr;
+    }
+
+    void FirstPersonExtrasComponent::OnActiveViewChanged(const AZ::EntityId& activeEntityId)
+    {
+        if (m_needsHeadBobFallback)
+        {
+            m_headBobEntityPtr = GetEntityPtr(activeEntityId);
+            if (m_headBobEntityPtr != nullptr)
+            {
+                m_headBobEntityId = activeEntityId;
+                Camera::CameraNotificationBus::Handler::BusDisconnect();
+                m_needsHeadBobFallback = false;
+
+                m_originalCameraTranslation = m_headBobEntityPtr->GetTransform()->GetLocalTranslation();
+                m_previousOffset = AZ::Vector3::CreateZero();
+            }
+        }
+    }
+
+    void FirstPersonExtrasComponent::OnEntityActivated(const AZ::EntityId& entityId)
+    {
+        if (entityId == m_headBobEntityId)
+        {
+            m_headBobEntityPtr = GetEntityPtr(m_headBobEntityId);
+            AZ::EntityBus::Handler::BusDisconnect();
+            if (m_headBobEntityPtr)
+            {
+                m_originalCameraTranslation = m_headBobEntityPtr->GetTransform()->GetLocalTranslation();
+                m_previousOffset = AZ::Vector3::CreateZero();
+            }
+        }
+    }
+
+    AZ::Entity* FirstPersonExtrasComponent::GetActiveCamera() const
+    {
+        AZ::EntityId activeCameraId;
+        Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId, &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
+        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+        return ca->FindEntity(activeCameraId);
     }
 
     void FirstPersonExtrasComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -239,10 +413,159 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
+    void FirstPersonExtrasComponent::SetHeadBobEntity(const AZ::EntityId& id)
+    {
+        // Disconnect existing handlers
+        if (m_needsHeadBobFallback)
+        {
+            Camera::CameraNotificationBus::Handler::BusDisconnect();
+            m_needsHeadBobFallback = false;
+        }
+        AZ::EntityBus::Handler::BusDisconnect();
+
+        m_headBobEntityId = id;
+        m_headBobEntityPtr = nullptr;
+
+        if (!m_headBobEntityId.IsValid())
+        {
+            m_headBobEntityPtr = GetEntityPtr(m_headBobEntityId);
+            if (m_headBobEntityPtr == nullptr)
+            {
+                m_needsHeadBobFallback = true;
+                Camera::CameraNotificationBus::Handler::BusConnect();
+            }
+        }
+        else
+        {
+            m_headBobEntityPtr = GetEntityPtr(m_headBobEntityId);
+            if (m_headBobEntityPtr == nullptr)
+            {
+                AZ::EntityBus::Handler::BusConnect(m_headBobEntityId);
+            }
+        }
+        // Reset original translation if new entity
+        if (m_headBobEntityPtr)
+        {
+            m_originalCameraTranslation = m_headBobEntityPtr->GetTransform()->GetLocalTranslation();
+            m_previousOffset = AZ::Vector3::CreateZero();
+        }
+    }
+
+    AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadBobOffset(float deltaTime)
+    {
+        // Walking if FirstPersonController XYs velocity non-zero and grounded
+        m_isWalking = !m_firstPersonControllerObject->m_applyVelocityXY.IsZero() && *m_grounded;
+
+        // Determine states
+        AZ::Vector2 world_local_forward(
+            AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading).TransformVector(AZ::Vector3(0.f, 1.f, 0.f)));
+        bool isBackwards = m_isWalking && (m_firstPersonControllerObject->m_applyVelocityXY.Dot(world_local_forward) < 0.0f);
+        bool isCrouching = !m_firstPersonControllerObject->m_standing;
+        bool isSprinting = (m_firstPersonControllerObject->m_sprintVelocityAdjust > 1.0f) &&
+            (m_firstPersonControllerObject->m_standing || m_firstPersonControllerObject->m_sprintWhileCrouched);
+
+        // Compute effective values
+        float effectiveFrequency = m_headBobFrequency;
+        float effectiveHorizontalAmplitude = m_headBobHorizontalAmplitude;
+        float effectiveVerticalAmplitude = m_headBobVerticalAmplitude;
+
+        // Apply backwards scales if moving backwards
+        if (isBackwards)
+        {
+            effectiveFrequency *= m_backwardsFrequencyScale;
+            effectiveHorizontalAmplitude *= m_backwardsHorizontalAmplitudeScale;
+            effectiveVerticalAmplitude *= m_backwardsVerticalAmplitudeScale;
+        }
+
+        // Apply crouch scales if crouching
+        if (isCrouching)
+        {
+            effectiveFrequency *= m_crouchFrequencyScale;
+            effectiveHorizontalAmplitude *= m_crouchHorizontalAmplitudeScale;
+            effectiveVerticalAmplitude *= m_crouchVerticalAmplitudeScale;
+        }
+
+        // Apply sprint scales if sprinting
+        if (isSprinting)
+        {
+            effectiveFrequency *= m_sprintFrequencyScale;
+            effectiveHorizontalAmplitude *= m_sprintHorizontalAmplitudeScale;
+            effectiveVerticalAmplitude *= m_sprintVerticalAmplitudeScale;
+        }
+
+        // Get the effective up direction from the FPC
+        AZ::Vector3 upDirection = m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose;
+        if (upDirection.IsZero())
+        {
+            upDirection = AZ::Vector3::CreateAxisZ();
+        }
+
+        // Increment m_walkingTime only when walking, reset otherwise.
+        if (m_isWalking)
+        {
+            m_walkingTime += deltaTime;
+        }
+        else
+        {
+            m_walkingTime = 0.f;
+        }
+        // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce).
+        float horizontalOffset = -sinf(m_walkingTime * effectiveFrequency) * effectiveHorizontalAmplitude;
+        float verticalOffset = -sinf(m_walkingTime * effectiveFrequency * 2.0f) * effectiveVerticalAmplitude;
+
+        // Get camera's local right vector for horizontal alignment.
+        m_rightLocalVector =
+            AZ::Quaternion(m_headBobEntityPtr->GetTransform()->GetLocalRotationQuaternion()).TransformVector(AZ::Vector3::CreateAxisX());
+
+        // Combine offets. Horizontal along right, vertical along Z.
+        return m_rightLocalVector * horizontalOffset + upDirection * verticalOffset;
+    }
+
+    void FirstPersonExtrasComponent::UpdateHeadBob(float deltaTime)
+    {
+        // Compute new headbob offset
+        m_offset = CalculateHeadBobOffset(deltaTime);
+
+        // Bail if no entity
+        if (m_headBobEntityPtr == nullptr)
+            return;
+
+        auto* headBobEntitytransform = m_headBobEntityPtr->GetTransform();
+
+        // Get the headbob entity or camera's current local transform
+        AZ::Transform currentLocalTransform = headBobEntitytransform->GetLocalTM();
+        // Calculate the "clean" local translation by removing the previous frame's headbob offset
+        AZ::Vector3 cleanLocalTranslation = currentLocalTransform.GetTranslation() - m_previousOffset;
+        // Compute the target local translation by adding the new bob offset to the clean position
+        AZ::Vector3 targetLocalTranslation = cleanLocalTranslation + m_offset;
+        // Smoothly interpolate from current to target local translation using the provided smoothing factor
+        AZ::Vector3 newLocalTranslation = currentLocalTransform.GetTranslation().Lerp(targetLocalTranslation, m_headBobSmoothing);
+
+        // Set local translation
+        headBobEntitytransform->SetLocalTranslation(newLocalTranslation);
+
+        // Update previous offset
+        m_previousOffset = newLocalTranslation - cleanLocalTranslation;
+
+        // Snap if residual is small
+        AZ::Vector3 lerpResidual = newLocalTranslation - targetLocalTranslation;
+        if (lerpResidual.GetLengthSq() <= 1e-6f)
+        {
+            headBobEntitytransform->SetLocalTranslation(targetLocalTranslation);
+            m_previousOffset = m_offset;
+        }
+    }
+
     void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
     {
         // Queue up jumps
         QueueJump(deltaTime, timestepElseTick);
+
+        // Update headbob only during frame ticks
+        if (!timestepElseTick && m_enableHeadBob && m_headBobEntityPtr)
+        {
+            UpdateHeadBob(deltaTime);
+        }
     }
 
     // Event Notification methods for use in scripts
@@ -347,5 +670,22 @@ namespace FirstPersonController
             m_jumpPressedInAirQueueTimeThreshold = 0.f;
         else
             m_jumpPressedInAirQueueTimeThreshold = new_jumpPressedInAirQueueTimeThreshold;
+    }
+    bool FirstPersonExtrasComponent::GetEnableHeadBob() const
+    {
+        return m_enableHeadBob;
+    }
+    AZ::EntityId FirstPersonExtrasComponent::GetHeadBobEntityId() const
+    {
+        return m_headBobEntityId;
+    }
+    void FirstPersonExtrasComponent::SetHeadBobEntityId(const AZ::EntityId& entityId)
+    {
+        SetHeadBobEntity(entityId);
+    }
+    AZ::Entity* FirstPersonExtrasComponent::GetEntityPtr(AZ::EntityId pointer) const
+    {
+        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+        return ca->FindEntity(pointer);
     }
 } // namespace FirstPersonController

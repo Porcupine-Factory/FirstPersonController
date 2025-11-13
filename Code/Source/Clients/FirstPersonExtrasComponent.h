@@ -13,6 +13,8 @@
 #include <AzCore/Component/TickBus.h>
 #include <AzCore/std/containers/map.h>
 
+#include <AzFramework/Components/CameraBus.h>
+
 #include <StartingPointInput/InputEventNotificationBus.h>
 
 namespace FirstPersonController
@@ -24,6 +26,7 @@ namespace FirstPersonController
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentNotificationBus::Handler
         , public FirstPersonExtrasComponentRequestBus::Handler
+        , public Camera::CameraNotificationBus::Handler
     {
     public:
         AZ_COMPONENT(FirstPersonExtrasComponent, "{86d186ce-6065-4cb2-adda-48c630eb5ec4}");
@@ -34,6 +37,9 @@ namespace FirstPersonController
         void Activate() override;
         void Deactivate() override;
 
+        // AZ::EntityBus interface
+        void OnEntityActivated(const AZ::EntityId& entityId) override;
+
         static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
@@ -43,13 +49,21 @@ namespace FirstPersonController
         void OnReleased(float value) override;
         void OnHeld(float value) override;
 
+        void OnActiveViewChanged(const AZ::EntityId& activeEntityId) override;
+
         // FirstPersonExtrasRequestBus
         float GetJumpPressedInAirQueueTimeThreshold() const override;
         void SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold) override;
+        bool GetEnableHeadBob() const;
+        AZ::EntityId GetHeadBobEntityId() const override;
+        void SetHeadBobEntityId(const AZ::EntityId&) override;
 
     private:
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
+
+        AZ::Entity* GetActiveCamera() const;
+        AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
@@ -73,6 +87,34 @@ namespace FirstPersonController
 
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;
+
+        // HeadBob
+        void SetHeadBobEntity(const AZ::EntityId& id);
+        void UpdateHeadBob(float deltaTime);
+        AZ::Vector3 CalculateHeadBobOffset(float deltaTime);
+        bool m_enableHeadBob = false;
+        bool m_isWalking = false;
+        bool m_needsHeadBobFallback = false;
+        float m_headBobFrequency = 6.15f;
+        float m_headBobHorizontalAmplitude = 0.01f;
+        float m_headBobVerticalAmplitude = 0.03f;
+        float m_backwardsFrequencyScale = 0.875f;
+        float m_backwardsHorizontalAmplitudeScale = 1.0f;
+        float m_backwardsVerticalAmplitudeScale = 1.0f;
+        float m_crouchFrequencyScale = 0.875f;
+        float m_crouchHorizontalAmplitudeScale = 0.875f;
+        float m_crouchVerticalAmplitudeScale = 0.875f;
+        float m_sprintFrequencyScale = 1.25f;
+        float m_sprintHorizontalAmplitudeScale = 1.125f;
+        float m_sprintVerticalAmplitudeScale = 1.125f;
+        float m_headBobSmoothing = 0.25f;
+        float m_walkingTime = 0.f;
+        AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_rightLocalVector = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_offset = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_previousOffset = AZ::Vector3::CreateZero();
+        AZ::EntityId m_headBobEntityId = AZ::EntityId();
+        AZ::Entity* m_headBobEntityPtr = nullptr;
 
         // FirstPersonExtrasComponent object
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
