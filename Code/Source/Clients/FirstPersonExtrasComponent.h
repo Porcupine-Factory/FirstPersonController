@@ -107,7 +107,7 @@ namespace FirstPersonController
         float m_sprintFrequencyScale = 1.25f;
         float m_sprintHorizontalAmplitudeScale = 1.125f;
         float m_sprintVerticalAmplitudeScale = 1.125f;
-        float m_headbobAttenuation = 1.f;
+        float m_headbobAttenuation = 0.25f;
         float m_walkingTime = 0.f;
         AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();
         AZ::Vector3 m_headbobOffset = AZ::Vector3::CreateZero();
