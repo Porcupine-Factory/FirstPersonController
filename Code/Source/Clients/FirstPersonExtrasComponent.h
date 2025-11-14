@@ -54,9 +54,9 @@ namespace FirstPersonController
         // FirstPersonExtrasRequestBus
         float GetJumpPressedInAirQueueTimeThreshold() const override;
         void SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold) override;
-        bool GetEnableHeadBob() const;
-        AZ::EntityId GetHeadBobEntityId() const override;
-        void SetHeadBobEntityId(const AZ::EntityId&) override;
+        bool GetEnableHeadbob() const;
+        AZ::EntityId GetHeadbobEntityId() const override;
+        void SetHeadbobEntityId(const AZ::EntityId&) override;
 
     private:
         // Input event assignment and notification bus connection
@@ -88,33 +88,32 @@ namespace FirstPersonController
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;
 
-        // HeadBob
-        void SetHeadBobEntity(const AZ::EntityId& id);
-        void UpdateHeadBob(float deltaTime);
-        AZ::Vector3 CalculateHeadBobOffset(float deltaTime);
-        bool m_enableHeadBob = false;
+        // Headbob
+        void SetHeadbobEntity(const AZ::EntityId& id);
+        void UpdateHeadbob(const float& deltaTime);
+        AZ::Vector3 CalculateHeadbobOffset(const float& deltaTime);
+        bool m_enableHeadbob = false;
         bool m_isWalking = false;
-        bool m_needsHeadBobFallback = false;
-        float m_headBobFrequency = 6.15f;
-        float m_headBobHorizontalAmplitude = 0.01f;
-        float m_headBobVerticalAmplitude = 0.03f;
+        bool m_needsHeadbobFallback = false;
+        float m_headbobFrequency = 6.15f;
+        float m_headbobHorizontalAmplitude = 0.01f;
+        float m_headbobVerticalAmplitude = 0.03f;
         float m_backwardsFrequencyScale = 0.875f;
-        float m_backwardsHorizontalAmplitudeScale = 1.0f;
-        float m_backwardsVerticalAmplitudeScale = 1.0f;
+        float m_backwardsHorizontalAmplitudeScale = 1.f;
+        float m_backwardsVerticalAmplitudeScale = 1.f;
         float m_crouchFrequencyScale = 0.875f;
         float m_crouchHorizontalAmplitudeScale = 0.875f;
         float m_crouchVerticalAmplitudeScale = 0.875f;
         float m_sprintFrequencyScale = 1.25f;
         float m_sprintHorizontalAmplitudeScale = 1.125f;
         float m_sprintVerticalAmplitudeScale = 1.125f;
-        float m_headBobSmoothing = 0.25f;
+        float m_headbobAttenuation = 1.f;
         float m_walkingTime = 0.f;
         AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_rightLocalVector = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_offset = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_headbobOffset = AZ::Vector3::CreateZero();
         AZ::Vector3 m_previousOffset = AZ::Vector3::CreateZero();
-        AZ::EntityId m_headBobEntityId = AZ::EntityId();
-        AZ::Entity* m_headBobEntityPtr = nullptr;
+        AZ::EntityId m_headbobEntityId = AZ::EntityId();
+        AZ::Entity* m_headbobEntityPtr = nullptr;
 
         // FirstPersonExtrasComponent object
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
