@@ -76,6 +76,8 @@ namespace FirstPersonController
         virtual void SetSprintEventName(const AZStd::string&) = 0;
         virtual float GetSprintInputValue() const = 0;
         virtual void SetSprintInputValue(const float&) = 0;
+        virtual float GetSprintEffectiveValue() const = 0;
+        virtual void SetSprintEffectiveValue(const float&) = 0;
         virtual AZStd::string GetCrouchEventName() const = 0;
         virtual void SetCrouchEventName(const AZStd::string&) = 0;
         virtual float GetCrouchInputValue() const = 0;
