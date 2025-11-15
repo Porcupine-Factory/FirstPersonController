@@ -753,6 +753,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Event Name", &FirstPersonControllerComponentRequests::SetSprintEventName)
                 ->Event("Get Sprint Input Value", &FirstPersonControllerComponentRequests::GetSprintInputValue)
                 ->Event("Set Sprint Input Value", &FirstPersonControllerComponentRequests::SetSprintInputValue)
+                ->Event("Get Sprint Effective Value", &FirstPersonControllerComponentRequests::GetSprintEffectiveValue)
+                ->Event("Set Sprint Effective Value", &FirstPersonControllerComponentRequests::SetSprintEffectiveValue)
                 ->Event("Get Crouch Event Name", &FirstPersonControllerComponentRequests::GetCrouchEventName)
                 ->Event("Set Crouch Event Name", &FirstPersonControllerComponentRequests::SetCrouchEventName)
                 ->Event("Get Crouch Input Value", &FirstPersonControllerComponentRequests::GetCrouchInputValue)
@@ -1392,13 +1394,14 @@ namespace FirstPersonController
 
         if (*inputId == m_sprintEventId)
         {
+            m_sprintValue = value;
             if (m_grounded)
             {
-                m_sprintValue = value;
+                m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
-                m_sprintValue = 0.f;
+                m_sprintEffectiveValue = 0.f;
         }
 
         for (auto& it_event : m_controlMap)
@@ -1446,13 +1449,14 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if (*inputId == m_sprintEventId)
         {
+            m_sprintValue = value;
             if (m_grounded || m_sprintPrevValue != 1.f)
             {
-                m_sprintValue = value;
+                m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
-                m_sprintValue = 0.f;
+                m_sprintEffectiveValue = 0.f;
         }
     }
 
@@ -2073,27 +2077,27 @@ namespace FirstPersonController
     {
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
         // and it shouldn't be applied if you're crouching (depending on various settings)
-        if (m_sprintValue == 0.f || (!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
+        if (m_sprintEffectiveValue == 0.f || (!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
             (!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX()) || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue) ||
             (targetVelocityXY.IsZero()) ||
-            (m_sprintValue != 0.f && !m_sprintBackwards &&
+            (m_sprintEffectiveValue != 0.f && !m_sprintBackwards &&
              ((!m_forwardValue && !m_leftValue && !m_rightValue) || (!m_forwardValue && -m_leftValue == m_rightValue) ||
               (targetVelocityXY.GetY() < 0.f))))
-            m_sprintValue = 0.f;
+            m_sprintEffectiveValue = 0.f;
 
         if ((m_sprintViaScript && m_sprintEnableDisable) && (targetVelocityXY.GetY() > 0.f || m_sprintBackwards))
         {
-            m_sprintValue = 1.f;
+            m_sprintEffectiveValue = 1.f;
             m_sprintAccelValue = m_sprintAccelScale;
         }
         else if (m_sprintViaScript && !m_sprintEnableDisable)
-            m_sprintValue = 0.f;
+            m_sprintEffectiveValue = 0.f;
 
         // Reset the counter if there is no movement
         if (m_applyVelocityXY.IsZero())
             m_sprintAccumulatedAccel = 0.f;
 
-        if (m_sprintValue == 0.f || m_sprintCooldownTimer != 0.f)
+        if (m_sprintEffectiveValue == 0.f || m_sprintCooldownTimer != 0.f)
             m_sprintVelocityAdjust = 1.f;
         else
         {
@@ -2113,11 +2117,11 @@ namespace FirstPersonController
             m_sprintCooldownTimer == 0.f)
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnSprintStarted);
-        else if (m_sprintPrevValue == 1.f && m_sprintValue == 0.f && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
+        else if (m_sprintPrevValue == 1.f && m_sprintEffectiveValue == 0.f && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnSprintStopped);
 
-        m_sprintPrevValue = m_sprintValue;
+        m_sprintPrevValue = m_sprintEffectiveValue;
 
         // If sprint is to be applied then increment the sprint counter
         if (!AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldownTimer == 0.f)
@@ -2171,7 +2175,7 @@ namespace FirstPersonController
         {
             m_staminaDecreasing = false;
 
-            m_sprintValue = 0.f;
+            m_sprintEffectiveValue = 0.f;
 
             // Set the sprint acceleration adjust according to the local direction the character is moving
             if (!m_sprintStopAccelAdjustCaptured && targetVelocityXY.IsZero())
@@ -2353,7 +2357,7 @@ namespace FirstPersonController
         else if (!m_crouchEnableToggle && (m_grounded || m_crouching) && !m_crouchScriptLocked)
         {
             if (m_crouchValue != 0.f &&
-                ((m_sprintValue == 0.f || !m_crouchSprintCausesStanding) ||
+                ((m_sprintEffectiveValue == 0.f || !m_crouchSprintCausesStanding) ||
                  ((m_crouchPriorityWhenSprintPressed) && (m_standing || m_crouching))) &&
                 (m_jumpValue == 0.f || !m_crouchJumpCausesStanding || (m_jumpReqRepress && (m_standing || m_crouching))))
                 m_crouching = true;
@@ -2363,13 +2367,13 @@ namespace FirstPersonController
 
         // If the crouch key takes priority when the sprint key is held and we're attempting to crouch
         // while the sprint key is being pressed then stop the sprinting and continue crouching
-        if (m_crouchPriorityWhenSprintPressed && !m_sprintWhileCrouched && m_sprintValue != 0.f && m_crouching &&
+        if (m_crouchPriorityWhenSprintPressed && !m_sprintWhileCrouched && m_sprintEffectiveValue != 0.f && m_crouching &&
             m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
-            m_sprintValue = 0.f;
+            m_sprintEffectiveValue = 0.f;
         // Otherwise if the crouch key does not take priority when the sprint key is held,
         // and we are attempting to crouch while the sprint key is held, then do not crouch
         else if (
-            !m_crouchPriorityWhenSprintPressed && m_sprintValue != 0.f && m_grounded && m_crouching &&
+            !m_crouchPriorityWhenSprintPressed && m_sprintEffectiveValue != 0.f && m_grounded && m_crouching &&
             m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
             m_crouching = false;
 
@@ -2780,7 +2784,7 @@ namespace FirstPersonController
         // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
         // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
         // AZ_Printf("First Person Controller Component", "m_sprintAccumulatedAccel = %.10f", m_sprintAccumulatedAccel);
-        // AZ_Printf("First Person Controller Component", "m_sprintValue = %.10f", m_sprintValue);
+        // AZ_Printf("First Person Controller Component", "m_sprintEffectiveValue = %.10f", m_sprintEffectiveValue);
         // AZ_Printf("First Person Controller Component", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
         // AZ_Printf("First Person Controller Component", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
         // AZ_Printf("First Person Controller Component", "m_decelerationFactor = %.10f", m_decelerationFactor);
@@ -4200,6 +4204,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintInputValue(const float& new_sprintValue)
     {
         m_sprintValue = new_sprintValue;
+    }
+    float FirstPersonControllerComponent::GetSprintEffectiveValue() const
+    {
+        return m_sprintEffectiveValue;
+    }
+    void FirstPersonControllerComponent::SetSprintEffectiveValue(const float& new_sprintEffectiveValue)
+    {
+        m_sprintEffectiveValue = new_sprintEffectiveValue;
     }
     AZStd::string FirstPersonControllerComponent::GetCrouchEventName() const
     {

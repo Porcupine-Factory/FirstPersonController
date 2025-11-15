@@ -122,6 +122,8 @@ namespace FirstPersonController
         void SetSprintEventName(const AZStd::string& new_strSprint) override;
         float GetSprintInputValue() const override;
         void SetSprintInputValue(const float& new_sprintValue) override;
+        float GetSprintEffectiveValue() const override;
+        void SetSprintEffectiveValue(const float& new_sprintEffectiveValue) override;
         AZStd::string GetCrouchEventName() const override;
         void SetCrouchEventName(const AZStd::string& new_strCrouch) override;
         float GetCrouchInputValue() const override;
@@ -602,6 +604,7 @@ namespace FirstPersonController
         float m_totalLerpTime = 0.f;
 
         // Sprint application variables
+        float m_sprintEffectiveValue = 0.f;
         float m_sprintAccelValue = 1.f;
         float m_sprintPrevValue = 0.f;
         float m_sprintVelocityAdjust = 0.f;
