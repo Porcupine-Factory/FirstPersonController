@@ -458,7 +458,7 @@ namespace FirstPersonController
             AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading).TransformVector(AZ::Vector3(0.f, 1.f, 0.f)));
         const bool isBackwards = m_isWalking && (m_firstPersonControllerObject->m_applyVelocityXY.Dot(world_local_forward) < 0.0f);
         const bool isCrouching = !m_firstPersonControllerObject->m_standing;
-        const bool isSprinting = (m_firstPersonControllerObject->m_sprintValue > 0.f) &&
+        const bool isSprinting = (!m_firstPersonControllerObject->m_sprintValue == 0.f) &&
             (m_firstPersonControllerObject->m_staminaPercentage > 0.f || !m_firstPersonControllerObject->m_sprintUsesStamina);
 
         // Compute effective values
