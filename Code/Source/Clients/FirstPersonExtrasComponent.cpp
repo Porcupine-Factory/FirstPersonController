@@ -24,7 +24,6 @@ namespace FirstPersonController
 
                 // Headbob group
                 ->Field("Enable Headbob", &FirstPersonExtrasComponent::m_enableHeadbob)
-                ->Field("Headbob Entity", &FirstPersonExtrasComponent::m_headbobEntityId)
                 ->Field("Frequency", &FirstPersonExtrasComponent::m_headbobFrequency)
                 ->Field("Horizontal Amplitude", &FirstPersonExtrasComponent::m_headbobHorizontalAmplitude)
                 ->Field("Vertical Amplitude", &FirstPersonExtrasComponent::m_headbobVerticalAmplitude)
@@ -66,12 +65,6 @@ namespace FirstPersonController
                     ->GroupElementToggle("Headbob", &FirstPersonExtrasComponent::m_enableHeadbob)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
-                    ->DataElement(
-                        nullptr,
-                        &FirstPersonExtrasComponent::m_headbobEntityId,
-                        "Headbob Entity",
-                        "Entity to apply headbob to (e.g., camera). Defaults to active camera if blank.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
                     ->DataElement(nullptr, &FirstPersonExtrasComponent::m_headbobFrequency, "Frequency", "Speed of the headbob.")
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
                     ->DataElement(
@@ -458,15 +451,15 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
     {
         // Walking if FirstPersonController XYs velocity non-zero and grounded
-        m_isWalking = !m_firstPersonControllerObject->m_applyVelocityXY.IsZero() && *m_grounded;
+        m_isWalking = !m_firstPersonControllerObject->m_applyVelocityXY.IsZero() && m_firstPersonControllerObject->m_groundClose;
 
         // Determine states
         const AZ::Vector2 world_local_forward(
             AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading).TransformVector(AZ::Vector3(0.f, 1.f, 0.f)));
         const bool isBackwards = m_isWalking && (m_firstPersonControllerObject->m_applyVelocityXY.Dot(world_local_forward) < 0.0f);
         const bool isCrouching = !m_firstPersonControllerObject->m_standing;
-        const bool isSprinting = (m_firstPersonControllerObject->m_sprintVelocityAdjust > 1.0f) &&
-            (m_firstPersonControllerObject->m_standing || m_firstPersonControllerObject->m_sprintWhileCrouched);
+        const bool isSprinting = (m_firstPersonControllerObject->m_sprintValue = !0.f) &&
+            (m_firstPersonControllerObject->m_staminaPercentage > 0.f || !m_firstPersonControllerObject->m_sprintUsesStamina);
 
         // Compute effective values
         float effectiveFrequency = m_headbobFrequency;
