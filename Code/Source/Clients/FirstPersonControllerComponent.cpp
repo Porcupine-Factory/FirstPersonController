@@ -1421,6 +1421,12 @@ namespace FirstPersonController
         if (inputId == nullptr)
             return;
 
+        if (*inputId == m_sprintEventId)
+        {
+            m_sprintEffectiveValue = value;
+            m_sprintAccelValue = value * m_sprintAccelScale;
+        }
+
         for (auto& it_event : m_controlMap)
         {
             if (*inputId == *(it_event.first))
