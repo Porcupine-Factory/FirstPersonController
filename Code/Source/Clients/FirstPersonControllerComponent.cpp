@@ -1401,7 +1401,10 @@ namespace FirstPersonController
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
+            {
                 m_sprintEffectiveValue = 0.f;
+                m_sprintAccelValue = 0.f;
+            }
         }
 
         for (auto& it_event : m_controlMap)
@@ -1423,8 +1426,8 @@ namespace FirstPersonController
 
         if (*inputId == m_sprintEventId)
         {
-            m_sprintEffectiveValue = value;
-            m_sprintAccelValue = value * m_sprintAccelScale;
+            m_sprintEffectiveValue = 0.f;
+            m_sprintAccelValue = 0.f;
         }
 
         for (auto& it_event : m_controlMap)
@@ -1462,7 +1465,10 @@ namespace FirstPersonController
                 m_sprintAccelValue = value * m_sprintAccelScale;
             }
             else
+            {
                 m_sprintEffectiveValue = 0.f;
+                m_sprintAccelValue = 0.f;
+            }
         }
     }
 
