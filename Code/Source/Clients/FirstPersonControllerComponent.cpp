@@ -1599,7 +1599,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow)
+        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow || m_physicsTimeAccumulator >= m_prevTimestep)
             return;
 
         // Update time accumulator
@@ -1611,10 +1611,6 @@ namespace FirstPersonController
         // Interpolate translation
         const AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedCameraTranslation);
-
-        // Reset accumulator if it exceeds physics timestep
-        if (m_physicsTimeAccumulator >= m_prevTimestep)
-            m_physicsTimeAccumulator -= m_prevTimestep;
     }
 
     // Helper function to check if camera is a child of the character
