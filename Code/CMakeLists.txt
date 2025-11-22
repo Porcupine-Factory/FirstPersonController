@@ -47,7 +47,7 @@ ly_add_target(
             AZ::AzCore
             AZ::AzFramework
             Gem::StartingPointInput.Static
-            Gem::PhysX5.Static
+            Gem::PhysX.Static
             Gem::Atom_RPI.Public
 	    Gem::Multiplayer.Client
             # For autogen components
@@ -126,7 +126,7 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
                 AZ::AzToolsFramework
                 Gem::FirstPersonController.Private.Object
                 Gem::StartingPointInput.Static
-                Gem::PhysX5.Static
+                Gem::PhysX.Static
                 Gem::Atom_RPI.Public
     )
 

@@ -24,7 +24,7 @@
     "requirements": "This requires the PhysX and Starting Point Input gems.",
     "documentation_url": "https://github.com/Porcupine-Factory/FirstPersonController/wiki",
     "dependencies": [
-        "PhysX5",
+        "PhysX",
         "StartingPointInput",
         "Atom_RPI"
     ],
