@@ -7,6 +7,7 @@
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/Serialization/SerializeContext.h>
+#include <Source/AutoGen/AutoComponentTypes.h>
 
 namespace FirstPersonController
 {
@@ -78,6 +79,8 @@ namespace FirstPersonController
     {
         FirstPersonControllerRequestBus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
+        // Register multiplayer components
+        RegisterMultiplayerComponents();
     }
 
     void FirstPersonControllerSystemComponent::Deactivate()

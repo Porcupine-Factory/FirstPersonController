@@ -7,6 +7,7 @@
 #include <Clients/FirstPersonControllerComponent.h>
 #include <Clients/FirstPersonControllerSystemComponent.h>
 #include <Clients/FirstPersonExtrasComponent.h>
+#include <Source/AutoGen/AutoComponentTypes.h>
 
 namespace FirstPersonController
 {
@@ -27,6 +28,9 @@ namespace FirstPersonController
                 { FirstPersonControllerSystemComponent::CreateDescriptor(),
                   FirstPersonControllerComponent::CreateDescriptor(),
                   FirstPersonExtrasComponent::CreateDescriptor() });
+
+            //< Register multiplayer components
+            CreateComponentDescriptors(m_descriptors);
         }
 
         /**

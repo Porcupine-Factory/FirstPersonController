@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<Component
+    Name="NetworkFPC"
+    Namespace="FirstPersonController"
+    OverrideComponent="false"
+    OverrideController="true"
+    OverrideInclude="Multiplayer/NetworkFPC.h"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <NetworkInput Type="float" Name="Forward" Init="0.f" />
+    <NetworkInput Type="float" Name="Back" Init="0.f" />
+    <NetworkInput Type="float" Name="Left" Init="0.f" />
+    <NetworkInput Type="float" Name="Right" Init="0.f" />
+    <NetworkInput Type="float" Name="Yaw" Init="0.f" />
+    <NetworkInput Type="float" Name="Pitch" Init="0.f" />
+    <NetworkInput Type="float" Name="Jump" Init="0.f" />
+
+</Component>

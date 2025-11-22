@@ -34,6 +34,7 @@ ly_add_target(
     NAMESPACE Gem
     FILES_CMAKE
         firstpersoncontroller_private_files.cmake
+	firstpersoncontroller_autogen_files.cmake
         ${pal_dir}/firstpersoncontroller_private_files.cmake
     TARGET_PROPERTIES
         O3DE_PRIVATE_TARGET TRUE
@@ -48,6 +49,16 @@ ly_add_target(
             Gem::StartingPointInput.Static
             Gem::PhysX5.Static
             Gem::Atom_RPI.Public
+	    Gem::Multiplayer.Client
+            # For autogen components
+            PRIVATE
+            Gem::Multiplayer.Client.Static
+    AUTOGEN_RULES
+        *.AutoComponent.xml,AutoComponent_Header.jinja,$path/$fileprefix.AutoComponent.h
+        *.AutoComponent.xml,AutoComponent_Source.jinja,$path/$fileprefix.AutoComponent.cpp
+        *.AutoComponent.xml,AutoComponentTypes_Header.jinja,$path/AutoComponentTypes.h
+        *.AutoComponent.xml,AutoComponentTypes_Source.jinja,$path/AutoComponentTypes.cpp
+
 )
 
 # Here add FirstPersonController target, it depends on the Private Object library and Public API interface
