@@ -34,7 +34,7 @@ ly_add_target(
     NAMESPACE Gem
     FILES_CMAKE
         firstpersoncontroller_private_files.cmake
-	firstpersoncontroller_autogen_files.cmake
+        firstpersoncontroller_autogen_files.cmake
         ${pal_dir}/firstpersoncontroller_private_files.cmake
     TARGET_PROPERTIES
         O3DE_PRIVATE_TARGET TRUE
@@ -49,7 +49,7 @@ ly_add_target(
             Gem::StartingPointInput.Static
             Gem::PhysX.Static
             Gem::Atom_RPI.Public
-	    Gem::Multiplayer.Client
+            Gem::Multiplayer.Client
             # For autogen components
             PRIVATE
             Gem::Multiplayer.Client.Static

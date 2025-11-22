@@ -3706,12 +3706,12 @@ namespace FirstPersonController
         // Only update the rotation on each tick
         if (!timestepElseTick)
         {
-            // Update the camera and character rotation
-            UpdateRotation();
-
             // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
             // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
             LerpCameraToCharacter(deltaTime);
+
+            // Update the camera and character rotation
+            UpdateRotation();
         }
 
         // Keep track of the last two target velocity values for the obstruction check logic
