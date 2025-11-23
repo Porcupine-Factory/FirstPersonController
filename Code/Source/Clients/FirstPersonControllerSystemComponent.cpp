@@ -30,6 +30,12 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
+
+                ec->Class<FirstPersonControllerSystemComponent>(
+                      "NetworkFPC", "[Description of functionality provided by this System Component]")
+                    ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
             }
         }
     }
@@ -38,12 +44,14 @@ namespace FirstPersonController
     {
         provided.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         provided.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
+        provided.push_back(AZ_CRC_CE("NetworkFPCService"));
     }
 
     void FirstPersonControllerSystemComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
     {
         incompatible.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         incompatible.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
+        incompatible.push_back(AZ_CRC_CE("NetworkFPCService"));
     }
 
     void FirstPersonControllerSystemComponent::GetRequiredServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& required)

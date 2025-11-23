@@ -167,5 +167,7 @@ namespace FirstPersonController
         void OnSprintStopped();
         void OnCooldownStarted();
         void OnCooldownDone();
+
+        friend class NetworkFPCController;
     };
 } // namespace FirstPersonController

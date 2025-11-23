@@ -8,6 +8,7 @@
 #include <AzCore/Component/TickBus.h>
 #include <FirstPersonController/FirstPersonControllerBus.h>
 #include <FirstPersonController/FirstPersonExtrasBus.h>
+#include <FirstPersonController/NetworkFPCBus.h>
 
 namespace FirstPersonController
 {
@@ -15,6 +16,7 @@ namespace FirstPersonController
         : public AZ::Component
         , protected FirstPersonControllerRequestBus::Handler
         , protected FirstPersonExtrasRequestBus::Handler
+        , protected NetworkFPCRequestBus::Handler
         , public AZ::TickBus::Handler
     {
     public:

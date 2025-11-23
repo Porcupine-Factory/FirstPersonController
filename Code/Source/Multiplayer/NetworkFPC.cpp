@@ -1,6 +1,7 @@
 #include <Multiplayer/NetworkFPC.h>
 
 #include <AzCore/Serialization/SerializeContext.h>
+#include <Multiplayer/Components/NetworkCharacterComponent.h>
 
 namespace FirstPersonController
 {
@@ -15,6 +16,11 @@ namespace FirstPersonController
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+    }
+
+    void NetworkFPCController::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
+    {
+        provided.push_back(AZ_CRC_CE("NetworkFPCService"));
     }
 
     void NetworkFPCController::CreateInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
@@ -43,6 +49,8 @@ namespace FirstPersonController
 
     void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
     {
+        NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
+
         const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
         AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
@@ -53,5 +61,16 @@ namespace FirstPersonController
         AZ_Printf("NetworkFPC", "Pitch: %f", playerInput->m_pitch);
         AZ_Printf("NetworkFPC", "Jump: %f", playerInput->m_jump);
         AZ_Printf("NetworkFPC", "Crouch: %f", playerInput->m_crouch);
+    }
+
+    // Event Notification methods for use in scripts
+    void NetworkFPCController::OnNetworkTick([[maybe_unused]] const float& deltaTime)
+    {
+    }
+
+    // Request Bus getter and setter methods for use in scripts
+    void NetworkFPCController::TryMoveWithVelocity(const AZ::Vector3& tryVelocity, const float& deltaTime) const
+    {
+        // GetController()->TryMoveWithVelocity(tryVelocity, deltaTime);
     }
 } // namespace FirstPersonController
