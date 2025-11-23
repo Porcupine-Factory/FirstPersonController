@@ -1220,7 +1220,6 @@ namespace FirstPersonController
         AssignConnectInputEvents();
 
         Camera::CameraNotificationBus::Handler::BusConnect();
-        AZ::TickBus::Handler::BusConnect();
 
         InputChannelEventListener::Connect();
         AZStd::shared_ptr<AzFramework::InputChannelEventFilterInclusionList> filter;
@@ -1236,6 +1235,16 @@ namespace FirstPersonController
         // Debug log to verify m_cameraSmoothFollow value at activation
         // AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
         //    m_cameraSmoothFollow ? "true" : "false");
+
+        // Check for the presence of NetworkFPC component to determine if this is a multiplayer setup.
+        // If NetworkFPC is not found, assume single-player mode and connect to the TickBus for real-time updates.
+        auto* networkFpc = GetEntity()->FindComponent<NetworkFPC>();
+        m_hasNetworkFpc = (networkFpc != nullptr);
+
+        if (!m_hasNetworkFpc)
+        {
+            AZ::TickBus::Handler::BusConnect();
+        }
 
         // Initialize PID controllers
         m_crouchDownPidController = PidController<float>(

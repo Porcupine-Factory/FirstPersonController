@@ -2,6 +2,8 @@
 
 #include <Source/AutoGen/NetworkFPC.AutoComponent.h>
 
+#include <Clients/FirstPersonControllerComponent.h>
+
 namespace FirstPersonController
 {
 

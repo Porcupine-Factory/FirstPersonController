@@ -19,6 +19,8 @@
 
 #include <StartingPointInput/InputEventNotificationBus.h>
 
+#include <Multiplayer/NetworkFPC.h>
+
 #include <PhysXCharacters/API/CharacterController.h>
 
 #include <FirstPersonController/PidController.h>
@@ -563,6 +565,9 @@ namespace FirstPersonController
         bool m_cameraSmoothFollow = true;
         float m_physicsTimestepScaleFactor = 1.f;
 
+        // Check if using NetworkFPC component
+        bool m_hasNetworkFpc = false;
+
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
         float m_physicsTimeAccumulator = 0.f;
@@ -878,7 +883,9 @@ namespace FirstPersonController
             { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
         };
 
-        // Make this class a friend of the FirstPersonExtrasComponent to give it access to private members
+        // Make this class a friend of the FirstPersonExtrasComponent and NetworkFPCController to
+        // give access to private members
         friend class FirstPersonExtrasComponent;
+        friend class NetworkFPCController;
     };
 } // namespace FirstPersonController
