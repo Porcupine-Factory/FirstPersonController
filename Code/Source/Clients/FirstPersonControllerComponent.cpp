@@ -310,7 +310,7 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_addVelocityForTimestepVsTick,
                         "Add Velocity For Physics Timestep Instead Of Tick",
                         "If this is enabled then the velocity will be applied on each physics timestep, if it is disabled then the "
-                        "velocity will be applied on each tick (frame).")
+                        "velocity will be applied on each tick (frame). If NetworkFPC is present then this will be set to true.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_velocityXCrossYTracksNormal,
@@ -1205,7 +1205,6 @@ namespace FirstPersonController
             }
         }
 
-        Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
         Physics::CollisionRequestBus::BroadcastResult(
             m_standCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_standCollisionGroupId);
         Physics::CollisionRequestBus::BroadcastResult(
@@ -1234,7 +1233,7 @@ namespace FirstPersonController
 
         // Debug log to verify m_cameraSmoothFollow value at activation
         // AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
-        //    m_cameraSmoothFollow ? "true" : "false");
+        //     m_cameraSmoothFollow ? "true" : "false");
 
         AZ::TickBus::Handler::BusConnect();
         NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
@@ -1259,8 +1258,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnCharacterActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
-        Physics::CharacterNotificationBus::Handler::BusDisconnect();
-
         // Obtain the PhysX Character Controller's capsule height and radius
         // and use those dimensions for the ground detection shapecast capsule
         PhysX::CharacterControllerRequestBus::EventResult(
@@ -1322,6 +1319,19 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnEntityActivated(const AZ::EntityId& entityId)
     {
+        // Get access to the NetworkFPC object and its member
+        const AZ::Entity* entity = GetEntity();
+        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
+
+        // Determine if the NetworkFPC is enabled
+        if (m_networkFPCObject != nullptr)
+        {
+            m_cameraSmoothFollow = true;
+            SetAddVelocityForTimestepVsTick(true);
+            NetworkFPCControllerRequestBus::EventResult(
+                m_networkFPCEnabled, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetNetworkFPCEnabled);
+        }
+
         if (entityId == m_cameraEntityId)
         {
             AZ::EntityBus::Handler::BusDisconnect();
@@ -1330,12 +1340,15 @@ namespace FirstPersonController
             {
                 // Calculate initial eye height based on the difference between the
                 // camera and character entities' translations, projected along the pose axis.
-                AZ::Vector3 characterWorldTranslation;
-                AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-                AZ::Vector3 cameraWorldTranslation;
-                AZ::TransformBus::EventResult(cameraWorldTranslation, m_cameraEntityId, &AZ::TransformBus::Events::GetWorldTranslation);
-                AZ::Vector3 diff = cameraWorldTranslation - characterWorldTranslation;
-                m_eyeHeight = diff.Dot(m_sphereCastsAxisDirectionPose.GetNormalized());
+                if (m_networkFPCObject == nullptr)
+                {
+                    AZ::Vector3 characterWorldTranslation;
+                    AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+                    AZ::Vector3 cameraWorldTranslation;
+                    AZ::TransformBus::EventResult(cameraWorldTranslation, m_cameraEntityId, &AZ::TransformBus::Events::GetWorldTranslation);
+                    AZ::Vector3 diff = cameraWorldTranslation - characterWorldTranslation;
+                    m_eyeHeight = diff.Dot(m_sphereCastsAxisDirectionPose.GetNormalized());
+                }
                 InitializeCameraTranslation();
                 Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
                 // AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
@@ -1348,10 +1361,6 @@ namespace FirstPersonController
                 m_cameraEntityId = AZ::EntityId();
             }
         }
-
-        // Get access to the NetworkFPC object and its member
-        const AZ::Entity* entity = GetEntity();
-        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
     }
 
     void FirstPersonControllerComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -1596,9 +1605,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::InitializeCameraTranslation()
     {
         if (!m_activeCameraEntity)
-        {
             return;
-        }
 
         // Set target translation for smooth follow
         AZ::Vector3 characterWorldTranslation;
