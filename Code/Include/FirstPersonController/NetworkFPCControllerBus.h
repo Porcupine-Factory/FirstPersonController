@@ -16,7 +16,7 @@ namespace FirstPersonController
     public:
         ~NetworkFPCControllerRequests() override = default;
 
-        virtual void TryMoveWithVelocity(const AZ::Vector3&, const float&) const = 0;
+        virtual void TryMoveWithVelocity([[maybe_unused]] const AZ::Vector3&, [[maybe_unused]] const float&) const = 0;
     };
 
     using NetworkFPCControllerRequestBus = AZ::EBus<NetworkFPCControllerRequests>;
@@ -37,7 +37,7 @@ namespace FirstPersonController
         AZ_EBUS_BEHAVIOR_BINDER(
             NetworkFPCControllerNotificationHandler, "{4f610d12-82bc-4e01-a792-7730beb321d0}", AZ::SystemAllocator, OnNetworkTick);
 
-        void OnNetworkTick(const float& deltaTime) override
+        void OnNetworkTick([[maybe_unused]] const float& deltaTime) override
         {
             Call(FN_OnNetworkTick);
         }

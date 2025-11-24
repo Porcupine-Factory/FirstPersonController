@@ -100,7 +100,8 @@ namespace FirstPersonController
     }
 
     // Request Bus getter and setter methods for use in scripts
-    void NetworkFPCController::TryMoveWithVelocity(const AZ::Vector3& tryVelocity, const float& deltaTime) const
+    void NetworkFPCController::TryMoveWithVelocity(
+        [[maybe_unused]] const AZ::Vector3& tryVelocity, [[maybe_unused]] const float& deltaTime) const
     {
         // GetController()->TryMoveWithVelocity(tryVelocity, deltaTime);
     }
