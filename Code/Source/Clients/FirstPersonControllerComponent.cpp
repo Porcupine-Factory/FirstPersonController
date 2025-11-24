@@ -1326,6 +1326,7 @@ namespace FirstPersonController
         // Determine if the NetworkFPC is enabled
         if (m_networkFPCObject != nullptr)
         {
+            InputEventNotificationBus::MultiHandler::BusDisconnect();
             m_cameraSmoothFollow = true;
             SetAddVelocityForTimestepVsTick(true);
             NetworkFPCControllerRequestBus::EventResult(
@@ -1397,7 +1398,8 @@ namespace FirstPersonController
             {
                 *(it_event.first) = StartingPointInput::InputEventNotificationId(
                     (m_inputNames[std::distance(m_controlMap.begin(), m_controlMap.find(it_event.first))])->c_str());
-                InputEventNotificationBus::MultiHandler::BusConnect(*(it_event.first));
+                if (!m_networkFPCEnabled)
+                    InputEventNotificationBus::MultiHandler::BusConnect(*(it_event.first));
             }
         }
     }
