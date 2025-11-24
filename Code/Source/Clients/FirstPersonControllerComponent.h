@@ -513,7 +513,7 @@ namespace FirstPersonController
         void SmoothCriticallyDampedFloat(
             float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
-        void CheckCharacterMovementObstructed();
+        void CheckCharacterMovementObstructed(const bool& networkFPCEnabled);
         void ProcessLinearImpulse(const float& deltaTime);
         void ProcessCharacterHits(const float& deltaTime);
 
@@ -558,9 +558,10 @@ namespace FirstPersonController
         void OnCooldownStarted();
         void OnCooldownDone();
 
-        // Stores the previous tick deltaTime and previous physics timestep
+        // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
         float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;
+        float m_prevNetworkFPCDeltaTime = 1.f / 60.f;
 
         // Provides the functionality when AddVelocityForPhysicsTimestep is used
         void OnSceneSimulationStart(float physicsTimestep);
@@ -582,6 +583,7 @@ namespace FirstPersonController
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevSampledVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prevPrevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();

@@ -21,7 +21,9 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "network controller")
                 ->Attribute(AZ::Script::Attributes::Category, "Network FPC")
-                ->Event("Try Move With Velocity", &NetworkFPCControllerRequests::TryMoveWithVelocity);
+                ->Event("Try Add Velocity For Network Tick", &NetworkFPCControllerRequests::TryAddVelocityForNetworkTick)
+                ->Event("Get NetworkFPC Enabled", &NetworkFPCControllerRequests::GetNetworkFPCEnabled)
+                ->Event("Set NetworkFPC Enabled", &NetworkFPCControllerRequests::SetNetworkFPCEnabled);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("NetworkFPCControllerRequestBus");
         }
@@ -29,6 +31,8 @@ namespace FirstPersonController
 
     void NetworkFPCController::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+        NetworkFPCControllerRequestBus::Handler::BusConnect(GetEntityId());
+
         // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
         const AZ::Entity* entity = GetParent().GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
@@ -37,6 +41,7 @@ namespace FirstPersonController
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+        NetworkFPCControllerRequestBus::Handler::BusDisconnect();
     }
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -75,23 +80,23 @@ namespace FirstPersonController
         }
     }
 
-    void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
+    void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, float deltaTime)
     {
         if (!m_enable)
             return;
 
         NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
 
-        const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
+        // const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
-        AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
-        AZ_Printf("NetworkFPC", "Back: %f", playerInput->m_back);
-        AZ_Printf("NetworkFPC", "Left: %f", playerInput->m_left);
-        AZ_Printf("NetworkFPC", "Right: %f", playerInput->m_right);
-        AZ_Printf("NetworkFPC", "Yaw: %f", playerInput->m_yaw);
-        AZ_Printf("NetworkFPC", "Pitch: %f", playerInput->m_pitch);
-        AZ_Printf("NetworkFPC", "Jump: %f", playerInput->m_jump);
-        AZ_Printf("NetworkFPC", "Crouch: %f", playerInput->m_crouch);
+        // AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
+        // AZ_Printf("NetworkFPC", "Back: %f", playerInput->m_back);
+        // AZ_Printf("NetworkFPC", "Left: %f", playerInput->m_left);
+        // AZ_Printf("NetworkFPC", "Right: %f", playerInput->m_right);
+        // AZ_Printf("NetworkFPC", "Yaw: %f", playerInput->m_yaw);
+        // AZ_Printf("NetworkFPC", "Pitch: %f", playerInput->m_pitch);
+        // AZ_Printf("NetworkFPC", "Jump: %f", playerInput->m_jump);
+        // AZ_Printf("NetworkFPC", "Crouch: %f", playerInput->m_crouch);
     }
 
     // Event Notification methods for use in scripts
@@ -100,9 +105,16 @@ namespace FirstPersonController
     }
 
     // Request Bus getter and setter methods for use in scripts
-    void NetworkFPCController::TryMoveWithVelocity(
-        [[maybe_unused]] const AZ::Vector3& tryVelocity, [[maybe_unused]] const float& deltaTime) const
+    void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime)
     {
-        // GetController()->TryMoveWithVelocity(tryVelocity, deltaTime);
+        GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
+    }
+    bool NetworkFPCController::GetNetworkFPCEnabled() const
+    {
+        return m_enable;
+    }
+    void NetworkFPCController::SetNetworkFPCEnabled(const bool& new_enable)
+    {
+        m_enable = new_enable;
     }
 } // namespace FirstPersonController

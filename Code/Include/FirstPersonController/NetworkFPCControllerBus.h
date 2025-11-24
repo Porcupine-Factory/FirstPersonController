@@ -16,7 +16,9 @@ namespace FirstPersonController
     public:
         ~NetworkFPCControllerRequests() override = default;
 
-        virtual void TryMoveWithVelocity([[maybe_unused]] const AZ::Vector3&, [[maybe_unused]] const float&) const = 0;
+        virtual void TryAddVelocityForNetworkTick(const AZ::Vector3&, const float&) = 0;
+        virtual bool GetNetworkFPCEnabled() const = 0;
+        virtual void SetNetworkFPCEnabled(const bool&) = 0;
     };
 
     using NetworkFPCControllerRequestBus = AZ::EBus<NetworkFPCControllerRequests>;

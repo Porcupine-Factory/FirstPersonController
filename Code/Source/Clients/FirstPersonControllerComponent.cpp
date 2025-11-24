@@ -186,7 +186,6 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Min, -100.f)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " %")
                 ->Field("Hit Detection Group", &FirstPersonControllerComponent::m_characterHitCollisionGroupId)
-
                 ->Version(1);
 
             if (AZ::EditContext* ec = sc->GetEditContext())
@@ -1237,10 +1236,6 @@ namespace FirstPersonController
         // AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
         //    m_cameraSmoothFollow ? "true" : "false");
 
-        // Get access to the NetworkFPC object and its member
-        const AZ::Entity* entity = GetEntity();
-        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
-
         AZ::TickBus::Handler::BusConnect();
         NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
 
@@ -1353,6 +1348,10 @@ namespace FirstPersonController
                 m_cameraEntityId = AZ::EntityId();
             }
         }
+
+        // Get access to the NetworkFPC object and its member
+        const AZ::Entity* entity = GetEntity();
+        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
     }
 
     void FirstPersonControllerComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -1540,8 +1539,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime)
     {
-        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 2);
-        m_prevDeltaTime = deltaTime;
+        ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
+        m_prevNetworkFPCDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -2847,10 +2846,16 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::CheckCharacterMovementObstructed()
+    void FirstPersonControllerComponent::CheckCharacterMovementObstructed(const bool& networkFPCEnabled)
     {
         // Get the current velocity to determine if something was hit
-        Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
+        if (!networkFPCEnabled)
+            Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
+        else
+        {
+            m_currentVelocity = m_prevSampledVelocity;
+            m_prevSampledVelocity = AZ::Vector3::CreateZero();
+        }
 
         if (!m_prevPrevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
         {
@@ -3715,6 +3720,7 @@ namespace FirstPersonController
         return tiltedXY;
     }
 
+    // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Only update the rotation on each tick
@@ -3731,13 +3737,29 @@ namespace FirstPersonController
         // Keep track of the last two target velocity values for the obstruction check logic
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
-        // Handle motion on either the physics fixed timestep, the frame tick, or the network tick,
+        // Determine if the NetworkFPC is enabled
+        bool networkFPCEnabled = false;
+        if (m_networkFPCObject != nullptr)
+            NetworkFPCControllerRequestBus::EventResult(
+                networkFPCEnabled, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetNetworkFPCEnabled);
+
+        // Sample the current velocity during physics timesteps when NetworkFPC is enabled
+        // and retain this value for use in CheckCharacterMovementObstructed(...).
+        // This is done because GetVelocity will return zero during network ticks.
+        if (tickTimestepNetwork == 1 && networkFPCEnabled)
+        {
+            Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
+            if (!m_currentVelocity.IsZero())
+                m_prevSampledVelocity = m_currentVelocity;
+        }
+
+        // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,
         // depending on which is selected and which is currently executing
-        if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && m_networkFPCObject == nullptr) ||
-            (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && m_networkFPCObject == nullptr))
+        if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !networkFPCEnabled) ||
+            (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !networkFPCEnabled))
         {
             // Perform the check to see if the character's movement is obstructed
-            CheckCharacterMovementObstructed();
+            CheckCharacterMovementObstructed(networkFPCEnabled);
 
             // Reset the camera to the latest physics translation of the character
             ResetCameraToCharacter();
@@ -3782,9 +3804,9 @@ namespace FirstPersonController
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
             // Add velocity on either the network tick, the physics timstep, or the frame tick
-            if (m_networkFPCObject != nullptr)
+            if (tickTimestepNetwork == 2)
                 NetworkFPCControllerRequestBus::Event(
-                    GetEntityId(), &NetworkFPCControllerRequestBus::Events::TryMoveWithVelocity, m_prevTargetVelocity, deltaTime);
+                    GetEntityId(), &NetworkFPCControllerRequestBus::Events::TryAddVelocityForNetworkTick, m_prevTargetVelocity, deltaTime);
             else if (m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);

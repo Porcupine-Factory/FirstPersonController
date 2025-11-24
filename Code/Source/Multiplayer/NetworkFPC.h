@@ -41,7 +41,9 @@ namespace FirstPersonController
         void ProcessInput(Multiplayer::NetworkInput& input, float deltaTime) override;
 
         // NetworkFPCControllerRequestBus
-        void TryMoveWithVelocity(const AZ::Vector3& tryVelocity, const float& deltaTime) const override;
+        void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
+        bool GetNetworkFPCEnabled() const override;
+        void SetNetworkFPCEnabled(const bool& new_enable) override;
 
     protected:
         // NetworkFPCControllerNotificationBus
