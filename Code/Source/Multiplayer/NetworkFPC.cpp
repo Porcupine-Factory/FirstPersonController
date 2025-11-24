@@ -10,12 +10,39 @@ namespace FirstPersonController
     {
     }
 
+    void NetworkFPCController::Reflect(AZ::ReflectContext* rc)
+    {
+        if (auto bc = azrtti_cast<AZ::BehaviorContext*>(rc))
+        {
+            bc->EBus<NetworkFPCControllerNotificationBus>("NetworkFPCControllerNotificationBus")
+                ->Handler<NetworkFPCControllerNotificationHandler>();
+
+            bc->EBus<NetworkFPCControllerRequestBus>("NetworkFPCControllerRequestBus")
+                ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
+                ->Attribute(AZ::Script::Attributes::Module, "network controller")
+                ->Attribute(AZ::Script::Attributes::Category, "Network FPC")
+                ->Event("Try Move With Velocity", &NetworkFPCControllerRequests::TryMoveWithVelocity);
+
+            bc->Class<FirstPersonControllerComponent>()->RequestBus("NetworkFPCControllerRequestBus");
+        }
+    }
+
     void NetworkFPCController::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+        // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
+        const AZ::Entity* entity = GetParent().GetEntity();
+        m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
+        m_firstPersonExtrasObject = entity->FindComponent<FirstPersonExtrasComponent>();
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+    }
+
+    void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
+    {
+        required.push_back(AZ_CRC_CE("InputConfigurationService"));
+        required.push_back(AZ_CRC_CE("FirstPersonControllerService"));
     }
 
     void NetworkFPCController::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
@@ -23,32 +50,36 @@ namespace FirstPersonController
         provided.push_back(AZ_CRC_CE("NetworkFPCService"));
     }
 
+    void NetworkFPCController::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
+    {
+        incompatible.push_back(AZ_CRC_CE("NetworkFPCService"));
+        incompatible.push_back(AZ_CRC_CE("InputService"));
+    }
+
     void NetworkFPCController::CreateInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
     {
         // Retrieve the FirstPersonControllerComponent from the entity
-        FirstPersonControllerComponent* firstPersonController = GetParent().GetEntity()->FindComponent<FirstPersonControllerComponent>();
-        if (firstPersonController)
+        if (m_firstPersonControllerObject)
         {
             auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
             // Assign input values from the FirstPersonControllerComponent
-            playerInput->m_forward = firstPersonController->m_forwardValue;
-            playerInput->m_back = firstPersonController->m_backValue;
-            playerInput->m_left = firstPersonController->m_leftValue;
-            playerInput->m_right = firstPersonController->m_rightValue;
-            playerInput->m_yaw = firstPersonController->m_yawValue;
-            playerInput->m_pitch = firstPersonController->m_pitchValue;
-            playerInput->m_jump = firstPersonController->m_jumpValue;
-            playerInput->m_crouch = firstPersonController->m_crouchValue;
-
-            // Reset accumulated deltas for yaw and pitch
-            firstPersonController->m_yawValue = 0.0f;
-            firstPersonController->m_pitchValue = 0.0f;
+            playerInput->m_forward = m_firstPersonControllerObject->m_forwardValue;
+            playerInput->m_back = m_firstPersonControllerObject->m_backValue;
+            playerInput->m_left = m_firstPersonControllerObject->m_leftValue;
+            playerInput->m_right = m_firstPersonControllerObject->m_rightValue;
+            playerInput->m_yaw = m_firstPersonControllerObject->m_yawValue;
+            playerInput->m_pitch = m_firstPersonControllerObject->m_pitchValue;
+            playerInput->m_jump = m_firstPersonControllerObject->m_jumpValue;
+            playerInput->m_crouch = m_firstPersonControllerObject->m_crouchValue;
         }
     }
 
     void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
     {
+        if (!m_enable)
+            return;
+
         NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
 
         const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();

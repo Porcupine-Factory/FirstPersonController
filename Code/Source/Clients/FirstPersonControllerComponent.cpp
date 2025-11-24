@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <Clients/FirstPersonControllerComponent.h>
+#include <Multiplayer/NetworkFPC.h>
 
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
@@ -1236,15 +1237,12 @@ namespace FirstPersonController
         // AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
         //    m_cameraSmoothFollow ? "true" : "false");
 
-        // Check for the presence of NetworkFPC component to determine if this is a multiplayer setup.
-        // If NetworkFPC is not found, assume single-player mode and connect to the TickBus for real-time updates.
-        auto* networkFpc = GetEntity()->FindComponent<NetworkFPC>();
-        m_hasNetworkFpc = (networkFpc != nullptr);
+        // Get access to the NetworkFPC object and its member
+        const AZ::Entity* entity = GetEntity();
+        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
 
-        if (!m_hasNetworkFpc)
-        {
-            AZ::TickBus::Handler::BusConnect();
-        }
+        AZ::TickBus::Handler::BusConnect();
+        NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
 
         // Initialize PID controllers
         m_crouchDownPidController = PidController<float>(
@@ -1311,6 +1309,7 @@ namespace FirstPersonController
     {
         InputEventNotificationBus::MultiHandler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
+        NetworkFPCControllerNotificationBus::Handler::BusDisconnect();
         InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
         Camera::CameraNotificationBus::Handler::BusDisconnect();
@@ -1535,7 +1534,13 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), false);
+        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
+        m_prevDeltaTime = deltaTime;
+    }
+
+    void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime)
+    {
+        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 2);
         m_prevDeltaTime = deltaTime;
     }
 
@@ -1543,7 +1548,7 @@ namespace FirstPersonController
     {
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
-        ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), true);
+        ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
@@ -3710,10 +3715,10 @@ namespace FirstPersonController
         return tiltedXY;
     }
 
-    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
+    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Only update the rotation on each tick
-        if (!timestepElseTick)
+        if (tickTimestepNetwork == 0)
         {
             // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
             // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
@@ -3726,9 +3731,10 @@ namespace FirstPersonController
         // Keep track of the last two target velocity values for the obstruction check logic
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
-        // Handle motion on either the physics fixed timestep or the frame tick, depending on which is selected and which is currently
-        // executing
-        if (timestepElseTick == m_addVelocityForTimestepVsTick)
+        // Handle motion on either the physics fixed timestep, the frame tick, or the network tick,
+        // depending on which is selected and which is currently executing
+        if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && m_networkFPCObject == nullptr) ||
+            (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && m_networkFPCObject == nullptr))
         {
             // Perform the check to see if the character's movement is obstructed
             CheckCharacterMovementObstructed();
@@ -3775,7 +3781,11 @@ namespace FirstPersonController
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
-            if (m_addVelocityForTimestepVsTick)
+            // Add velocity on either the network tick, the physics timstep, or the frame tick
+            if (m_networkFPCObject != nullptr)
+                NetworkFPCControllerRequestBus::Event(
+                    GetEntityId(), &NetworkFPCControllerRequestBus::Events::TryMoveWithVelocity, m_prevTargetVelocity, deltaTime);
+            else if (m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
             else

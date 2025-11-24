@@ -19,6 +19,8 @@
 
 namespace FirstPersonController
 {
+    class NetworkFPC;
+
     class FirstPersonExtrasComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
@@ -74,6 +76,10 @@ namespace FirstPersonController
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
 
+        // FirstPersonControllerComponent and NetworkFPC objects
+        FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
+        NetworkFPC* m_networkFPCObject = nullptr;
+
         // Stores the previous tick deltaTime and previous physics timestep
         float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;
@@ -114,9 +120,6 @@ namespace FirstPersonController
         AZ::Vector3 m_previousOffset = AZ::Vector3::CreateZero();
         AZ::EntityId m_headbobEntityId = AZ::EntityId();
         AZ::Entity* m_headbobEntityPtr = nullptr;
-
-        // FirstPersonExtrasComponent object
-        FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
 
         // FirstPersonController event value multipliers
         float* m_jumpValue = nullptr;

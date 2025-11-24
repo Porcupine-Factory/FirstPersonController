@@ -4,6 +4,8 @@
 
 #pragma once
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
+#include <FirstPersonController/NetworkFPCControllerBus.h>
+#include <FirstPersonController/PidController.h>
 
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityBus.h>
@@ -19,18 +21,17 @@
 
 #include <StartingPointInput/InputEventNotificationBus.h>
 
-#include <Multiplayer/NetworkFPC.h>
-
 #include <PhysXCharacters/API/CharacterController.h>
-
-#include <FirstPersonController/PidController.h>
 
 namespace FirstPersonController
 {
+    class NetworkFPC;
+
     class FirstPersonControllerComponent
         : public AZ::Component
         , public AZ::TickBus::Handler
         , protected Physics::CharacterNotificationBus::Handler
+        , public NetworkFPCControllerNotificationBus::Handler
         , public AzFramework::InputChannelEventListener
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentRequestBus::Handler
@@ -69,6 +70,9 @@ namespace FirstPersonController
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
+
+        // NetworkFPCControllerNotificationBus
+        void OnNetworkTick(const float& deltaTime);
 
         // FirstPersonControllerRequestBus
         AZ::EntityId GetCharacterEntityId() const override;
@@ -474,6 +478,9 @@ namespace FirstPersonController
         // Set the first-person camera position
         void InitializeCameraTranslation();
 
+        // NetworkFPC object
+        NetworkFPC* m_networkFPCObject = nullptr;
+
         // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::EntityId m_cameraEntityId;
@@ -486,7 +493,7 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick
-        void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);
+        void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
 
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float& deltaTime);
@@ -564,9 +571,6 @@ namespace FirstPersonController
         bool m_addVelocityForTimestepVsTick = true;
         bool m_cameraSmoothFollow = true;
         float m_physicsTimestepScaleFactor = 1.f;
-
-        // Check if using NetworkFPC component
-        bool m_hasNetworkFpc = false;
 
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;

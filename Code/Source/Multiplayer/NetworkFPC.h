@@ -4,9 +4,13 @@
 #include <Source/AutoGen/NetworkFPC.AutoComponent.h>
 
 #include <Clients/FirstPersonControllerComponent.h>
+#include <Clients/FirstPersonExtrasComponent.h>
 
 namespace FirstPersonController
 {
+    class FirstPersonControllerComponent;
+
+    class FirstPersonExtrasComponent;
 
     class NetworkFPCController
         : public NetworkFPCControllerBase
@@ -15,10 +19,14 @@ namespace FirstPersonController
     public:
         explicit NetworkFPCController(NetworkFPC& parent);
 
+        static void Reflect(AZ::ReflectContext* rc);
+
         void OnActivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
         void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
 
+        static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
+        static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
 
         //! Common input creation logic for the NetworkInput.
         //! Fill out the input struct and the MultiplayerInputDriver will send the input data over the network
@@ -38,6 +46,12 @@ namespace FirstPersonController
     protected:
         // NetworkFPCControllerNotificationBus
         void OnNetworkTick(const float& deltaTime);
+
+        // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
+        FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
+        FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
+
+        bool m_enable = true;
 
         friend class FirstPersonControllerComponent;
         friend class FirstPersonExtrasComponent;

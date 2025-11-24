@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <Clients/FirstPersonExtrasComponent.h>
+#include <Multiplayer/NetworkFPC.h>
 
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
@@ -169,9 +170,10 @@ namespace FirstPersonController
         FirstPersonControllerComponentNotificationBus::Handler::BusConnect(GetEntityId());
         FirstPersonExtrasComponentRequestBus::Handler::BusConnect(GetEntityId());
 
-        // Get access to the FirstPersonControllerComponent object and its members
+        // Get access to the FirstPersonControllerComponent and Netw object and its members
         const AZ::Entity* entity = GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
+        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
 
         // Assign pointer attributes to the associated attributes of the FirstPersonControllerComponent, accessible via friendship
         if (m_firstPersonControllerObject)
