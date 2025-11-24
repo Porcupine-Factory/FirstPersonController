@@ -480,6 +480,7 @@ namespace FirstPersonController
 
         // NetworkFPC object
         NetworkFPC* m_networkFPCObject = nullptr;
+        bool m_networkFPCEnabled = false;
 
         // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -513,7 +514,7 @@ namespace FirstPersonController
         void SmoothCriticallyDampedFloat(
             float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
-        void CheckCharacterMovementObstructed(const bool& networkFPCEnabled);
+        void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
         void ProcessCharacterHits(const float& deltaTime);
 

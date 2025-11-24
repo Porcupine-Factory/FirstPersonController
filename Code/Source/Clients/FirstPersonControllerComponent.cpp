@@ -1541,6 +1541,7 @@ namespace FirstPersonController
     {
         ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
         m_prevNetworkFPCDeltaTime = deltaTime;
+        CaptureCharacterEyeTranslation();
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -1552,7 +1553,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
     {
-        CaptureCharacterEyeTranslation();
+        if (!m_networkFPCEnabled)
+            CaptureCharacterEyeTranslation();
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepFinish,
             physicsTimestep * m_physicsTimestepScaleFactor);
@@ -1612,14 +1614,20 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow || m_physicsTimeAccumulator >= m_prevTimestep)
+        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow ||
+            ((m_physicsTimeAccumulator >= m_prevTimestep) && !m_networkFPCEnabled) ||
+            ((m_physicsTimeAccumulator >= m_prevNetworkFPCDeltaTime) && m_networkFPCEnabled))
             return;
 
         // Update time accumulator
         m_physicsTimeAccumulator += deltaTime;
 
         // Calculate interpolation factor
-        const float alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
+        float alpha;
+        if (!m_networkFPCEnabled)
+            alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
+        else
+            alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevNetworkFPCDeltaTime, 0.f, 1.f);
 
         // Interpolate translation
         const AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
@@ -2846,10 +2854,10 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::CheckCharacterMovementObstructed(const bool& networkFPCEnabled)
+    void FirstPersonControllerComponent::CheckCharacterMovementObstructed()
     {
         // Get the current velocity to determine if something was hit
-        if (!networkFPCEnabled)
+        if (!m_networkFPCEnabled)
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
         else
         {
@@ -3738,15 +3746,14 @@ namespace FirstPersonController
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
         // Determine if the NetworkFPC is enabled
-        bool networkFPCEnabled = false;
         if (m_networkFPCObject != nullptr)
             NetworkFPCControllerRequestBus::EventResult(
-                networkFPCEnabled, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetNetworkFPCEnabled);
+                m_networkFPCEnabled, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetNetworkFPCEnabled);
 
         // Sample the current velocity during physics timesteps when NetworkFPC is enabled
         // and retain this value for use in CheckCharacterMovementObstructed(...).
         // This is done because GetVelocity will return zero during network ticks.
-        if (tickTimestepNetwork == 1 && networkFPCEnabled)
+        if (tickTimestepNetwork == 1 && m_networkFPCEnabled)
         {
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
             if (!m_currentVelocity.IsZero())
@@ -3755,11 +3762,11 @@ namespace FirstPersonController
 
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,
         // depending on which is selected and which is currently executing
-        if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !networkFPCEnabled) ||
-            (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !networkFPCEnabled))
+        if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !m_networkFPCEnabled) ||
+            (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !m_networkFPCEnabled))
         {
             // Perform the check to see if the character's movement is obstructed
-            CheckCharacterMovementObstructed(networkFPCEnabled);
+            CheckCharacterMovementObstructed();
 
             // Reset the camera to the latest physics translation of the character
             ResetCameraToCharacter();
