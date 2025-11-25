@@ -788,6 +788,9 @@ namespace FirstPersonController
         AzPhysics::SceneQuery::QueryType m_characterHitBy = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;
         AZStd::vector<AzPhysics::SceneQueryHit> m_characterHits;
 
+        // Networking related variables
+        bool m_acquiredIfAutonomous = false;
+
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;
         bool m_updateXYDescending = true;

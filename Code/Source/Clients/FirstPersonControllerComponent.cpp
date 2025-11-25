@@ -1327,6 +1327,7 @@ namespace FirstPersonController
         if (m_networkFPCObject != nullptr)
         {
             InputEventNotificationBus::MultiHandler::BusDisconnect();
+            InputChannelEventListener::Disconnect();
             m_cameraSmoothFollow = true;
             SetAddVelocityForTimestepVsTick(true);
             m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
@@ -3739,6 +3740,28 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
+        // Determine if the NetworkFPC is enabled
+        if (m_networkFPCObject != nullptr)
+        {
+            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
+            if (!m_acquiredIfAutonomous)
+            {
+                bool isAutonomous = false;
+                NetworkFPCControllerRequestBus::EventResult(
+                    isAutonomous, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetIsNetEntityAutonomous);
+                if (!isAutonomous && m_networkFPCEnabled)
+                {
+                    AZ::TickBus::Handler::BusDisconnect();
+                    InputChannelEventListener::Disconnect();
+                    Camera::CameraNotificationBus::Handler::BusDisconnect();
+                    m_sceneSimulationStartHandler.Disconnect();
+                    m_sceneSimulationFinishHandler.Disconnect();
+                    return;
+                }
+                m_acquiredIfAutonomous = true;
+            }
+        }
+
         // Only update the rotation on each tick
         if (tickTimestepNetwork == 0)
         {
@@ -3752,10 +3775,6 @@ namespace FirstPersonController
 
         // Keep track of the last two target velocity values for the obstruction check logic
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
-
-        // Determine if the NetworkFPC is enabled
-        if (m_networkFPCObject != nullptr)
-            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
 
         // Sample the current velocity during physics timesteps when NetworkFPC is enabled
         // and retain this value for use in CheckCharacterMovementObstructed(...).

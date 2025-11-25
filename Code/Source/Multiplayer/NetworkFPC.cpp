@@ -21,7 +21,8 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "network controller")
                 ->Attribute(AZ::Script::Attributes::Category, "Network FPC")
-                ->Event("Try Add Velocity For Network Tick", &NetworkFPCControllerRequests::TryAddVelocityForNetworkTick);
+                ->Event("Try Add Velocity For Network Tick", &NetworkFPCControllerRequests::TryAddVelocityForNetworkTick)
+                ->Event("Get Is Net Entity Autonomous", &NetworkFPCControllerRequests::GetIsNetEntityAutonomous);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("NetworkFPCControllerRequestBus");
         }
@@ -106,5 +107,9 @@ namespace FirstPersonController
     void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime)
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
+    }
+    bool NetworkFPCController::GetIsNetEntityAutonomous() const
+    {
+        return IsNetEntityRoleAutonomous();
     }
 } // namespace FirstPersonController

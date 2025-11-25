@@ -42,6 +42,7 @@ namespace FirstPersonController
 
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
+        bool GetIsNetEntityAutonomous() const override;
 
     protected:
         // NetworkFPCControllerNotificationBus
