@@ -1477,7 +1477,7 @@ namespace FirstPersonController
         else if (*inputId == m_sprintEventId)
         {
             m_sprintValue = value;
-            if (m_grounded || m_sprintPrevValue != 1.f)
+            if (m_grounded || m_sprintPrevValue == 0.f)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;

@@ -18,7 +18,8 @@
     <NetworkInput Type="float" Name="Right" Init="0.f" />
     <NetworkInput Type="float" Name="Yaw" Init="0.f" />
     <NetworkInput Type="float" Name="Pitch" Init="0.f" />
-    <NetworkInput Type="float" Name="Jump" Init="0.f" />
+    <NetworkInput Type="float" Name="Sprint" Init="0.f" />
     <NetworkInput Type="float" Name="Crouch" Init="0.f" />
+    <NetworkInput Type="float" Name="Jump" Init="0.f" />
 
 </Component>

@@ -15,11 +15,10 @@ namespace FirstPersonController
     class NetworkFPCController
         : public NetworkFPCControllerBase
         , public NetworkFPCControllerRequestBus::Handler
+        , public StartingPointInput::InputEventNotificationBus::MultiHandler
     {
     public:
         explicit NetworkFPCController(NetworkFPC& parent);
-
-        static void Reflect(AZ::ReflectContext* rc);
 
         void OnActivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
         void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
@@ -44,13 +43,63 @@ namespace FirstPersonController
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
         bool GetIsNetEntityAutonomous() const override;
 
-    protected:
+        // AZ::InputEventNotificationBus interface
+        void OnPressed(float value) override;
+        void OnReleased(float value) override;
+        void OnHeld(float value) override;
+
+    private:
+        // Input event assignment and notification bus connection
+        void AssignConnectInputEvents();
+
         // NetworkFPCControllerNotificationBus
         void OnNetworkTick(const float& deltaTime);
 
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
+
+        // Event value multipliers
+        float m_forwardValue = 0.f;
+        float m_backValue = 0.f;
+        float m_leftValue = 0.f;
+        float m_rightValue = 0.f;
+        float m_yawValue = 0.f;
+        float m_pitchValue = 0.f;
+        float m_sprintValue = 0.f;
+        float m_crouchValue = 0.f;
+        float m_jumpValue = 0.f;
+
+        // Event IDs and action names
+        StartingPointInput::InputEventNotificationId m_moveForwardEventId;
+        AZStd::string m_strForward = "Forward";
+        StartingPointInput::InputEventNotificationId m_moveBackEventId;
+        AZStd::string m_strBack = "Back";
+        StartingPointInput::InputEventNotificationId m_moveLeftEventId;
+        AZStd::string m_strLeft = "Left";
+        StartingPointInput::InputEventNotificationId m_moveRightEventId;
+        AZStd::string m_strRight = "Right";
+        StartingPointInput::InputEventNotificationId m_rotateYawEventId;
+        AZStd::string m_strYaw = "Yaw";
+        StartingPointInput::InputEventNotificationId m_rotatePitchEventId;
+        AZStd::string m_strPitch = "Pitch";
+        StartingPointInput::InputEventNotificationId m_sprintEventId;
+        AZStd::string m_strSprint = "Sprint";
+        StartingPointInput::InputEventNotificationId m_crouchEventId;
+        AZStd::string m_strCrouch = "Crouch";
+        StartingPointInput::InputEventNotificationId m_jumpEventId;
+        AZStd::string m_strJump = "Jump";
+
+        // Array of action names
+        AZStd::string* m_inputNames[9] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight, &m_strYaw,
+                                           &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump };
+
+        // Map of event IDs and event value multipliers
+        AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
+            { &m_moveForwardEventId, &m_forwardValue }, { &m_moveBackEventId, &m_backValue }, { &m_moveLeftEventId, &m_leftValue },
+            { &m_moveRightEventId, &m_rightValue },     { &m_rotateYawEventId, &m_yawValue }, { &m_rotatePitchEventId, &m_pitchValue },
+            { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
+        };
 
         friend class FirstPersonControllerComponent;
         friend class FirstPersonExtrasComponent;
