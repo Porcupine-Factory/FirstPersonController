@@ -21,9 +21,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
                 ->Attribute(AZ::Script::Attributes::Module, "network controller")
                 ->Attribute(AZ::Script::Attributes::Category, "Network FPC")
-                ->Event("Try Add Velocity For Network Tick", &NetworkFPCControllerRequests::TryAddVelocityForNetworkTick)
-                ->Event("Get NetworkFPC Enabled", &NetworkFPCControllerRequests::GetNetworkFPCEnabled)
-                ->Event("Set NetworkFPC Enabled", &NetworkFPCControllerRequests::SetNetworkFPCEnabled);
+                ->Event("Try Add Velocity For Network Tick", &NetworkFPCControllerRequests::TryAddVelocityForNetworkTick);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("NetworkFPCControllerRequestBus");
         }
@@ -82,7 +80,7 @@ namespace FirstPersonController
 
     void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, float deltaTime)
     {
-        if (!m_enable)
+        if (!GetEnableNetworkFPC())
             return;
 
         NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
@@ -108,13 +106,5 @@ namespace FirstPersonController
     void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime)
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
-    }
-    bool NetworkFPCController::GetNetworkFPCEnabled() const
-    {
-        return m_enable;
-    }
-    void NetworkFPCController::SetNetworkFPCEnabled(const bool& new_enable)
-    {
-        m_enable = new_enable;
     }
 } // namespace FirstPersonController

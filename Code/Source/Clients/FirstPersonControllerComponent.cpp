@@ -1329,8 +1329,7 @@ namespace FirstPersonController
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             m_cameraSmoothFollow = true;
             SetAddVelocityForTimestepVsTick(true);
-            NetworkFPCControllerRequestBus::EventResult(
-                m_networkFPCEnabled, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetNetworkFPCEnabled);
+            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
         }
 
         if (entityId == m_cameraEntityId)
@@ -3756,8 +3755,7 @@ namespace FirstPersonController
 
         // Determine if the NetworkFPC is enabled
         if (m_networkFPCObject != nullptr)
-            NetworkFPCControllerRequestBus::EventResult(
-                m_networkFPCEnabled, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetNetworkFPCEnabled);
+            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
 
         // Sample the current velocity during physics timesteps when NetworkFPC is enabled
         // and retain this value for use in CheckCharacterMovementObstructed(...).

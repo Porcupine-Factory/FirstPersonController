@@ -42,8 +42,6 @@ namespace FirstPersonController
 
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
-        bool GetNetworkFPCEnabled() const override;
-        void SetNetworkFPCEnabled(const bool& new_enable) override;
 
     protected:
         // NetworkFPCControllerNotificationBus
@@ -52,8 +50,6 @@ namespace FirstPersonController
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
-
-        bool m_enable = true;
 
         friend class FirstPersonControllerComponent;
         friend class FirstPersonExtrasComponent;
