@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <FirstPersonController/FirstPersonControllerTypeIds.h>
+
 #include <AzCore/EBus/EBus.h>
 #include <AzCore/Interface/Interface.h>
 
@@ -12,7 +14,7 @@ namespace FirstPersonController
     class FirstPersonControllerRequests
     {
     public:
-        AZ_RTTI(FirstPersonControllerRequests, "{2880DB3D-3966-4C87-8777-BC9028E3F48D}");
+        AZ_RTTI(FirstPersonControllerRequests, FirstPersonControllerRequestsTypeId);
         virtual ~FirstPersonControllerRequests() = default;
         // Put your public methods here
     };

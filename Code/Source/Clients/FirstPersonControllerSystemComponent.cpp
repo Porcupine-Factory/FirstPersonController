@@ -4,6 +4,8 @@
 
 #include "FirstPersonControllerSystemComponent.h"
 
+#include <FirstPersonController/FirstPersonControllerTypeIds.h>
+
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/Serialization/SerializeContext.h>
@@ -11,13 +13,16 @@
 
 namespace FirstPersonController
 {
+    AZ_COMPONENT_IMPL(
+        FirstPersonControllerSystemComponent, "FirstPersonControllerSystemComponent", FirstPersonControllerSystemComponentTypeId);
+
     void FirstPersonControllerSystemComponent::Reflect(AZ::ReflectContext* context)
     {
-        if (AZ::SerializeContext* serialize = azrtti_cast<AZ::SerializeContext*>(context))
+        if (auto serializeContext = azrtti_cast<AZ::SerializeContext*>(context))
         {
-            serialize->Class<FirstPersonControllerSystemComponent, AZ::Component>()->Version(0);
+            serializeContext->Class<FirstPersonControllerSystemComponent, AZ::Component>()->Version(0);
 
-            if (AZ::EditContext* ec = serialize->GetEditContext())
+            if (AZ::EditContext* ec = serializeContext->GetEditContext())
             {
                 ec->Class<FirstPersonControllerSystemComponent>(
                       "FirstPersonController", "[Description of functionality provided by this System Component]")
@@ -86,6 +91,8 @@ namespace FirstPersonController
     void FirstPersonControllerSystemComponent::Activate()
     {
         FirstPersonControllerRequestBus::Handler::BusConnect();
+        FirstPersonExtrasRequestBus::Handler::BusConnect();
+        NetworkFPCRequestBus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
         // Register multiplayer components
         RegisterMultiplayerComponents();
@@ -95,6 +102,8 @@ namespace FirstPersonController
     {
         AZ::TickBus::Handler::BusDisconnect();
         FirstPersonControllerRequestBus::Handler::BusDisconnect();
+        FirstPersonExtrasRequestBus::Handler::BusDisconnect();
+        NetworkFPCRequestBus::Handler::BusDisconnect();
     }
 
     void FirstPersonControllerSystemComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)

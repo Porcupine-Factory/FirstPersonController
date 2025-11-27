@@ -12,9 +12,14 @@ o3de_pal_dir(pal_dir ${CMAKE_CURRENT_LIST_DIR}/Platform/${PAL_PLATFORM_NAME} "${
 # is supported by this platform.
 include(${pal_dir}/PAL_${PAL_PLATFORM_NAME_LOWERCASE}.cmake)
 
-# The FirstPersonController.API target declares the common interface that users of this gem should depend on in their targets
+# Check to see if building the Gem Modules are supported for the current platform
+if(NOT PAL_TRAIT_FIRSTPERSONCONTROLLER_SUPPORTED)
+    return()
+endif()
+
+# The ${gem_name}.API target declares the common interface that users of this gem should depend on in their targets
 ly_add_target(
-    NAME FirstPersonController.API INTERFACE
+    NAME ${gem_name}.API INTERFACE
     NAMESPACE Gem
     FILES_CMAKE
         firstpersoncontroller_api_files.cmake
@@ -27,10 +32,10 @@ ly_add_target(
            AZ::AzCore
 )
 
-# The FirstPersonController.Private.Object target is an internal target
+# The ${gem_name}.Private.Object target is an internal target
 # It should not be used outside of this Gems CMakeLists.txt
 ly_add_target(
-    NAME FirstPersonController.Private.Object STATIC
+    NAME ${gem_name}.Private.Object STATIC
     NAMESPACE Gem
     FILES_CMAKE
         firstpersoncontroller_private_files.cmake
@@ -61,9 +66,9 @@ ly_add_target(
 
 )
 
-# Here add FirstPersonController target, it depends on the Private Object library and Public API interface
+# Here add ${gem_name} target, it depends on the Private Object library and Public API interface
 ly_add_target(
-    NAME FirstPersonController ${PAL_TRAIT_MONOLITHIC_DRIVEN_MODULE_TYPE}
+    NAME ${gem_name} ${PAL_TRAIT_MONOLITHIC_DRIVEN_MODULE_TYPE}
     NAMESPACE Gem
     FILES_CMAKE
         firstpersoncontroller_shared_files.cmake
@@ -75,26 +80,45 @@ ly_add_target(
             Source
     BUILD_DEPENDENCIES
         PUBLIC
-            Gem::FirstPersonController.API
+            Gem::${gem_name}.API
         PRIVATE
-            Gem::FirstPersonController.Private.Object
+            Gem::${gem_name}.Private.Object
 )
 
-# By default, we will specify that the above target FirstPersonController would be used by
+# Include the gem name into the Client Module source file
+# for use with the AZ_DECLARE_MODULE_CLASS macro
+# This is to allow renaming of the gem to also cause
+# the CreateModuleClass_Gem_<gem-name> function which
+# is used to bootstrap the gem in monolithic builds to link to the new gem name
+ly_add_source_properties(
+SOURCES
+    Source/Clients/FirstPersonControllerModule.cpp
+PROPERTY COMPILE_DEFINITIONS
+    VALUES
+        O3DE_GEM_NAME=${gem_name}
+        O3DE_GEM_VERSION=${gem_version})
+
+# By default, we will specify that the above target ${gem_name} would be used by
 # Client and Server type targets when this gem is enabled.  If you don't want it
 # active in Clients or Servers by default, delete one of both of the following lines:
-ly_create_alias(NAME FirstPersonController.Clients NAMESPACE Gem TARGETS Gem::FirstPersonController)
-ly_create_alias(NAME FirstPersonController.Servers NAMESPACE Gem TARGETS Gem::FirstPersonController)
+ly_create_alias(NAME ${gem_name}.Clients NAMESPACE Gem TARGETS Gem::${gem_name})
+ly_create_alias(NAME ${gem_name}.Servers NAMESPACE Gem TARGETS Gem::${gem_name})
+ly_create_alias(NAME ${gem_name}.Unified NAMESPACE Gem TARGETS Gem::${gem_name})
 
-# For the Client and Server variants of FirstPersonController Gem, an alias to the FirstPersonController.API target will be made
-ly_create_alias(NAME FirstPersonController.Clients.API NAMESPACE Gem TARGETS Gem::FirstPersonController.API)
-ly_create_alias(NAME FirstPersonController.Servers.API NAMESPACE Gem TARGETS Gem::FirstPersonController.API)
+# For the Client and Server variants of ${gem_name} Gem, an alias to the ${gem_name}.API target will be made
+ly_create_alias(NAME ${gem_name}.Clients.API NAMESPACE Gem TARGETS Gem::${gem_name}.API)
+ly_create_alias(NAME ${gem_name}.Servers.API NAMESPACE Gem TARGETS Gem::${gem_name}.API)
+ly_create_alias(NAME ${gem_name}.Unified.API NAMESPACE Gem TARGETS Gem::${gem_name}.API)
 
-# If we are on a host platform, we want to add the host tools targets like the FirstPersonController.Editor MODULE target
+# Add in CMake dependencies for each gem dependency listed in this gem's gem.json file
+# for the Clients, Servers, Unified gem variants
+o3de_add_variant_dependencies_for_gem_dependencies(GEM_NAME ${gem_name} VARIANTS Clients Servers Unified)
+
+# If we are on a host platform, we want to add the host tools targets like the ${gem_name}.Editor MODULE target
 if(PAL_TRAIT_BUILD_HOST_TOOLS)
-    # The FirstPersonController.Editor.API target can be used by other gems that want to interact with the FirstPersonController.Editor module
+    # The ${gem_name}.Editor.API target can be used by other gems that want to interact with the ${gem_name}.Editor module
     ly_add_target(
-        NAME FirstPersonController.Editor.API INTERFACE
+        NAME ${gem_name}.Editor.API INTERFACE
         NAMESPACE Gem
         FILES_CMAKE
             firstpersoncontroller_editor_api_files.cmake
@@ -107,11 +131,11 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
                 AZ::AzToolsFramework
     )
 
-    # The FirstPersonController.Editor.Private.Object target is an internal target
+    # The ${gem_name}.Editor.Private.Object target is an internal target
     # which is only to be used by this gems CMakeLists.txt and any subdirectories
     # Other gems should not use this target
     ly_add_target(
-        NAME FirstPersonController.Editor.Private.Object STATIC
+        NAME ${gem_name}.Editor.Private.Object STATIC
         NAMESPACE Gem
         FILES_CMAKE
             firstpersoncontroller_editor_private_files.cmake
@@ -124,14 +148,14 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
         BUILD_DEPENDENCIES
             PUBLIC
                 AZ::AzToolsFramework
-                Gem::FirstPersonController.Private.Object
+                ${gem_name}.Private.Object
                 Gem::StartingPointInput.Static
                 Gem::PhysX5.Static
                 Gem::Atom_RPI.Public
     )
 
     ly_add_target(
-        NAME FirstPersonController.Editor GEM_MODULE
+        NAME ${gem_name}.Editor GEM_MODULE
         NAMESPACE Gem
         AUTOMOC
         FILES_CMAKE
@@ -143,21 +167,37 @@ if(PAL_TRAIT_BUILD_HOST_TOOLS)
                 Include
         BUILD_DEPENDENCIES
             PUBLIC
-                Gem::FirstPersonController.Editor.API
+                Gem::${gem_name}.Editor.API
             PRIVATE
-                Gem::FirstPersonController.Editor.Private.Object
+                Gem::${gem_name}.Editor.Private.Object
     )
 
-    # By default, we will specify that the above target FirstPersonController would be used by
+    # Include the gem name into the Editor Module source file
+    # for use with the AZ_DECLARE_MODULE_CLASS macro
+    # This is to allow renaming of the gem to also cause
+    # the CreateModuleClass_Gem_<gem-name> function which
+    # is used to bootstrap the gem in monolithic builds to link to the new gem name
+    ly_add_source_properties(
+    SOURCES
+        Source/Tools/FirstPersonControllerEditorModule.cpp
+    PROPERTY COMPILE_DEFINITIONS
+        VALUES
+            O3DE_GEM_NAME=${gem_name}
+            O3DE_GEM_VERSION=${gem_version})
+
+    # By default, we will specify that the above target ${gem_name} would be used by
     # Tool and Builder type targets when this gem is enabled.  If you don't want it
     # active in Tools or Builders by default, delete one of both of the following lines:
-    ly_create_alias(NAME FirstPersonController.Tools    NAMESPACE Gem TARGETS Gem::FirstPersonController.Editor)
-    ly_create_alias(NAME FirstPersonController.Builders NAMESPACE Gem TARGETS Gem::FirstPersonController.Editor)
+    ly_create_alias(NAME ${gem_name}.Tools    NAMESPACE Gem TARGETS Gem::${gem_name}.Editor)
+    ly_create_alias(NAME ${gem_name}.Builders NAMESPACE Gem TARGETS Gem::${gem_name}.Editor)
 
-    # For the Tools and Builders variants of FirstPersonController Gem, an alias to the FirstPersonController.Editor API target will be made
-    ly_create_alias(NAME FirstPersonController.Tools.API NAMESPACE Gem TARGETS Gem::FirstPersonController.Editor.API)
-    ly_create_alias(NAME FirstPersonController.Builders.API NAMESPACE Gem TARGETS Gem::FirstPersonController.Editor.API)
+    # For the Tools and Builders variants of ${gem_name} Gem, an alias to the ${gem_name}.Editor API target will be made
+    ly_create_alias(NAME ${gem_name}.Tools.API NAMESPACE Gem TARGETS Gem::${gem_name}.Editor.API)
+    ly_create_alias(NAME ${gem_name}.Builders.API NAMESPACE Gem TARGETS Gem::${gem_name}.Editor.API)
 
+    # Add in CMake dependencies for each gem dependency listed in this gem's gem.json file
+    # for the Tools and Builders gem variants
+    o3de_add_variant_dependencies_for_gem_dependencies(GEM_NAME ${gem_name} VARIANTS Tools Builders)
 endif()
 
 ################################################################################
@@ -165,11 +205,11 @@ endif()
 ################################################################################
 # See if globally, tests are supported
 if(PAL_TRAIT_BUILD_TESTS_SUPPORTED)
-    # We globally support tests, see if we support tests on this platform for FirstPersonController.Tests
+    # We globally support tests, see if we support tests on this platform for ${gem_name}.Tests
     if(PAL_TRAIT_FIRSTPERSONCONTROLLER_TEST_SUPPORTED)
-        # We support FirstPersonController.Tests on this platform, add dependency on the Private Object target
+        # We support ${gem_name}.Tests on this platform, add dependency on the Private Object target
         ly_add_target(
-            NAME FirstPersonController.Tests ${PAL_TRAIT_TEST_TARGET_TYPE}
+            NAME ${gem_name}.Tests ${PAL_TRAIT_TEST_TARGET_TYPE}
             NAMESPACE Gem
             FILES_CMAKE
                 firstpersoncontroller_tests_files.cmake
@@ -177,16 +217,17 @@ if(PAL_TRAIT_BUILD_TESTS_SUPPORTED)
                 PRIVATE
                     Tests
                     Source
+                    Include
             BUILD_DEPENDENCIES
                 PRIVATE
                     AZ::AzTest
                     AZ::AzFramework
-                    Gem::FirstPersonController.Private.Object
+                    Gem::${gem_name}.Private.Object
         )
 
-        # Add FirstPersonController.Tests to googletest
+        # Add ${gem_name}.Tests to googletest
         ly_add_googletest(
-            NAME Gem::FirstPersonController.Tests
+            NAME Gem::${gem_name}.Tests
         )
     endif()
 
@@ -194,10 +235,10 @@ if(PAL_TRAIT_BUILD_TESTS_SUPPORTED)
     if(PAL_TRAIT_BUILD_HOST_TOOLS)
         # We are a host platform, see if Editor tests are supported on this platform
         if(PAL_TRAIT_FIRSTPERSONCONTROLLER_EDITOR_TEST_SUPPORTED)
-            # We support FirstPersonController.Editor.Tests on this platform, add FirstPersonController.Editor.Tests target which depends on
-            # private FirstPersonController.Editor.Private.Object target
+            # We support ${gem_name}.Editor.Tests on this platform, add ${gem_name}.Editor.Tests target which depends on
+            # private ${gem_name}.Editor.Private.Object target
             ly_add_target(
-                NAME FirstPersonController.Editor.Tests ${PAL_TRAIT_TEST_TARGET_TYPE}
+                NAME ${gem_name}.Editor.Tests ${PAL_TRAIT_TEST_TARGET_TYPE}
                 NAMESPACE Gem
                 FILES_CMAKE
                     firstpersoncontroller_editor_tests_files.cmake
@@ -205,15 +246,16 @@ if(PAL_TRAIT_BUILD_TESTS_SUPPORTED)
                     PRIVATE
                         Tests
                         Source
+                        Include
                 BUILD_DEPENDENCIES
                     PRIVATE
                         AZ::AzTest
-                        Gem::FirstPersonController.Private.Object
+                        Gem::${gem_name}.Editor.Private.Object
             )
 
-            # Add FirstPersonController.Editor.Tests to googletest
+            # Add ${gem_name}.Editor.Tests to googletest
             ly_add_googletest(
-                NAME Gem::FirstPersonController.Editor.Tests
+                NAME Gem::${gem_name}.Editor.Tests
             )
         endif()
     endif()

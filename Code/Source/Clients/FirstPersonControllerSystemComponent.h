@@ -20,7 +20,7 @@ namespace FirstPersonController
         , public AZ::TickBus::Handler
     {
     public:
-        AZ_COMPONENT(FirstPersonControllerSystemComponent, "{736A6201-CF72-489D-BA29-89F01B14914F}");
+        AZ_COMPONENT_DECL(FirstPersonControllerSystemComponent);
 
         static void Reflect(AZ::ReflectContext* context);
 
