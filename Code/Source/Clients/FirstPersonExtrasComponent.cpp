@@ -168,6 +168,7 @@ namespace FirstPersonController
     {
         AZ::TickBus::Handler::BusConnect();
         FirstPersonControllerComponentNotificationBus::Handler::BusConnect(GetEntityId());
+        NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
         FirstPersonExtrasComponentRequestBus::Handler::BusConnect(GetEntityId());
 
         // Get access to the FirstPersonControllerComponent and Netw object and its members
@@ -216,9 +217,10 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::Deactivate()
     {
         InputEventNotificationBus::MultiHandler::BusDisconnect();
-        AZ::TickBus::Handler::BusDisconnect();
-        FirstPersonControllerComponentNotificationBus::Handler::BusDisconnect();
         FirstPersonExtrasComponentRequestBus::Handler::BusDisconnect();
+        NetworkFPCControllerNotificationBus::Handler::BusDisconnect();
+        FirstPersonControllerComponentNotificationBus::Handler::BusDisconnect();
+        AZ::TickBus::Handler::BusDisconnect();
 
         // Headbob deactivation
         if (m_enableHeadbob)
@@ -251,6 +253,17 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnEntityActivated(const AZ::EntityId& entityId)
     {
+        // Get access to the NetworkFPC object and its member
+        const AZ::Entity* entity = GetEntity();
+        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
+
+        // Determine if the NetworkFPC is enabled
+        if (m_networkFPCObject != nullptr)
+        {
+            InputEventNotificationBus::MultiHandler::BusDisconnect();
+            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
+        }
+
         if (entityId == m_headbobEntityId)
         {
             m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
@@ -352,23 +365,29 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnPhysicsTimestepFinish(const float& physicsTimestep)
     {
-        ProcessInput(((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), true);
+        ProcessInput(((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
         m_prevTimestep = physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor;
     }
 
     void FirstPersonExtrasComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), false);
+        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::QueueJump(const float& deltaTime, const bool& timestepElseTick)
+    void FirstPersonExtrasComponent::OnNetworkTick(const float& deltaTime)
+    {
+        ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
+        m_prevNetworkFPCDeltaTime = deltaTime;
+    }
+
+    void FirstPersonExtrasComponent::QueueJump(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Bail if the threshold is set to zero
         if (m_jumpPressedInAirQueueTimeThreshold == 0.f)
             return;
 
-        if (!timestepElseTick && !*m_grounded && m_prevJumpValue == 0.f && *m_jumpValue != 0.f)
+        if (tickTimestepNetwork == 0 && !*m_grounded && m_prevJumpValue == 0.f && *m_jumpValue != 0.f)
         {
             // Reset the timer
             m_jumpPressedInAirTimer = 0.f;
@@ -377,7 +396,9 @@ namespace FirstPersonController
             m_prevQueueJump = m_queueJump;
             m_queueJump = true;
         }
-        else if (timestepElseTick && m_queueJump && !*m_grounded)
+        else if (
+            ((tickTimestepNetwork == 1 && !m_networkFPCEnabled) || (tickTimestepNetwork == 2 && m_networkFPCEnabled)) && m_queueJump &&
+            !*m_grounded)
         {
             // Increment the timer when the jump is queued
             m_jumpPressedInAirTimer += deltaTime;
@@ -390,7 +411,9 @@ namespace FirstPersonController
                 m_queueJump = false;
             }
         }
-        else if (timestepElseTick && m_queueJump && *m_grounded)
+        else if (
+            ((tickTimestepNetwork == 1 && !m_networkFPCEnabled) || (tickTimestepNetwork == 2 && m_networkFPCEnabled)) && m_queueJump &&
+            *m_grounded)
         {
             // Perform the jump when the ground is hit
             m_prevQueueJump = m_queueJump;
@@ -400,7 +423,9 @@ namespace FirstPersonController
             // Broadcast a notification event that a jump is queued
             FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnJumpFromQueue);
         }
-        else if (timestepElseTick && m_prevQueueJump && !m_queueJump)
+        else if (
+            ((tickTimestepNetwork == 1 && !m_networkFPCEnabled) || (tickTimestepNetwork == 2 && m_networkFPCEnabled)) && m_prevQueueJump &&
+            !m_queueJump)
         {
             // Clear the previous queue and script jump variables
             m_prevQueueJump = m_queueJump;
@@ -408,7 +433,7 @@ namespace FirstPersonController
         }
 
         // Keep track of the previous jump value
-        if (!timestepElseTick)
+        if (tickTimestepNetwork == 0)
             m_prevJumpValue = *m_jumpValue;
     }
 
@@ -547,12 +572,31 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const bool& timestepElseTick)
+    void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
-        // Queue up jumps
-        QueueJump(deltaTime, timestepElseTick);
+        // Determine if the NetworkFPC is enabled
+        if (m_networkFPCObject != nullptr)
+        {
+            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
+            if (!m_acquiredIfAutonomous)
+            {
+                bool isAutonomous = false;
+                NetworkFPCControllerRequestBus::EventResult(
+                    isAutonomous, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetIsNetEntityAutonomous);
+                if (!isAutonomous && m_networkFPCEnabled)
+                {
+                    AZ::TickBus::Handler::BusDisconnect();
+                    Camera::CameraNotificationBus::Handler::BusDisconnect();
+                    return;
+                }
+                m_acquiredIfAutonomous = true;
+            }
+        }
 
-        if (!timestepElseTick)
+        // Queue up jumps
+        QueueJump(deltaTime, tickTimestepNetwork);
+
+        if (tickTimestepNetwork == 0)
         {
             // Update headbob
             UpdateHeadbob(deltaTime);

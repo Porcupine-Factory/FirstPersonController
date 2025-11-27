@@ -17,6 +17,9 @@ namespace FirstPersonController
         , public NetworkFPCControllerRequestBus::Handler
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
     {
+        friend class FirstPersonControllerComponent;
+        friend class FirstPersonExtrasComponent;
+
     public:
         explicit NetworkFPCController(NetworkFPC& parent);
 
@@ -100,8 +103,5 @@ namespace FirstPersonController
             { &m_moveRightEventId, &m_rightValue },     { &m_rotateYawEventId, &m_yawValue }, { &m_rotatePitchEventId, &m_pitchValue },
             { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
         };
-
-        friend class FirstPersonControllerComponent;
-        friend class FirstPersonExtrasComponent;
     };
 } // namespace FirstPersonController

@@ -38,6 +38,9 @@ namespace FirstPersonController
         , public AZ::EntityBus::Handler
         , public Camera::CameraNotificationBus::Handler
     {
+        friend class FirstPersonExtrasComponent;
+        friend class NetworkFPCController;
+
     public:
         AZ_COMPONENT(FirstPersonControllerComponent, "{0a47c7c2-0f94-48dd-8e3f-fd55c30475b9}");
 
@@ -480,7 +483,6 @@ namespace FirstPersonController
 
         // NetworkFPC object
         NetworkFPC* m_networkFPCObject = nullptr;
-        bool m_networkFPCEnabled = false;
 
         // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;
@@ -790,6 +792,7 @@ namespace FirstPersonController
 
         // Networking related variables
         bool m_acquiredIfAutonomous = false;
+        bool m_networkFPCEnabled = false;
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;
@@ -892,10 +895,5 @@ namespace FirstPersonController
             { &m_moveRightEventId, &m_rightValue },     { &m_rotateYawEventId, &m_yawValue }, { &m_rotatePitchEventId, &m_pitchValue },
             { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
         };
-
-        // Make this class a friend of the FirstPersonExtrasComponent and NetworkFPCController to
-        // give access to private members
-        friend class FirstPersonExtrasComponent;
-        friend class NetworkFPCController;
     };
 } // namespace FirstPersonController

@@ -27,9 +27,12 @@ namespace FirstPersonController
         , public AZ::EntityBus::Handler
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentNotificationBus::Handler
+        , public NetworkFPCControllerNotificationBus::Handler
         , public FirstPersonExtrasComponentRequestBus::Handler
         , public Camera::CameraNotificationBus::Handler
     {
+        friend class NetworkFPCController;
+
     public:
         AZ_COMPONENT(FirstPersonExtrasComponent, "{86d186ce-6065-4cb2-adda-48c630eb5ec4}");
 
@@ -70,8 +73,11 @@ namespace FirstPersonController
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
+        // NetworkFPCControllerNotificationBus
+        void OnNetworkTick(const float& deltaTime);
+
         // Called on each tick
-        void ProcessInput(const float& deltaTime, const bool& tickElseTimestep);
+        void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
 
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
@@ -80,12 +86,17 @@ namespace FirstPersonController
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         NetworkFPC* m_networkFPCObject = nullptr;
 
-        // Stores the previous tick deltaTime and previous physics timestep
+        // Networking related variables
+        bool m_acquiredIfAutonomous = false;
+        bool m_networkFPCEnabled = false;
+
+        // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
         float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;
+        float m_prevNetworkFPCDeltaTime = 1.f / 60.f;
 
         // Jump queuing
-        void QueueJump(const float& deltaTime, const bool& timestepElseTick);
+        void QueueJump(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
         bool m_queueJump = false;
         bool m_prevQueueJump = false;
         float m_jumpPressedInAirTimer = 0.f;
@@ -170,7 +181,5 @@ namespace FirstPersonController
         void OnSprintStopped();
         void OnCooldownStarted();
         void OnCooldownDone();
-
-        friend class NetworkFPCController;
     };
 } // namespace FirstPersonController
