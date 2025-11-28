@@ -155,6 +155,7 @@ namespace FirstPersonController
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);
         void OnPhysicsTimestepFinish(const float& timeStep);
+        void OnNetworkFPCTick(const float& deltaTime);
         void OnGroundHit(const float& fellDistance);
         void OnGroundSoonHit(const float& soonFellDistance);
         void OnUngrounded();

@@ -590,6 +590,9 @@ namespace FirstPersonController
     }
 
     // Notification Events from the First Person Controller component
+    void FirstPersonExtrasComponent::OnNetworkFPCTick([[maybe_unused]] const float& deltaTime)
+    {
+    }
     void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)
     {
     }
@@ -676,6 +679,7 @@ namespace FirstPersonController
     {
     }
 
+    // Request Bus getter and setter methods for use in scripts
     float FirstPersonExtrasComponent::GetJumpPressedInAirQueueTimeThreshold() const
     {
         return m_jumpPressedInAirQueueTimeThreshold;

@@ -518,8 +518,6 @@ namespace FirstPersonController
         void ResetCameraToCharacter();
         void CaptureCharacterEyeTranslation();
         void SprintManager(const AZ::Vector2& targetVelocity, const float& deltaTime);
-        void SmoothCriticallyDampedFloat(
-            float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime);
         void CrouchManager(const float& deltaTime);
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
@@ -537,6 +535,7 @@ namespace FirstPersonController
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);
         void OnPhysicsTimestepFinish(const float& timeStep);
+        void OnNetworkFPCTick(const float& deltaTime);
         void OnGroundHit(const float& fellDistance);
         void OnGroundSoonHit(const float& soonFellDistance);
         void OnUngrounded();

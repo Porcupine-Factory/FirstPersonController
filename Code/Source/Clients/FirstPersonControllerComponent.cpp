@@ -1557,8 +1557,8 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime)
     {
         ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
-        m_prevNetworkFPCDeltaTime = deltaTime;
         CaptureCharacterEyeTranslation();
+        m_prevNetworkFPCDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -2359,31 +2359,6 @@ namespace FirstPersonController
         else
             m_staminaPercentage = 0.f;
         // AZ_Printf("First Person Controller Component", "Stamina = %.10f\%", m_staminaPercentage);
-    }
-
-    void FirstPersonControllerComponent::SmoothCriticallyDampedFloat(
-        float& value, float& valueRate, const float& timeDelta, const float& target, const float& smoothTime)
-    {
-        if (smoothTime > 0.f)
-        {
-            const float omega = 2.f / smoothTime;
-            const float x = omega * timeDelta;
-            const float exp = 1.f / (1.f + x + 0.48f * x * x + 0.235f * x * x * x);
-            const float change = value - target;
-            const float temp = (valueRate + change * omega) * timeDelta;
-            valueRate = (valueRate - temp * omega) * exp;
-            value = target + (change + temp) * exp;
-        }
-        else if (timeDelta > 0.f)
-        {
-            valueRate = (target - value) / timeDelta;
-            value = target;
-        }
-        else
-        {
-            value = target;
-            valueRate = float(0); // Zero the rate
-        }
     }
 
     void FirstPersonControllerComponent::CrouchManager(const float& deltaTime)
@@ -3770,6 +3745,13 @@ namespace FirstPersonController
                 m_prevSampledVelocity = m_currentVelocity;
         }
 
+        // Broadcast a notification on NetworkFPC ticks
+        if (tickTimestepNetwork == 2)
+        {
+            FirstPersonControllerComponentNotificationBus::Broadcast(
+                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTick, deltaTime * m_physicsTimestepScaleFactor);
+        }
+
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,
         // depending on which is selected and which is currently executing
         if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !m_networkFPCEnabled) ||
@@ -3838,6 +3820,9 @@ namespace FirstPersonController
     {
     }
     void FirstPersonControllerComponent::OnPhysicsTimestepFinish([[maybe_unused]] const float& timeStep)
+    {
+    }
+    void FirstPersonControllerComponent::OnNetworkFPCTick([[maybe_unused]] const float& deltaTime)
     {
     }
     void FirstPersonControllerComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)
