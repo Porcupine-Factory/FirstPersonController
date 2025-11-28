@@ -114,17 +114,20 @@ namespace FirstPersonController
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
         m_firstPersonExtrasObject = entity->FindComponent<FirstPersonExtrasComponent>();
         m_firstPersonControllerObject->m_networkFPCEnabled = GetEnableNetworkFPC();
-        m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
+        if (m_firstPersonExtrasObject != nullptr)
+            m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
         FirstPersonControllerComponentRequestBus::Broadcast(
             &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
-        FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+        if (m_firstPersonExtrasObject != nullptr)
+            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
 
         if (IsNetEntityRoleAutonomous())
         {
             m_autonomousNotDetermined = false;
             FirstPersonControllerComponentRequestBus::Broadcast(&FirstPersonControllerComponentRequestBus::Events::IsAutonomousSoConnect);
-            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::IsAutonomousSoConnect);
+            if (m_firstPersonExtrasObject != nullptr)
+                FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::IsAutonomousSoConnect);
             AssignConnectInputEvents();
         }
     }
@@ -186,7 +189,8 @@ namespace FirstPersonController
         {
             FirstPersonControllerComponentRequestBus::Broadcast(
                 &FirstPersonControllerComponentRequestBus::Events::NotAutonomousSoDisconnect);
-            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NotAutonomousSoDisconnect);
+            if (m_firstPersonExtrasObject != nullptr)
+                FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NotAutonomousSoDisconnect);
             m_autonomousNotDetermined = false;
         }
 
@@ -237,19 +241,23 @@ namespace FirstPersonController
     {
         m_disabled = !enable;
         m_firstPersonControllerObject->m_networkFPCEnabled = enable;
-        m_firstPersonExtrasObject->m_networkFPCEnabled = enable;
+        if (m_firstPersonExtrasObject != nullptr)
+            m_firstPersonExtrasObject->m_networkFPCEnabled = enable;
         if (!m_disabled)
         {
             FirstPersonControllerComponentRequestBus::Broadcast(
                 &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
-            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            if (m_firstPersonExtrasObject != nullptr)
+                FirstPersonExtrasComponentRequestBus::Broadcast(
+                    &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
             AssignConnectInputEvents();
         }
         else
         {
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             m_firstPersonControllerObject->AssignConnectInputEvents();
-            m_firstPersonExtrasObject->AssignConnectInputEvents();
+            if (m_firstPersonExtrasObject != nullptr)
+                m_firstPersonExtrasObject->AssignConnectInputEvents();
         }
     }
 
@@ -270,19 +278,23 @@ namespace FirstPersonController
     {
         m_disabled = !new_enabled;
         m_firstPersonControllerObject->m_networkFPCEnabled = new_enabled;
-        m_firstPersonExtrasObject->m_networkFPCEnabled = new_enabled;
+        if (m_firstPersonExtrasObject != nullptr)
+            m_firstPersonExtrasObject->m_networkFPCEnabled = new_enabled;
         if (!m_disabled)
         {
             FirstPersonControllerComponentRequestBus::Broadcast(
                 &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
-            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            if (m_firstPersonExtrasObject != nullptr)
+                FirstPersonExtrasComponentRequestBus::Broadcast(
+                    &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
             AssignConnectInputEvents();
         }
         else
         {
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             m_firstPersonControllerObject->AssignConnectInputEvents();
-            m_firstPersonExtrasObject->AssignConnectInputEvents();
+            if (m_firstPersonExtrasObject != nullptr)
+                m_firstPersonExtrasObject->AssignConnectInputEvents();
         }
     }
 } // namespace FirstPersonController
