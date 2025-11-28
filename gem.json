@@ -25,6 +25,7 @@
     "documentation_url": "https://github.com/Porcupine-Factory/FirstPersonController/wiki",
     "dependencies": [
         "PhysX5",
+        "MultiplayerPhysX5",
         "StartingPointInput",
         "Atom_RPI"
     ],
