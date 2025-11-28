@@ -10,7 +10,7 @@
 
     <ComponentRelation Constraint="Required" HasController="true" Name="NetworkCharacterComponent" Namespace="Multiplayer" Include="Multiplayer/Components/NetworkCharacterComponent.h" />
 
-    <NetworkProperty Type="bool" Name="EnableNetworkFPC" Init="true" ReplicateFrom="Autonomous" ReplicateTo="Authority" IsRewindable="false" IsPredictable="false" IsPublic="true" Container="Object" ExposeToEditor="false" ExposeToScript="true" GenerateEventBindings="false" Description=""/>
+    <NetworkProperty Type="bool" Name="EnableNetworkFPC" Init="true" ReplicateFrom="Authority" ReplicateTo="Client" IsRewindable="false" IsPredictable="false" IsPublic="true" Container="Object" ExposeToEditor="false" ExposeToScript="true" GenerateEventBindings="true" Description=""/>
 
     <NetworkInput Type="float" Name="Forward" Init="0.f" />
     <NetworkInput Type="float" Name="Back" Init="0.f" />

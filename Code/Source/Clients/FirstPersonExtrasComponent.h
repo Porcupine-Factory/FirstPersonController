@@ -62,6 +62,9 @@ namespace FirstPersonController
         bool GetEnableHeadbob() const;
         AZ::EntityId GetHeadbobEntityId() const override;
         void SetHeadbobEntityId(const AZ::EntityId&) override;
+        void NetworkFPCEnabledIgnoreInputs() override;
+        void IsAutonomousSoConnect() override;
+        void NotAutonomousSoDisconnect() override;
 
     private:
         // Input event assignment and notification bus connection
@@ -87,7 +90,6 @@ namespace FirstPersonController
         NetworkFPC* m_networkFPCObject = nullptr;
 
         // Networking related variables
-        bool m_acquiredIfAutonomous = false;
         bool m_networkFPCEnabled = false;
 
         // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime

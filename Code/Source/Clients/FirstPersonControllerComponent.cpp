@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "FirstPersonController/NetworkFPCControllerBus.h"
 #include <Clients/FirstPersonControllerComponent.h>
 #include <Multiplayer/NetworkFPC.h>
 
@@ -1080,6 +1081,32 @@ namespace FirstPersonController
                     "Set Crouch Priority When Sprint Pressed", &FirstPersonControllerComponentRequests::SetCrouchPriorityWhenSprintPressed)
                 ->Event("Get Crouch When Not Grounded", &FirstPersonControllerComponentRequests::GetCrouchWhenNotGrounded)
                 ->Event("Set Crouch When Not Grounded", &FirstPersonControllerComponentRequests::SetCrouchWhenNotGrounded)
+                ->Event("Get Crouch Down Proportional Gain", &FirstPersonControllerComponentRequests::GetCrouchDownProportionalGain)
+                ->Event("Set Crouch Down Proportional Gain", &FirstPersonControllerComponentRequests::SetCrouchDownProportionalGain)
+                ->Event("Get Crouch Down Integral Gain", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralGain)
+                ->Event("Set Crouch Down Integral Gain", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralGain)
+                ->Event("Get Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeGain)
+                ->Event("Set Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeGain)
+                ->Event("Get Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralWindupLimit)
+                ->Event("Set Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralWindupLimit)
+                ->Event(
+                    "Get Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeFilterAlpha)
+                ->Event(
+                    "Set Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeFilterAlpha)
+                ->Event("Get Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeMode)
+                ->Event("Set Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeMode)
+                ->Event("Get Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::GetStandUpProportionalGain)
+                ->Event("Set Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::SetStandUpProportionalGain)
+                ->Event("Get Stand Up Integral Gain", &FirstPersonControllerComponentRequests::GetStandUpIntegralGain)
+                ->Event("Set Stand Up Integral Gain", &FirstPersonControllerComponentRequests::SetStandUpIntegralGain)
+                ->Event("Get Stand Up Derivative Gain", &FirstPersonControllerComponentRequests::GetStandUpDerivativeGain)
+                ->Event("Set Stand Up Derivative Gain", &FirstPersonControllerComponentRequests::SetStandUpDerivativeGain)
+                ->Event("Get Stand Up Integral Windup Limit", &FirstPersonControllerComponentRequests::GetStandUpIntegralWindupLimit)
+                ->Event("Set Stand Up Integral Windup Limit", &FirstPersonControllerComponentRequests::SetStandUpIntegralWindupLimit)
+                ->Event("Get Stand Up Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetStandUpDerivativeFilterAlpha)
+                ->Event("Set Stand Up Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetStandUpDerivativeFilterAlpha)
+                ->Event("Get Stand Up Derivative Mode", &FirstPersonControllerComponentRequests::GetStandUpDerivativeMode)
+                ->Event("Set Stand Up Derivative Mode", &FirstPersonControllerComponentRequests::SetStandUpDerivativeMode)
                 ->Event(
                     "Get Enable Camera And Character Rotation", &FirstPersonControllerComponentRequests::GetEnableCameraCharacterRotation)
                 ->Event(
@@ -1113,32 +1140,8 @@ namespace FirstPersonController
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
                 ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
-                ->Event("Get Crouch Down Proportional Gain", &FirstPersonControllerComponentRequests::GetCrouchDownProportionalGain)
-                ->Event("Set Crouch Down Proportional Gain", &FirstPersonControllerComponentRequests::SetCrouchDownProportionalGain)
-                ->Event("Get Crouch Down Integral Gain", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralGain)
-                ->Event("Set Crouch Down Integral Gain", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralGain)
-                ->Event("Get Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeGain)
-                ->Event("Set Crouch Down Derivative Gain", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeGain)
-                ->Event("Get Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::GetCrouchDownIntegralWindupLimit)
-                ->Event("Set Crouch Down Integral Windup Limit", &FirstPersonControllerComponentRequests::SetCrouchDownIntegralWindupLimit)
-                ->Event(
-                    "Get Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeFilterAlpha)
-                ->Event(
-                    "Set Crouch Down Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeFilterAlpha)
-                ->Event("Get Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::GetCrouchDownDerivativeMode)
-                ->Event("Set Crouch Down Derivative Mode", &FirstPersonControllerComponentRequests::SetCrouchDownDerivativeMode)
-                ->Event("Get Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::GetStandUpProportionalGain)
-                ->Event("Set Stand Up Proportional Gain", &FirstPersonControllerComponentRequests::SetStandUpProportionalGain)
-                ->Event("Get Stand Up Integral Gain", &FirstPersonControllerComponentRequests::GetStandUpIntegralGain)
-                ->Event("Set Stand Up Integral Gain", &FirstPersonControllerComponentRequests::SetStandUpIntegralGain)
-                ->Event("Get Stand Up Derivative Gain", &FirstPersonControllerComponentRequests::GetStandUpDerivativeGain)
-                ->Event("Set Stand Up Derivative Gain", &FirstPersonControllerComponentRequests::SetStandUpDerivativeGain)
-                ->Event("Get Stand Up Integral Windup Limit", &FirstPersonControllerComponentRequests::GetStandUpIntegralWindupLimit)
-                ->Event("Set Stand Up Integral Windup Limit", &FirstPersonControllerComponentRequests::SetStandUpIntegralWindupLimit)
-                ->Event("Get Stand Up Derivative Filter Alpha", &FirstPersonControllerComponentRequests::GetStandUpDerivativeFilterAlpha)
-                ->Event("Set Stand Up Derivative Filter Alpha", &FirstPersonControllerComponentRequests::SetStandUpDerivativeFilterAlpha)
-                ->Event("Get Stand Up Derivative Mode", &FirstPersonControllerComponentRequests::GetStandUpDerivativeMode)
-                ->Event("Set Stand Up Derivative Mode", &FirstPersonControllerComponentRequests::SetStandUpDerivativeMode);
+                ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
+                ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -1205,6 +1208,7 @@ namespace FirstPersonController
             }
         }
 
+        Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
         Physics::CollisionRequestBus::BroadcastResult(
             m_standCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_standCollisionGroupId);
         Physics::CollisionRequestBus::BroadcastResult(
@@ -1258,6 +1262,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnCharacterActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
+        Physics::CharacterNotificationBus::Handler::BusDisconnect();
+
         // Obtain the PhysX Character Controller's capsule height and radius
         // and use those dimensions for the ground detection shapecast capsule
         PhysX::CharacterControllerRequestBus::EventResult(
@@ -3740,28 +3746,6 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
-        // Determine if the NetworkFPC is enabled
-        if (m_networkFPCObject != nullptr)
-        {
-            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
-            if (!m_acquiredIfAutonomous)
-            {
-                bool isAutonomous = false;
-                NetworkFPCControllerRequestBus::EventResult(
-                    isAutonomous, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetIsNetEntityAutonomous);
-                if (!isAutonomous && m_networkFPCEnabled)
-                {
-                    AZ::TickBus::Handler::BusDisconnect();
-                    InputChannelEventListener::Disconnect();
-                    Camera::CameraNotificationBus::Handler::BusDisconnect();
-                    m_sceneSimulationStartHandler.Disconnect();
-                    m_sceneSimulationFinishHandler.Disconnect();
-                    return;
-                }
-                m_acquiredIfAutonomous = true;
-            }
-        }
-
         // Only update the rotation on each tick
         if (tickTimestepNetwork == 0)
         {
@@ -4689,7 +4673,7 @@ namespace FirstPersonController
     {
         m_addVelocityForTimestepVsTick = new_addVelocityForTimestepVsTick;
 
-        if (m_addVelocityForTimestepVsTick)
+        if (m_addVelocityForTimestepVsTick && !m_sceneSimulationStartHandler.IsConnected())
         {
             Physics::DefaultWorldBus::BroadcastResult(m_attachedSceneHandle, &Physics::DefaultWorldRequests::GetDefaultSceneHandle);
             if (m_attachedSceneHandle == AzPhysics::InvalidSceneHandle)
@@ -4720,10 +4704,11 @@ namespace FirstPersonController
                 sceneInterface->RegisterSceneSimulationFinishHandler(m_attachedSceneHandle, m_sceneSimulationFinishHandler);
             }
         }
-        else
+        else if (!m_addVelocityForTimestepVsTick)
         {
             m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
             m_sceneSimulationStartHandler.Disconnect();
+            m_sceneSimulationFinishHandler.Disconnect();
         }
     }
     float FirstPersonControllerComponent::GetPhysicsTimestepScaleFactor() const
@@ -5943,5 +5928,36 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetPitch() const
     {
         return m_currentPitch;
+    }
+    bool FirstPersonControllerComponent::GetLocallyEnableNetworkFPC() const
+    {
+        return m_networkFPCEnabled;
+    }
+    void FirstPersonControllerComponent::SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled)
+    {
+        m_networkFPCEnabled = new_networkFPCEnabled;
+        NetworkFPCControllerRequestBus::Event(GetEntityId(), &NetworkFPCControllerRequestBus::Events::SetEnabled, m_networkFPCEnabled);
+    }
+    void FirstPersonControllerComponent::NetworkFPCEnabledIgnoreInputs()
+    {
+        InputEventNotificationBus::MultiHandler::BusDisconnect();
+        InputChannelEventListener::Disconnect();
+    }
+    void FirstPersonControllerComponent::IsAutonomousSoConnect()
+    {
+        AZ::TickBus::Handler::BusConnect();
+        InputChannelEventListener::Connect();
+        Camera::CameraNotificationBus::Handler::BusConnect();
+        const bool addVelocityForTimestepVsTick = m_addVelocityForTimestepVsTick;
+        SetAddVelocityForTimestepVsTick(addVelocityForTimestepVsTick);
+    }
+    void FirstPersonControllerComponent::NotAutonomousSoDisconnect()
+    {
+        AZ::TickBus::Handler::BusDisconnect();
+        InputChannelEventListener::Disconnect();
+        Camera::CameraNotificationBus::Handler::BusDisconnect();
+        m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+        m_sceneSimulationStartHandler.Disconnect();
+        m_sceneSimulationFinishHandler.Disconnect();
     }
 } // namespace FirstPersonController

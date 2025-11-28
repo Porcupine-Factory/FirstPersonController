@@ -574,25 +574,6 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
-        // Determine if the NetworkFPC is enabled
-        if (m_networkFPCObject != nullptr)
-        {
-            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
-            if (!m_acquiredIfAutonomous)
-            {
-                bool isAutonomous = false;
-                NetworkFPCControllerRequestBus::EventResult(
-                    isAutonomous, GetEntityId(), &NetworkFPCControllerRequestBus::Events::GetIsNetEntityAutonomous);
-                if (!isAutonomous && m_networkFPCEnabled)
-                {
-                    AZ::TickBus::Handler::BusDisconnect();
-                    Camera::CameraNotificationBus::Handler::BusDisconnect();
-                    return;
-                }
-                m_acquiredIfAutonomous = true;
-            }
-        }
-
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
 
@@ -722,5 +703,19 @@ namespace FirstPersonController
     {
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
         return ca->FindEntity(pointer);
+    }
+    void FirstPersonExtrasComponent::NetworkFPCEnabledIgnoreInputs()
+    {
+        InputEventNotificationBus::MultiHandler::BusDisconnect();
+    }
+    void FirstPersonExtrasComponent::IsAutonomousSoConnect()
+    {
+        AZ::TickBus::Handler::BusConnect();
+        Camera::CameraNotificationBus::Handler::BusConnect();
+    }
+    void FirstPersonExtrasComponent::NotAutonomousSoDisconnect()
+    {
+        AZ::TickBus::Handler::BusDisconnect();
+        Camera::CameraNotificationBus::Handler::BusDisconnect();
     }
 } // namespace FirstPersonController

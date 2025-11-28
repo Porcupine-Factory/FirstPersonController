@@ -20,6 +20,9 @@ namespace FirstPersonController
         virtual bool GetEnableHeadbob() const = 0;
         virtual AZ::EntityId GetHeadbobEntityId() const = 0;
         virtual void SetHeadbobEntityId(const AZ::EntityId&) = 0;
+        virtual void NetworkFPCEnabledIgnoreInputs() = 0;
+        virtual void IsAutonomousSoConnect() = 0;
+        virtual void NotAutonomousSoDisconnect() = 0;
     };
 
     using FirstPersonExtrasComponentRequestBus = AZ::EBus<FirstPersonExtrasComponentRequests>;

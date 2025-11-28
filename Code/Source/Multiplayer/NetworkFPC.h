@@ -27,6 +27,7 @@ namespace FirstPersonController
         void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
 
         static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
+        static void GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
 
@@ -45,6 +46,8 @@ namespace FirstPersonController
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
         bool GetIsNetEntityAutonomous() const override;
+        bool GetEnabled() const override;
+        void SetEnabled(const bool& new_enabled) override;
 
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;
@@ -57,6 +60,14 @@ namespace FirstPersonController
 
         // NetworkFPCControllerNotificationBus
         void OnNetworkTick(const float& deltaTime);
+
+        // EnableNetworkFPC Changed Event
+        AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
+        void OnEnableNetworkFPCChanged(const bool& enable);
+        bool m_disabled = false;
+
+        // Signals when the controller is determined to be autonomous or not
+        bool m_autonomousNotDetermined = true;
 
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;

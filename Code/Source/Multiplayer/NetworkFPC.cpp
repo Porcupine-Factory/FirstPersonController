@@ -9,6 +9,11 @@ namespace FirstPersonController
 
     NetworkFPCController::NetworkFPCController(NetworkFPC& parent)
         : NetworkFPCControllerBase(parent)
+        , m_enableNetworkFPCChangedEvent(
+              [this](bool enable)
+              {
+                  OnEnableNetworkFPCChanged(enable);
+              })
     {
     }
 
@@ -99,26 +104,46 @@ namespace FirstPersonController
 
     void NetworkFPCController::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
-        if (IsNetEntityRoleAutonomous())
-            AssignConnectInputEvents();
-
         NetworkFPCControllerRequestBus::Handler::BusConnect(GetEntityId());
+
+        // Subscribe to EnableNetworkFPC change events
+        EnableNetworkFPCAddEvent(m_enableNetworkFPCChangedEvent);
 
         // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
         const AZ::Entity* entity = GetParent().GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
         m_firstPersonExtrasObject = entity->FindComponent<FirstPersonExtrasComponent>();
+        m_firstPersonControllerObject->m_networkFPCEnabled = GetEnableNetworkFPC();
+        m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
+
+        FirstPersonControllerComponentRequestBus::Broadcast(
+            &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+        FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+
+        if (IsNetEntityRoleAutonomous())
+        {
+            m_autonomousNotDetermined = false;
+            FirstPersonControllerComponentRequestBus::Broadcast(&FirstPersonControllerComponentRequestBus::Events::IsAutonomousSoConnect);
+            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::IsAutonomousSoConnect);
+            AssignConnectInputEvents();
+        }
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
         NetworkFPCControllerRequestBus::Handler::BusDisconnect();
+        InputEventNotificationBus::MultiHandler::BusDisconnect();
     }
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
         required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("FirstPersonControllerService"));
+    }
+
+    void NetworkFPCController::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    {
+        dependent.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
     }
 
     void NetworkFPCController::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
@@ -153,8 +178,17 @@ namespace FirstPersonController
 
     void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, float deltaTime)
     {
-        if (!GetEnableNetworkFPC())
+        if (m_disabled)
             return;
+
+        // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
+        if (m_autonomousNotDetermined)
+        {
+            FirstPersonControllerComponentRequestBus::Broadcast(
+                &FirstPersonControllerComponentRequestBus::Events::NotAutonomousSoDisconnect);
+            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NotAutonomousSoDisconnect);
+            m_autonomousNotDetermined = false;
+        }
 
         NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
 
@@ -199,6 +233,26 @@ namespace FirstPersonController
     {
     }
 
+    void NetworkFPCController::OnEnableNetworkFPCChanged(const bool& enable)
+    {
+        m_disabled = !enable;
+        m_firstPersonControllerObject->m_networkFPCEnabled = enable;
+        m_firstPersonExtrasObject->m_networkFPCEnabled = enable;
+        if (!m_disabled)
+        {
+            FirstPersonControllerComponentRequestBus::Broadcast(
+                &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            AssignConnectInputEvents();
+        }
+        else
+        {
+            InputEventNotificationBus::MultiHandler::BusDisconnect();
+            m_firstPersonControllerObject->AssignConnectInputEvents();
+            m_firstPersonExtrasObject->AssignConnectInputEvents();
+        }
+    }
+
     // Request Bus getter and setter methods for use in scripts
     void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime)
     {
@@ -207,5 +261,28 @@ namespace FirstPersonController
     bool NetworkFPCController::GetIsNetEntityAutonomous() const
     {
         return IsNetEntityRoleAutonomous();
+    }
+    bool NetworkFPCController::GetEnabled() const
+    {
+        return !m_disabled;
+    }
+    void NetworkFPCController::SetEnabled(const bool& new_enabled)
+    {
+        m_disabled = !new_enabled;
+        m_firstPersonControllerObject->m_networkFPCEnabled = new_enabled;
+        m_firstPersonExtrasObject->m_networkFPCEnabled = new_enabled;
+        if (!m_disabled)
+        {
+            FirstPersonControllerComponentRequestBus::Broadcast(
+                &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            AssignConnectInputEvents();
+        }
+        else
+        {
+            InputEventNotificationBus::MultiHandler::BusDisconnect();
+            m_firstPersonControllerObject->AssignConnectInputEvents();
+            m_firstPersonExtrasObject->AssignConnectInputEvents();
+        }
     }
 } // namespace FirstPersonController

@@ -415,6 +415,30 @@ namespace FirstPersonController
         void SetCrouchPriorityWhenSprintPressed(const bool& new_crouchPriorityWhenSprintPressed) override;
         bool GetCrouchWhenNotGrounded() const override;
         void SetCrouchWhenNotGrounded(const bool& new_crouchWhenNotGrounded) override;
+        float GetCrouchDownProportionalGain() const override;
+        void SetCrouchDownProportionalGain(const float& new_crouchDownProportionalGain) override;
+        float GetCrouchDownIntegralGain() const override;
+        void SetCrouchDownIntegralGain(const float& new_crouchDownIntegralGain) override;
+        float GetCrouchDownDerivativeGain() const override;
+        void SetCrouchDownDerivativeGain(const float& new_crouchDownDerivativeGain) override;
+        float GetCrouchDownIntegralWindupLimit() const override;
+        void SetCrouchDownIntegralWindupLimit(const float& new_crouchDownIntegralWindupLimit) override;
+        float GetCrouchDownDerivativeFilterAlpha() const override;
+        void SetCrouchDownDerivativeFilterAlpha(const float& new_crouchDownDerivativeFilterAlpha) override;
+        float GetStandUpProportionalGain() const override;
+        void SetStandUpProportionalGain(const float& new_standUpProportionalGain) override;
+        float GetStandUpIntegralGain() const override;
+        void SetStandUpIntegralGain(const float& new_standUpIntegralGain) override;
+        float GetStandUpDerivativeGain() const override;
+        void SetStandUpDerivativeGain(const float& new_standUpDerivativeGain) override;
+        float GetStandUpIntegralWindupLimit() const override;
+        void SetStandUpIntegralWindupLimit(const float& new_standUpIntegralWindupLimit) override;
+        float GetStandUpDerivativeFilterAlpha() const override;
+        void SetStandUpDerivativeFilterAlpha(const float& new_standUpDerivativeFilterAlpha) override;
+        PidController<float>::DerivativeCalculationMode GetCrouchDownDerivativeMode() const override;
+        void SetCrouchDownDerivativeMode(const PidController<float>::DerivativeCalculationMode& new_crouchDownDerivativeMode) override;
+        PidController<float>::DerivativeCalculationMode GetStandUpDerivativeMode() const override;
+        void SetStandUpDerivativeMode(const PidController<float>::DerivativeCalculationMode& new_standUpDerivativeMode) override;
         bool GetSprintViaScript() const override;
         void SetSprintViaScript(const bool& new_sprintViaScript) override;
         bool GetSprintEnableDisable() const override;
@@ -446,30 +470,11 @@ namespace FirstPersonController
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
-        float GetCrouchDownProportionalGain() const override;
-        void SetCrouchDownProportionalGain(const float& new_crouchDownProportionalGain) override;
-        float GetCrouchDownIntegralGain() const override;
-        void SetCrouchDownIntegralGain(const float& new_crouchDownIntegralGain) override;
-        float GetCrouchDownDerivativeGain() const override;
-        void SetCrouchDownDerivativeGain(const float& new_crouchDownDerivativeGain) override;
-        float GetCrouchDownIntegralWindupLimit() const override;
-        void SetCrouchDownIntegralWindupLimit(const float& new_crouchDownIntegralWindupLimit) override;
-        float GetCrouchDownDerivativeFilterAlpha() const override;
-        void SetCrouchDownDerivativeFilterAlpha(const float& new_crouchDownDerivativeFilterAlpha) override;
-        float GetStandUpProportionalGain() const override;
-        void SetStandUpProportionalGain(const float& new_standUpProportionalGain) override;
-        float GetStandUpIntegralGain() const override;
-        void SetStandUpIntegralGain(const float& new_standUpIntegralGain) override;
-        float GetStandUpDerivativeGain() const override;
-        void SetStandUpDerivativeGain(const float& new_standUpDerivativeGain) override;
-        float GetStandUpIntegralWindupLimit() const override;
-        void SetStandUpIntegralWindupLimit(const float& new_standUpIntegralWindupLimit) override;
-        float GetStandUpDerivativeFilterAlpha() const override;
-        void SetStandUpDerivativeFilterAlpha(const float& new_standUpDerivativeFilterAlpha) override;
-        PidController<float>::DerivativeCalculationMode GetCrouchDownDerivativeMode() const override;
-        void SetCrouchDownDerivativeMode(const PidController<float>::DerivativeCalculationMode& new_crouchDownDerivativeMode) override;
-        PidController<float>::DerivativeCalculationMode GetStandUpDerivativeMode() const override;
-        void SetStandUpDerivativeMode(const PidController<float>::DerivativeCalculationMode& new_standUpDerivativeMode) override;
+        bool GetLocallyEnableNetworkFPC() const override;
+        void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
+        void NetworkFPCEnabledIgnoreInputs() override;
+        void IsAutonomousSoConnect() override;
+        void NotAutonomousSoDisconnect() override;
 
     private:
         // Input event assignment and notification bus connection
@@ -791,7 +796,6 @@ namespace FirstPersonController
         AZStd::vector<AzPhysics::SceneQueryHit> m_characterHits;
 
         // Networking related variables
-        bool m_acquiredIfAutonomous = false;
         bool m_networkFPCEnabled = false;
 
         // Variables used to determine when the X&Y velocity should be updated
