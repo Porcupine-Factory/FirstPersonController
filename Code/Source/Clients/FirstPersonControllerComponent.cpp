@@ -2428,6 +2428,16 @@ namespace FirstPersonController
         // Handle ongoing crouch down movement using PID control
         if (m_crouchingDownMove)
         {
+            // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
+            const float referenceSubDeltaTime = 1.0f / 120.0f;
+            // Calculate the number of substeps required to cover the full deltaTime.
+            // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
+            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
+            // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
+            // across the calculated numSubSteps. This ensures the total simulated time across all
+            // substeps exactly equals deltaTime.
+            const float subDeltaTime = deltaTime / numSubsteps;
+
             // Define position tolerance. Set to 2% of the total crouch distance to determine when the position is "close enough" to the
             // target.
             // This prevents minor floating-point errors or small oscillations from delaying state transitions.
@@ -2440,17 +2450,23 @@ namespace FirstPersonController
             const float crouchSettleDuration = 0.2f;
 
             // Target Z offset for crouch: Negative distance to lower camera
-            float targetLocalZOffset = -m_crouchDistance;
-            // Current PID error along Z: Difference between target and current Z travel
-            float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
-            // Get acceleration from PID controller based on error, time step, and current position
-            float zAcceleration = m_crouchDownPidController.Output(currentZError, deltaTime, m_cameraLocalZTravelDistance);
-            // Update velocity with acceleration over time
-            m_currentCrouchVelocity += zAcceleration * deltaTime;
-            // Compute delta travel for this frame
-            float cameraTravelDelta = m_currentCrouchVelocity * deltaTime;
-            // Apply delta to local Z travel distance
-            m_cameraLocalZTravelDistance += cameraTravelDelta;
+            const float targetLocalZOffset = -m_crouchDistance;
+
+            // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
+            // and camera distance calculation for framerate/timestep-independence.
+            for (int i = 0; i < numSubsteps; ++i)
+            {
+                // Current PID error along Z: Difference between target and current Z travel
+                float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                // Get acceleration from PID controller based on error, time step, and current position
+                float zAcceleration = m_crouchDownPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
+                // Update velocity with acceleration over time
+                m_currentCrouchVelocity += zAcceleration * subDeltaTime;
+                // Compute delta travel for this substep
+                float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
+                // Apply delta to local Z travel distance
+                m_cameraLocalZTravelDistance += cameraTravelDelta;
+            }
 
             // Update capsule height based on current Z travel (ensures collider matches visual crouch)
             m_capsuleCurrentHeight = m_capsuleHeight + m_cameraLocalZTravelDistance;
@@ -2464,10 +2480,10 @@ namespace FirstPersonController
             // Resize the PhysX character controller capsule to match current height
             PhysX::CharacterControllerRequestBus::Event(
                 GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-            cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
+            cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
 
             // Post-update error for settle check
-            currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+            const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
             // Check if within tolerance for position and velocity to start settling
             if (fabs(currentZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
             {
@@ -2521,6 +2537,16 @@ namespace FirstPersonController
         static float standUpSettleTimer = 0.0f;
         if (m_standingUpMove)
         {
+            // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
+            const float referenceSubDeltaTime = 1.0f / 120.0f;
+            // Calculate the number of substeps required to cover the full deltaTime.
+            // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
+            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
+            // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
+            // across the calculated numSubSteps. This ensures the total simulated time across all
+            // substeps exactly equals deltaTime.
+            const float subDeltaTime = deltaTime / numSubsteps;
+
             // Define tolerances similar to crouch down for consistency
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
             const float crouchVelocityTolerance = 0.1f;
@@ -2605,24 +2631,34 @@ namespace FirstPersonController
                 m_standPrevented = false;
 
                 // Target Z offset for standing: Reset to zero
-                float targetLocalZOffset = 0.0f;
-                // Compute current PID error
-                float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
-                // Get acceleration from PID
-                float zAcceleration = m_standUpPidController.Output(currentZError, deltaTime, m_cameraLocalZTravelDistance);
-                m_currentCrouchVelocity += zAcceleration * deltaTime;
-                float cameraTravelDelta = m_currentCrouchVelocity * deltaTime;
-                m_cameraLocalZTravelDistance += cameraTravelDelta;
+                const float targetLocalZOffset = 0.0f;
+
+                // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
+                // and camera distance calculation for framerate/timestep-independence.
+                for (int i = 0; i < numSubsteps; ++i)
+                {
+                    // Current PID error along Z: Difference between target and current Z travel
+                    float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                    // Get acceleration from PID controller based on error, time step, and current position
+                    float zAcceleration = m_standUpPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
+                    // Update velocity with acceleration over time
+                    m_currentCrouchVelocity += zAcceleration * subDeltaTime;
+                    // Compute delta travel for this substep
+                    float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
+                    // Apply delta to local Z travel distance
+                    m_cameraLocalZTravelDistance += cameraTravelDelta;
+                }
+
                 // Capsule update (max height guard)
                 m_capsuleCurrentHeight = m_capsuleHeight + m_cameraLocalZTravelDistance;
                 if (m_capsuleCurrentHeight > m_capsuleHeight)
                     m_capsuleCurrentHeight = m_capsuleHeight;
                 PhysX::CharacterControllerRequestBus::Event(
                     GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-                cameraTransform->SetLocalZ(cameraTransform->GetLocalZ() + cameraTravelDelta);
+                cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
 
                 // Early standing for speed
-                float postZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                const float postZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
                 if (!m_standing && fabs(postZError) < earlyStandThreshold)
                 {
                     m_standing = true;
