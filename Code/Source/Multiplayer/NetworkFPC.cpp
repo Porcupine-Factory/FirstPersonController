@@ -117,17 +117,20 @@ namespace FirstPersonController
         if (m_firstPersonExtrasObject != nullptr)
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
-        FirstPersonControllerComponentRequestBus::Broadcast(
-            &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+        FirstPersonControllerComponentRequestBus::Event(
+            GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
         if (m_firstPersonExtrasObject != nullptr)
-            FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            FirstPersonExtrasComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
 
         if (IsNetEntityRoleAutonomous())
         {
             m_autonomousNotDetermined = false;
-            FirstPersonControllerComponentRequestBus::Broadcast(&FirstPersonControllerComponentRequestBus::Events::IsAutonomousSoConnect);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::IsAutonomousSoConnect);
             if (m_firstPersonExtrasObject != nullptr)
-                FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::IsAutonomousSoConnect);
+                FirstPersonExtrasComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonExtrasComponentRequestBus::Events::IsAutonomousSoConnect);
             AssignConnectInputEvents();
         }
     }
@@ -187,10 +190,11 @@ namespace FirstPersonController
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
         {
-            FirstPersonControllerComponentRequestBus::Broadcast(
-                &FirstPersonControllerComponentRequestBus::Events::NotAutonomousSoDisconnect);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::NotAutonomousSoDisconnect);
             if (m_firstPersonExtrasObject != nullptr)
-                FirstPersonExtrasComponentRequestBus::Broadcast(&FirstPersonExtrasComponentRequestBus::Events::NotAutonomousSoDisconnect);
+                FirstPersonExtrasComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonExtrasComponentRequestBus::Events::NotAutonomousSoDisconnect);
             m_autonomousNotDetermined = false;
         }
 
@@ -245,11 +249,11 @@ namespace FirstPersonController
             m_firstPersonExtrasObject->m_networkFPCEnabled = enable;
         if (!m_disabled)
         {
-            FirstPersonControllerComponentRequestBus::Broadcast(
-                &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
             if (m_firstPersonExtrasObject != nullptr)
-                FirstPersonExtrasComponentRequestBus::Broadcast(
-                    &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+                FirstPersonExtrasComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
             AssignConnectInputEvents();
         }
         else
@@ -282,11 +286,11 @@ namespace FirstPersonController
             m_firstPersonExtrasObject->m_networkFPCEnabled = new_enabled;
         if (!m_disabled)
         {
-            FirstPersonControllerComponentRequestBus::Broadcast(
-                &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
             if (m_firstPersonExtrasObject != nullptr)
-                FirstPersonExtrasComponentRequestBus::Broadcast(
-                    &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
+                FirstPersonExtrasComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonExtrasComponentRequestBus::Events::NetworkFPCEnabledIgnoreInputs);
             AssignConnectInputEvents();
         }
         else
