@@ -1336,7 +1336,7 @@ namespace FirstPersonController
             InputChannelEventListener::Disconnect();
             m_cameraSmoothFollow = true;
             SetAddVelocityForTimestepVsTick(true);
-            m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
+            NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
         }
 
         if (entityId == m_cameraEntityId)
@@ -1556,6 +1556,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime)
     {
+        if (!m_networkFPCEnabled)
+            NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
         ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
         CaptureCharacterEyeTranslation();
         m_prevNetworkFPCDeltaTime = deltaTime;
@@ -3802,14 +3804,11 @@ namespace FirstPersonController
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
-            // Add velocity on either the network tick, the physics timstep, or the frame tick
-            if (tickTimestepNetwork == 2)
-                NetworkFPCControllerRequestBus::Event(
-                    GetEntityId(), &NetworkFPCControllerRequestBus::Events::TryAddVelocityForNetworkTick, m_prevTargetVelocity, deltaTime);
-            else if (m_addVelocityForTimestepVsTick)
+            // Add velocity on either the network tick (not shown here, see NetworkFPC), the physics timstep, or the frame tick
+            if (m_addVelocityForTimestepVsTick && tickTimestepNetwork == 1)
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
-            else
+            else if (tickTimestepNetwork == 0)
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
         }
