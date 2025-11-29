@@ -219,7 +219,9 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_sprintAccelValue = 0.f;
         }
 
-        GetNetworkCharacterComponentController()->TryMoveWithVelocity(m_firstPersonControllerObject->m_prevTargetVelocity, deltaTime);
+        GetNetworkCharacterComponentController()->TryMoveWithVelocity(
+            m_firstPersonControllerObject->m_prevTargetVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
+        m_prevDeltaTime = deltaTime;
 
         // AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
         // AZ_Printf("NetworkFPC", "Back: %f", playerInput->m_back);

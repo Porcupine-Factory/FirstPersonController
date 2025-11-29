@@ -61,6 +61,9 @@ namespace FirstPersonController
         // NetworkFPCControllerNotificationBus
         void OnNetworkTick(const float& deltaTime);
 
+        // Keep track of the previous deltaTime for averagin
+        float m_prevDeltaTime = 1.f / 60.f;
+
         // EnableNetworkFPC Changed Event
         AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
         void OnEnableNetworkFPCChanged(const bool& enable);

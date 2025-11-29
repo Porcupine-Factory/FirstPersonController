@@ -3841,12 +3841,15 @@ namespace FirstPersonController
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
             // Add velocity on either the network tick (not shown here, see NetworkFPC), the physics timstep, or the frame tick
-            if (m_addVelocityForTimestepVsTick && tickTimestepNetwork == 1)
-                Physics::CharacterRequestBus::Event(
-                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
-            else if (tickTimestepNetwork == 0)
-                Physics::CharacterRequestBus::Event(
-                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
+            if (!m_networkFPCEnabled)
+            {
+                if (m_addVelocityForTimestepVsTick)
+                    Physics::CharacterRequestBus::Event(
+                        GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
+                else
+                    Physics::CharacterRequestBus::Event(
+                        GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
+            }
         }
     }
 
