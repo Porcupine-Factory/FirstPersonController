@@ -796,6 +796,8 @@ namespace FirstPersonController
 
         // Networking related variables
         bool m_networkFPCEnabled = false;
+        bool m_notAutonomous = false;
+        bool m_isAuthority = false;
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;

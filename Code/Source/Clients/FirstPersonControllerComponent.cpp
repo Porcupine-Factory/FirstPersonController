@@ -1724,7 +1724,7 @@ namespace FirstPersonController
         // Apply yaw to player character
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
 
-        if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
+        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && (m_notAutonomous || m_isAuthority)))
         {
             AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
             characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
@@ -5992,5 +5992,6 @@ namespace FirstPersonController
         m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         m_sceneSimulationStartHandler.Disconnect();
         m_sceneSimulationFinishHandler.Disconnect();
+        m_notAutonomous = true;
     }
 } // namespace FirstPersonController

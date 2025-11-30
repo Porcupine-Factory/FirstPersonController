@@ -129,6 +129,10 @@ namespace FirstPersonController
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
             AssignConnectInputEvents();
         }
+        else if (IsNetEntityRoleAuthority())
+        {
+            m_firstPersonControllerObject->m_isAuthority = true;
+        }
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
