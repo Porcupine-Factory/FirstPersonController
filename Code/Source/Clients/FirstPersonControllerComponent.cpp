@@ -1713,7 +1713,7 @@ namespace FirstPersonController
             m_newLookRotationDelta = targetLookRotationDelta;
     }
 
-    void FirstPersonControllerComponent::UpdateRotation()
+    void FirstPersonControllerComponent::UpdateRotation(const AZ::u8& tickTimestepNetwork)
     {
         if (!m_enableCameraCharacterRotation)
             return;
@@ -1723,7 +1723,12 @@ namespace FirstPersonController
 
         // Apply yaw to player character
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
-        characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
+
+        if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
+        {
+            AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
+            characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
+        }
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
         if (m_activeCameraEntity)
@@ -1776,7 +1781,12 @@ namespace FirstPersonController
 
         // Update heading and pitch
         if (!m_scriptSetCurrentHeadingTick)
-            m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+        {
+            if (!m_networkFPCEnabled)
+                m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+            else
+                m_currentHeading = m_cameraRotationTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
+        }
         else
             m_scriptSetCurrentHeadingTick = false;
 
@@ -3760,14 +3770,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Only update the rotation on each tick
-        if (tickTimestepNetwork == 0)
+        if (tickTimestepNetwork == 0 || tickTimestepNetwork == 2)
         {
             // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
             // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
             LerpCameraToCharacter(deltaTime);
 
             // Update the camera and character rotation
-            UpdateRotation();
+            UpdateRotation(tickTimestepNetwork);
         }
 
         // Keep track of the last two target velocity values for the obstruction check logic

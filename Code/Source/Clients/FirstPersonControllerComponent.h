@@ -509,7 +509,7 @@ namespace FirstPersonController
         void AcquireSumOfGroundNormals();
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
-        void UpdateRotation();
+        void UpdateRotation(const AZ::u8& tickTimestepNetwork);
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void ApplyMovingUpInclineXYSpeedFactor();
         void LerpCameraToCharacter(float deltaTime);
