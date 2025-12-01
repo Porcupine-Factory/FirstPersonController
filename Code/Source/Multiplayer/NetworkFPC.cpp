@@ -48,14 +48,9 @@ namespace FirstPersonController
         if (inputId == nullptr)
             return;
 
-        if (*inputId == m_sprintEventId)
-        {
-            m_sprintValue = value;
-        }
-
         for (auto& it_event : m_controlMap)
         {
-            if (*inputId == *(it_event.first) && !(*(it_event.first) == m_sprintEventId))
+            if (*inputId == *(it_event.first))
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
@@ -89,11 +84,11 @@ namespace FirstPersonController
 
         if (*inputId == m_rotateYawEventId)
         {
-            m_yawValue = value;
+            m_yawValue += value;
         }
         else if (*inputId == m_rotatePitchEventId)
         {
-            m_pitchValue = value;
+            m_pitchValue += value;
         }
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if (*inputId == m_sprintEventId)
@@ -172,8 +167,8 @@ namespace FirstPersonController
         playerInput->m_back = m_backValue;
         playerInput->m_left = m_leftValue;
         playerInput->m_right = m_rightValue;
-        playerInput->m_yaw = m_yawValue;
-        playerInput->m_pitch = m_pitchValue;
+        playerInput->m_yaw = m_yawValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
+        playerInput->m_pitch = m_pitchValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
         playerInput->m_sprint = m_sprintValue;
         playerInput->m_crouch = m_crouchValue;
         playerInput->m_jump = m_jumpValue;

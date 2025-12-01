@@ -1733,6 +1733,9 @@ namespace FirstPersonController
             characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
         }
 
+        if (tickTimestepNetwork == 2)
+            return;
+
         m_activeCameraEntity = GetActiveCameraEntityPtr();
         if (m_activeCameraEntity)
         {
@@ -1783,7 +1786,7 @@ namespace FirstPersonController
         }
 
         if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
-            (!m_isAuthority || m_isAuthority && !m_notAutonomous))
+            (!m_isAuthority && !m_notAutonomous))
             static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())
                 ->SetCameraRotationAngles(m_cameraRotationTransform->GetWorldRotation());
 
@@ -2444,7 +2447,7 @@ namespace FirstPersonController
         if (m_crouchingDownMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            const float referenceSubDeltaTime = 1.0f / 120.0f;
+            constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
             const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
@@ -2459,10 +2462,10 @@ namespace FirstPersonController
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
             // Define velocity tolerance. A small threshold (0.1 m/s) to check if velocity has sufficiently damped near zero,
             // indicating the movement has stabilized and is not still accelerating or oscillating.
-            const float crouchVelocityTolerance = 0.1f;
+            constexpr float crouchVelocityTolerance = 0.1f;
             // Define settle duration. 200ms period after tolerances are met to allow any residual PID damping or minor adjustments
             // to occur, ensuring smooth stopping without abrupt snaps or state changes.
-            const float crouchSettleDuration = 0.2f;
+            constexpr float crouchSettleDuration = 0.2f;
 
             // Target Z offset for crouch: Negative distance to lower camera
             const float targetLocalZOffset = -m_crouchDistance;
@@ -2551,7 +2554,7 @@ namespace FirstPersonController
         if (m_standingUpMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            const float referenceSubDeltaTime = 1.0f / 120.0f;
+            constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
             const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
@@ -2562,9 +2565,9 @@ namespace FirstPersonController
 
             // Define tolerances similar to crouch down for consistency
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
-            const float crouchVelocityTolerance = 0.1f;
+            constexpr float crouchVelocityTolerance = 0.1f;
             // 200ms standing settle time
-            const float crouchSettleDuration = 0.2f;
+            constexpr float crouchSettleDuration = 0.2f;
             // Early standing flag. Set if close enough to target for responsive feel
             const float earlyStandThreshold = 0.1f * fabs(m_crouchDistance);
 
@@ -2644,7 +2647,7 @@ namespace FirstPersonController
                 m_standPrevented = false;
 
                 // Target Z offset for standing: Reset to zero
-                const float targetLocalZOffset = 0.0f;
+                constexpr float targetLocalZOffset = 0.0f;
 
                 // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
                 // and camera distance calculation for framerate/timestep-independence.
@@ -2900,11 +2903,14 @@ namespace FirstPersonController
         // Get the current velocity to determine if something was hit
         if (!m_networkFPCEnabled)
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
-        else
+        else if (!m_notAutonomous)
         {
+            // TODO: This works for autonomous clients but not for hosts (server + client)
             m_currentVelocity = m_prevSampledVelocity;
             m_prevSampledVelocity = AZ::Vector3::CreateZero();
         }
+        else
+            return;
 
         if (!m_prevPrevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
         {
@@ -3126,7 +3132,7 @@ namespace FirstPersonController
         if (m_coyoteTime > 0.f)
         {
             // When the radius percentage increase is set to less than or equal to -100% then use a raycast instead
-            const float noRadiusUseRacast = -100.f;
+            constexpr float noRadiusUseRacast = -100.f;
             if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > noRadiusUseRacast)
             {
                 request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
