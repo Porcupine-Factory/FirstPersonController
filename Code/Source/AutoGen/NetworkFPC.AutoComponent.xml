@@ -10,7 +10,19 @@
 
     <ComponentRelation Constraint="Required" HasController="true" Name="NetworkCharacterComponent" Namespace="Multiplayer" Include="Multiplayer/Components/NetworkCharacterComponent.h" />
 
-    <NetworkProperty Type="bool" Name="EnableNetworkFPC" Init="true" ReplicateFrom="Authority" ReplicateTo="Client" IsRewindable="false" IsPredictable="false" IsPublic="true" Container="Object" ExposeToEditor="false" ExposeToScript="true" GenerateEventBindings="true" Description=""/>
+    <NetworkProperty Type="bool" Name="EnableNetworkFPC"
+                     Init="true" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="false"
+                     IsPredictable="false" IsPublic="true"
+                     Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Determines whether NetworkFPC is enabled or disabled"/>
+    <NetworkProperty Type="AZ::Vector3" Name="CameraRotationAngles"
+                     Init="AZ::Vector3::CreateZero()" ReplicateFrom="Autonomous"
+                     ReplicateTo="Authority" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="false" GenerateEventBindings="true"
+                     Description="Current aim direction of the camera (pitch in X, yaw in Z)"/>
 
     <NetworkInput Type="float" Name="Forward" Init="0.f" />
     <NetworkInput Type="float" Name="Back" Init="0.f" />

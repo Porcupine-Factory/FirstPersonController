@@ -1537,13 +1537,13 @@ namespace FirstPersonController
 
         if (channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RX)
         {
-            m_cameraRotationAngles[2] = -1.f * inputChannel.GetValue() * m_yawSensitivity;
+            m_cameraRotationAnglesDelta.SetZ(-1.f * inputChannel.GetValue() * m_yawSensitivity);
             m_rotatingYawViaScriptGamepad = true;
         }
 
         if (channelId == AzFramework::InputDeviceGamepad::ThumbStickAxis1D::RY)
         {
-            m_cameraRotationAngles[0] = inputChannel.GetValue() * m_pitchSensitivity;
+            m_cameraRotationAnglesDelta.SetX(inputChannel.GetValue() * m_pitchSensitivity);
             m_rotatingPitchViaScriptGamepad = true;
         }
     }
@@ -1694,18 +1694,17 @@ namespace FirstPersonController
         // Multiply by -1 since moving the mouse to the right produces a positive value
         // but a positive rotation about Z is counterclockwise
         if (!m_rotatingYawViaScriptGamepad)
-            m_cameraRotationAngles[2] = -1.f * m_yawValue * m_yawSensitivity;
+            m_cameraRotationAnglesDelta.SetZ(-1.f * m_yawValue * m_yawSensitivity);
         else
             m_rotatingYawViaScriptGamepad = false;
 
         // Multiply by -1 since moving the mouse up produces a negative value from the input bus
         if (!m_rotatingPitchViaScriptGamepad)
-            m_cameraRotationAngles[0] = -1.f * m_pitchValue * m_pitchSensitivity;
+            m_cameraRotationAnglesDelta.SetX(-1.f * m_pitchValue * m_pitchSensitivity);
         else
             m_rotatingPitchViaScriptGamepad = false;
 
-        const AZ::Quaternion targetLookRotationDelta =
-            AZ::Quaternion::CreateFromEulerAnglesRadians(AZ::Vector3::CreateFromFloat3(m_cameraRotationAngles));
+        const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerAnglesRadians(m_cameraRotationAnglesDelta);
 
         if (m_rotationDamp * 0.01f <= 1.f)
             m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp * 0.01f);
@@ -1724,8 +1723,12 @@ namespace FirstPersonController
         // Apply yaw to player character
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
 
-        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && (m_notAutonomous || m_isAuthority)))
+        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && (m_isAuthority || m_notAutonomous)))
         {
+            if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
+                m_isAuthority && m_notAutonomous)
+                m_currentHeading =
+                    static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetCameraRotationAngles().GetZ();
             AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
             characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
         }
@@ -1778,6 +1781,11 @@ namespace FirstPersonController
                 m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
             }
         }
+
+        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
+            (!m_isAuthority || m_isAuthority && !m_notAutonomous))
+            static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())
+                ->SetCameraRotationAngles(m_cameraRotationTransform->GetWorldRotation());
 
         // Update heading and pitch
         if (!m_scriptSetCurrentHeadingTick)
@@ -2412,10 +2420,10 @@ namespace FirstPersonController
 
         // Determine if starting or switching to crouch down movement. Initiates when crouching is active, not already moving down,
         // and currently standing or near standing position
-        bool isStartingCrouchDown = m_crouching && !m_crouchingDownMove &&
+        const bool isStartingCrouchDown = m_crouching && !m_crouchingDownMove &&
             (m_standing || AZ::IsClose(m_cameraLocalZTravelDistance, 0.f, 0.01f) ||
              m_cameraLocalZTravelDistance > -m_crouchDistance + 0.01f);
-        bool isSwitchingToCrouchDown = m_crouching && m_standingUpMove;
+        const bool isSwitchingToCrouchDown = m_crouching && m_standingUpMove;
         // Start or switch to crouch down movement
         if (isStartingCrouchDown || isSwitchingToCrouchDown)
         {
@@ -2431,9 +2439,6 @@ namespace FirstPersonController
                 FirstPersonControllerComponentNotificationBus::Broadcast(
                     &FirstPersonControllerComponentNotificationBus::Events::OnStartedCrouching);
         }
-
-        // Static timer for settling after reaching target during crouch down (ensures stability before state change)
-        static float crouchDownSettleTimer = 0.0f;
 
         // Handle ongoing crouch down movement using PID control
         if (m_crouchingDownMove)
@@ -2467,13 +2472,13 @@ namespace FirstPersonController
             for (int i = 0; i < numSubsteps; ++i)
             {
                 // Current PID error along Z: Difference between target and current Z travel
-                float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
                 // Get acceleration from PID controller based on error, time step, and current position
-                float zAcceleration = m_crouchDownPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
+                const float zAcceleration = m_crouchDownPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
                 // Update velocity with acceleration over time
                 m_currentCrouchVelocity += zAcceleration * subDeltaTime;
                 // Compute delta travel for this substep
-                float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
+                const float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
                 // Apply delta to local Z travel distance
                 m_cameraLocalZTravelDistance += cameraTravelDelta;
             }
@@ -2498,9 +2503,9 @@ namespace FirstPersonController
             if (fabs(currentZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
             {
                 // Accumulate settle time
-                crouchDownSettleTimer += deltaTime;
+                m_crouchDownSettleTimer += deltaTime;
                 // Complete settle if duration met. Reset velocity, end movement, set crouched state, and notify
-                if (crouchDownSettleTimer >= crouchSettleDuration)
+                if (m_crouchDownSettleTimer >= crouchSettleDuration)
                 {
                     // Snap camera to target position
                     m_cameraLocalZTravelDistance = targetLocalZOffset;
@@ -2511,7 +2516,7 @@ namespace FirstPersonController
                     // Mark as fully crouched
                     m_crouched = true;
                     // Reset timer for next use
-                    crouchDownSettleTimer = 0.0f;
+                    m_crouchDownSettleTimer = 0.0f;
                     FirstPersonControllerComponentNotificationBus::Broadcast(
                         &FirstPersonControllerComponentNotificationBus::Events::OnCrouched);
                 }
@@ -2519,7 +2524,7 @@ namespace FirstPersonController
             else
             {
                 // Reset settle timer if not within tolerance
-                crouchDownSettleTimer = 0.0f;
+                m_crouchDownSettleTimer = 0.0f;
             }
         }
         // Determine if starting or switching to stand up movement. Initiates when not crouching, not already standing up,
@@ -2543,8 +2548,6 @@ namespace FirstPersonController
                     &FirstPersonControllerComponentNotificationBus::Events::OnStartedStanding);
         }
 
-        // Static timer for settling after reaching target during stand up
-        static float standUpSettleTimer = 0.0f;
         if (m_standingUpMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
@@ -2648,13 +2651,13 @@ namespace FirstPersonController
                 for (int i = 0; i < numSubsteps; ++i)
                 {
                     // Current PID error along Z: Difference between target and current Z travel
-                    float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                    const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
                     // Get acceleration from PID controller based on error, time step, and current position
-                    float zAcceleration = m_standUpPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
+                    const float zAcceleration = m_standUpPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
                     // Update velocity with acceleration over time
                     m_currentCrouchVelocity += zAcceleration * subDeltaTime;
                     // Compute delta travel for this substep
-                    float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
+                    const float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
                     // Apply delta to local Z travel distance
                     m_cameraLocalZTravelDistance += cameraTravelDelta;
                 }
@@ -2677,14 +2680,14 @@ namespace FirstPersonController
                 if (fabs(postZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
                 {
                     // Accumulate settle time. Allows final damping before state change.
-                    standUpSettleTimer += deltaTime;
+                    m_standUpSettleTimer += deltaTime;
                     // Complete if settled. Reset velocity, end movement, set standing
-                    if (standUpSettleTimer >= crouchSettleDuration)
+                    if (m_standUpSettleTimer >= crouchSettleDuration)
                     {
                         m_cameraLocalZTravelDistance = targetLocalZOffset;
                         m_currentCrouchVelocity = 0.f;
                         m_standingUpMove = false;
-                        standUpSettleTimer = 0.0f;
+                        m_standUpSettleTimer = 0.0f;
                         FirstPersonControllerComponentNotificationBus::Broadcast(
                             &FirstPersonControllerComponentNotificationBus::Events::OnStoodUp);
                     }
@@ -2692,7 +2695,7 @@ namespace FirstPersonController
                 else
                 {
                     // Reset if not settled
-                    standUpSettleTimer = 0.0f;
+                    m_standUpSettleTimer = 0.0f;
                 }
             }
         }
@@ -5936,17 +5939,17 @@ namespace FirstPersonController
         const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput)
     {
         if (updateCharacterAndCameraYawConsidersInput)
-            m_cameraRotationAngles[2] = new_characterAndCameraYawAngle - m_yawValue * m_yawSensitivity;
+            m_cameraRotationAnglesDelta.SetZ(new_characterAndCameraYawAngle - m_yawValue * m_yawSensitivity);
         else
-            m_cameraRotationAngles[2] = new_characterAndCameraYawAngle;
+            m_cameraRotationAnglesDelta.SetZ(new_characterAndCameraYawAngle);
         m_rotatingYawViaScriptGamepad = true;
     }
     void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput)
     {
         if (updateCameraPitchConsidersInput)
-            m_cameraRotationAngles[0] = new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity;
+            m_cameraRotationAnglesDelta.SetX(new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity);
         else
-            m_cameraRotationAngles[0] = new_cameraPitchAngle;
+            m_cameraRotationAnglesDelta.SetX(new_cameraPitchAngle);
         m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const

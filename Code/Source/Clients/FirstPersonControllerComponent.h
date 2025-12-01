@@ -612,7 +612,7 @@ namespace FirstPersonController
         bool m_scriptSetsTargetVelocityXY = false;
 
         // Angles used to rotate the camera
-        float m_cameraRotationAngles[3] = { 0.f, 0.f, 0.f };
+        AZ::Vector3 m_cameraRotationAnglesDelta = AZ::Vector3::CreateZero();
 
         // Top walk speed
         float m_speed = 5.f;
@@ -672,6 +672,8 @@ namespace FirstPersonController
         bool m_crouchScriptLocked = false;
         bool m_crouchWhenNotGrounded = false;
         float m_currentCrouchVelocity = 0.f;
+        float m_crouchDownSettleTimer = 0.f;
+        float m_standUpSettleTimer = 0.f;
 
         // Crouch Down PID Parameters
         float m_crouchDownProportionalGain = 200.0f;
