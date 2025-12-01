@@ -1723,7 +1723,7 @@ namespace FirstPersonController
         // Apply yaw to player character
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
 
-        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && (m_isAuthority || m_notAutonomous)))
+        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && m_isAuthority))
         {
             if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
                 m_isAuthority && m_notAutonomous)
@@ -1785,8 +1785,8 @@ namespace FirstPersonController
             }
         }
 
-        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
-            (!m_isAuthority && !m_notAutonomous))
+        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr && !m_isAuthority &&
+            !m_notAutonomous)
             static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())
                 ->SetCameraRotationAngles(m_cameraRotationTransform->GetWorldRotation());
 
