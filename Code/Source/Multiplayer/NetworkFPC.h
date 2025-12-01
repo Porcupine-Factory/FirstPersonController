@@ -71,6 +71,7 @@ namespace FirstPersonController
 
         // Signals when the controller is determined to be autonomous or not
         bool m_autonomousNotDetermined = true;
+        bool m_isAuthority = false;
 
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;

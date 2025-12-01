@@ -1556,6 +1556,11 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime)
     {
+        if (!m_isServer && !m_isHost && !m_isAutonomousClient)
+        {
+            NotAutonomousSoDisconnect();
+            return;
+        }
         if (!m_networkFPCEnabled)
             NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
         ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
@@ -1723,10 +1728,9 @@ namespace FirstPersonController
         // Apply yaw to player character
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
 
-        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && m_isAuthority))
+        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && (m_isServer || m_isHost)))
         {
-            if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
-                m_isAuthority && m_notAutonomous)
+            if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr && m_isServer)
                 m_currentHeading =
                     static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetCameraRotationAngles().GetZ();
             AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
@@ -1785,8 +1789,8 @@ namespace FirstPersonController
             }
         }
 
-        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr && !m_isAuthority &&
-            !m_notAutonomous)
+        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
+            m_isAutonomousClient)
             static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())
                 ->SetCameraRotationAngles(m_cameraRotationTransform->GetWorldRotation());
 
@@ -2903,9 +2907,9 @@ namespace FirstPersonController
         // Get the current velocity to determine if something was hit
         if (!m_networkFPCEnabled)
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
-        else if (!m_notAutonomous)
+        else if (m_isHost || m_isAutonomousClient)
         {
-            // TODO: This works for autonomous clients but not for hosts (server + client)
+            // TODO: This works for autonomous clients but not for hosts
             m_currentVelocity = m_prevSampledVelocity;
             m_prevSampledVelocity = AZ::Vector3::CreateZero();
         }
@@ -6001,6 +6005,5 @@ namespace FirstPersonController
         m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         m_sceneSimulationStartHandler.Disconnect();
         m_sceneSimulationFinishHandler.Disconnect();
-        m_notAutonomous = true;
     }
 } // namespace FirstPersonController

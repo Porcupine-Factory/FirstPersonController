@@ -123,10 +123,14 @@ namespace FirstPersonController
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
             AssignConnectInputEvents();
+            if (IsNetEntityRoleAuthority())
+                m_firstPersonControllerObject->m_isHost = true;
+            else
+                m_firstPersonControllerObject->m_isAutonomousClient = true;
         }
         else if (IsNetEntityRoleAuthority())
         {
-            m_firstPersonControllerObject->m_isAuthority = true;
+            m_isAuthority = true;
         }
     }
 
@@ -188,6 +192,8 @@ namespace FirstPersonController
             m_firstPersonControllerObject->NotAutonomousSoDisconnect();
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->NotAutonomousSoDisconnect();
+            if (IsNetEntityRoleAuthority())
+                m_firstPersonControllerObject->m_isServer = true;
             m_autonomousNotDetermined = false;
         }
 
