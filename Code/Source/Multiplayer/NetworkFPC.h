@@ -73,6 +73,9 @@ namespace FirstPersonController
         bool m_autonomousNotDetermined = true;
         bool m_isAuthority = false;
 
+        // Desired rotation of the character
+        AZ::Quaternion m_desiredRotation = AZ::Quaternion::CreateZero();
+
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;

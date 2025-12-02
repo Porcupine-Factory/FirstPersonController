@@ -201,8 +201,6 @@ namespace FirstPersonController
             !m_firstPersonControllerObject->m_isAutonomousClient)
             return;
 
-        NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
-
         const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
         // Assign the First Person Controller's inputs from the input prediction
@@ -227,6 +225,10 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_sprintEffectiveValue = 0.f;
             m_firstPersonControllerObject->m_sprintAccelValue = 0.f;
         }
+
+        NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
+
+        GetNetworkCharacterComponentController()->GetEntity()->GetTransform()->SetWorldRotationQuaternion(GetDesiredRotation());
 
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(
             m_firstPersonControllerObject->m_prevTargetVelocity, (deltaTime + m_prevDeltaTime) / 2.f);

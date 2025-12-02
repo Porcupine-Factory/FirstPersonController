@@ -1745,7 +1745,10 @@ namespace FirstPersonController
             // Apply the yaw to the character
             const AZ::Quaternion characterRotationQuaternion =
                 AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
-            characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
+            if (!m_networkFPCEnabled)
+                characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
+            else if (m_networkFPCControllerObject != nullptr)
+                m_networkFPCControllerObject->SetDesiredRotation(characterRotationQuaternion);
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
             if (m_networkFPCEnabled && m_networkFPCControllerObject)
