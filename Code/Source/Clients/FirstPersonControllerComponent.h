@@ -26,6 +26,7 @@
 namespace FirstPersonController
 {
     class NetworkFPC;
+    class NetworkFPCController;
 
     class FirstPersonControllerComponent
         : public AZ::Component
@@ -488,6 +489,7 @@ namespace FirstPersonController
 
         // NetworkFPC object
         NetworkFPC* m_networkFPCObject = nullptr;
+        NetworkFPCController* m_networkFPCControllerObject = nullptr;
 
         // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;

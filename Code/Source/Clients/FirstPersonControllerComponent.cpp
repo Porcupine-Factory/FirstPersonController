@@ -1332,6 +1332,7 @@ namespace FirstPersonController
         // Determine if the NetworkFPC is enabled
         if (m_networkFPCObject != nullptr)
         {
+            m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             InputChannelEventListener::Disconnect();
             m_cameraSmoothFollow = true;
@@ -1727,8 +1728,8 @@ namespace FirstPersonController
 
         // Get the character's transform
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
-        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr)
-            characterTransform = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEntity()->GetTransform();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            characterTransform = m_networkFPCControllerObject->GetEntity()->GetTransform();
 
         if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
         {
@@ -1742,9 +1743,9 @@ namespace FirstPersonController
             characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
-            if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()))
+            if (m_networkFPCEnabled && m_networkFPCControllerObject)
             {
-                static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->SetLookRotationDelta(newLookRotationDelta);
+                m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
                 m_appliedNetworkFPCRotation = false;
             }
 
@@ -1752,12 +1753,12 @@ namespace FirstPersonController
             if (tickTimestepNetwork == 2)
                 return;
         }
-        else if (static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr)
+        else if (m_networkFPCControllerObject != nullptr)
         {
             // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
             if (!m_appliedNetworkFPCRotation)
             {
-                newLookRotationDelta = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetLookRotationDelta();
+                newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta();
                 newLookRotationDelta.SetZ(0.f);
                 m_appliedNetworkFPCRotation = true;
             }
