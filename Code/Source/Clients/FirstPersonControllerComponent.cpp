@@ -1549,6 +1549,11 @@ namespace FirstPersonController
         }
     }
 
+    int FirstPersonControllerComponent::GetTickOrder()
+    {
+        return AZ::TICK_PRE_RENDER;
+    }
+
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
         ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
