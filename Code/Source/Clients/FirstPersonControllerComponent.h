@@ -801,6 +801,7 @@ namespace FirstPersonController
         bool m_isServer = false;
         bool m_isHost = false;
         bool m_isAutonomousClient = false;
+        bool m_appliedNetworkFPCRotation = false;
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;

@@ -197,6 +197,10 @@ namespace FirstPersonController
             m_autonomousNotDetermined = false;
         }
 
+        if (!m_firstPersonControllerObject->m_isServer && !m_firstPersonControllerObject->m_isHost &&
+            !m_firstPersonControllerObject->m_isAutonomousClient)
+            return;
+
         NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
 
         const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();

@@ -1723,22 +1723,50 @@ namespace FirstPersonController
             return;
 
         SmoothRotation();
-        const AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
+        AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
 
-        // Apply yaw to player character
+        // Get the character's transform
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
+        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr)
+            characterTransform = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEntity()->GetTransform();
 
-        if (!m_networkFPCEnabled || (tickTimestepNetwork == 2 && (m_isServer || m_isHost)))
+        if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
         {
-            if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr && m_isServer)
-                m_currentHeading =
-                    static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetCameraRotationAngles().GetZ();
-            AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
-            characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
-        }
+            // Get the current heading
+            if (m_networkFPCEnabled)
+                m_currentHeading = characterTransform->GetWorldRotation().GetZ();
 
-        if (tickTimestepNetwork == 2)
-            return;
+            // Apply the yaw to the character
+            const AZ::Quaternion characterRotationQuaternion =
+                AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
+            characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
+
+            // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
+            if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()))
+            {
+                static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->SetLookRotationDelta(newLookRotationDelta);
+                m_appliedNetworkFPCRotation = false;
+            }
+
+            // Done applying rotations to the character for multiplayer
+            if (tickTimestepNetwork == 2)
+                return;
+        }
+        else if (static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr)
+        {
+            // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
+            if (!m_appliedNetworkFPCRotation)
+            {
+                newLookRotationDelta = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetLookRotationDelta();
+                newLookRotationDelta.SetZ(0.f);
+                m_appliedNetworkFPCRotation = true;
+            }
+            else
+                newLookRotationDelta = AZ::Vector3::CreateZero();
+
+            // Set the camera yaw, accounting for the yaw delta
+            m_cameraYaw = characterTransform->GetWorldRotation().GetZ() - newLookRotationDelta.GetZ();
+        }
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
         if (m_activeCameraEntity)
@@ -1789,24 +1817,14 @@ namespace FirstPersonController
             }
         }
 
-        if (m_networkFPCEnabled && static_cast<NetworkFPCController*>(m_networkFPCObject->GetController()) != nullptr &&
-            m_isAutonomousClient)
-            static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())
-                ->SetCameraRotationAngles(m_cameraRotationTransform->GetWorldRotation());
-
         // Update heading and pitch
         if (!m_scriptSetCurrentHeadingTick)
-        {
-            if (!m_networkFPCEnabled)
-                m_currentHeading = characterTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
-            else
-                m_currentHeading = m_cameraRotationTransform->GetWorldRotationQuaternion().GetEulerRadians().GetZ();
-        }
+            m_currentHeading = characterTransform->GetWorldRotation().GetZ();
         else
             m_scriptSetCurrentHeadingTick = false;
 
         if (m_activeCameraEntity)
-            m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotationQuaternion().GetEulerRadians().GetX();
+            m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotation().GetX();
     }
 
     // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
