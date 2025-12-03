@@ -176,6 +176,7 @@ namespace FirstPersonController
         playerInput->m_right = m_rightValue;
         playerInput->m_desiredVelocity = GetDesiredVelocity();
         playerInput->m_yaw = m_yawValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
+        playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
         playerInput->m_pitch = m_pitchValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
         playerInput->m_sprint = m_sprintValue;
         playerInput->m_crouch = m_crouchValue;
@@ -232,7 +233,9 @@ namespace FirstPersonController
 
         NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
 
-        GetNetworkCharacterComponentController()->GetEntity()->GetTransform()->SetWorldRotationQuaternion(GetDesiredRotation());
+        const AZ::Quaternion characterRotationQuaternion =
+            AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta);
+        GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
 
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
         m_prevDeltaTime = deltaTime;
