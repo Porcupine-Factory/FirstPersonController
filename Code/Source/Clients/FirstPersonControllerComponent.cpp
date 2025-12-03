@@ -1181,33 +1181,6 @@ namespace FirstPersonController
             }
         }
 
-        // Check whether the game is being ran in the O3DE editor
-        AZ::ApplicationTypeQuery applicationType;
-        if (auto componentApplicationRequests = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
-            componentApplicationRequests != nullptr)
-        {
-            componentApplicationRequests->QueryApplicationType(applicationType);
-        }
-
-        // If not running in the editor and the timestep is less than or equal to 1/(refresh rate) then disable camera smoothing
-        if (!applicationType.IsEditor())
-        {
-            AzFramework::NativeWindowHandle windowHandle = nullptr;
-            windowHandle = AZ::RPI::ViewportContextRequests::Get()->GetDefaultViewportContext()->GetWindowHandle();
-            if (windowHandle)
-            {
-                float refreshRate = 60.f;
-                AzFramework::WindowRequestBus::EventResult(
-                    refreshRate, windowHandle, &AzFramework::WindowRequestBus::Events::GetDisplayRefreshRate);
-
-                const AzPhysics::SystemConfiguration* config = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration();
-
-                // Disable camera smooth follow if the physics timestep is less than or equal to the refresh time
-                if (config->m_fixedTimestep <= 1.f / refreshRate)
-                    m_cameraSmoothFollow = false;
-            }
-        }
-
         Physics::CharacterNotificationBus::Handler::BusConnect(GetEntityId());
         Physics::CollisionRequestBus::BroadcastResult(
             m_standCollisionGroup, &Physics::CollisionRequests::GetCollisionGroupById, m_standCollisionGroupId);
@@ -1338,6 +1311,35 @@ namespace FirstPersonController
             m_cameraSmoothFollow = true;
             SetAddVelocityForTimestepVsTick(true);
             NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
+        }
+        else
+        {
+            // Check whether the game is being ran in the O3DE editor
+            AZ::ApplicationTypeQuery applicationType;
+            if (auto componentApplicationRequests = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+                componentApplicationRequests != nullptr)
+            {
+                componentApplicationRequests->QueryApplicationType(applicationType);
+            }
+
+            // If not running in the editor and the timestep is less than or equal to 1/(refresh rate) then disable camera smoothing
+            if (!applicationType.IsEditor())
+            {
+                AzFramework::NativeWindowHandle windowHandle = nullptr;
+                windowHandle = AZ::RPI::ViewportContextRequests::Get()->GetDefaultViewportContext()->GetWindowHandle();
+                if (windowHandle)
+                {
+                    float refreshRate = 60.f;
+                    AzFramework::WindowRequestBus::EventResult(
+                        refreshRate, windowHandle, &AzFramework::WindowRequestBus::Events::GetDisplayRefreshRate);
+
+                    const AzPhysics::SystemConfiguration* config = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration();
+
+                    // Disable camera smooth follow if the physics timestep is less than or equal to the refresh time
+                    if (config->m_fixedTimestep <= 1.f / refreshRate)
+                        m_cameraSmoothFollow = false;
+                }
+            }
         }
 
         if (entityId == m_cameraEntityId)
