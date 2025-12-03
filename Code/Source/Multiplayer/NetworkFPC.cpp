@@ -171,6 +171,7 @@ namespace FirstPersonController
         playerInput->m_back = m_backValue;
         playerInput->m_left = m_leftValue;
         playerInput->m_right = m_rightValue;
+        playerInput->m_desiredVelocity = GetDesiredVelocity();
         playerInput->m_yaw = m_yawValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
         playerInput->m_pitch = m_pitchValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
         playerInput->m_sprint = m_sprintValue;
@@ -230,8 +231,7 @@ namespace FirstPersonController
 
         GetNetworkCharacterComponentController()->GetEntity()->GetTransform()->SetWorldRotationQuaternion(GetDesiredRotation());
 
-        GetNetworkCharacterComponentController()->TryMoveWithVelocity(
-            m_firstPersonControllerObject->m_prevTargetVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
+        GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
         m_prevDeltaTime = deltaTime;
 
         // AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);

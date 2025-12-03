@@ -1757,7 +1757,7 @@ namespace FirstPersonController
                 m_appliedNetworkFPCRotation = false;
             }
 
-            // Done applying rotations to the character for multiplayer
+            // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
             if (tickTimestepNetwork == 2)
                 return;
         }
@@ -2934,14 +2934,11 @@ namespace FirstPersonController
         // Get the current velocity to determine if something was hit
         if (!m_networkFPCEnabled)
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
-        else if (m_isHost || m_isAutonomousClient)
+        else
         {
-            // TODO: This works for autonomous clients but not for hosts
             m_currentVelocity = m_prevSampledVelocity;
             m_prevSampledVelocity = AZ::Vector3::CreateZero();
         }
-        else
-            return;
 
         if (!m_prevPrevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
         {
@@ -3820,6 +3817,10 @@ namespace FirstPersonController
             UpdateRotation(tickTimestepNetwork);
         }
 
+        // When using NetworkFPC, obtain the last desired velocity that was sent
+        if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
+            m_prevTargetVelocity = m_networkFPCControllerObject->GetDesiredVelocity();
+
         // Keep track of the last two target velocity values for the obstruction check logic
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
 
@@ -3890,16 +3891,15 @@ namespace FirstPersonController
             // Change the +Z direction based on m_velocityZPosDirection
             m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
-            // Add velocity on either the network tick (not shown here, see NetworkFPC), the physics timstep, or the frame tick
-            if (!m_networkFPCEnabled)
-            {
-                if (m_addVelocityForTimestepVsTick)
-                    Physics::CharacterRequestBus::Event(
-                        GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
-                else
-                    Physics::CharacterRequestBus::Event(
-                        GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
-            }
+            // Add velocity on either the network tick, the physics timstep, or the frame tick
+            if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
+                m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
+            else if (!m_networkFPCEnabled && m_addVelocityForTimestepVsTick)
+                Physics::CharacterRequestBus::Event(
+                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
+            else if (!m_networkFPCEnabled)
+                Physics::CharacterRequestBus::Event(
+                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
         }
     }
 
