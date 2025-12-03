@@ -3804,8 +3804,11 @@ namespace FirstPersonController
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
-    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonControllerComponent::ProcessInput(float deltaTime, const AZ::u8& tickTimestepNetwork)
     {
+        if (tickTimestepNetwork == 2 && m_isHost)
+            deltaTime /= 2.f;
+
         // Only update the rotation on each tick
         if (tickTimestepNetwork == 0 || tickTimestepNetwork == 2)
         {

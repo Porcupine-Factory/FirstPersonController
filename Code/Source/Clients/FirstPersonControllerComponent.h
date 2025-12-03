@@ -504,7 +504,7 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick
-        void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
+        void ProcessInput(float deltaTime, const AZ::u8& tickTimestepNetwork);
 
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float& deltaTime);
