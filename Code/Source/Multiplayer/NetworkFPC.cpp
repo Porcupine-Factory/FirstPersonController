@@ -112,6 +112,9 @@ namespace FirstPersonController
         if (m_firstPersonExtrasObject != nullptr)
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
+        // Set the velocity tolerance to a big number to avoid false-positive ground obstruction checks
+        m_firstPersonControllerObject->m_velocityCloseTolerance = 50.f;
+
         m_firstPersonControllerObject->NetworkFPCEnabledIgnoreInputs();
         if (m_firstPersonExtrasObject != nullptr)
             m_firstPersonExtrasObject->NetworkFPCEnabledIgnoreInputs();
