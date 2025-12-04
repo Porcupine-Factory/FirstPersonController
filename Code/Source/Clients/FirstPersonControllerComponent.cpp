@@ -3247,13 +3247,13 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::UpdateJumpMaxHoldTime()
     {
         // Calculate the amount of time that the jump key can be held based on m_jumpHoldDistance
-        // divided by the average of the initial jump velocity and the velocity at the edge of the capsule
-        const float jumpVelocityCapsuleEdgeSquared =
+        // divided by the average of the initial jump velocity and the velocity at the transition point
+        const float jumpVelocityHoldDistanceSquared =
             m_jumpInitialVelocity * m_jumpInitialVelocity + 2.f * m_gravity * m_jumpHeldGravityFactor * m_jumpHoldDistance;
-        // If the initial velocity is large enough such that the apogee can be reached outside of the capsule
-        // then compute how long the jump key is held while still inside the jump hold offset intersection capsule
-        if (jumpVelocityCapsuleEdgeSquared >= 0.f)
-            m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity + sqrt(jumpVelocityCapsuleEdgeSquared)) / 2.f);
+        // If the initial velocity is large enough such that the apogee can be reached outside of the jump hold distance
+        // then compute how long the jump key is held while still inside the jump hold distance
+        if (jumpVelocityHoldDistanceSquared >= 0.f)
+            m_jumpMaxHoldTime = m_jumpHoldDistance / ((m_jumpInitialVelocity + sqrt(jumpVelocityHoldDistanceSquared)) / 2.f);
         // Otherwise the apogee will be reached inside m_jumpHoldDistance
         // and the jump time needs to computed accordingly
         else
