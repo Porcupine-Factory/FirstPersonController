@@ -1248,8 +1248,8 @@ namespace FirstPersonController
 
         m_capsuleCurrentHeight = m_capsuleHeight;
 
-        if (m_crouchDistance > m_capsuleHeight - 2.f * m_capsuleRadius)
-            m_crouchDistance = m_capsuleHeight - 2.f * m_capsuleRadius;
+        // Clamp crouch distance to capsule height minus twice the radius
+        SetCrouchDistance(m_crouchDistance);
 
         // Set the max grounded angle to be slightly greater than the PhysX Character Controller's
         // maximum slope angle value in the editor
@@ -5703,10 +5703,6 @@ namespace FirstPersonController
         // the capsule remains valid (height must be at least 2 * radius).
         const float maxCrouchDistance = m_capsuleHeight - 2.f * m_capsuleRadius;
 
-        // Set the crouch distance, clamping it to the maximum allowable value if necessary.
-        // This prevents invalid collider states where the crouched height would be too small.
-        m_crouchDistance = AZ::GetMin(new_crouchDistance, maxCrouchDistance);
-
         // Issue a warning if the provided distance was adjusted to fit within capsule limits.
         // This helps users understand why their input was modified and avoid unexpected behavior.
         if (new_crouchDistance > maxCrouchDistance)
@@ -5721,6 +5717,10 @@ namespace FirstPersonController
                 m_capsuleRadius,
                 maxCrouchDistance);
         }
+
+        // Set the crouch distance, clamping it to the maximum allowable value if necessary.
+        // This prevents invalid collider states where the crouched height would be too small.
+        m_crouchDistance = AZ::GetMin(new_crouchDistance, maxCrouchDistance);
     }
     bool FirstPersonControllerComponent::GetCrouchingDownMove() const
     {

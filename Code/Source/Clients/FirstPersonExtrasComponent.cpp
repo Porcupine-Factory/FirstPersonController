@@ -375,7 +375,7 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTick(const float& deltaTime, const bool& server)
+    void FirstPersonExtrasComponent::OnNetworkTick(const float& deltaTime, [[maybe_unused]] const bool& server)
     {
         ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
         m_prevNetworkFPCDeltaTime = deltaTime;
