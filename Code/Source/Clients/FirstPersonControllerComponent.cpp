@@ -1308,7 +1308,6 @@ namespace FirstPersonController
             m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             InputChannelEventListener::Disconnect();
-            m_cameraSmoothFollow = true;
             SetAddVelocityForTimestepVsTick(true);
             NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
         }
@@ -1569,6 +1568,7 @@ namespace FirstPersonController
             NotAutonomousSoDisconnect();
             return;
         }
+        CaptureCharacterEyeTranslation();
         if (!((m_isHost && server) || (m_isServer && !server)))
         {
             FirstPersonControllerComponentNotificationBus::Broadcast(
@@ -1578,7 +1578,6 @@ namespace FirstPersonController
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
             m_prevNetworkFPCDeltaTime = deltaTime;
         }
-        CaptureCharacterEyeTranslation();
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -1649,6 +1648,13 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
+        const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
+        if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
+        {
+            m_cameraSmoothFollow = !m_cameraSmoothFollow;
+            CaptureCharacterEyeTranslation();
+        }
+
         if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow ||
             ((m_physicsTimeAccumulator >= m_prevTimestep) && !m_networkFPCEnabled) ||
             ((m_physicsTimeAccumulator >= m_prevNetworkFPCDeltaTime) && m_networkFPCEnabled))
@@ -1661,6 +1667,12 @@ namespace FirstPersonController
         float alpha;
         if (!m_networkFPCEnabled)
             alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
+        else if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
+        {
+            // Skip the interpolation when it's disabled with NetworkFPC
+            alpha = 1.f;
+            m_cameraSmoothFollow = !m_cameraSmoothFollow;
+        }
         else
             alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevNetworkFPCDeltaTime, 0.f, 1.f);
 
