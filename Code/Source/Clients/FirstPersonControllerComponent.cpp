@@ -4211,6 +4211,8 @@ namespace FirstPersonController
     {
         m_strForward = new_strForward;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetForwardScale() const
     {
@@ -4236,6 +4238,8 @@ namespace FirstPersonController
     {
         m_strBack = new_strBack;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetBackScale() const
     {
@@ -4261,6 +4265,8 @@ namespace FirstPersonController
     {
         m_strLeft = new_strLeft;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetLeftScale() const
     {
@@ -4286,6 +4292,8 @@ namespace FirstPersonController
     {
         m_strRight = new_strRight;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetRightScale() const
     {
@@ -4311,6 +4319,8 @@ namespace FirstPersonController
     {
         m_strYaw = new_strYaw;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetYawInputValue() const
     {
@@ -4328,6 +4338,8 @@ namespace FirstPersonController
     {
         m_strPitch = new_strPitch;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetPitchInputValue() const
     {
@@ -4345,6 +4357,8 @@ namespace FirstPersonController
     {
         m_strSprint = new_strSprint;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetSprintInputValue() const
     {
@@ -4370,6 +4384,8 @@ namespace FirstPersonController
     {
         m_strCrouch = new_strCrouch;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetCrouchInputValue() const
     {
@@ -4387,6 +4403,8 @@ namespace FirstPersonController
     {
         m_strJump = new_strJump;
         AssignConnectInputEvents();
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->AssignConnectInputEvents();
     }
     float FirstPersonControllerComponent::GetJumpInputValue() const
     {
