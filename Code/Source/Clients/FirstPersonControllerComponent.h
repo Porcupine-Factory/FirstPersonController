@@ -77,7 +77,7 @@ namespace FirstPersonController
         int GetTickOrder() override;
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTick(const float& deltaTime);
+        void OnNetworkTick(const float& deltaTime, const bool& server);
 
         // FirstPersonControllerRequestBus
         AZ::EntityId GetCharacterEntityId() const override;

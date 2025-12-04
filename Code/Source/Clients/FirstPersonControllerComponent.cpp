@@ -1562,21 +1562,23 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime)
+    void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime, const bool& server)
     {
         if (!m_isServer && !m_isHost && !m_isAutonomousClient)
         {
             NotAutonomousSoDisconnect();
             return;
         }
-        if (!m_networkFPCEnabled)
-            NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
-        if (!m_isHost)
+        if (!((m_isHost && server) || (m_isServer && !server)))
+        {
+            FirstPersonControllerComponentNotificationBus::Broadcast(
+                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTick, deltaTime * m_physicsTimestepScaleFactor);
+            if (!m_networkFPCEnabled)
+                NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
-        else
-            ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 4.f), 2);
+            m_prevNetworkFPCDeltaTime = deltaTime;
+        }
         CaptureCharacterEyeTranslation();
-        m_prevNetworkFPCDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -3835,13 +3837,6 @@ namespace FirstPersonController
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
             if (!m_currentVelocity.IsZero())
                 m_prevSampledVelocity = m_currentVelocity;
-        }
-
-        // Broadcast a notification on NetworkFPC ticks
-        if (tickTimestepNetwork == 2)
-        {
-            FirstPersonControllerComponentNotificationBus::Broadcast(
-                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTick, deltaTime * m_physicsTimestepScaleFactor);
         }
 
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,

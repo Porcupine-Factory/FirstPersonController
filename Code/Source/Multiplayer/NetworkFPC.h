@@ -59,7 +59,7 @@ namespace FirstPersonController
         void AssignConnectInputEvents();
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTick(const float& deltaTime);
+        void OnNetworkTick(const float& deltaTime, const bool& server);
 
         // Keep track of the previous deltaTime for averagin
         float m_prevDeltaTime = 1.f / 60.f;
@@ -71,7 +71,6 @@ namespace FirstPersonController
 
         // Signals when the controller is determined to be autonomous or not
         bool m_autonomousNotDetermined = true;
-        bool m_isAuthority = false;
 
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;

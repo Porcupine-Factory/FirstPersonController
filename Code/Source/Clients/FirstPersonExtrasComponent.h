@@ -77,7 +77,7 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTick(const float& deltaTime);
+        void OnNetworkTick(const float& deltaTime, const bool& server);
 
         // Called on each tick
         void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);

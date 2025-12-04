@@ -131,10 +131,6 @@ namespace FirstPersonController
             else
                 m_firstPersonControllerObject->m_isAutonomousClient = true;
         }
-        else if (IsNetEntityRoleAuthority())
-        {
-            m_isAuthority = true;
-        }
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
@@ -231,7 +227,8 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_sprintAccelValue = 0.f;
         }
 
-        NetworkFPCControllerNotificationBus::Broadcast(&NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime);
+        NetworkFPCControllerNotificationBus::Broadcast(
+            &NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime, m_firstPersonControllerObject->m_isServer);
 
         const AZ::Quaternion characterRotationQuaternion =
             AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta);
@@ -252,7 +249,7 @@ namespace FirstPersonController
     }
 
     // Event Notification methods for use in scripts
-    void NetworkFPCController::OnNetworkTick([[maybe_unused]] const float& deltaTime)
+    void NetworkFPCController::OnNetworkTick([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
     {
     }
 
