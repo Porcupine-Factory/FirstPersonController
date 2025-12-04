@@ -1571,7 +1571,10 @@ namespace FirstPersonController
         }
         if (!m_networkFPCEnabled)
             NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
-        ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
+        if (!m_isHost)
+            ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
+        else
+            ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 4.f), 2);
         CaptureCharacterEyeTranslation();
         m_prevNetworkFPCDeltaTime = deltaTime;
     }
@@ -3806,9 +3809,6 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(float deltaTime, const AZ::u8& tickTimestepNetwork)
     {
-        if (tickTimestepNetwork == 2 && m_isHost)
-            deltaTime /= 2.f;
-
         // Only update the rotation on each tick
         if (tickTimestepNetwork == 0 || tickTimestepNetwork == 2)
         {
