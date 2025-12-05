@@ -163,6 +163,9 @@ namespace FirstPersonController
 
     void NetworkFPCController::CreateInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
     {
+        if (m_disabled)
+            return;
+
         auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
         // Assign input values
