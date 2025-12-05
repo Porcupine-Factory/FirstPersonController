@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<Component
+    Name="NetworkFPCAnimationComponent"
+    Namespace="FirstPersonController"
+    OverrideComponent="true"
+    OverrideController="false"
+    OverrideInclude="Multiplayer/NetworkFPCAnimationComponent.h"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <ComponentRelation Constraint="Required" HasController="true" Name="NetworkFPC" Namespace="FirstPersonController" Include="Multiplayer/NetworkFPC.h" />
+
+    <ArchetypeProperty Type="AZStd::string" Name="WalkSpeedParamName" Init="&quot;WalkSpeed&quot;" ExposeToEditor="true" Description="Anim graph walk speed parameter name"/>
+
+</Component>

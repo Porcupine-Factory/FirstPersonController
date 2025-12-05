@@ -27,7 +27,8 @@
         "PhysX5",
         "MultiplayerPhysX5",
         "StartingPointInput",
-        "Atom_RPI"
+        "Atom_RPI",
+        "EMotionFX"
     ],
     "repo_uri": "https://github.com/Porcupine-Factory/FirstPersonController.git",
     "restricted": "FirstPersonController",
