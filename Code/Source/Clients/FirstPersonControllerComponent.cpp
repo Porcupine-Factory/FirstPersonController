@@ -1564,7 +1564,7 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime, const bool& server)
+    void FirstPersonControllerComponent::OnNetworkTickStart(const float& deltaTime, const bool& server)
     {
         if (!m_isAutonomousClient && !m_isServer && !m_isHost)
         {
@@ -1574,13 +1574,20 @@ namespace FirstPersonController
         if (!((m_isHost && server) || (m_isServer && !server)))
         {
             FirstPersonControllerComponentNotificationBus::Broadcast(
-                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTick, deltaTime * m_physicsTimestepScaleFactor);
+                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickStart, deltaTime * m_physicsTimestepScaleFactor);
             if (!m_networkFPCEnabled)
                 NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
-            m_prevNetworkFPCDeltaTime = deltaTime;
         }
+    }
+
+    void FirstPersonControllerComponent::OnNetworkTickFinish(const float& deltaTime, const bool& server)
+    {
         CaptureCharacterEyeTranslation();
+        if (!((m_isHost && server) || (m_isServer && !server)))
+            FirstPersonControllerComponentNotificationBus::Broadcast(
+                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickFinish, deltaTime * m_physicsTimestepScaleFactor);
+        m_prevNetworkFPCDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -3837,7 +3844,8 @@ namespace FirstPersonController
         {
             // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
             // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
-            LerpCameraToCharacter(deltaTime);
+            if (tickTimestepNetwork != 2)
+                LerpCameraToCharacter(deltaTime);
 
             // Update the camera and character rotation
             UpdateRotation(deltaTime, tickTimestepNetwork);
@@ -3932,7 +3940,10 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnPhysicsTimestepFinish([[maybe_unused]] const float& timeStep)
     {
     }
-    void FirstPersonControllerComponent::OnNetworkFPCTick([[maybe_unused]] const float& deltaTime)
+    void FirstPersonControllerComponent::OnNetworkFPCTickStart([[maybe_unused]] const float& deltaTime)
+    {
+    }
+    void FirstPersonControllerComponent::OnNetworkFPCTickFinish([[maybe_unused]] const float& deltaTime)
     {
     }
     void FirstPersonControllerComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)

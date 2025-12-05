@@ -231,7 +231,7 @@ namespace FirstPersonController
         }
 
         NetworkFPCControllerNotificationBus::Broadcast(
-            &NetworkFPCControllerNotificationBus::Events::OnNetworkTick, deltaTime, m_firstPersonControllerObject->m_isServer);
+            &NetworkFPCControllerNotificationBus::Events::OnNetworkTickStart, deltaTime, m_firstPersonControllerObject->m_isServer);
 
         const AZ::Quaternion characterRotationQuaternion =
             AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta);
@@ -239,6 +239,9 @@ namespace FirstPersonController
 
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
         m_prevDeltaTime = deltaTime;
+
+        NetworkFPCControllerNotificationBus::Broadcast(
+            &NetworkFPCControllerNotificationBus::Events::OnNetworkTickFinish, deltaTime, m_firstPersonControllerObject->m_isServer);
 
         // AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
         // AZ_Printf("NetworkFPC", "Back: %f", playerInput->m_back);
@@ -252,7 +255,10 @@ namespace FirstPersonController
     }
 
     // Event Notification methods for use in scripts
-    void NetworkFPCController::OnNetworkTick([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
+    void NetworkFPCController::OnNetworkTickStart([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
+    {
+    }
+    void NetworkFPCController::OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
     {
     }
 

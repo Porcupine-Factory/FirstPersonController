@@ -62,6 +62,7 @@ namespace FirstPersonController
         bool GetEnableHeadbob() const;
         AZ::EntityId GetHeadbobEntityId() const override;
         void SetHeadbobEntityId(const AZ::EntityId&) override;
+        AZ::Vector3 GetCameraTranslationWithoutHeadbob() const override;
         void NetworkFPCEnabledIgnoreInputs() override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
@@ -77,7 +78,8 @@ namespace FirstPersonController
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTick(const float& deltaTime, const bool& server);
+        void OnNetworkTickStart(const float& deltaTime, const bool& server);
+        void OnNetworkTickFinish(const float& deltaTime, const bool& server);
 
         // Called on each tick
         void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
@@ -116,6 +118,7 @@ namespace FirstPersonController
         bool m_needsHeadbobFallback = false;
         float m_headbobFrequency = 6.15f;
         float m_headbobHorizontalAmplitude = 0.01f;
+        AZ::Vector3 m_cameraTranslationWithoutHeadbob = AZ::Vector3::CreateZero();
         float m_headbobVerticalAmplitude = 0.03f;
         float m_backwardsFrequencyScale = 0.875f;
         float m_backwardsHorizontalAmplitudeScale = 1.f;
@@ -155,7 +158,8 @@ namespace FirstPersonController
         // FirstPersonControllerComponentNotificationBus
         void OnPhysicsTimestepStart(const float& timeStep);
         void OnPhysicsTimestepFinish(const float& timeStep);
-        void OnNetworkFPCTick(const float& deltaTime);
+        void OnNetworkFPCTickStart(const float& deltaTime);
+        void OnNetworkFPCTickFinish(const float& deltaTime);
         void OnGroundHit(const float& fellDistance);
         void OnGroundSoonHit(const float& soonFellDistance);
         void OnUngrounded();

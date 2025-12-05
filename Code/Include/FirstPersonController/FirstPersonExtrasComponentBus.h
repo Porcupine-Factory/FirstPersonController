@@ -6,6 +6,7 @@
 #pragma once
 
 #include <AzCore/Component/ComponentBus.h>
+#include <AzCore/Math/Vector3.h>
 #include <AzCore/RTTI/BehaviorContext.h>
 
 namespace FirstPersonController
@@ -20,6 +21,7 @@ namespace FirstPersonController
         virtual bool GetEnableHeadbob() const = 0;
         virtual AZ::EntityId GetHeadbobEntityId() const = 0;
         virtual void SetHeadbobEntityId(const AZ::EntityId&) = 0;
+        virtual AZ::Vector3 GetCameraTranslationWithoutHeadbob() const = 0;
         virtual void NetworkFPCEnabledIgnoreInputs() = 0;
         virtual void IsAutonomousSoConnect() = 0;
         virtual void NotAutonomousSoDisconnect() = 0;

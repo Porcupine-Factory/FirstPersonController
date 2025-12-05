@@ -158,7 +158,8 @@ namespace FirstPersonController
                     &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold)
                 ->Event("Get Enable Headbob", &FirstPersonExtrasComponentRequests::GetEnableHeadbob)
                 ->Event("Get Headbob Entity Id", &FirstPersonExtrasComponentRequests::GetHeadbobEntityId)
-                ->Event("Set Headbob Entity Id", &FirstPersonExtrasComponentRequests::SetHeadbobEntityId);
+                ->Event("Set Headbob Entity Id", &FirstPersonExtrasComponentRequests::SetHeadbobEntityId)
+                ->Event("Get Camera Translation Without Headbob", &FirstPersonExtrasComponentRequests::GetCameraTranslationWithoutHeadbob);
 
             bc->Class<FirstPersonExtrasComponent>()->RequestBus("FirstPersonExtrasComponentRequestBus");
         }
@@ -375,10 +376,20 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTick(const float& deltaTime, [[maybe_unused]] const bool& server)
+    void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, [[maybe_unused]] const bool& server)
     {
         ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
         m_prevNetworkFPCDeltaTime = deltaTime;
+    }
+
+    void FirstPersonExtrasComponent::OnNetworkTickFinish(const float& deltaTime, [[maybe_unused]] const bool& server)
+    {
+    }
+
+    AZ::Entity* FirstPersonExtrasComponent::GetEntityPtr(AZ::EntityId pointer) const
+    {
+        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+        return ca->FindEntity(pointer);
     }
 
     void FirstPersonExtrasComponent::QueueJump(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
@@ -551,9 +562,9 @@ namespace FirstPersonController
         // Get the headbob entity or camera's current local transform
         const AZ::Transform currentLocalTransform = headbobEntitytransform->GetLocalTM();
         // Calculate the "clean" local translation by removing the previous frame's headbob offset
-        const AZ::Vector3 cleanLocalTranslation = currentLocalTransform.GetTranslation() - m_previousOffset;
+        m_cameraTranslationWithoutHeadbob = currentLocalTransform.GetTranslation() - m_previousOffset;
         // Compute the target local translation by adding the new bob offset to the clean position
-        const AZ::Vector3 targetLocalTranslation = cleanLocalTranslation + m_headbobOffset;
+        const AZ::Vector3 targetLocalTranslation = m_cameraTranslationWithoutHeadbob + m_headbobOffset;
         // Smoothly interpolate from current to target local translation using the provided smoothing factor
         const AZ::Vector3 newLocalTranslation = currentLocalTransform.GetTranslation().Lerp(targetLocalTranslation, m_headbobAttenuation);
 
@@ -561,7 +572,7 @@ namespace FirstPersonController
         headbobEntitytransform->SetLocalTranslation(newLocalTranslation);
 
         // Update previous offset
-        m_previousOffset = newLocalTranslation - cleanLocalTranslation;
+        m_previousOffset = newLocalTranslation - m_cameraTranslationWithoutHeadbob;
 
         // Snap if residual is small
         AZ::Vector3 lerpResidual = newLocalTranslation - targetLocalTranslation;
@@ -590,7 +601,10 @@ namespace FirstPersonController
     }
 
     // Notification Events from the First Person Controller component
-    void FirstPersonExtrasComponent::OnNetworkFPCTick([[maybe_unused]] const float& deltaTime)
+    void FirstPersonExtrasComponent::OnNetworkFPCTickStart([[maybe_unused]] const float& deltaTime)
+    {
+    }
+    void FirstPersonExtrasComponent::OnNetworkFPCTickFinish([[maybe_unused]] const float& deltaTime)
     {
     }
     void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)
@@ -703,10 +717,9 @@ namespace FirstPersonController
     {
         SetHeadbobEntity(entityId);
     }
-    AZ::Entity* FirstPersonExtrasComponent::GetEntityPtr(AZ::EntityId pointer) const
+    AZ::Vector3 FirstPersonExtrasComponent::GetCameraTranslationWithoutHeadbob() const
     {
-        auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
-        return ca->FindEntity(pointer);
+        return m_cameraTranslationWithoutHeadbob;
     }
     void FirstPersonExtrasComponent::NetworkFPCEnabledIgnoreInputs()
     {
