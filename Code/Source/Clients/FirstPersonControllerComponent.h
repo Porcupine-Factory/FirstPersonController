@@ -504,7 +504,7 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick
-        void ProcessInput(float deltaTime, const AZ::u8& tickTimestepNetwork);
+        void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
 
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float& deltaTime);
@@ -512,7 +512,7 @@ namespace FirstPersonController
         void AcquireSumOfGroundNormals();
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float& deltaTime);
-        void UpdateRotation(const AZ::u8& tickTimestepNetwork);
+        void UpdateRotation(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void ApplyMovingUpInclineXYSpeedFactor();
         void LerpCameraToCharacter(float deltaTime);
@@ -804,7 +804,7 @@ namespace FirstPersonController
         bool m_isServer = false;
         bool m_isHost = false;
         bool m_isAutonomousClient = false;
-        bool m_appliedNetworkFPCRotation = false;
+        float m_networkFPCRotationSliceAccumulator = 0.f;
 
         // Variables used to determine when the X&Y velocity should be updated
         bool m_updateXYAscending = true;

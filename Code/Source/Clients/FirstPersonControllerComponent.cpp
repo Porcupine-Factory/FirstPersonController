@@ -1557,18 +1557,20 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
+        if (!m_networkFPCEnabled || !m_isHost)
+            ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
+        else
+            ProcessInput(((deltaTime + m_prevDeltaTime) / 4.f), 0);
         m_prevDeltaTime = deltaTime;
     }
 
     void FirstPersonControllerComponent::OnNetworkTick(const float& deltaTime, const bool& server)
     {
-        if (!m_isServer && !m_isHost && !m_isAutonomousClient)
+        if (!m_isAutonomousClient && !m_isServer && !m_isHost)
         {
             NotAutonomousSoDisconnect();
             return;
         }
-        CaptureCharacterEyeTranslation();
         if (!((m_isHost && server) || (m_isServer && !server)))
         {
             FirstPersonControllerComponentNotificationBus::Broadcast(
@@ -1578,6 +1580,7 @@ namespace FirstPersonController
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
             m_prevNetworkFPCDeltaTime = deltaTime;
         }
+        CaptureCharacterEyeTranslation();
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
@@ -1666,7 +1669,7 @@ namespace FirstPersonController
         // Calculate interpolation factor
         float alpha;
         if (!m_networkFPCEnabled)
-            alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevTimestep, 0.f, 1.f);
+            alpha = AZ::GetMax(m_physicsTimeAccumulator / m_prevTimestep, 1.f);
         else if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
         {
             // Skip the interpolation when it's disabled with NetworkFPC
@@ -1742,7 +1745,7 @@ namespace FirstPersonController
             m_newLookRotationDelta = targetLookRotationDelta;
     }
 
-    void FirstPersonControllerComponent::UpdateRotation(const AZ::u8& tickTimestepNetwork)
+    void FirstPersonControllerComponent::UpdateRotation(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         if (!m_enableCameraCharacterRotation)
             return;
@@ -1768,10 +1771,11 @@ namespace FirstPersonController
                 characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
-            if (m_networkFPCEnabled && m_networkFPCControllerObject)
+            if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             {
+                m_networkFPCRotationSliceAccumulator = 0.f;
+                m_cameraYaw = characterTransform->GetWorldRotation().GetZ();
                 m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
-                m_appliedNetworkFPCRotation = false;
             }
 
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
@@ -1781,17 +1785,22 @@ namespace FirstPersonController
         else if (m_networkFPCControllerObject != nullptr)
         {
             // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
-            if (!m_appliedNetworkFPCRotation)
+            if (m_networkFPCRotationSliceAccumulator < 1.f)
             {
-                newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta();
-                newLookRotationDelta.SetZ(0.f);
-                m_appliedNetworkFPCRotation = true;
+                const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
+                m_networkFPCRotationSliceAccumulator += 1.f / slice;
+                newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
+                if (m_networkFPCRotationSliceAccumulator >= 1.f)
+                {
+                    newLookRotationDelta.SetZ(0.f);
+                    m_cameraYaw = characterTransform->GetWorldRotation().GetZ();
+                }
             }
             else
+            {
                 newLookRotationDelta = AZ::Vector3::CreateZero();
-
-            // Set the camera yaw, accounting for the yaw delta
-            m_cameraYaw = characterTransform->GetWorldRotation().GetZ() - newLookRotationDelta.GetZ();
+                m_cameraYaw = characterTransform->GetWorldRotation().GetZ();
+            }
         }
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
@@ -3821,7 +3830,7 @@ namespace FirstPersonController
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
-    void FirstPersonControllerComponent::ProcessInput(float deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Only update the rotation on each tick
         if (tickTimestepNetwork == 0 || tickTimestepNetwork == 2)
@@ -3831,7 +3840,7 @@ namespace FirstPersonController
             LerpCameraToCharacter(deltaTime);
 
             // Update the camera and character rotation
-            UpdateRotation(tickTimestepNetwork);
+            UpdateRotation(deltaTime, tickTimestepNetwork);
         }
 
         // When using NetworkFPC, obtain the last desired velocity that was sent
