@@ -382,7 +382,7 @@ namespace FirstPersonController
         m_prevNetworkFPCDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTickFinish(const float& deltaTime, [[maybe_unused]] const bool& server)
+    void FirstPersonExtrasComponent::OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
     {
     }
 
