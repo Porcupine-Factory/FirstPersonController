@@ -63,17 +63,31 @@ namespace FirstPersonController
             m_walkSpeedParamId = m_animationGraph->FindParameterIndex(GetWalkSpeedParamName().c_str());
         }
 
+        if (m_sprintParamId == InvalidParamIndex)
+        {
+            m_sprintParamId = m_animationGraph->FindParameterIndex(GetSprintParamName().c_str());
+        }
+
         // Get networked velocity from controller
         NetworkFPC* controller = GetEntity()->FindComponent<NetworkFPC>();
-        if (controller && m_walkSpeedParamId != InvalidParamIndex)
+        if (controller)
         {
-            AZ::Vector3 velocity = controller->GetDesiredVelocity();
-            // Ignore Z for ground speed
-            velocity.SetZ(0.0f);
-            const float speed = velocity.GetLength();
+            if (m_walkSpeedParamId != InvalidParamIndex)
+            {
+                AZ::Vector3 velocity = controller->GetDesiredVelocity();
+                // Ignore Z for ground speed
+                velocity.SetZ(0.0f);
+                float speed = velocity.GetLength();
 
-            // Set the paramater directly; anim graph handles transitions
-            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, speed);
+                // Set the paramater directly; anim graph handles transitions
+                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, speed);
+            }
+
+            if (m_sprintParamId != InvalidParamIndex)
+            {
+                bool isSprinting = controller->GetIsSprinting();
+                m_animationGraph->SetParameterBool(m_sprintParamId, isSprinting);
+            }
         }
 
         m_networkRequests->UpdateActorExternal(deltaTime);

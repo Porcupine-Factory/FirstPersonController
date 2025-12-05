@@ -3903,7 +3903,10 @@ namespace FirstPersonController
 
             // Add velocity on either the network tick, the physics timstep, or the frame tick
             if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
+            {
                 m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
+                m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
+            }
             else if (!m_networkFPCEnabled && m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);

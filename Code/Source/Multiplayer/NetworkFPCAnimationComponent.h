@@ -57,6 +57,7 @@ namespace FirstPersonController
         EMotionFX::Integration::AnimGraphComponentRequests* m_animationGraph = nullptr;
 
         size_t m_walkSpeedParamId = InvalidParamIndex;
+        size_t m_sprintParamId = InvalidParamIndex;
     };
 
 } // namespace FirstPersonController
