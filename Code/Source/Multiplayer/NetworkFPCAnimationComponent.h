@@ -58,6 +58,9 @@ namespace FirstPersonController
 
         size_t m_walkSpeedParamId = InvalidParamIndex;
         size_t m_sprintParamId = InvalidParamIndex;
+        size_t m_crouchToStandParamId = InvalidParamIndex;
+        size_t m_crouchParamId = InvalidParamIndex;
+        size_t m_standToCrouchParamId = InvalidParamIndex;
     };
 
 } // namespace FirstPersonController

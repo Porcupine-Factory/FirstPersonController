@@ -68,6 +68,21 @@ namespace FirstPersonController
             m_sprintParamId = m_animationGraph->FindParameterIndex(GetSprintParamName().c_str());
         }
 
+        if (m_standToCrouchParamId == InvalidParamIndex)
+        {
+            m_standToCrouchParamId = m_animationGraph->FindParameterIndex(GetStandToCrouchParamName().c_str());
+        }
+
+        if (m_crouchParamId == InvalidParamIndex)
+        {
+            m_crouchParamId = m_animationGraph->FindParameterIndex(GetCrouchParamName().c_str());
+        }
+
+        if (m_crouchToStandParamId == InvalidParamIndex)
+        {
+            m_crouchToStandParamId = m_animationGraph->FindParameterIndex(GetCrouchToStandParamName().c_str());
+        }
+
         // Get networked velocity from controller
         NetworkFPC* controller = GetEntity()->FindComponent<NetworkFPC>();
         if (controller)
@@ -87,6 +102,24 @@ namespace FirstPersonController
             {
                 bool isSprinting = controller->GetIsSprinting();
                 m_animationGraph->SetParameterBool(m_sprintParamId, isSprinting);
+            }
+
+            if (m_standToCrouchParamId != InvalidParamIndex)
+            {
+                bool isCrouchingDown = controller->GetIsCrouchingDown();
+                m_animationGraph->SetParameterBool(m_standToCrouchParamId, isCrouchingDown);
+            }
+
+            if (m_crouchToStandParamId != InvalidParamIndex)
+            {
+                bool isStandingUp = controller->GetIsStandingUp();
+                m_animationGraph->SetParameterBool(m_crouchToStandParamId, isStandingUp);
+            }
+
+            if (m_crouchParamId != InvalidParamIndex)
+            {
+                bool isCrouching = controller->GetIsCrouching();
+                m_animationGraph->SetParameterBool(m_crouchParamId, isCrouching);
             }
         }
 

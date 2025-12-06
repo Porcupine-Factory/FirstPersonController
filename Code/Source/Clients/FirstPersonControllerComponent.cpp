@@ -3923,6 +3923,9 @@ namespace FirstPersonController
             {
                 m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
                 m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
+                m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
+                m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
+                m_networkFPCControllerObject->SetIsCrouching(GetCrouching());
             }
             else if (!m_networkFPCEnabled && m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(
