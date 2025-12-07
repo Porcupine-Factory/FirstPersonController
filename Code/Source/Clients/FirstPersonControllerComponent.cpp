@@ -3839,14 +3839,17 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
-        // Only update the rotation on each tick
-        if (tickTimestepNetwork == 0 || tickTimestepNetwork == 2)
+        // Only interpolate the camera to the character on frame ticks
+        if (tickTimestepNetwork == 0)
         {
             // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
             // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
-            if (tickTimestepNetwork != 2)
-                LerpCameraToCharacter(deltaTime);
+            LerpCameraToCharacter(deltaTime);
+        }
 
+        // Only update the rotation on frame ticks and network ticks
+        if (tickTimestepNetwork == 0 || tickTimestepNetwork == 2)
+        {
             // Update the camera and character rotation
             UpdateRotation(deltaTime, tickTimestepNetwork);
         }

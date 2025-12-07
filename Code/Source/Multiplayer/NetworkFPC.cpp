@@ -174,9 +174,9 @@ namespace FirstPersonController
         playerInput->m_left = m_leftValue;
         playerInput->m_right = m_rightValue;
         playerInput->m_desiredVelocity = GetDesiredVelocity();
-        playerInput->m_yaw = m_yawValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
+        playerInput->m_yaw = m_yawValue;
         playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
-        playerInput->m_pitch = m_pitchValue / (deltaTime / m_firstPersonControllerObject->m_prevDeltaTime);
+        playerInput->m_pitch = m_pitchValue;
         playerInput->m_sprint = m_sprintValue;
         playerInput->m_crouch = m_crouchValue;
         playerInput->m_jump = m_jumpValue;
