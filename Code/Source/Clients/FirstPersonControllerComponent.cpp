@@ -3926,6 +3926,10 @@ namespace FirstPersonController
                 m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
                 m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
                 m_networkFPCControllerObject->SetIsCrouching(GetCrouching());
+                m_networkFPCControllerObject->SetIsJumpStarting(GetUngroundedDueToJump());
+                m_networkFPCControllerObject->SetIsFalling(!m_groundClose);
+                m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+                m_networkFPCControllerObject->SetIsGrounded(m_grounded);
             }
             else if (!m_networkFPCEnabled && m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(

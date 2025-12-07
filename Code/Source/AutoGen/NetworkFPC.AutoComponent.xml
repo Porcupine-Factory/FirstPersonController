@@ -59,6 +59,30 @@
                     IsPublic="true" Container="Object" ExposeToEditor="false"
                     ExposeToScript="true" GenerateEventBindings="true"
                     Description="Whether the character is currently standing up"/>
+    <NetworkProperty Type="bool" Name="IsJumpStarting"
+                    Init="false" ReplicateFrom="Authority"
+                    ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                    IsPublic="true" Container="Object" ExposeToEditor="false"
+                    ExposeToScript="true" GenerateEventBindings="true"
+                    Description="Whether the character is initiating jump"/>
+    <NetworkProperty Type="bool" Name="IsFalling"
+                    Init="false" ReplicateFrom="Authority"
+                    ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                    IsPublic="true" Container="Object" ExposeToEditor="false"
+                    ExposeToScript="true" GenerateEventBindings="true"
+                    Description="Whether the character is falling or in the middle of a jump"/>
+    <NetworkProperty Type="bool" Name="IsJumpLanding"
+                    Init="false" ReplicateFrom="Authority"
+                    ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                    IsPublic="true" Container="Object" ExposeToEditor="false"
+                    ExposeToScript="true" GenerateEventBindings="true"
+                    Description="Whether the character is landing from a jump"/>
+    <NetworkProperty Type="bool" Name="IsGrounded"
+                    Init="false" ReplicateFrom="Authority"
+                    ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                    IsPublic="true" Container="Object" ExposeToEditor="false"
+                    ExposeToScript="true" GenerateEventBindings="true"
+                    Description="Whether the character is grounded"/>
 
     <NetworkInput Type="float" Name="Forward" Init="0.f"/>
     <NetworkInput Type="float" Name="Back" Init="0.f"/>

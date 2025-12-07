@@ -83,6 +83,26 @@ namespace FirstPersonController
             m_crouchToStandParamId = m_animationGraph->FindParameterIndex(GetCrouchToStandParamName().c_str());
         }
 
+        if (m_jumpStartParamId == InvalidParamIndex)
+        {
+            m_jumpStartParamId = m_animationGraph->FindParameterIndex(GetJumpStartParamName().c_str());
+        }
+
+        if (m_fallParamId == InvalidParamIndex)
+        {
+            m_fallParamId = m_animationGraph->FindParameterIndex(GetFallParamName().c_str());
+        }
+
+        if (m_jumpLandParamId == InvalidParamIndex)
+        {
+            m_jumpLandParamId = m_animationGraph->FindParameterIndex(GetJumpLandParamName().c_str());
+        }
+
+        if (m_groundedParamId == InvalidParamIndex)
+        {
+            m_groundedParamId = m_animationGraph->FindParameterIndex(GetGroundedParamName().c_str());
+        }
+
         // Get networked velocity from controller
         NetworkFPC* controller = GetEntity()->FindComponent<NetworkFPC>();
         if (controller)
@@ -120,6 +140,30 @@ namespace FirstPersonController
             {
                 bool isCrouching = controller->GetIsCrouching();
                 m_animationGraph->SetParameterBool(m_crouchParamId, isCrouching);
+            }
+
+            if (m_jumpStartParamId != InvalidParamIndex)
+            {
+                bool isJumpStarting = controller->GetIsJumpStarting();
+                m_animationGraph->SetParameterBool(m_jumpStartParamId, isJumpStarting);
+            }
+
+            if (m_fallParamId != InvalidParamIndex)
+            {
+                bool isFalling = controller->GetIsFalling();
+                m_animationGraph->SetParameterBool(m_fallParamId, isFalling);
+            }
+
+            if (m_jumpLandParamId != InvalidParamIndex)
+            {
+                bool isJumpLanding = controller->GetIsJumpLanding();
+                m_animationGraph->SetParameterBool(m_jumpLandParamId, isJumpLanding);
+            }
+
+            if (m_groundedParamId != InvalidParamIndex)
+            {
+                bool isGrounded = controller->GetIsGrounded();
+                m_animationGraph->SetParameterBool(m_groundedParamId, isGrounded);
             }
         }
 
