@@ -413,6 +413,7 @@ namespace FirstPersonController
         virtual float GetHeading() const = 0;
         virtual void SetHeadingForTick(const float&) = 0;
         virtual float GetPitch() const = 0;
+        virtual float GetYaw() const = 0;
         virtual bool GetLocallyEnableNetworkFPC() const = 0;
         virtual void SetLocallyEnableNetworkFPC(const bool&) = 0;
         virtual void NetworkFPCEnabledIgnoreInputs() = 0;

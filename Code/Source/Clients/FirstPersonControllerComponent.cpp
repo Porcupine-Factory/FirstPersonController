@@ -1140,6 +1140,7 @@ namespace FirstPersonController
                 ->Event("Get Character Heading", &FirstPersonControllerComponentRequests::GetHeading)
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
                 ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
+                ->Event("Get Camera Yaw", &FirstPersonControllerComponentRequests::GetYaw)
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
                 ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC);
 
@@ -6062,6 +6063,10 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetPitch() const
     {
         return m_currentPitch;
+    }
+    float FirstPersonControllerComponent::GetYaw() const
+    {
+        return m_cameraYaw;
     }
     bool FirstPersonControllerComponent::GetLocallyEnableNetworkFPC() const
     {

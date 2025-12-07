@@ -473,6 +473,7 @@ namespace FirstPersonController
         float GetHeading() const override;
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
+        float GetYaw() const override;
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
         void NetworkFPCEnabledIgnoreInputs() override;
