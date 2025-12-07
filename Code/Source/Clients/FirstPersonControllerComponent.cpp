@@ -1773,16 +1773,19 @@ namespace FirstPersonController
                 m_currentHeading = characterTransform->GetWorldRotation().GetZ();
 
             // Apply the yaw to the character
-            const AZ::Quaternion characterRotationQuaternion =
-                AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
             if (!m_networkFPCEnabled)
+            {
+                const AZ::Quaternion characterRotationQuaternion =
+                    AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
                 characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
+            }
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
             if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             {
                 m_networkFPCRotationSliceAccumulator = 0.f;
-                m_cameraYaw = characterTransform->GetWorldRotation().GetZ();
+                if (m_isHost)
+                    m_cameraYaw = m_currentHeading;
                 m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
             }
 
@@ -1798,16 +1801,11 @@ namespace FirstPersonController
                 const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
                 m_networkFPCRotationSliceAccumulator += 1.f / slice;
                 newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
-                if (m_networkFPCRotationSliceAccumulator >= 1.f)
-                {
-                    newLookRotationDelta.SetZ(0.f);
-                    m_cameraYaw = characterTransform->GetWorldRotation().GetZ();
-                }
             }
             else
             {
                 newLookRotationDelta = AZ::Vector3::CreateZero();
-                m_cameraYaw = characterTransform->GetWorldRotation().GetZ();
+                m_cameraYaw = m_currentHeading;
             }
         }
 
