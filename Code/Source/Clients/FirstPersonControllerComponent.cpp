@@ -1784,9 +1784,13 @@ namespace FirstPersonController
             if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             {
                 m_networkFPCRotationSliceAccumulator = 0.f;
-                if (m_isHost)
+                if (m_isHost || !m_newtworkFPCCameraAligned)
+                {
                     m_cameraYaw = m_currentHeading;
+                    m_newtworkFPCCameraAligned = true;
+                }
                 m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
+                m_networkFPCControllerObject->SetYawDeltaOvershoot(0.f);
             }
 
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
@@ -1796,17 +1800,12 @@ namespace FirstPersonController
         else if (m_networkFPCControllerObject != nullptr)
         {
             // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
-            if (m_networkFPCRotationSliceAccumulator < 1.f)
-            {
-                const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
-                m_networkFPCRotationSliceAccumulator += 1.f / slice;
-                newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
-            }
-            else
-            {
-                newLookRotationDelta = AZ::Vector3::CreateZero();
-                m_cameraYaw = m_currentHeading;
-            }
+            const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
+            m_networkFPCRotationSliceAccumulator += 1.f / slice;
+            newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
+            // Compensate the character's yaw from the camera overshooting due to network jitter
+            if (m_networkFPCRotationSliceAccumulator > 1.f)
+                m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + newLookRotationDelta.GetZ()) - m_currentHeading);
         }
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
