@@ -22,6 +22,7 @@ namespace FirstPersonController
         virtual AZ::EntityId GetHeadbobEntityId() const = 0;
         virtual void SetHeadbobEntityId(const AZ::EntityId&) = 0;
         virtual AZ::Vector3 GetCameraTranslationWithoutHeadbob() const = 0;
+        virtual AZ::Vector3 GetPreviousOffset() const = 0;
         virtual void NetworkFPCEnabledIgnoreInputs() = 0;
         virtual void IsAutonomousSoConnect() = 0;
         virtual void NotAutonomousSoDisconnect() = 0;

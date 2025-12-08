@@ -159,7 +159,8 @@ namespace FirstPersonController
                 ->Event("Get Enable Headbob", &FirstPersonExtrasComponentRequests::GetEnableHeadbob)
                 ->Event("Get Headbob Entity Id", &FirstPersonExtrasComponentRequests::GetHeadbobEntityId)
                 ->Event("Set Headbob Entity Id", &FirstPersonExtrasComponentRequests::SetHeadbobEntityId)
-                ->Event("Get Camera Translation Without Headbob", &FirstPersonExtrasComponentRequests::GetCameraTranslationWithoutHeadbob);
+                ->Event("Get Camera Translation Without Headbob", &FirstPersonExtrasComponentRequests::GetCameraTranslationWithoutHeadbob)
+                ->Event("Get Previous Camera Headbob Offset", &FirstPersonExtrasComponentRequests::GetPreviousOffset);
 
             bc->Class<FirstPersonExtrasComponent>()->RequestBus("FirstPersonExtrasComponentRequestBus");
         }
@@ -572,7 +573,10 @@ namespace FirstPersonController
         headbobEntitytransform->SetLocalTranslation(newLocalTranslation);
 
         // Update previous offset
-        m_previousOffset = newLocalTranslation - m_cameraTranslationWithoutHeadbob;
+        if (!m_networkFPCEnabled)
+            m_previousOffset = newLocalTranslation - m_cameraTranslationWithoutHeadbob;
+        else
+            m_previousOffset = newLocalTranslation - currentLocalTransform.GetTranslation();
 
         // Snap if residual is small
         AZ::Vector3 lerpResidual = newLocalTranslation - targetLocalTranslation;
@@ -720,6 +724,10 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonExtrasComponent::GetCameraTranslationWithoutHeadbob() const
     {
         return m_cameraTranslationWithoutHeadbob;
+    }
+    AZ::Vector3 FirstPersonExtrasComponent::GetPreviousOffset() const
+    {
+        return m_previousOffset;
     }
     void FirstPersonExtrasComponent::NetworkFPCEnabledIgnoreInputs()
     {
