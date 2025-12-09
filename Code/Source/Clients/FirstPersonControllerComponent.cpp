@@ -3151,10 +3151,7 @@ namespace FirstPersonController
         // Accumulate airtime if the character isn't grounded, otherwise set it to zero
         // Set m_ungroundedDueToJump to false when the character is grounded
         if (m_grounded)
-        {
-            m_ungroundedDueToJump = false;
             m_airTime = 0.f;
-        }
         else
             m_airTime += deltaTime;
 
@@ -3233,6 +3230,7 @@ namespace FirstPersonController
         // or just left the ground (via jumping or otherwise)
         if (!prevGrounded && m_grounded)
         {
+            m_ungroundedDueToJump = false;
             if (m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
                 m_fellDistance = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ() - m_fellFromHeight;
             else
