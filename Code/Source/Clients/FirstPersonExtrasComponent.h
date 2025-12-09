@@ -135,10 +135,10 @@ namespace FirstPersonController
         float m_completeHeadLandTime = 0.4f;
         float m_currentHeadPitchAngle = 0.f;
         float m_deltaAngle = 0.f;
-        float m_headAngleJump = -5.7f;
-        float m_headAngleLand = -4.3f;
-        float m_deltaAngleFactorJump = -5.f;
-        float m_deltaAngleFactorLand = -5.f;
+        float m_headAngleJump = 3.f;
+        float m_headAngleLand = 2.f;
+        float m_deltaAngleFactorJump = 5.f;
+        float m_deltaAngleFactorLand = 10.f;
 
         // Headbob
         void UpdateHeadbob(const float& deltaTime);

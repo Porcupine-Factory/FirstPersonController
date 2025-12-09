@@ -29,9 +29,9 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
                 ->Field("Head Angle Land", &FirstPersonExtrasComponent::m_headAngleLand)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
-                ->Field("Delta Angle Factor Jump", &FirstPersonExtrasComponent::m_deltaAngleFactorJump)
-                ->Field("Delta Angle Factor Land", &FirstPersonExtrasComponent::m_deltaAngleFactorLand)
-                ->Field("Complete Head Land Time", &FirstPersonExtrasComponent::m_completeHeadLandTime)
+                ->Field("Jump Delta Angle Speed Factor", &FirstPersonExtrasComponent::m_deltaAngleFactorJump)
+                ->Field("Land Delta Angle Speed Factor", &FirstPersonExtrasComponent::m_deltaAngleFactorLand)
+                ->Field("Complete Head Angle Land Time", &FirstPersonExtrasComponent::m_completeHeadLandTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
 
                 // Headbob group
@@ -93,20 +93,23 @@ namespace FirstPersonController
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_deltaAngleFactorJump,
-                        "Delta Angle Factor Jump",
-                        "Factor that determines how quickly the camera's pitch changes at the start of a jump.")
+                        "Jump Delta Angle Speed Factor",
+                        "Factor that determines how quickly the camera's pitch changes at the start of a jump, "
+                        "bigger numbers make it faster.")
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_deltaAngleFactorLand,
-                        "Delta Angle Factor Land",
-                        "Factor that determines how quickly the camera's pitch changes when landing.")
+                        "Land Delta Angle Speed Factor",
+                        "Factor that determines how quickly the camera's pitch changes when landing, "
+                        "bigger numbers make it faster.")
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_completeHeadLandTime,
-                        "Complete Head Land Time",
-                        "The time it takes to be in the air for the entire Head Angle Land to apply.")
+                        "Complete Head Angle Land Time",
+                        "The time it takes to be in the air for the entire Head Angle Land to apply, "
+                        "any time in the air less than this will cause the angle to be proportional to the air time divided by this value.")
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
 
                     ->GroupElementToggle("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
@@ -519,11 +522,11 @@ namespace FirstPersonController
 
         if (m_tiltJumped)
         {
-            m_deltaAngle = deltaTime * m_totalHeadAngle * m_deltaAngleFactorJump;
+            m_deltaAngle = deltaTime * m_totalHeadAngle * -m_deltaAngleFactorJump;
         }
         else if (m_tiltLanded)
         {
-            m_deltaAngle = deltaTime * m_totalHeadAngle * m_deltaAngleFactorLand;
+            m_deltaAngle = deltaTime * m_totalHeadAngle * -m_deltaAngleFactorLand;
         }
         else
             return;
@@ -547,7 +550,7 @@ namespace FirstPersonController
             m_tiltJumped = false;
             m_tiltLanded = false;
             FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_currentHeadPitchAngle, true);
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_currentHeadPitchAngle, true);
             m_currentHeadPitchAngle = 0.f;
         }
         else if (m_currentHeadPitchAngle <= m_totalHeadAngle)
@@ -700,9 +703,9 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::EventResult(
             airTime, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetAirTime);
         if (airTime <= m_completeHeadLandTime)
-            m_totalHeadAngle = m_headAngleLand * airTime / m_completeHeadLandTime;
+            m_totalHeadAngle = -m_headAngleLand * airTime / m_completeHeadLandTime;
         else
-            m_totalHeadAngle = m_headAngleLand;
+            m_totalHeadAngle = -m_headAngleLand;
     }
     void FirstPersonExtrasComponent::OnUngrounded()
     {
@@ -764,7 +767,7 @@ namespace FirstPersonController
         m_tiltJumped = true;
         m_tiltLanded = false;
         m_moveHeadDown = true;
-        m_totalHeadAngle = m_headAngleJump;
+        m_totalHeadAngle = -m_headAngleJump;
     }
     void FirstPersonExtrasComponent::OnFinalJump()
     {
@@ -810,7 +813,7 @@ namespace FirstPersonController
     }
     float FirstPersonExtrasComponent::GetHeadAngleJump() const
     {
-        return m_headAngleJump * 360.f / AZ::Constants::TwoPi;
+        return -m_headAngleJump * 360.f / AZ::Constants::TwoPi;
     }
     void FirstPersonExtrasComponent::SetHeadAngleJump(const float& new_headAngleJump)
     {
@@ -818,7 +821,7 @@ namespace FirstPersonController
     }
     float FirstPersonExtrasComponent::GetHeadAngleLand() const
     {
-        return m_headAngleLand * 360.f / AZ::Constants::TwoPi;
+        return -m_headAngleLand * 360.f / AZ::Constants::TwoPi;
     }
     void FirstPersonExtrasComponent::SetHeadAngleLand(const float& new_headAngleLand)
     {
@@ -826,7 +829,7 @@ namespace FirstPersonController
     }
     float FirstPersonExtrasComponent::GetDeltaAngleFactorJump() const
     {
-        return m_deltaAngleFactorJump;
+        return -m_deltaAngleFactorJump;
     }
     void FirstPersonExtrasComponent::SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump)
     {
@@ -834,7 +837,7 @@ namespace FirstPersonController
     }
     float FirstPersonExtrasComponent::GetDeltaAngleFactorLand() const
     {
-        return m_deltaAngleFactorLand;
+        return -m_deltaAngleFactorLand;
     }
     void FirstPersonExtrasComponent::SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand)
     {
