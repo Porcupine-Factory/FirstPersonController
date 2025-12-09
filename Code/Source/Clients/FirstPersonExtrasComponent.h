@@ -59,9 +59,22 @@ namespace FirstPersonController
         // FirstPersonExtrasRequestBus
         float GetJumpPressedInAirQueueTimeThreshold() const override;
         void SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold) override;
-        bool GetEnableHeadbob() const;
+        bool GetJumpHeadTiltEnabled() const override;
+        void SetJumpHeadTiltEnabled(const bool& new_jumpHeadTiltEnabled) override;
+        float GetHeadAngleJump() const override;
+        void SetHeadAngleJump(const float& new_headAngleJump) override;
+        float GetHeadAngleLand() const override;
+        void SetHeadAngleLand(const float& new_headAngleLand) override;
+        float GetDeltaAngleFactorJump() const override;
+        void SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump) override;
+        float GetDeltaAngleFactorLand() const override;
+        void SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand) override;
+        float GetCompleteHeadLandTime() const override;
+        void SetCompleteHeadLandTime(const float& new_completeHeadLandTime) override;
+        bool GetHeadbobEnabled() const override;
+        void SetHeadbobEnabled(const bool& new_headbobEnabled) override;
         AZ::EntityId GetHeadbobEntityId() const override;
-        void SetHeadbobEntityId(const AZ::EntityId&) override;
+        void SetHeadbobEntityId(const AZ::EntityId& new_headbobEntityId) override;
         AZ::Vector3 GetCameraTranslationWithoutHeadbob() const override;
         AZ::Vector3 GetPreviousOffset() const override;
         void NetworkFPCEnabledIgnoreInputs() override;
@@ -88,6 +101,9 @@ namespace FirstPersonController
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
 
+        // Jump Head Tilt
+        void PerformJumpHeadTilt(const float& deltaTime);
+
         // FirstPersonControllerComponent and NetworkFPC objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         NetworkFPC* m_networkFPCObject = nullptr;
@@ -110,11 +126,24 @@ namespace FirstPersonController
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;
 
+        // Jump Head Tilt
+        bool m_jumpHeadTiltEnabled = true;
+        bool m_tiltJumped = false;
+        bool m_tiltLanded = false;
+        bool m_moveHeadDown = true;
+        float m_totalHeadAngle = 0.f;
+        float m_completeHeadLandTime = 0.4f;
+        float m_currentHeadPitchAngle = 0.f;
+        float m_deltaAngle = 0.f;
+        float m_headAngleJump = -5.7f;
+        float m_headAngleLand = -4.3f;
+        float m_deltaAngleFactorJump = -5.f;
+        float m_deltaAngleFactorLand = -5.f;
+
         // Headbob
-        void SetHeadbobEntity(const AZ::EntityId& id);
         void UpdateHeadbob(const float& deltaTime);
         AZ::Vector3 CalculateHeadbobOffset(const float& deltaTime);
-        bool m_enableHeadbob = false;
+        bool m_headbobEnabled = true;
         bool m_isWalking = false;
         bool m_needsHeadbobFallback = false;
         float m_headbobFrequency = 6.15f;

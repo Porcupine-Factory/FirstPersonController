@@ -23,8 +23,19 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
 
+                // Jump Head Tilt group
+                ->Field("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
+                ->Field("Head Angle Jump", &FirstPersonExtrasComponent::m_headAngleJump)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
+                ->Field("Head Angle Land", &FirstPersonExtrasComponent::m_headAngleLand)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
+                ->Field("Delta Angle Factor Jump", &FirstPersonExtrasComponent::m_deltaAngleFactorJump)
+                ->Field("Delta Angle Factor Land", &FirstPersonExtrasComponent::m_deltaAngleFactorLand)
+                ->Field("Complete Head Land Time", &FirstPersonExtrasComponent::m_completeHeadLandTime)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+
                 // Headbob group
-                ->Field("Enable Headbob", &FirstPersonExtrasComponent::m_enableHeadbob)
+                ->Field("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
                 ->Field("Frequency", &FirstPersonExtrasComponent::m_headbobFrequency)
                 ->Field("Horizontal Amplitude", &FirstPersonExtrasComponent::m_headbobHorizontalAmplitude)
                 ->Field("Vertical Amplitude", &FirstPersonExtrasComponent::m_headbobVerticalAmplitude)
@@ -63,81 +74,116 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.f)
 
-                    ->GroupElementToggle("Headbob", &FirstPersonExtrasComponent::m_enableHeadbob)
+                    // Jump Head Tilt group
+                    ->GroupElementToggle("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_headAngleJump,
+                        "Head Angle Jump",
+                        "The change in the camera's pitch when the character jumps.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_headAngleLand,
+                        "Head Angle Land",
+                        "The change in the camera's pitch when the character lands.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_deltaAngleFactorJump,
+                        "Delta Angle Factor Jump",
+                        "Factor that determines how quickly the camera's pitch changes at the start of a jump.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_deltaAngleFactorLand,
+                        "Delta Angle Factor Land",
+                        "Factor that determines how quickly the camera's pitch changes when landing.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_completeHeadLandTime,
+                        "Complete Head Land Time",
+                        "The time it takes to be in the air for the entire Head Angle Land to apply.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
+
+                    ->GroupElementToggle("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(nullptr, &FirstPersonExtrasComponent::m_headbobFrequency, "Frequency", "Speed of the headbob.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobHorizontalAmplitude,
                         "Horizontal Amplitude",
-                        "Left/right bob distance.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                        "Left/right headbob distance.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr, &FirstPersonExtrasComponent::m_headbobVerticalAmplitude, "Vertical Amplitude", "Up/down headbob distance.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_backwardsFrequencyScale,
                         "Backwards Frequency Scale",
                         "Scale factor for frequency when moving backwards.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_backwardsHorizontalAmplitudeScale,
                         "Backwards Horizontal Amplitude Scale",
                         "Scale factor for horizontal amplitude when moving backwards.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_backwardsVerticalAmplitudeScale,
                         "Backwards Vertical Amplitude Scale",
                         "Scale factor for vertical amplitude when moving backwards.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_crouchFrequencyScale,
                         "Crouch Frequency Scale",
                         "Scale factor for frequency when crouching.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_crouchHorizontalAmplitudeScale,
                         "Crouch Horizontal Amplitude Scale",
                         "Scale factor for horizontal amplitude when crouching.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_crouchVerticalAmplitudeScale,
                         "Crouch Vertical Amplitude Scale",
                         "Scale factor for vertical amplitude when crouching.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_sprintFrequencyScale,
                         "Sprint Frequency Scale",
                         "Scale factor for frequency when sprinting.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_sprintHorizontalAmplitudeScale,
                         "Sprint Horizontal Amplitude Scale",
                         "Scale factor for horizontal amplitude when sprinting.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_sprintVerticalAmplitudeScale,
                         "Sprint Vertical Amplitude Scale",
                         "Scale factor for vertical amplitude when sprinting.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobAttenuation,
                         "Attenuation Factor",
                         "Factor to attenuate the magnitude of the oscillation, lower values decrease intensity, a value of 1 does not "
                         "attenuate.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetEnableHeadbob);
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled);
             }
         }
 
@@ -156,7 +202,20 @@ namespace FirstPersonController
                 ->Event(
                     "Set Jump Pressed In Air Queue Time Threshold",
                     &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold)
-                ->Event("Get Enable Headbob", &FirstPersonExtrasComponentRequests::GetEnableHeadbob)
+                ->Event("Get Jump Head Tilt Enabled", &FirstPersonExtrasComponentRequests::GetJumpHeadTiltEnabled)
+                ->Event("Set Jump Head Tilt Enabled", &FirstPersonExtrasComponentRequests::SetJumpHeadTiltEnabled)
+                ->Event("Get Head Angle Jump", &FirstPersonExtrasComponentRequests::GetHeadAngleJump)
+                ->Event("Set Head Angle Jump", &FirstPersonExtrasComponentRequests::SetHeadAngleJump)
+                ->Event("Get Head Angle Land", &FirstPersonExtrasComponentRequests::GetHeadAngleLand)
+                ->Event("Set Head Angle Land", &FirstPersonExtrasComponentRequests::SetHeadAngleLand)
+                ->Event("Set Delta Angle Factor Jump", &FirstPersonExtrasComponentRequests::GetDeltaAngleFactorJump)
+                ->Event("Set Delta Angle Factor Jump", &FirstPersonExtrasComponentRequests::SetDeltaAngleFactorJump)
+                ->Event("Set Delta Angle Factor Land", &FirstPersonExtrasComponentRequests::GetDeltaAngleFactorLand)
+                ->Event("Set Delta Angle Factor Land", &FirstPersonExtrasComponentRequests::SetDeltaAngleFactorLand)
+                ->Event("Get Complete Head Land Time", &FirstPersonExtrasComponentRequests::GetCompleteHeadLandTime)
+                ->Event("Set Complete Head Land Time", &FirstPersonExtrasComponentRequests::SetCompleteHeadLandTime)
+                ->Event("Get Headbob Enabled", &FirstPersonExtrasComponentRequests::GetHeadbobEnabled)
+                ->Event("Set Headbob Enabled", &FirstPersonExtrasComponentRequests::SetHeadbobEnabled)
                 ->Event("Get Headbob Entity Id", &FirstPersonExtrasComponentRequests::GetHeadbobEntityId)
                 ->Event("Set Headbob Entity Id", &FirstPersonExtrasComponentRequests::SetHeadbobEntityId)
                 ->Event("Get Camera Translation Without Headbob", &FirstPersonExtrasComponentRequests::GetCameraTranslationWithoutHeadbob)
@@ -186,11 +245,15 @@ namespace FirstPersonController
             m_grounded = &(m_firstPersonControllerObject->m_grounded);
         }
 
+        // Convert Jump Head Tilt angles to radians
+        m_headAngleJump *= AZ::Constants::TwoPi / 360.f;
+        m_headAngleLand *= AZ::Constants::TwoPi / 360.f;
+
         // Assign the FirstPersonExtrasComponent specific inputs
         AssignConnectInputEvents();
 
         // Headbob activation
-        if (m_enableHeadbob)
+        if (m_headbobEnabled)
         {
             // Setup Headbob entity
             if (!m_headbobEntityId.IsValid())
@@ -225,7 +288,7 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusDisconnect();
 
         // Headbob deactivation
-        if (m_enableHeadbob)
+        if (m_headbobEnabled)
         {
             if (m_needsHeadbobFallback)
             {
@@ -449,42 +512,46 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
-    void FirstPersonExtrasComponent::SetHeadbobEntity(const AZ::EntityId& id)
+    void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float& deltaTime)
     {
-        // Disconnect existing handlers
-        if (m_needsHeadbobFallback)
+        if (!m_jumpHeadTiltEnabled)
+            return;
+
+        if (m_tiltLanded)
         {
-            Camera::CameraNotificationBus::Handler::BusDisconnect();
-            m_needsHeadbobFallback = false;
+            m_deltaAngle = m_prevDeltaTime * m_totalHeadAngle * m_deltaAngleFactorLand;
         }
-        AZ::EntityBus::Handler::BusDisconnect();
-
-        m_headbobEntityId = id;
-        m_headbobEntityPtr = nullptr;
-
-        if (!m_headbobEntityId.IsValid())
+        else if (m_tiltJumped)
         {
-            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
-            if (m_headbobEntityPtr == nullptr)
-            {
-                m_needsHeadbobFallback = true;
-                Camera::CameraNotificationBus::Handler::BusConnect();
-            }
+            m_deltaAngle = m_prevDeltaTime * m_totalHeadAngle * m_deltaAngleFactorJump;
+        }
+        else
+            return;
+
+        if (m_moveHeadDown)
+        {
+            m_currentHeadPitchAngle -= m_deltaAngle;
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_deltaAngle, true);
         }
         else
         {
-            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
-            if (m_headbobEntityPtr == nullptr)
-            {
-                AZ::EntityBus::Handler::BusConnect(m_headbobEntityId);
-            }
+            m_currentHeadPitchAngle += m_deltaAngle;
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_deltaAngle, true);
         }
-        // Reset original translation if new entity
-        if (m_headbobEntityPtr)
+
+        if (m_currentHeadPitchAngle >= 0.f)
         {
-            m_originalCameraTranslation = m_headbobEntityPtr->GetTransform()->GetLocalTranslation();
-            m_previousOffset = AZ::Vector3::CreateZero();
+            m_moveHeadDown = true;
+            m_tiltJumped = false;
+            m_tiltLanded = false;
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_currentHeadPitchAngle, true);
+            m_currentHeadPitchAngle = 0.f;
         }
+        else if (m_currentHeadPitchAngle <= m_totalHeadAngle)
+            m_moveHeadDown = false;
     }
 
     AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
@@ -548,7 +615,7 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::UpdateHeadbob(const float& deltaTime)
     {
-        if (!m_enableHeadbob || !m_headbobEntityPtr)
+        if (!m_headbobEnabled || !m_headbobEntityPtr)
             return;
 
         // Compute new headbob offset
@@ -594,7 +661,9 @@ namespace FirstPersonController
 
         if (tickTimestepNetwork == 0)
         {
-            // Update headbob
+            // Perform Jump Head Tilt
+            PerformJumpHeadTilt(deltaTime);
+            // Update Headbob
             UpdateHeadbob(deltaTime);
         }
     }
@@ -616,6 +685,16 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance)
     {
+        m_tiltLanded = true;
+        m_tiltJumped = false;
+        m_moveHeadDown = true;
+        float airTime = 0.f;
+        FirstPersonControllerComponentRequestBus::EventResult(
+            airTime, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetAirTime);
+        if (airTime <= m_completeHeadLandTime)
+            m_totalHeadAngle = (m_headAngleLand * airTime) / m_completeHeadLandTime;
+        else
+            m_totalHeadAngle = m_headAngleLand;
     }
     void FirstPersonExtrasComponent::OnUngrounded()
     {
@@ -674,6 +753,10 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnFirstJump()
     {
+        m_tiltJumped = true;
+        m_tiltLanded = false;
+        m_moveHeadDown = true;
+        m_totalHeadAngle = m_headAngleJump;
     }
     void FirstPersonExtrasComponent::OnFinalJump()
     {
@@ -709,17 +792,102 @@ namespace FirstPersonController
         else
             m_jumpPressedInAirQueueTimeThreshold = new_jumpPressedInAirQueueTimeThreshold;
     }
-    bool FirstPersonExtrasComponent::GetEnableHeadbob() const
+    bool FirstPersonExtrasComponent::GetJumpHeadTiltEnabled() const
     {
-        return m_enableHeadbob;
+        return m_jumpHeadTiltEnabled;
+    }
+    void FirstPersonExtrasComponent::SetJumpHeadTiltEnabled(const bool& new_jumpHeadTiltEnabled)
+    {
+        m_jumpHeadTiltEnabled = new_jumpHeadTiltEnabled;
+    }
+    float FirstPersonExtrasComponent::GetHeadAngleJump() const
+    {
+        return m_headAngleJump * 360.f / AZ::Constants::TwoPi;
+    }
+    void FirstPersonExtrasComponent::SetHeadAngleJump(const float& new_headAngleJump)
+    {
+        m_headAngleJump = new_headAngleJump * AZ::Constants::TwoPi / 360.f;
+    }
+    float FirstPersonExtrasComponent::GetHeadAngleLand() const
+    {
+        return m_headAngleLand * 360.f / AZ::Constants::TwoPi;
+    }
+    void FirstPersonExtrasComponent::SetHeadAngleLand(const float& new_headAngleLand)
+    {
+        m_headAngleLand = new_headAngleLand * AZ::Constants::TwoPi / 360.f;
+    }
+    float FirstPersonExtrasComponent::GetDeltaAngleFactorJump() const
+    {
+        return m_deltaAngleFactorJump;
+    }
+    void FirstPersonExtrasComponent::SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump)
+    {
+        m_deltaAngleFactorJump = new_deltaAngleFactorJump;
+    }
+    float FirstPersonExtrasComponent::GetDeltaAngleFactorLand() const
+    {
+        return m_deltaAngleFactorLand;
+    }
+    void FirstPersonExtrasComponent::SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand)
+    {
+        m_deltaAngleFactorLand = new_deltaAngleFactorLand;
+    }
+    float FirstPersonExtrasComponent::GetCompleteHeadLandTime() const
+    {
+        return m_completeHeadLandTime;
+    }
+    void FirstPersonExtrasComponent::SetCompleteHeadLandTime(const float& new_completeHeadLandTime)
+    {
+        m_completeHeadLandTime = new_completeHeadLandTime;
+    }
+    bool FirstPersonExtrasComponent::GetHeadbobEnabled() const
+    {
+        return m_headbobEnabled;
+    }
+    void FirstPersonExtrasComponent::SetHeadbobEnabled(const bool& new_headbobEnabled)
+    {
+        m_headbobEnabled = new_headbobEnabled;
     }
     AZ::EntityId FirstPersonExtrasComponent::GetHeadbobEntityId() const
     {
         return m_headbobEntityId;
     }
-    void FirstPersonExtrasComponent::SetHeadbobEntityId(const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::SetHeadbobEntityId(const AZ::EntityId& new_headbobEntityId)
     {
-        SetHeadbobEntity(entityId);
+        // Disconnect existing handlers
+        if (m_needsHeadbobFallback)
+        {
+            Camera::CameraNotificationBus::Handler::BusDisconnect();
+            m_needsHeadbobFallback = false;
+        }
+        AZ::EntityBus::Handler::BusDisconnect();
+
+        m_headbobEntityId = new_headbobEntityId;
+        m_headbobEntityPtr = nullptr;
+
+        if (!m_headbobEntityId.IsValid())
+        {
+            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
+            if (m_headbobEntityPtr == nullptr)
+            {
+                m_needsHeadbobFallback = true;
+                Camera::CameraNotificationBus::Handler::BusConnect();
+            }
+        }
+        else
+        {
+            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
+            if (m_headbobEntityPtr == nullptr)
+            {
+                AZ::EntityBus::Handler::BusConnect(m_headbobEntityId);
+            }
+        }
+        // Reset original translation if new entity
+        if (m_headbobEntityPtr)
+        {
+            m_originalCameraTranslation = m_headbobEntityPtr->GetTransform()->GetLocalTranslation();
+            m_previousOffset = AZ::Vector3::CreateZero();
+        }
     }
     AZ::Vector3 FirstPersonExtrasComponent::GetCameraTranslationWithoutHeadbob() const
     {

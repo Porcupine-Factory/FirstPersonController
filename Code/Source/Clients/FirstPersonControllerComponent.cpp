@@ -582,7 +582,6 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_coyoteTime,
                         "Coyote Time",
                         "Grace period after walking off a ledge during which a jump is still allowed.")
-                    ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(

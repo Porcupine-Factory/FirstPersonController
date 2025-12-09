@@ -18,7 +18,20 @@ namespace FirstPersonController
 
         virtual float GetJumpPressedInAirQueueTimeThreshold() const = 0;
         virtual void SetJumpPressedInAirQueueTimeThreshold(const float&) = 0;
-        virtual bool GetEnableHeadbob() const = 0;
+        virtual bool GetJumpHeadTiltEnabled() const = 0;
+        virtual void SetJumpHeadTiltEnabled(const bool&) = 0;
+        virtual float GetHeadAngleJump() const = 0;
+        virtual void SetHeadAngleJump(const float&) = 0;
+        virtual float GetHeadAngleLand() const = 0;
+        virtual void SetHeadAngleLand(const float&) = 0;
+        virtual float GetDeltaAngleFactorJump() const = 0;
+        virtual void SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump) = 0;
+        virtual float GetDeltaAngleFactorLand() const = 0;
+        virtual void SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand) = 0;
+        virtual float GetCompleteHeadLandTime() const = 0;
+        virtual void SetCompleteHeadLandTime(const float& new_completeHeadLandTime) = 0;
+        virtual bool GetHeadbobEnabled() const = 0;
+        virtual void SetHeadbobEnabled(const bool&) = 0;
         virtual AZ::EntityId GetHeadbobEntityId() const = 0;
         virtual void SetHeadbobEntityId(const AZ::EntityId&) = 0;
         virtual AZ::Vector3 GetCameraTranslationWithoutHeadbob() const = 0;
