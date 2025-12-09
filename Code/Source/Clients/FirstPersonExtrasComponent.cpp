@@ -512,7 +512,7 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
-    void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float& deltaTime)
+    void FirstPersonExtrasComponent::PerformJumpHeadTilt([[maybe_unused]] const float& deltaTime)
     {
         if (!m_jumpHeadTiltEnabled)
             return;
