@@ -428,12 +428,6 @@ namespace FirstPersonController
     {
     }
 
-    void FirstPersonExtrasComponent::OnPhysicsTimestepFinish(const float& physicsTimestep)
-    {
-        ProcessInput(((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
-        m_prevTimestep = physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor;
-    }
-
     void FirstPersonExtrasComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
         ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
@@ -448,6 +442,12 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
     {
+    }
+
+    void FirstPersonExtrasComponent::OnPhysicsTimestepFinish(const float& physicsTimestep)
+    {
+        ProcessInput(((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
+        m_prevTimestep = physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor;
     }
 
     AZ::Entity* FirstPersonExtrasComponent::GetEntityPtr(AZ::EntityId pointer) const
@@ -512,18 +512,18 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
-    void FirstPersonExtrasComponent::PerformJumpHeadTilt([[maybe_unused]] const float& deltaTime)
+    void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float& deltaTime)
     {
         if (!m_jumpHeadTiltEnabled)
             return;
 
-        if (m_tiltLanded)
+        if (m_tiltJumped)
         {
-            m_deltaAngle = m_prevDeltaTime * m_totalHeadAngle * m_deltaAngleFactorLand;
+            m_deltaAngle = deltaTime * m_totalHeadAngle * m_deltaAngleFactorJump;
         }
-        else if (m_tiltJumped)
+        else if (m_tiltLanded)
         {
-            m_deltaAngle = m_prevDeltaTime * m_totalHeadAngle * m_deltaAngleFactorJump;
+            m_deltaAngle = deltaTime * m_totalHeadAngle * m_deltaAngleFactorLand;
         }
         else
             return;
@@ -661,10 +661,18 @@ namespace FirstPersonController
 
         if (tickTimestepNetwork == 0)
         {
-            // Perform Jump Head Tilt
-            PerformJumpHeadTilt(deltaTime);
+            if (!m_networkFPCEnabled)
+            {
+                // Perform Jump Head Tilt
+                PerformJumpHeadTilt(deltaTime);
+            }
             // Update Headbob
             UpdateHeadbob(deltaTime);
+        }
+        else if (tickTimestepNetwork == 2)
+        {
+            // Perform Jump Head Tilt
+            PerformJumpHeadTilt(deltaTime);
         }
     }
 
@@ -692,7 +700,7 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::EventResult(
             airTime, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetAirTime);
         if (airTime <= m_completeHeadLandTime)
-            m_totalHeadAngle = (m_headAngleLand * airTime) / m_completeHeadLandTime;
+            m_totalHeadAngle = m_headAngleLand * airTime / m_completeHeadLandTime;
         else
             m_totalHeadAngle = m_headAngleLand;
     }
