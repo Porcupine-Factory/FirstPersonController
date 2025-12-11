@@ -161,7 +161,7 @@ namespace FirstPersonController
                 ->Field("Update X&Y Velocity Only When Ground Close", &FirstPersonControllerComponent::m_updateXYOnlyNearGround)
 
                 // Impulse group
-                ->Field("Enable Impulse", &FirstPersonControllerComponent::m_enableImpulses)
+                ->Field("Impulse", &FirstPersonControllerComponent::m_enableImpulses)
                 ->Field("Use Friction For Deceleration", &FirstPersonControllerComponent::m_impulseDecelUsesFriction)
                 ->Field("Mass", &FirstPersonControllerComponent::m_characterMass)
                 ->Attribute(AZ::Edit::Attributes::Min, 0.00001f)
@@ -179,8 +179,13 @@ namespace FirstPersonController
                         Physics::NameConstants::GetSuperscriptTwo().c_str()))
 
                 // Hit Detection group
-                ->Field("Enable Hit Detection", &FirstPersonControllerComponent::m_enableCharacterHits)
+                ->Field("Hit Detection", &FirstPersonControllerComponent::m_enableCharacterHits)
                 ->Field("Capsule Radius Detection Percentage Increase", &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease)
+                ->Attribute(AZ::Edit::Attributes::Min, -100.f)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " %")
+                ->Field(
+                    "Capsule Radius Detection Percentage IncreaseWhileIdle",
+                    &FirstPersonControllerComponent::m_hitRadiusPercentageIncreaseWhileIdle)
                 ->Attribute(AZ::Edit::Attributes::Min, -100.f)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " %")
                 ->Field("Capsule Height Detection Percentage Increase", &FirstPersonControllerComponent::m_hitHeightPercentageIncrease)
@@ -618,14 +623,8 @@ namespace FirstPersonController
                         "Allows movement in X&Y only if close to an acceptable ground entity. According to the distance set in Jump Hold "
                         "Distance. If the ascending and descending options are disabled, then this will effectively do nothing.")
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Impulse")
+                    ->GroupElementToggle("Impulse", &FirstPersonControllerComponent::m_enableImpulses)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
-                    ->DataElement(
-                        nullptr,
-                        &FirstPersonControllerComponent::m_enableImpulses,
-                        "Enable Impulses",
-                        "Determines whether impulses can be applied to the character via the EBus (e.g. scripts). Dynamic / simulated "
-                        "rigid bodies will not apply impulses to the character without using the EBus.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(
                         nullptr,
@@ -662,19 +661,21 @@ namespace FirstPersonController
                         "Friction For Deceleration' is turned on then this constant will not be used.")
                     ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableImpulsesAndNotDecelUsesFriction)
 
-                    ->ClassElement(AZ::Edit::ClassElements::Group, "Hit Detection")
+                    ->GroupElementToggle("Hit Detection", &FirstPersonControllerComponent::m_enableCharacterHits)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
-                    ->DataElement(
-                        nullptr,
-                        &FirstPersonControllerComponent::m_enableCharacterHits,
-                        "Enable Hit Detection",
-                        "Determines whether collisions with the character will be detected by a capsule shapecast.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease,
                         "Capsule Radius Detection Percentage Increase",
                         "Percentage to increase the character's capsule collider radius by to determine hits / collisions.")
+                    ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableCharacterHits)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonControllerComponent::m_hitRadiusPercentageIncreaseWhileIdle,
+                        "Capsule Radius Detection Percentage Increase While Idle",
+                        "Percentage to increase the character's capsule collider radius by to determine hits / collisions "
+                        "while the character isn't moving.")
                     ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableCharacterHits)
                     ->DataElement(
                         nullptr,
@@ -890,6 +891,12 @@ namespace FirstPersonController
                 ->Event("Set Enable Character Hits", &FirstPersonControllerComponentRequests::SetEnableCharacterHits)
                 ->Event("Get Hit Radius Percentage Increase", &FirstPersonControllerComponentRequests::GetHitRadiusPercentageIncrease)
                 ->Event("Set Hit Radius Percentage Increase", &FirstPersonControllerComponentRequests::SetHitRadiusPercentageIncrease)
+                ->Event(
+                    "Get Hit Radius Percentage Increase While Idle",
+                    &FirstPersonControllerComponentRequests::GetHitRadiusPercentageIncreaseWhileIdle)
+                ->Event(
+                    "Set Hit Radius Percentage Increase While Idle",
+                    &FirstPersonControllerComponentRequests::SetHitRadiusPercentageIncreaseWhileIdle)
                 ->Event("Get Hit Height Percentage Increase", &FirstPersonControllerComponentRequests::GetHitHeightPercentageIncrease)
                 ->Event("Set Hit Height Percentage Increase", &FirstPersonControllerComponentRequests::SetHitHeightPercentageIncrease)
                 ->Event("Get Hit Extra Projection Percentage", &FirstPersonControllerComponentRequests::GetHitExtraProjectionPercentage)
@@ -3695,7 +3702,7 @@ namespace FirstPersonController
                   m_characterHitCollisionGroup,
                   nullptr)
             : AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-                  m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
+                  m_capsuleRadius * (1.f + m_hitRadiusPercentageIncreaseWhileIdle / 100.f),
                   m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
                   capsulePose,
                   AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()),
@@ -5032,6 +5039,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentageIncrease)
     {
         m_hitRadiusPercentageIncrease = new_hitRadiusPercentageIncrease;
+    }
+    float FirstPersonControllerComponent::GetHitRadiusPercentageIncreaseWhileIdle() const
+    {
+        return m_hitRadiusPercentageIncreaseWhileIdle;
+    }
+    void FirstPersonControllerComponent::SetHitRadiusPercentageIncreaseWhileIdle(const float& new_hitRadiusPercentageIncreaseWhileIdle)
+    {
+        m_hitRadiusPercentageIncreaseWhileIdle = new_hitRadiusPercentageIncreaseWhileIdle;
     }
     float FirstPersonControllerComponent::GetHitHeightPercentageIncrease() const
     {

@@ -253,6 +253,8 @@ namespace FirstPersonController
         void SetEnableCharacterHits(const bool& new_enableCharacterHits) override;
         float GetHitRadiusPercentageIncrease() const override;
         void SetHitRadiusPercentageIncrease(const float& new_hitRadiusPercentageIncrease) override;
+        float GetHitRadiusPercentageIncreaseWhileIdle() const override;
+        void SetHitRadiusPercentageIncreaseWhileIdle(const float& new_hitRadiusPercentageIncreaseWhileIdle) override;
         float GetHitHeightPercentageIncrease() const override;
         void SetHitHeightPercentageIncrease(const float& new_hitHeightPercentageIncrease) override;
         float GetHitExtraProjectionPercentage() const override;
@@ -794,7 +796,8 @@ namespace FirstPersonController
         float m_impulseLerpTime = 0.f;
         float m_characterMass = 80.f;
         bool m_enableCharacterHits = true;
-        float m_hitRadiusPercentageIncrease = 5.f;
+        float m_hitRadiusPercentageIncrease = 68.f;
+        float m_hitRadiusPercentageIncreaseWhileIdle = 55.f;
         float m_hitHeightPercentageIncrease = 5.f;
         float m_hitExtraProjectionPercentage = 10.f;
         AzPhysics::CollisionGroups::Id m_characterHitCollisionGroupId = AzPhysics::CollisionGroups::Id();

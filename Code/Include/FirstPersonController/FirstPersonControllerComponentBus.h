@@ -193,6 +193,8 @@ namespace FirstPersonController
         virtual void SetEnableCharacterHits(const bool&) = 0;
         virtual float GetHitRadiusPercentageIncrease() const = 0;
         virtual void SetHitRadiusPercentageIncrease(const float&) = 0;
+        virtual float GetHitRadiusPercentageIncreaseWhileIdle() const = 0;
+        virtual void SetHitRadiusPercentageIncreaseWhileIdle(const float&) = 0;
         virtual float GetHitHeightPercentageIncrease() const = 0;
         virtual void SetHitHeightPercentageIncrease(const float&) = 0;
         virtual float GetHitExtraProjectionPercentage() const = 0;
