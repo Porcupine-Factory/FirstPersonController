@@ -1274,6 +1274,8 @@ namespace FirstPersonController
                 m_ungroundedDueToJump = true;
         }
 
+        m_prevTranslation = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
+
         // Set the sprint pause time based on whether the cooldown time or the max consecutive sprint time is longer
         // This number can be altered using the RequestBus
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
@@ -3686,8 +3688,9 @@ namespace FirstPersonController
             GetVectorAnglesBetweenVectorsRadians(AZ::Vector3::CreateAxisX(), m_sphereCastsAxisDirectionPose)));
 
         // Set the translation and shift the capsule based on the character's capsule height
-        capsulePose.SetTranslation(
-            GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
+        capsulePose.SetTranslation(m_prevTranslation + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
+
+        m_prevTranslation = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
 
         AzPhysics::ShapeCastRequest request = !m_applyVelocityXY.IsZero() || m_applyVelocityZ != 0.f || !m_currentVelocity.IsZero()
             ? AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(

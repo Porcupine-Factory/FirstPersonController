@@ -788,6 +788,7 @@ namespace FirstPersonController
         AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevTranslation = AZ::Vector3::CreateZero();
         AZ::Vector2 m_applyVelocityXYFromImpulse = AZ::Vector2::CreateZero();
         float m_impulseConstantDecel = 10.f;
         float m_impulsePrevConstantDecel = 10.f;
@@ -796,7 +797,7 @@ namespace FirstPersonController
         float m_impulseLerpTime = 0.f;
         float m_characterMass = 80.f;
         bool m_enableCharacterHits = true;
-        float m_hitRadiusPercentageIncrease = 68.f;
+        float m_hitRadiusPercentageIncrease = 63.f;
         float m_hitRadiusPercentageIncreaseWhileIdle = 55.f;
         float m_hitHeightPercentageIncrease = 5.f;
         float m_hitExtraProjectionPercentage = 10.f;
