@@ -860,6 +860,7 @@ namespace FirstPersonController
                 ->Event("Set Corrected Velocity Z", &FirstPersonControllerComponentRequests::SetCorrectedVelocityZ)
                 ->Event("Get Apply Velocity XY", &FirstPersonControllerComponentRequests::GetApplyVelocityXY)
                 ->Event("Set Apply Velocity XY", &FirstPersonControllerComponentRequests::SetApplyVelocityXY)
+                ->Event("Get Next Likely Apply Velocity XY", &FirstPersonControllerComponentRequests::GetNextLikelyApplyVelocityXY)
                 ->Event("Get Add Velocity Using World", &FirstPersonControllerComponentRequests::GetAddVelocityWorld)
                 ->Event("Set Add Velocity Using World", &FirstPersonControllerComponentRequests::SetAddVelocityWorld)
                 ->Event("Get Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetAddVelocityHeading)
@@ -2909,10 +2910,17 @@ namespace FirstPersonController
         if (m_applyVelocityXY != targetVelocityXYWorld)
         {
             if (m_instantVelocityRotation)
+            {
                 m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
                                                     .TransformVector(AZ::Vector3(LerpVelocityXY(targetVelocityXY, deltaTime))));
+                m_nextLikelyApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
+                                                              .TransformVector(AZ::Vector3(LerpVelocityXY(targetVelocityXY, deltaTime))));
+            }
             else
+            {
                 m_applyVelocityXY = LerpVelocityXY(targetVelocityXYWorld, deltaTime);
+                m_nextLikelyApplyVelocityXY = LerpVelocityXY(targetVelocityXYWorld, deltaTime);
+            }
         }
         else
         {
@@ -4908,6 +4916,10 @@ namespace FirstPersonController
                 AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
         else
             m_prevApplyVelocityXY = m_applyVelocityXY;
+    }
+    AZ::Vector2 FirstPersonControllerComponent::GetNextLikelyApplyVelocityXY() const
+    {
+        return m_nextLikelyApplyVelocityXY;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetAddVelocityWorld() const
     {

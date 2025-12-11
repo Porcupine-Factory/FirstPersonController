@@ -162,6 +162,7 @@ namespace FirstPersonController
         virtual void SetCorrectedVelocityZ(const float&) = 0;
         virtual AZ::Vector2 GetApplyVelocityXY() const = 0;
         virtual void SetApplyVelocityXY(const AZ::Vector2&) = 0;
+        virtual AZ::Vector2 GetNextLikelyApplyVelocityXY() const = 0;
         virtual AZ::Vector3 GetAddVelocityWorld() const = 0;
         virtual void SetAddVelocityWorld(const AZ::Vector3&) = 0;
         virtual AZ::Vector3 GetAddVelocityHeading() const = 0;

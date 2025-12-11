@@ -222,6 +222,7 @@ namespace FirstPersonController
         void SetCorrectedVelocityZ(const float& new_correctedVelocityZ) override;
         AZ::Vector2 GetApplyVelocityXY() const override;
         void SetApplyVelocityXY(const AZ::Vector2& new_applyVelocityXY) override;
+        AZ::Vector2 GetNextLikelyApplyVelocityXY() const override;
         AZ::Vector3 GetAddVelocityWorld() const override;
         void SetAddVelocityWorld(const AZ::Vector3& new_addVelocityWorld) override;
         AZ::Vector3 GetAddVelocityHeading() const override;
@@ -596,6 +597,7 @@ namespace FirstPersonController
 
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_nextLikelyApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prevSampledVelocity = AZ::Vector3::CreateZero();
