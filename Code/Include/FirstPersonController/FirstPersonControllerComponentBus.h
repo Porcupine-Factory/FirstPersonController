@@ -78,6 +78,8 @@ namespace FirstPersonController
         virtual void SetSprintInputValue(const float&) = 0;
         virtual float GetSprintEffectiveValue() const = 0;
         virtual void SetSprintEffectiveValue(const float&) = 0;
+        virtual bool GetSprintInputEngaged() const = 0;
+        virtual void SetSprintInputEngaged(const bool&) = 0;
         virtual AZStd::string GetCrouchEventName() const = 0;
         virtual void SetCrouchEventName(const AZStd::string&) = 0;
         virtual float GetCrouchInputValue() const = 0;
@@ -335,6 +337,12 @@ namespace FirstPersonController
         virtual void SetSprintBackwards(const bool&) = 0;
         virtual bool GetSprintWhileCrouched() const = 0;
         virtual void SetSprintWhileCrouched(const bool&) = 0;
+        virtual bool GetSprintEnableToggle() const = 0;
+        virtual void SetSprintEnableToggle(const bool&) = 0;
+        virtual bool GetSprintToggleAutomatically() const = 0;
+        virtual void SetSprintToggleAutomatically(const bool&) = 0;
+        virtual bool GetSprintAutoToggleOutOfCrouch() const = 0;
+        virtual void SetSprintAutoToggleOutOfCrouch(const bool&) = 0;
         virtual bool GetCrouching() const = 0;
         virtual void SetCrouching(const bool&) = 0;
         virtual bool GetCrouched() const = 0;

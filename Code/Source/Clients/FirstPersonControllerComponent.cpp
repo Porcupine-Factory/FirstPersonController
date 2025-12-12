@@ -91,6 +91,8 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Field("Sprint Backwards", &FirstPersonControllerComponent::m_sprintBackwards)
                 ->Field("Sprint While Crouched", &FirstPersonControllerComponent::m_sprintWhileCrouched)
+                ->Field("Sprint Enable Toggle", &FirstPersonControllerComponent::m_sprintEnableToggle)
+                ->Field("Sprint Toggle Automatically", &FirstPersonControllerComponent::m_sprintToggleAutomatically)
 
                 // Crouching group
                 ->Field("Stand Collision Group", &FirstPersonControllerComponent::m_standCollisionGroupId)
@@ -403,6 +405,19 @@ namespace FirstPersonController
                         &FirstPersonControllerComponent::m_sprintWhileCrouched,
                         "Sprint While Crouched",
                         "Determines whether the character can sprint while crouched.")
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonControllerComponent::m_sprintEnableToggle,
+                        "Sprint Enable Toggle",
+                        "Determines whether the sprint key toggles sprinting. Disabling this requires the sprint key to be held to "
+                        "keep sprinting.")
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonControllerComponent::m_sprintToggleAutomatically,
+                        "Sprint Toggle Automatically",
+                        "Determines whether sprint is engaged automatically when stopping and moving again or when stamina replenishes.")
+                    ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetSprintEnableToggle)
 
                     ->ClassElement(AZ::Edit::ClassElements::Group, "Crouching")
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -756,6 +771,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Input Value", &FirstPersonControllerComponentRequests::SetSprintInputValue)
                 ->Event("Get Sprint Effective Value", &FirstPersonControllerComponentRequests::GetSprintEffectiveValue)
                 ->Event("Set Sprint Effective Value", &FirstPersonControllerComponentRequests::SetSprintEffectiveValue)
+                ->Event("Get Sprint Input Engaged", &FirstPersonControllerComponentRequests::GetSprintInputEngaged)
+                ->Event("Set Sprint Input Engaged", &FirstPersonControllerComponentRequests::SetSprintInputEngaged)
                 ->Event("Get Crouch Event Name", &FirstPersonControllerComponentRequests::GetCrouchEventName)
                 ->Event("Set Crouch Event Name", &FirstPersonControllerComponentRequests::SetCrouchEventName)
                 ->Event("Get Crouch Input Value", &FirstPersonControllerComponentRequests::GetCrouchInputValue)
@@ -1057,6 +1074,12 @@ namespace FirstPersonController
                 ->Event("Set Sprint Backwards", &FirstPersonControllerComponentRequests::SetSprintBackwards)
                 ->Event("Get Sprint While Crouched", &FirstPersonControllerComponentRequests::GetSprintWhileCrouched)
                 ->Event("Set Sprint While Crouched", &FirstPersonControllerComponentRequests::SetSprintWhileCrouched)
+                ->Event("Get Sprint Enable Toggle", &FirstPersonControllerComponentRequests::GetSprintEnableToggle)
+                ->Event("Set Sprint Enable Toggle", &FirstPersonControllerComponentRequests::SetSprintEnableToggle)
+                ->Event("Get Sprint Toggle Automatically", &FirstPersonControllerComponentRequests::GetSprintToggleAutomatically)
+                ->Event("Set Sprint Toggle Automatically", &FirstPersonControllerComponentRequests::SetSprintToggleAutomatically)
+                ->Event("Get Sprint Auto Toggle Out of Crouch", &FirstPersonControllerComponentRequests::GetSprintAutoToggleOutOfCrouch)
+                ->Event("Set Sprint Auto Toggle Out of Crouch", &FirstPersonControllerComponentRequests::SetSprintAutoToggleOutOfCrouch)
                 ->Event("Get Sprint Via Script", &FirstPersonControllerComponentRequests::GetSprintViaScript)
                 ->Event("Set Sprint Via Script", &FirstPersonControllerComponentRequests::SetSprintViaScript)
                 ->Event("Get Enable Disable Sprint", &FirstPersonControllerComponentRequests::GetSprintEnableDisable)
@@ -2215,27 +2238,56 @@ namespace FirstPersonController
     {
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
         // and it shouldn't be applied if you're crouching (depending on various settings)
-        if (m_sprintEffectiveValue == 0.f || (!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
+        if ((!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
             (!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX()) || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue) ||
             (targetVelocityXY.IsZero()) ||
-            (m_sprintEffectiveValue != 0.f && !m_sprintBackwards &&
+            (m_sprintInputEngaged && !m_sprintBackwards &&
              ((!m_forwardValue && !m_leftValue && !m_rightValue) || (!m_forwardValue && -m_leftValue == m_rightValue) ||
               (targetVelocityXY.GetY() < 0.f))))
-            m_sprintEffectiveValue = 0.f;
+        {
+            if (m_sprintEnableToggle && m_sprintToggleAutomatically && m_sprintInputEngaged)
+                m_sprintAutoToggleQueued = true;
+
+            m_sprintInputEngaged = false;
+        }
+        else if (m_sprintAutoToggleQueued)
+        {
+            m_sprintInputEngaged = true;
+            m_sprintAutoToggleQueued = false;
+        }
+
+        // Handle toggling the sprint key when it's enabled
+        if (!m_sprintEnableToggle)
+            m_sprintInputEngaged = m_sprintEffectiveValue != 0.f ? true : false;
+        else if (m_sprintEnableToggle && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue && !m_sprintAutoToggleQueued)
+        {
+            m_sprintInputEngaged = true;
+        }
+        else if (m_sprintEnableToggle && m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
+        {
+            m_sprintInputEngaged = false;
+        }
+        else if (m_sprintAutoToggleQueued && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
+            m_sprintAutoToggleQueued = false;
+
+        if (m_sprintEnableToggle && m_sprintInputEngaged)
+            m_sprintAccelValue = m_sprintAccelScale;
+        else if (m_sprintEnableToggle && !m_sprintInputEngaged)
+            m_sprintAccelValue = 0.f;
 
         if ((m_sprintViaScript && m_sprintEnableDisable) && (targetVelocityXY.GetY() > 0.f || m_sprintBackwards))
         {
-            m_sprintEffectiveValue = 1.f;
+            m_sprintInputEngaged = true;
             m_sprintAccelValue = m_sprintAccelScale;
         }
         else if (m_sprintViaScript && !m_sprintEnableDisable)
-            m_sprintEffectiveValue = 0.f;
+            m_sprintInputEngaged = false;
 
         // Reset the counter if there is no movement
         if (m_applyVelocityXY.IsZero())
             m_sprintAccumulatedAccel = 0.f;
 
-        if (m_sprintEffectiveValue == 0.f || m_sprintCooldownTimer != 0.f)
+        if (!m_sprintInputEngaged || m_sprintCooldownTimer != 0.f)
             m_sprintVelocityAdjust = 1.f;
         else
         {
@@ -2255,7 +2307,7 @@ namespace FirstPersonController
             m_sprintCooldownTimer == 0.f)
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnSprintStarted);
-        else if (m_sprintPrevValue == 1.f && m_sprintEffectiveValue == 0.f && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
+        else if (m_sprintPrevValue == 1.f && !m_sprintInputEngaged && AZ::IsClose(m_sprintVelocityAdjust, 1.f))
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnSprintStopped);
 
@@ -2313,7 +2365,8 @@ namespace FirstPersonController
         {
             m_staminaDecreasing = false;
 
-            m_sprintEffectiveValue = 0.f;
+            if (!m_sprintEnableToggle || !m_sprintToggleAutomatically)
+                m_sprintInputEngaged = false;
 
             // Set the sprint acceleration adjust according to the local direction the character is moving
             if (!m_sprintStopAccelAdjustCaptured && targetVelocityXY.IsZero())
@@ -2462,6 +2515,10 @@ namespace FirstPersonController
 
         AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
 
+        // Determine the latest sprint input value
+        if (!m_sprintEnableToggle)
+            m_sprintInputEngaged = m_sprintEffectiveValue != 0.f ? true : false;
+
         if (m_crouchEnableToggle && (m_grounded || m_crouching || m_crouchWhenNotGrounded) && !m_crouchScriptLocked &&
             m_crouchPrevValue == 0.f && m_crouchValue == 1.f)
         {
@@ -2470,7 +2527,7 @@ namespace FirstPersonController
         else if (!m_crouchEnableToggle && (m_grounded || m_crouching) && !m_crouchScriptLocked)
         {
             if (m_crouchValue != 0.f &&
-                ((m_sprintEffectiveValue == 0.f || !m_crouchSprintCausesStanding) ||
+                ((!m_sprintInputEngaged || !m_crouchSprintCausesStanding) ||
                  ((m_crouchPriorityWhenSprintPressed) && (m_standing || m_crouching))) &&
                 (m_jumpValue == 0.f || !m_crouchJumpCausesStanding || (m_jumpReqRepress && (m_standing || m_crouching))))
                 m_crouching = true;
@@ -2480,13 +2537,18 @@ namespace FirstPersonController
 
         // If the crouch key takes priority when the sprint key is held and we're attempting to crouch
         // while the sprint key is being pressed then stop the sprinting and continue crouching
-        if (m_crouchPriorityWhenSprintPressed && !m_sprintWhileCrouched && m_sprintEffectiveValue != 0.f && m_crouching &&
+        if (m_crouchPriorityWhenSprintPressed && !m_sprintWhileCrouched && m_sprintInputEngaged && m_crouching &&
             m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
+        {
+            m_sprintInputEngaged = false;
             m_sprintEffectiveValue = 0.f;
+            if (m_sprintEnableToggle && m_sprintToggleAutomatically && m_sprintAutoToggleOutOfCrouch)
+                m_sprintAutoToggleQueued = true;
+        }
         // Otherwise if the crouch key does not take priority when the sprint key is held,
         // and we are attempting to crouch while the sprint key is held, then do not crouch
         else if (
-            !m_crouchPriorityWhenSprintPressed && m_sprintEffectiveValue != 0.f && m_grounded && m_crouching &&
+            !m_crouchPriorityWhenSprintPressed && m_sprintInputEngaged && m_grounded && m_crouching &&
             m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
             m_crouching = false;
 
@@ -2935,7 +2997,7 @@ namespace FirstPersonController
         // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
         // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
         // AZ_Printf("First Person Controller Component", "m_sprintAccumulatedAccel = %.10f", m_sprintAccumulatedAccel);
-        // AZ_Printf("First Person Controller Component", "m_sprintEffectiveValue = %.10f", m_sprintEffectiveValue);
+        // AZ_Printf("First Person Controller Component", "m_sprintInputEngaged = %s", m_sprintInputEngaged ? "true" : "false");
         // AZ_Printf("First Person Controller Component", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
         // AZ_Printf("First Person Controller Component", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
         // AZ_Printf("First Person Controller Component", "m_decelerationFactor = %.10f", m_decelerationFactor);
@@ -4422,6 +4484,14 @@ namespace FirstPersonController
     {
         m_sprintEffectiveValue = new_sprintEffectiveValue;
     }
+    bool FirstPersonControllerComponent::GetSprintInputEngaged() const
+    {
+        return m_sprintInputEngaged;
+    }
+    void FirstPersonControllerComponent::SetSprintInputEngaged(const bool& new_sprintInputEngaged)
+    {
+        m_sprintInputEngaged = new_sprintInputEngaged;
+    }
     AZStd::string FirstPersonControllerComponent::GetCrouchEventName() const
     {
         return m_strCrouch;
@@ -5715,6 +5785,30 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintWhileCrouched(const bool& new_sprintWhileCrouched)
     {
         m_sprintWhileCrouched = new_sprintWhileCrouched;
+    }
+    bool FirstPersonControllerComponent::GetSprintEnableToggle() const
+    {
+        return m_sprintEnableToggle;
+    }
+    void FirstPersonControllerComponent::SetSprintEnableToggle(const bool& new_sprintEnableToggle)
+    {
+        m_sprintEnableToggle = new_sprintEnableToggle;
+    }
+    bool FirstPersonControllerComponent::GetSprintToggleAutomatically() const
+    {
+        return m_sprintToggleAutomatically;
+    }
+    void FirstPersonControllerComponent::SetSprintToggleAutomatically(const bool& new_sprintToggleAutomatically)
+    {
+        m_sprintToggleAutomatically = new_sprintToggleAutomatically;
+    }
+    bool FirstPersonControllerComponent::GetSprintAutoToggleOutOfCrouch() const
+    {
+        return m_sprintAutoToggleOutOfCrouch;
+    }
+    void FirstPersonControllerComponent::SetSprintAutoToggleOutOfCrouch(const bool& new_sprintAutoToggleOutOfCrouch)
+    {
+        m_sprintAutoToggleOutOfCrouch = new_sprintAutoToggleOutOfCrouch;
     }
     bool FirstPersonControllerComponent::GetSprintViaScript() const
     {

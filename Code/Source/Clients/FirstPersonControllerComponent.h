@@ -136,6 +136,8 @@ namespace FirstPersonController
         void SetSprintInputValue(const float& new_sprintValue) override;
         float GetSprintEffectiveValue() const override;
         void SetSprintEffectiveValue(const float& new_sprintEffectiveValue) override;
+        bool GetSprintInputEngaged() const override;
+        void SetSprintInputEngaged(const bool& new_sprintInputEngaged) override;
         AZStd::string GetCrouchEventName() const override;
         void SetCrouchEventName(const AZStd::string& new_strCrouch) override;
         float GetCrouchInputValue() const override;
@@ -394,6 +396,12 @@ namespace FirstPersonController
         void SetSprintBackwards(const bool& new_sprintBackwards) override;
         bool GetSprintWhileCrouched() const override;
         void SetSprintWhileCrouched(const bool& new_sprintWhileCrouched) override;
+        bool GetSprintEnableToggle() const override;
+        void SetSprintEnableToggle(const bool& new_sprintEnableToggle) override;
+        bool GetSprintToggleAutomatically() const override;
+        void SetSprintToggleAutomatically(const bool& new_sprintToggleAutomatically) override;
+        bool GetSprintAutoToggleOutOfCrouch() const override;
+        void SetSprintAutoToggleOutOfCrouch(const bool& new_sprintAutoToggleOutOfCrouch) override;
         bool GetCrouching() const override;
         void SetCrouching(const bool& new_crouching) override;
         bool GetCrouched() const override;
@@ -653,6 +661,11 @@ namespace FirstPersonController
         float m_sprintPause = 0.f;
         bool m_sprintBackwards = true;
         bool m_sprintWhileCrouched = false;
+        bool m_sprintEnableToggle = false;
+        bool m_sprintInputEngaged = false;
+        bool m_sprintToggleAutomatically = false;
+        bool m_sprintAutoToggleOutOfCrouch = false;
+        bool m_sprintAutoToggleQueued = false;
         bool m_sprintViaScript = false;
         bool m_sprintEnableDisable = false;
         bool m_staminaIncreasing = false;
