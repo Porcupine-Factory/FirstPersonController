@@ -2236,6 +2236,20 @@ namespace FirstPersonController
     // Here target velocity is with respect to the character's frame of reference
     void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& targetVelocityXY, const float& deltaTime)
     {
+        // Handle toggling the sprint key when it's enabled
+        if (!m_sprintEnableToggle)
+            m_sprintInputEngaged = m_sprintEffectiveValue != 0.f ? true : false;
+        else if (m_sprintEnableToggle && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue && !m_sprintAutoToggleQueued)
+        {
+            m_sprintInputEngaged = true;
+        }
+        else if (m_sprintEnableToggle && m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
+        {
+            m_sprintInputEngaged = false;
+        }
+        else if (m_sprintAutoToggleQueued && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
+            m_sprintAutoToggleQueued = false;
+
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
         // and it shouldn't be applied if you're crouching (depending on various settings)
         if ((!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
@@ -2256,26 +2270,13 @@ namespace FirstPersonController
             m_sprintAutoToggleQueued = false;
         }
 
-        // Handle toggling the sprint key when it's enabled
-        if (!m_sprintEnableToggle)
-            m_sprintInputEngaged = m_sprintEffectiveValue != 0.f ? true : false;
-        else if (m_sprintEnableToggle && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue && !m_sprintAutoToggleQueued)
-        {
-            m_sprintInputEngaged = true;
-        }
-        else if (m_sprintEnableToggle && m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
-        {
-            m_sprintInputEngaged = false;
-        }
-        else if (m_sprintAutoToggleQueued && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
-            m_sprintAutoToggleQueued = false;
-
         if (m_sprintEnableToggle && m_sprintInputEngaged)
             m_sprintAccelValue = m_sprintAccelScale;
         else if (m_sprintEnableToggle && !m_sprintInputEngaged)
             m_sprintAccelValue = 0.f;
 
-        if ((m_sprintViaScript && m_sprintEnableDisable) && (targetVelocityXY.GetY() > 0.f || m_sprintBackwards))
+        if ((m_sprintViaScript && m_sprintEnableDisable) &&
+            (targetVelocityXY.GetY() > 0.f || (targetVelocityXY.GetY() == 0.f && targetVelocityXY.GetX() != 0.f) || m_sprintBackwards))
         {
             m_sprintInputEngaged = true;
             m_sprintAccelValue = m_sprintAccelScale;
