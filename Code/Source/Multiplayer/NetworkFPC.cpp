@@ -20,6 +20,11 @@ namespace FirstPersonController
               {
                   OnEnableNetworkFPCChanged(enable);
               })
+        , m_preRenderEventHandler(
+              [this](float deltaTime)
+              {
+                  OnPreRender(deltaTime);
+              })
     {
     }
 
