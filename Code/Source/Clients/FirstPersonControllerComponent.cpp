@@ -1616,6 +1616,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTickFinish(const float& deltaTime, const bool& server)
     {
+        if (!m_isAutonomousClient && !m_isServer && !m_isHost)
+            return;
         CaptureCharacterEyeTranslation();
         if (!((m_isHost && server) || (m_isServer && !server)))
             FirstPersonControllerComponentNotificationBus::Broadcast(
