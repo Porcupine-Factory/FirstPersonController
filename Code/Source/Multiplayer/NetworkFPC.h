@@ -6,8 +6,27 @@
 #include <Clients/FirstPersonControllerComponent.h>
 #include <Clients/FirstPersonExtrasComponent.h>
 
+#include <Integration/ActorComponentBus.h>
+#include <Integration/AnimGraphComponentBus.h>
+
+#include <Multiplayer/Components/NetBindComponent.h>
+
+namespace EMotionFX
+{
+    class AnimGraphComponentNetworkRequests;
+    namespace Integration
+    {
+        class ActorComponentRequests;
+        class AnimGraphComponentRequests;
+    } // namespace Integration
+} // namespace EMotionFX
+
 namespace FirstPersonController
 {
+    // This is not documented, you kind of have to jump into EMotionFX's private headers to find this, invalid parameter index values are
+    // max size_t See InvalidIndex in Gems\EMotionFX\Code\EMotionFX\Source\EMotionFXConfig.h
+    constexpr size_t InvalidParamIndex = 0xffffffffffffffff;
+
     class FirstPersonControllerComponent;
 
     class FirstPersonExtrasComponent;
@@ -16,6 +35,8 @@ namespace FirstPersonController
         : public NetworkFPCControllerBase
         , public NetworkFPCControllerRequestBus::Handler
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
+        , private EMotionFX::Integration::ActorComponentNotificationBus::Handler
+        , private EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler
     {
         friend class FirstPersonControllerComponent;
         friend class FirstPersonExtrasComponent;
@@ -55,6 +76,8 @@ namespace FirstPersonController
         void OnHeld(float value) override;
 
     private:
+        void OnPreRender(float deltaTime);
+
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
 
@@ -69,6 +92,13 @@ namespace FirstPersonController
         AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
         void OnEnableNetworkFPCChanged(const bool& enable);
         bool m_disabled = false;
+
+        //! EMotionFX::Integration::ActorComponentNotificationBus::Handler
+        void OnActorInstanceCreated(EMotionFX::ActorInstance* actorInstance) override;
+        void OnActorInstanceDestroyed(EMotionFX::ActorInstance* actorInstance) override;
+
+        //! EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler
+        void OnAnimGraphInstanceCreated(EMotionFX::AnimGraphInstance* animGraphInstance) override;
 
         // Signals when the controller is determined to be autonomous or not
         bool m_autonomousNotDetermined = true;
@@ -118,5 +148,21 @@ namespace FirstPersonController
             { &m_moveRightEventId, &m_rightValue },     { &m_rotateYawEventId, &m_yawValue }, { &m_rotatePitchEventId, &m_pitchValue },
             { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
         };
+
+        // Network animation members
+        Multiplayer::EntityPreRenderEvent::Handler m_preRenderEventHandler;
+        EMotionFX::Integration::ActorComponentRequests* m_actorRequests = nullptr;
+        EMotionFX::AnimGraphComponentNetworkRequests* m_networkRequests = nullptr;
+        EMotionFX::Integration::AnimGraphComponentRequests* m_animationGraph = nullptr;
+
+        size_t m_walkSpeedParamId = InvalidParamIndex;
+        size_t m_sprintParamId = InvalidParamIndex;
+        size_t m_crouchToStandParamId = InvalidParamIndex;
+        size_t m_crouchParamId = InvalidParamIndex;
+        size_t m_standToCrouchParamId = InvalidParamIndex;
+        size_t m_jumpStartParamId = InvalidParamIndex;
+        size_t m_fallParamId = InvalidParamIndex;
+        size_t m_jumpLandParamId = InvalidParamIndex;
+        size_t m_groundedParamId = InvalidParamIndex;
     };
 } // namespace FirstPersonController

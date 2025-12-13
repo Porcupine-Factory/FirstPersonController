@@ -103,4 +103,14 @@
     <NetworkInput Type="float" Name="Crouch" Init="0.f"/>
     <NetworkInput Type="float" Name="Jump" Init="0.f"/>
 
+    <ArchetypeProperty Type="AZStd::string" Name="WalkSpeedParamName" Init="&quot;WalkSpeed&quot;" ExposeToEditor="true" Description="Anim graph walk speed parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="SprintParamName" Init="&quot;Sprint&quot;" ExposeToEditor="true" Description="Anim graph sprint parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="CrouchParamName" Init="&quot;Crouch&quot;" ExposeToEditor="true" Description="Anim graph crouch parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="CrouchToStandParamName" Init="&quot;CrouchToStand&quot;" ExposeToEditor="true" Description="Anim graph crouch to stand parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="StandToCrouchParamName" Init="&quot;StandToCrouch&quot;" ExposeToEditor="true" Description="Anim graph stand to crouch parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="JumpStartParamName" Init="&quot;JumpStart&quot;" ExposeToEditor="true" Description="Anim graph jump start parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="FallParamName" Init="&quot;Fall&quot;" ExposeToEditor="true" Description="Anim graph fall parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="JumpLandParamName" Init="&quot;JumpLand&quot;" ExposeToEditor="true" Description="Anim graph jump land parameter name"/>
+    <ArchetypeProperty Type="AZStd::string" Name="GroundedParamName" Init="&quot;Grounded&quot;" ExposeToEditor="true" Description="Anim graph grounded parameter name"/>
+
 </Component>
