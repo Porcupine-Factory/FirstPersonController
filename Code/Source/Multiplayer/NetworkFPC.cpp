@@ -307,11 +307,16 @@ namespace FirstPersonController
         }
     }
 
-    void NetworkFPCController::OnPreRender([[maybe_unused]] float deltaTime)
+    void NetworkFPCController::OnPreRender(float deltaTime)
     {
         if (m_animationGraph == nullptr || m_networkRequests == nullptr)
         {
             return;
+        }
+
+        if (IsNetEntityRoleAutonomous() && IsNetEntityRoleAuthority())
+        {
+            deltaTime /= 2.f;
         }
 
         if (m_walkSpeedParamId == InvalidParamIndex)
