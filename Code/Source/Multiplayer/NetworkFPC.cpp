@@ -333,7 +333,7 @@ namespace FirstPersonController
     {
         if (enable)
         {
-            // Reconnect animation network buses and handler
+            // Reconnect network animation buses and handler
             m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
             m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
             m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
@@ -345,7 +345,7 @@ namespace FirstPersonController
         }
         else
         {
-            // Disconnect animation buses and handler
+            // Disconnect network animation buses and handler
             EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
             EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
             m_preRenderEventHandler.Disconnect();
