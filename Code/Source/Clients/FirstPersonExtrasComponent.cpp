@@ -427,28 +427,43 @@ namespace FirstPersonController
     {
     }
 
-    void FirstPersonExtrasComponent::OnPhysicsTimestepStart([[maybe_unused]] const float& physicsTimestep)
-    {
-    }
-
     void FirstPersonExtrasComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
+        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+            !m_firstPersonControllerObject->m_isHost)
+            return;
         ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
         m_prevDeltaTime = deltaTime;
     }
 
     void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, [[maybe_unused]] const bool& server)
     {
-        ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
-        m_prevNetworkFPCDeltaTime = deltaTime;
+        if (!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+            !m_firstPersonControllerObject->m_isHost)
+        {
+            NotAutonomousSoDisconnect();
+            return;
+        }
+        if (!((m_firstPersonControllerObject->m_isHost && server) || (m_firstPersonControllerObject->m_isServer && !server)))
+        {
+            ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
+            m_prevNetworkFPCDeltaTime = deltaTime;
+        }
     }
 
     void FirstPersonExtrasComponent::OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
     {
     }
 
+    void FirstPersonExtrasComponent::OnPhysicsTimestepStart([[maybe_unused]] const float& physicsTimestep)
+    {
+    }
+
     void FirstPersonExtrasComponent::OnPhysicsTimestepFinish(const float& physicsTimestep)
     {
+        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+            !m_firstPersonControllerObject->m_isHost)
+            return;
         ProcessInput(((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
         m_prevTimestep = physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor;
     }
@@ -521,27 +536,27 @@ namespace FirstPersonController
             return;
 
         if (m_tiltJumped)
-        {
             m_deltaAngle = deltaTime * m_totalHeadAngle * -m_deltaAngleFactorJump;
-        }
         else if (m_tiltLanded)
-        {
             m_deltaAngle = deltaTime * m_totalHeadAngle * -m_deltaAngleFactorLand;
-        }
         else
             return;
 
         if (m_moveHeadDown)
         {
             m_currentHeadPitchAngle -= m_deltaAngle;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_deltaAngle, true);
+            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
+                m_firstPersonControllerObject->m_isHost)
+                FirstPersonControllerComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_deltaAngle, true);
         }
         else
         {
             m_currentHeadPitchAngle += m_deltaAngle;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_deltaAngle, true);
+            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
+                m_firstPersonControllerObject->m_isHost)
+                FirstPersonControllerComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_deltaAngle, true);
         }
 
         if (m_currentHeadPitchAngle >= 0.f)
@@ -549,12 +564,24 @@ namespace FirstPersonController
             m_moveHeadDown = true;
             m_tiltJumped = false;
             m_tiltLanded = false;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_currentHeadPitchAngle, true);
+            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
+                m_firstPersonControllerObject->m_isHost)
+                FirstPersonControllerComponentRequestBus::Event(
+                    GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_currentHeadPitchAngle, true);
             m_currentHeadPitchAngle = 0.f;
         }
         else if (m_currentHeadPitchAngle <= m_totalHeadAngle)
+        {
             m_moveHeadDown = false;
+            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
+                m_firstPersonControllerObject->m_isHost)
+                FirstPersonControllerComponentRequestBus::Event(
+                    GetEntityId(),
+                    &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch,
+                    (m_totalHeadAngle - m_currentHeadPitchAngle),
+                    true);
+            m_currentHeadPitchAngle = m_totalHeadAngle;
+        }
     }
 
     AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
@@ -696,6 +723,9 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance)
     {
+        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+            !m_firstPersonControllerObject->m_isHost)
+            return;
         m_tiltLanded = true;
         m_tiltJumped = false;
         m_moveHeadDown = true;
@@ -764,6 +794,9 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnFirstJump()
     {
+        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+            !m_firstPersonControllerObject->m_isHost)
+            return;
         m_tiltJumped = true;
         m_tiltLanded = false;
         m_moveHeadDown = true;

@@ -1590,6 +1590,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
+        if (m_networkFPCEnabled && !m_isAutonomousClient && !m_isServer && !m_isHost)
+            return;
         if (!m_networkFPCEnabled || !m_isHost)
             ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
         else
@@ -1627,6 +1629,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
+        if (m_networkFPCEnabled && !m_isAutonomousClient && !m_isServer && !m_isHost)
+            return;
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
         ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
@@ -1634,6 +1638,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
     {
+        if (m_networkFPCEnabled && !m_isAutonomousClient && !m_isServer && !m_isHost)
+            return;
         if (!m_networkFPCEnabled)
             CaptureCharacterEyeTranslation();
         FirstPersonControllerComponentNotificationBus::Broadcast(
