@@ -581,9 +581,11 @@ namespace FirstPersonController
         m_isWalking = !m_firstPersonControllerObject->m_applyVelocityXY.IsZero() && m_firstPersonControllerObject->m_groundClose;
 
         // Determine states
-        const AZ::Vector2 world_local_forward(
-            AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading).TransformVector(AZ::Vector3(0.f, 1.f, 0.f)));
-        const bool isBackwards = m_isWalking && (m_firstPersonControllerObject->m_applyVelocityXY.Dot(world_local_forward) < 0.0f);
+        const float heading = m_firstPersonControllerObject->m_currentHeading;
+        const AZ::Vector2 velocityXY = m_firstPersonControllerObject->m_applyVelocityXY;
+        const float localYVelocity = AZ::Quaternion::CreateRotationZ(-heading).TransformVector(AZ::Vector3(velocityXY)).GetY();
+        const bool isBackwards =
+            m_isWalking && (localYVelocity < -0.5f * m_firstPersonControllerObject->m_speed * m_firstPersonControllerObject->m_backScale);
         const bool isCrouching = !m_firstPersonControllerObject->m_standing;
         const bool isSprinting = (!m_firstPersonControllerObject->m_sprintValue == 0.f) &&
             (m_firstPersonControllerObject->m_staminaPercentage > 0.f || !m_firstPersonControllerObject->m_sprintUsesStamina);
@@ -628,7 +630,7 @@ namespace FirstPersonController
         }
         // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce).
         const float horizontalOffset = -sinf(m_walkingTime * effectiveFrequency) * effectiveHorizontalAmplitude;
-        const float verticalOffset = -sinf(m_walkingTime * effectiveFrequency * 2.0f) * effectiveVerticalAmplitude;
+        const float verticalOffset = -sinf(m_walkingTime * effectiveFrequency * 2.f) * effectiveVerticalAmplitude;
 
         // Combine offets. Horizontal along local X, vertical along local Z.
         return AZ::Vector3(horizontalOffset, 0.f, verticalOffset);
@@ -646,31 +648,26 @@ namespace FirstPersonController
         if (m_headbobEntityPtr == nullptr)
             return;
 
-        auto* headbobEntitytransform = m_headbobEntityPtr->GetTransform();
+        auto* headbobEntityTransform = m_headbobEntityPtr->GetTransform();
 
-        // Get the headbob entity or camera's current local transform
-        const AZ::Transform currentLocalTransform = headbobEntitytransform->GetLocalTM();
-        // Calculate the "clean" local translation by removing the previous frame's headbob offset
-        m_cameraTranslationWithoutHeadbob = currentLocalTransform.GetTranslation() - m_previousOffset;
+        // Get the "clean" local translation
+        m_cameraTranslationWithoutHeadbob = headbobEntityTransform->GetLocalTM().GetTranslation();
         // Compute the target local translation by adding the new bob offset to the clean position
         const AZ::Vector3 targetLocalTranslation = m_cameraTranslationWithoutHeadbob + m_headbobOffset;
         // Smoothly interpolate from current to target local translation using the provided smoothing factor
-        const AZ::Vector3 newLocalTranslation = currentLocalTransform.GetTranslation().Lerp(targetLocalTranslation, m_headbobAttenuation);
+        const AZ::Vector3 newLocalTranslation = m_cameraTranslationWithoutHeadbob.Lerp(targetLocalTranslation, m_headbobAttenuation);
 
         // Set local translation
-        headbobEntitytransform->SetLocalTranslation(newLocalTranslation);
+        headbobEntityTransform->SetLocalTranslation(newLocalTranslation);
 
         // Update previous offset
-        if (!m_networkFPCEnabled)
-            m_previousOffset = newLocalTranslation - m_cameraTranslationWithoutHeadbob;
-        else
-            m_previousOffset = newLocalTranslation - currentLocalTransform.GetTranslation();
+        m_previousOffset = newLocalTranslation - m_cameraTranslationWithoutHeadbob;
 
         // Snap if residual is small
-        AZ::Vector3 lerpResidual = newLocalTranslation - targetLocalTranslation;
+        const AZ::Vector3 lerpResidual = newLocalTranslation - targetLocalTranslation;
         if (lerpResidual.GetLengthSq() <= 1e-6f)
         {
-            headbobEntitytransform->SetLocalTranslation(targetLocalTranslation);
+            headbobEntityTransform->SetLocalTranslation(targetLocalTranslation);
             m_previousOffset = m_headbobOffset;
         }
     }
