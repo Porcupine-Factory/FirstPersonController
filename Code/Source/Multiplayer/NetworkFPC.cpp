@@ -198,7 +198,7 @@ namespace FirstPersonController
         playerInput->m_desiredVelocity = GetDesiredVelocity();
         playerInput->m_yaw = m_yawValue;
         playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
-        playerInput->m_yawDeltaOvershoot += GetYawDeltaOvershoot();
+        playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
         playerInput->m_pitch = m_pitchValue;
         playerInput->m_sprint = m_sprintValue;
         playerInput->m_crouch = m_crouchValue;
@@ -254,7 +254,10 @@ namespace FirstPersonController
         }
 
         NetworkFPCControllerNotificationBus::Broadcast(
-            &NetworkFPCControllerNotificationBus::Events::OnNetworkTickStart, deltaTime, m_firstPersonControllerObject->m_isServer);
+            &NetworkFPCControllerNotificationBus::Events::OnNetworkTickStart,
+            deltaTime,
+            m_firstPersonControllerObject->m_isServer,
+            GetEntityId());
 
         const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
             m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
@@ -264,7 +267,10 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
 
         NetworkFPCControllerNotificationBus::Broadcast(
-            &NetworkFPCControllerNotificationBus::Events::OnNetworkTickFinish, deltaTime, m_firstPersonControllerObject->m_isServer);
+            &NetworkFPCControllerNotificationBus::Events::OnNetworkTickFinish,
+            deltaTime,
+            m_firstPersonControllerObject->m_isServer,
+            GetEntityId());
 
         // AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
         // AZ_Printf("NetworkFPC", "Back: %f", playerInput->m_back);
@@ -278,10 +284,12 @@ namespace FirstPersonController
     }
 
     // Event Notification methods for use in scripts
-    void NetworkFPCController::OnNetworkTickStart([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
+    void NetworkFPCController::OnNetworkTickStart(
+        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entity)
     {
     }
-    void NetworkFPCController::OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
+    void NetworkFPCController::OnNetworkTickFinish(
+        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entity)
     {
     }
 

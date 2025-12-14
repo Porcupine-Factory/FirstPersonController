@@ -436,10 +436,11 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, [[maybe_unused]] const bool& server)
+    void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
     {
-        if (!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-            !m_firstPersonControllerObject->m_isHost)
+        if ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+             !m_firstPersonControllerObject->m_isHost) ||
+            (entity != GetEntityId()))
         {
             NotAutonomousSoDisconnect();
             return;
@@ -451,7 +452,8 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server)
+    void FirstPersonExtrasComponent::OnNetworkTickFinish(
+        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entity)
     {
     }
 
@@ -545,18 +547,14 @@ namespace FirstPersonController
         if (m_moveHeadDown)
         {
             m_currentHeadPitchAngle -= m_deltaAngle;
-            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
-                m_firstPersonControllerObject->m_isHost)
-                FirstPersonControllerComponentRequestBus::Event(
-                    GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_deltaAngle, true);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_deltaAngle, true);
         }
         else
         {
             m_currentHeadPitchAngle += m_deltaAngle;
-            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
-                m_firstPersonControllerObject->m_isHost)
-                FirstPersonControllerComponentRequestBus::Event(
-                    GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_deltaAngle, true);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_deltaAngle, true);
         }
 
         if (m_currentHeadPitchAngle >= 0.f)
@@ -564,22 +562,18 @@ namespace FirstPersonController
             m_moveHeadDown = true;
             m_tiltJumped = false;
             m_tiltLanded = false;
-            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
-                m_firstPersonControllerObject->m_isHost)
-                FirstPersonControllerComponentRequestBus::Event(
-                    GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_currentHeadPitchAngle, true);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_currentHeadPitchAngle, true);
             m_currentHeadPitchAngle = 0.f;
         }
         else if (m_currentHeadPitchAngle <= m_totalHeadAngle)
         {
             m_moveHeadDown = false;
-            if (!m_networkFPCEnabled || m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isServer ||
-                m_firstPersonControllerObject->m_isHost)
-                FirstPersonControllerComponentRequestBus::Event(
-                    GetEntityId(),
-                    &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch,
-                    (m_totalHeadAngle - m_currentHeadPitchAngle),
-                    true);
+            FirstPersonControllerComponentRequestBus::Event(
+                GetEntityId(),
+                &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch,
+                (m_totalHeadAngle - m_currentHeadPitchAngle),
+                true);
             m_currentHeadPitchAngle = m_totalHeadAngle;
         }
     }

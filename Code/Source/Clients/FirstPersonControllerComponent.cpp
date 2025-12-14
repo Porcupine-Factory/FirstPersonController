@@ -1599,13 +1599,15 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonControllerComponent::OnNetworkTickStart(const float& deltaTime, const bool& server)
+    void FirstPersonControllerComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
     {
         if (!m_isAutonomousClient && !m_isServer && !m_isHost)
         {
             NotAutonomousSoDisconnect();
             return;
         }
+        if (entity != GetEntityId())
+            return;
         if (!((m_isHost && server) || (m_isServer && !server)))
         {
             FirstPersonControllerComponentNotificationBus::Broadcast(
@@ -1616,11 +1618,12 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::OnNetworkTickFinish(const float& deltaTime, const bool& server)
+    void FirstPersonControllerComponent::OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
     {
-        if (!m_isAutonomousClient && !m_isServer && !m_isHost)
+        if ((!m_isAutonomousClient && !m_isServer && !m_isHost) || (entity != GetEntityId()))
             return;
-        CaptureCharacterEyeTranslation();
+        if (m_isAutonomousClient)
+            CaptureCharacterEyeTranslation();
         if (!((m_isHost && server) || (m_isServer && !server)))
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickFinish, deltaTime * m_physicsTimestepScaleFactor);
@@ -1682,7 +1685,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::InitializeCameraTranslation()
     {
-        if (!m_activeCameraEntity)
+        if (!m_activeCameraEntity || (m_networkFPCEnabled && !m_isAutonomousClient))
             return;
 
         // Set target translation for smooth follow
@@ -1699,6 +1702,9 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
+        if (m_networkFPCEnabled && !m_isAutonomousClient)
+            return;
+
         const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
         if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
         {
@@ -1752,6 +1758,8 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
+        if (m_networkFPCEnabled && !m_isAutonomousClient)
+            return;
         // Set the translation of the camera to where the character is on each physics timestep
         if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
@@ -2640,7 +2648,8 @@ namespace FirstPersonController
             // Resize the PhysX character controller capsule to match current height
             PhysX::CharacterControllerRequestBus::Event(
                 GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-            cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
+            if (!m_networkFPCEnabled || m_isAutonomousClient)
+                cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
 
             // Post-update error for settle check
             const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
@@ -2813,7 +2822,8 @@ namespace FirstPersonController
                     m_capsuleCurrentHeight = m_capsuleHeight;
                 PhysX::CharacterControllerRequestBus::Event(
                     GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-                cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
+                if (!m_networkFPCEnabled || m_isAutonomousClient)
+                    cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
 
                 // Early standing for speed
                 const float postZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
@@ -3920,6 +3930,29 @@ namespace FirstPersonController
         return tiltedXY;
     }
 
+    void FirstPersonControllerComponent::GetNetworkFPCProperties(const AZ::u8& tickTimestepNetwork)
+    {
+        if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
+        {
+            m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
+            m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
+        }
+    }
+
+    void FirstPersonControllerComponent::SetNetworkFPCProperties() const
+    {
+        m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
+        m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
+        m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
+        m_networkFPCControllerObject->SetIsCrouching(GetCrouching());
+        m_networkFPCControllerObject->SetIsJumpStarting(GetUngroundedDueToJump());
+        m_networkFPCControllerObject->SetIsFalling(!m_groundClose);
+        m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+        m_networkFPCControllerObject->SetIsGrounded(m_grounded);
+        m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
+        m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
+    }
+
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
@@ -3960,6 +3993,9 @@ namespace FirstPersonController
         if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !m_networkFPCEnabled) ||
             (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !m_networkFPCEnabled))
         {
+            // Get the various NetworkFPC properties, synchronizing with the server
+            GetNetworkFPCProperties(tickTimestepNetwork);
+
             // Perform the check to see if the character's movement is obstructed
             CheckCharacterMovementObstructed();
 
@@ -4008,15 +4044,9 @@ namespace FirstPersonController
             // Add velocity on either the network tick, the physics timstep, or the frame tick
             if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
             {
+                // Set the NetworkFPC properties, informing the server of the client's latest simulation
+                SetNetworkFPCProperties();
                 m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
-                m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
-                m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
-                m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
-                m_networkFPCControllerObject->SetIsCrouching(GetCrouching());
-                m_networkFPCControllerObject->SetIsJumpStarting(GetUngroundedDueToJump());
-                m_networkFPCControllerObject->SetIsFalling(!m_groundClose);
-                m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
-                m_networkFPCControllerObject->SetIsGrounded(m_grounded);
             }
             else if (!m_networkFPCEnabled && m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(

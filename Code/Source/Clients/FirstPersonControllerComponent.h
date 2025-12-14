@@ -77,8 +77,8 @@ namespace FirstPersonController
         int GetTickOrder() override;
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTickStart(const float& deltaTime, const bool& server);
-        void OnNetworkTickFinish(const float& deltaTime, const bool& server);
+        void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
+        void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
 
         // FirstPersonControllerRequestBus
         AZ::EntityId GetCharacterEntityId() const override;
@@ -538,6 +538,8 @@ namespace FirstPersonController
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
         void ProcessCharacterHits(const float& deltaTime);
+        void SetNetworkFPCProperties() const;
+        void GetNetworkFPCProperties(const AZ::u8& tickTimestepNetwork);
 
         // Method for getting a pointer to an entity
         AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;

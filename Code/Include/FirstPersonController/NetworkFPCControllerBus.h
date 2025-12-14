@@ -27,8 +27,8 @@ namespace FirstPersonController
     class NetworkFPCControllerNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnNetworkTickStart(const float&, const bool&) = 0;
-        virtual void OnNetworkTickFinish(const float&, const bool&) = 0;
+        virtual void OnNetworkTickStart(const float&, const bool&, const AZ::EntityId&) = 0;
+        virtual void OnNetworkTickFinish(const float&, const bool&, const AZ::EntityId&) = 0;
     };
 
     using NetworkFPCControllerNotificationBus = AZ::EBus<NetworkFPCControllerNotifications>;
@@ -45,11 +45,17 @@ namespace FirstPersonController
             OnNetworkTickStart,
             OnNetworkTickFinish);
 
-        void OnNetworkTickStart([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server) override
+        void OnNetworkTickStart(
+            [[maybe_unused]] const float& deltaTime,
+            [[maybe_unused]] const bool& server,
+            [[maybe_unused]] const AZ::EntityId& entity) override
         {
             Call(FN_OnNetworkTickStart);
         }
-        void OnNetworkTickFinish([[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server) override
+        void OnNetworkTickFinish(
+            [[maybe_unused]] const float& deltaTime,
+            [[maybe_unused]] const bool& server,
+            [[maybe_unused]] const AZ::EntityId& entity) override
         {
             Call(FN_OnNetworkTickFinish);
         }

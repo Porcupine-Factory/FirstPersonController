@@ -82,8 +82,8 @@ namespace FirstPersonController
         void AssignConnectInputEvents();
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTickStart(const float& deltaTime, const bool& server);
-        void OnNetworkTickFinish(const float& deltaTime, const bool& server);
+        void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
+        void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
 
         // Keep track of the previous deltaTime for averagin
         float m_prevDeltaTime = 1.f / 60.f;
