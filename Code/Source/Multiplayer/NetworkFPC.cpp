@@ -226,7 +226,6 @@ namespace FirstPersonController
     {
         if (m_disabled)
             return;
-        AZ_Printf("NetworkFPC", "EnableNetworkAnimation: %s", GetParent().GetEnableNetworkAnimation() ? "true" : "false");
 
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
