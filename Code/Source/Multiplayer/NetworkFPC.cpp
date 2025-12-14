@@ -20,6 +20,11 @@ namespace FirstPersonController
               {
                   OnEnableNetworkFPCChanged(enable);
               })
+        , m_enableNetworkAnimationChangedEvent(
+              [this](bool enable)
+              {
+                  OnEnableNetworkAnimationChanged(enable);
+              })
         , m_preRenderEventHandler(
               [this](float deltaTime)
               {
@@ -115,6 +120,9 @@ namespace FirstPersonController
         // Subscribe to EnableNetworkFPC change events
         EnableNetworkFPCAddEvent(m_enableNetworkFPCChangedEvent);
 
+        // Subscribe to EnableNetworkFPC change events
+        GetParent().EnableNetworkAnimationAddEvent(m_enableNetworkAnimationChangedEvent);
+
         // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
         const AZ::Entity* entity = GetParent().GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
@@ -144,21 +152,27 @@ namespace FirstPersonController
         }
 
         // Network animation setup
-        m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
-        m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
-        m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
+        if (GetParent().GetEnableNetworkAnimation())
+        {
+            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
+            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
+            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
 
-        EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
-        EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
 
-        GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
+            GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
+        }
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
         NetworkFPCControllerRequestBus::Handler::BusDisconnect();
         InputEventNotificationBus::MultiHandler::BusDisconnect();
-        EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
+        if (GetParent().GetEnableNetworkAnimation())
+        {
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
+        }
     }
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -212,6 +226,7 @@ namespace FirstPersonController
     {
         if (m_disabled)
             return;
+        AZ_Printf("NetworkFPC", "EnableNetworkAnimation: %s", GetParent().GetEnableNetworkAnimation() ? "true" : "false");
 
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
@@ -315,9 +330,44 @@ namespace FirstPersonController
         }
     }
 
+    void NetworkFPCController::OnEnableNetworkAnimationChanged(const bool& enable)
+    {
+        if (enable)
+        {
+            // Reconnect animation network buses and handler
+            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
+            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
+            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
+
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
+
+            GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
+        }
+        else
+        {
+            // Disconnect animation buses and handler
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
+            m_preRenderEventHandler.Disconnect();
+            m_actorRequests = nullptr;
+            m_networkRequests = nullptr;
+            m_animationGraph = nullptr;
+            m_walkSpeedParamId = InvalidParamIndex;
+            m_sprintParamId = InvalidParamIndex;
+            m_crouchToStandParamId = InvalidParamIndex;
+            m_crouchParamId = InvalidParamIndex;
+            m_standToCrouchParamId = InvalidParamIndex;
+            m_jumpStartParamId = InvalidParamIndex;
+            m_fallParamId = InvalidParamIndex;
+            m_jumpLandParamId = InvalidParamIndex;
+            m_groundedParamId = InvalidParamIndex;
+        }
+    }
+
     void NetworkFPCController::OnPreRender(float deltaTime)
     {
-        if (m_animationGraph == nullptr || m_networkRequests == nullptr)
+        if (!GetParent().GetEnableNetworkAnimation() || m_animationGraph == nullptr || m_networkRequests == nullptr)
         {
             return;
         }

@@ -93,6 +93,10 @@ namespace FirstPersonController
         void OnEnableNetworkFPCChanged(const bool& enable);
         bool m_disabled = false;
 
+        // EnableAnimationNetworkFPC Changed Event
+        AZ::Event<bool>::Handler m_enableNetworkAnimationChangedEvent;
+        void OnEnableNetworkAnimationChanged(const bool& enable);
+
         //! EMotionFX::Integration::ActorComponentNotificationBus::Handler
         void OnActorInstanceCreated(EMotionFX::ActorInstance* actorInstance) override;
         void OnActorInstanceDestroyed(EMotionFX::ActorInstance* actorInstance) override;
