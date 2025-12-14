@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FirstPersonController/NetworkFPCControllerBus.h"
 #include <Clients/FirstPersonControllerComponent.h>
 #include <Multiplayer/NetworkFPC.h>
 
@@ -1590,12 +1589,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        if (m_networkFPCEnabled && !m_isAutonomousClient && !m_isServer && !m_isHost)
-            return;
-        if (!m_networkFPCEnabled || !m_isHost)
-            ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
-        else
-            ProcessInput(((deltaTime + m_prevDeltaTime) / 4.f), 0);
+        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
         m_prevDeltaTime = deltaTime;
     }
 
@@ -1622,7 +1616,7 @@ namespace FirstPersonController
     {
         if ((!m_isAutonomousClient && !m_isServer && !m_isHost) || (entity != GetEntityId()))
             return;
-        if (m_isAutonomousClient)
+        if (!m_isServer)
             CaptureCharacterEyeTranslation();
         if (!((m_isHost && server) || (m_isServer && !server)))
             FirstPersonControllerComponentNotificationBus::Broadcast(
@@ -1632,8 +1626,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
-        if (m_networkFPCEnabled && !m_isAutonomousClient && !m_isServer && !m_isHost)
-            return;
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
         ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
@@ -1641,8 +1633,6 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
     {
-        if (m_networkFPCEnabled && !m_isAutonomousClient && !m_isServer && !m_isHost)
-            return;
         if (!m_networkFPCEnabled)
             CaptureCharacterEyeTranslation();
         FirstPersonControllerComponentNotificationBus::Broadcast(
@@ -1685,7 +1675,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::InitializeCameraTranslation()
     {
-        if (!m_activeCameraEntity || (m_networkFPCEnabled && !m_isAutonomousClient))
+        if (!m_activeCameraEntity || (m_networkFPCEnabled && m_isServer))
             return;
 
         // Set target translation for smooth follow
@@ -1702,7 +1692,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if (m_networkFPCEnabled && !m_isAutonomousClient)
+        if (m_networkFPCEnabled && m_isServer)
             return;
 
         const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
@@ -1758,7 +1748,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
-        if (m_networkFPCEnabled && !m_isAutonomousClient)
+        if (m_networkFPCEnabled && m_isServer)
             return;
         // Set the translation of the camera to where the character is on each physics timestep
         if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
@@ -2648,7 +2638,7 @@ namespace FirstPersonController
             // Resize the PhysX character controller capsule to match current height
             PhysX::CharacterControllerRequestBus::Event(
                 GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-            if (!m_networkFPCEnabled || m_isAutonomousClient)
+            if (!m_networkFPCEnabled || !m_isServer)
                 cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
 
             // Post-update error for settle check
@@ -2822,7 +2812,7 @@ namespace FirstPersonController
                     m_capsuleCurrentHeight = m_capsuleHeight;
                 PhysX::CharacterControllerRequestBus::Event(
                     GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
-                if (!m_networkFPCEnabled || m_isAutonomousClient)
+                if (!m_networkFPCEnabled || !m_isServer)
                     cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
 
                 // Early standing for speed
@@ -3934,6 +3924,7 @@ namespace FirstPersonController
     {
         if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
         {
+            m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
         }
@@ -3949,6 +3940,7 @@ namespace FirstPersonController
         m_networkFPCControllerObject->SetIsFalling(!m_groundClose);
         m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
         m_networkFPCControllerObject->SetIsGrounded(m_grounded);
+        m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
         m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
         m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
     }
@@ -3956,6 +3948,9 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
+        // Get the various NetworkFPC properties, synchronizing with the server
+        GetNetworkFPCProperties(tickTimestepNetwork);
+
         // Only interpolate the camera to the character on frame ticks
         if (tickTimestepNetwork == 0)
         {
@@ -3993,9 +3988,6 @@ namespace FirstPersonController
         if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !m_networkFPCEnabled) ||
             (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !m_networkFPCEnabled))
         {
-            // Get the various NetworkFPC properties, synchronizing with the server
-            GetNetworkFPCProperties(tickTimestepNetwork);
-
             // Perform the check to see if the character's movement is obstructed
             CheckCharacterMovementObstructed();
 

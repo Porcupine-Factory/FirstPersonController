@@ -429,9 +429,6 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-            !m_firstPersonControllerObject->m_isHost)
-            return;
         ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
         m_prevDeltaTime = deltaTime;
     }
