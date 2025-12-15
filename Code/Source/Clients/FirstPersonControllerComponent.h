@@ -85,6 +85,7 @@ namespace FirstPersonController
         AZ::EntityId GetActiveCameraEntityId() const override;
         AZ::Entity* GetActiveCameraEntityPtr() const override;
         void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
+        bool IsCameraChildOfCharacter() override;
         bool GetCameraSmoothFollow() const override;
         void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow) override;
         void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) override;
@@ -529,7 +530,6 @@ namespace FirstPersonController
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float& deltaTime);
         void ApplyMovingUpInclineXYSpeedFactor();
         void LerpCameraToCharacter(float deltaTime);
-        bool IsCameraChildOfCharacter();
         void SmoothRotation();
         void ResetCameraToCharacter();
         void CaptureCharacterEyeTranslation();

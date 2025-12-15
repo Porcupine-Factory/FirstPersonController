@@ -27,6 +27,7 @@ namespace FirstPersonController
         virtual AZ::Entity* GetActiveCameraEntityPtr() const = 0;
         virtual AZ::EntityId GetActiveCameraEntityId() const = 0;
         virtual void SetCameraEntity(const AZ::EntityId) = 0;
+        virtual bool IsCameraChildOfCharacter() = 0;
         virtual bool GetCameraSmoothFollow() const = 0;
         virtual void SetCameraSmoothFollow(const bool&) = 0;
         virtual void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) = 0;

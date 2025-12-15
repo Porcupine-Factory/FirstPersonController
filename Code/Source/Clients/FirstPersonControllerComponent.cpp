@@ -719,6 +719,7 @@ namespace FirstPersonController
                 ->Event("Get Active Camera EntityId", &FirstPersonControllerComponentRequests::GetActiveCameraEntityId)
                 ->Event("Get Active Camera Entity Pointer", &FirstPersonControllerComponentRequests::GetActiveCameraEntityPtr)
                 ->Event("Set Camera Entity", &FirstPersonControllerComponentRequests::SetCameraEntity)
+                ->Event("Get Is Camera Child Of Character", &FirstPersonControllerComponentRequests::IsCameraChildOfCharacter)
                 ->Event("Get Camera Smooth Follow", &FirstPersonControllerComponentRequests::GetCameraSmoothFollow)
                 ->Event("Set Camera Smooth Follow", &FirstPersonControllerComponentRequests::SetCameraSmoothFollow)
                 ->Event("Set Do Not Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeDoNotUpdate)
@@ -1713,7 +1714,7 @@ namespace FirstPersonController
         // Calculate interpolation factor
         float alpha;
         if (!m_networkFPCEnabled)
-            alpha = AZ::GetMax(m_physicsTimeAccumulator / m_prevTimestep, 1.f);
+            alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevTimestep, 1.f);
         else if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
         {
             // Skip the interpolation when it's disabled with NetworkFPC
@@ -1721,7 +1722,7 @@ namespace FirstPersonController
             m_cameraSmoothFollow = !m_cameraSmoothFollow;
         }
         else
-            alpha = AZ::GetClamp(m_physicsTimeAccumulator / m_prevNetworkFPCDeltaTime, 0.f, 1.f);
+            alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevNetworkFPCDeltaTime, 1.f);
 
         // Interpolate translation
         const AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
@@ -1736,13 +1737,11 @@ namespace FirstPersonController
             ReacquireChildEntityIds();
             m_obtainedChildIds = true;
         }
+
         for (const AZ::EntityId& childId : m_children)
-        {
             if (childId == m_cameraEntityId)
-            {
                 return true;
-            }
-        }
+
         return false;
     }
 
@@ -1815,11 +1814,7 @@ namespace FirstPersonController
 
             // Apply the yaw to the character
             if (!m_networkFPCEnabled)
-            {
-                const AZ::Quaternion characterRotationQuaternion =
-                    AZ::Quaternion::CreateRotationZ(m_currentHeading + newLookRotationDelta.GetZ());
-                characterTransform->SetWorldRotationQuaternion(characterRotationQuaternion);
-            }
+                characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
             if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -2751,7 +2746,7 @@ namespace FirstPersonController
                     return true;
                 if (!m_obtainedChildIds)
                 {
-                    AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                    ReacquireChildEntityIds();
                     m_obtainedChildIds = true;
                 }
                 for (AZ::EntityId id : m_children)
@@ -3173,7 +3168,7 @@ namespace FirstPersonController
             // Obtain the child IDs if we don't already have them
             if (!m_obtainedChildIds)
             {
-                AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                ReacquireChildEntityIds();
                 m_obtainedChildIds = true;
             }
 
@@ -3416,7 +3411,7 @@ namespace FirstPersonController
             // Obtain the child IDs if we don't already have them
             if (!m_obtainedChildIds)
             {
-                AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                ReacquireChildEntityIds();
                 m_obtainedChildIds = true;
             }
 
@@ -3807,7 +3802,7 @@ namespace FirstPersonController
             // Obtain the child IDs if we don't already have them
             if (!m_obtainedChildIds)
             {
-                AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+                ReacquireChildEntityIds();
                 m_obtainedChildIds = true;
             }
 
