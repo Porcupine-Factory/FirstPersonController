@@ -6,6 +6,7 @@
 #include <AzCore/Module/Module.h>
 #include <AzCore/RTTI/RTTIMacros.h>
 #include <AzCore/RTTI/TypeInfoSimple.h>
+#include <Clients/CameraCoupledChildComponent.h>
 #include <Clients/FirstPersonControllerComponent.h>
 #include <Clients/FirstPersonControllerSystemComponent.h>
 #include <Clients/FirstPersonExtrasComponent.h>

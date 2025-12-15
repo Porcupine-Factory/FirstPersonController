@@ -26,7 +26,8 @@ namespace FirstPersonController
             m_descriptors.end(),
             { FirstPersonControllerSystemComponent::CreateDescriptor(),
               FirstPersonControllerComponent::CreateDescriptor(),
-              FirstPersonExtrasComponent::CreateDescriptor() });
+              FirstPersonExtrasComponent::CreateDescriptor(),
+              CameraCoupledChildComponent::CreateDescriptor() });
 
         //< Register multiplayer components
         CreateComponentDescriptors(m_descriptors);

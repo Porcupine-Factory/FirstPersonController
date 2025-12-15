@@ -8,6 +8,8 @@ set(FILES
     Source/Clients/FirstPersonControllerComponent.h
     Source/Clients/FirstPersonExtrasComponent.cpp
     Source/Clients/FirstPersonExtrasComponent.h
+    Source/Clients/CameraCoupledChildComponent.cpp
+    Source/Clients/CameraCoupledChildComponent.h
     Source/Multiplayer/NetworkFPC.cpp
     Source/Multiplayer/NetworkFPC.h
 

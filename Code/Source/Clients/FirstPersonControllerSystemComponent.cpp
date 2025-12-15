@@ -37,6 +37,12 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
 
                 ec->Class<FirstPersonControllerSystemComponent>(
+                      "CameraCoupledChild", "[Description of functionality provided by this System Component]")
+                    ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
+
+                ec->Class<FirstPersonControllerSystemComponent>(
                       "NetworkFPC", "[Description of functionality provided by this System Component]")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
@@ -49,6 +55,7 @@ namespace FirstPersonController
     {
         provided.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         provided.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
+        provided.push_back(AZ_CRC_CE("CameraCoupledChildService"));
         provided.push_back(AZ_CRC_CE("NetworkFPCService"));
     }
 
@@ -56,6 +63,7 @@ namespace FirstPersonController
     {
         incompatible.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         incompatible.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
+        incompatible.push_back(AZ_CRC_CE("CameraCoupledChildService"));
         incompatible.push_back(AZ_CRC_CE("NetworkFPCService"));
     }
 
@@ -92,6 +100,7 @@ namespace FirstPersonController
     {
         FirstPersonControllerRequestBus::Handler::BusConnect();
         FirstPersonExtrasRequestBus::Handler::BusConnect();
+        CameraCoupledChildRequestBus::Handler::BusConnect();
         NetworkFPCRequestBus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
         // Register multiplayer components
@@ -103,6 +112,7 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusDisconnect();
         FirstPersonControllerRequestBus::Handler::BusDisconnect();
         FirstPersonExtrasRequestBus::Handler::BusDisconnect();
+        CameraCoupledChildRequestBus::Handler::BusDisconnect();
         NetworkFPCRequestBus::Handler::BusDisconnect();
     }
 

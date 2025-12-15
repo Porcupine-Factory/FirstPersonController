@@ -6,6 +6,7 @@
 
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/TickBus.h>
+#include <FirstPersonController/CameraCoupledChildBus.h>
 #include <FirstPersonController/FirstPersonControllerBus.h>
 #include <FirstPersonController/FirstPersonExtrasBus.h>
 #include <FirstPersonController/NetworkFPCBus.h>
@@ -16,6 +17,7 @@ namespace FirstPersonController
         : public AZ::Component
         , protected FirstPersonControllerRequestBus::Handler
         , protected FirstPersonExtrasRequestBus::Handler
+        , protected CameraCoupledChildRequestBus::Handler
         , protected NetworkFPCRequestBus::Handler
         , public AZ::TickBus::Handler
     {
