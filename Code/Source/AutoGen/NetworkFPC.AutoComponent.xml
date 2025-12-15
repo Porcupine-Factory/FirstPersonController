@@ -60,12 +60,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="false" GenerateEventBindings="true"
                      Description="The local Z velocity that is ultimately used in calculating DesiredVelocity"/>
     <NetworkProperty Type="bool" Name="EnableNetworkAnimation"
-                    Init="true" ReplicateFrom="Authority"
-                    ReplicateTo="Client" IsRewindable="false"
-                    IsPredictable="false" IsPublic="true"
-                    Container="Object" ExposeToEditor="true"
-                    ExposeToScript="true" GenerateEventBindings="true"
-                    Description="Determines whether network animations are enabled"/>
+                     Init="true" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="false"
+                     IsPredictable="false" IsPublic="true"
+                     Container="Object" ExposeToEditor="true"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Determines whether network animations are enabled"/>
     <NetworkProperty Type="bool" Name="IsSprinting"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
