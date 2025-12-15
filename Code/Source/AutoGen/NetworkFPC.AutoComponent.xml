@@ -72,6 +72,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the character is currently sprinting"/>
+    <NetworkProperty Type="float" Name="SprintHeldDuration"
+                     Init="0.f" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="The duration that sprint has been applied"/>
     <NetworkProperty Type="bool" Name="IsCrouchingDown"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"

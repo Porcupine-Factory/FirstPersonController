@@ -2367,8 +2367,6 @@ namespace FirstPersonController
             }
 
             m_sprintPause = m_sprintPauseTime;
-
-            m_sprintPrevVelocityLength = m_applyVelocityXY.GetLength();
         }
         // Otherwise if the sprint velocity isn't applied then decrement the sprint counter
         else
@@ -2453,7 +2451,6 @@ namespace FirstPersonController
 
             if (m_sprintAccumulatedAccel <= 0.f)
             {
-                m_sprintPrevVelocityLength = 0.f;
                 m_sprintStopAccelAdjustCaptured = false;
                 m_sprintAccelAdjust = 1.f;
             }
@@ -3927,6 +3924,7 @@ namespace FirstPersonController
     {
         if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
         {
+            m_sprintHeldDuration = m_networkFPCControllerObject->GetSprintHeldDuration();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
@@ -3935,6 +3933,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SetNetworkFPCProperties() const
     {
+        m_networkFPCControllerObject->SetSprintHeldDuration(m_sprintHeldDuration);
         m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
         m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
         m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
@@ -3944,8 +3943,8 @@ namespace FirstPersonController
         m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
         m_networkFPCControllerObject->SetIsGrounded(m_grounded);
         m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
-        m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
         m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
+        m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
@@ -3968,10 +3967,6 @@ namespace FirstPersonController
             // Update the camera and character rotation
             UpdateRotation(deltaTime, tickTimestepNetwork);
         }
-
-        // When using NetworkFPC, obtain the last desired velocity that was sent
-        if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
-            m_prevTargetVelocity = m_networkFPCControllerObject->GetDesiredVelocity();
 
         // Keep track of the last two target velocity values for the obstruction check logic
         m_prevPrevTargetVelocity = m_prevTargetVelocity;
