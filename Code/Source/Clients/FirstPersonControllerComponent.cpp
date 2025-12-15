@@ -1785,6 +1785,9 @@ namespace FirstPersonController
 
         const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerAnglesRadians(m_cameraRotationAnglesDelta);
 
+        m_cameraRotationAnglesDelta.SetZ(0.f);
+        m_cameraRotationAnglesDelta.SetX(0.f);
+
         if (m_rotationDamp * 0.01f <= 1.f)
             m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp * 0.01f);
         else
@@ -6187,17 +6190,18 @@ namespace FirstPersonController
         const float& new_characterAndCameraYawAngle, const bool& updateCharacterAndCameraYawConsidersInput)
     {
         if (updateCharacterAndCameraYawConsidersInput)
-            m_cameraRotationAnglesDelta.SetZ(new_characterAndCameraYawAngle - m_yawValue * m_yawSensitivity);
+            m_cameraRotationAnglesDelta.SetZ(
+                m_cameraRotationAnglesDelta.GetZ() + new_characterAndCameraYawAngle - m_yawValue * m_yawSensitivity);
         else
-            m_cameraRotationAnglesDelta.SetZ(new_characterAndCameraYawAngle);
+            m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() + new_characterAndCameraYawAngle);
         m_rotatingYawViaScriptGamepad = true;
     }
     void FirstPersonControllerComponent::UpdateCameraPitch(const float& new_cameraPitchAngle, const bool& updateCameraPitchConsidersInput)
     {
         if (updateCameraPitchConsidersInput)
-            m_cameraRotationAnglesDelta.SetX(new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity);
+            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity);
         else
-            m_cameraRotationAnglesDelta.SetX(new_cameraPitchAngle);
+            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + new_cameraPitchAngle);
         m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const
