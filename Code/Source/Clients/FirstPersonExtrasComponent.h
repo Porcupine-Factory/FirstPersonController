@@ -135,8 +135,8 @@ namespace FirstPersonController
         float m_completeHeadLandTime = 0.4f;
         float m_currentHeadPitchAngle = 0.f;
         float m_deltaAngle = 0.f;
-        float m_headAngleJump = 6.f;
-        float m_headAngleLand = 4.f;
+        float m_headAngleJump = 2.5f;
+        float m_headAngleLand = 2.f;
         float m_deltaAngleFactorJump = 5.f;
         float m_deltaAngleFactorLand = 8.f;
 
