@@ -9,7 +9,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
 <Component
     Name="NetworkFPC"
     Namespace="FirstPersonController"
-    OverrideComponent="false"
+    OverrideComponent="true"
     OverrideController="true"
     OverrideInclude="Multiplayer/NetworkFPC.h"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">

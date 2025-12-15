@@ -17,22 +17,239 @@ namespace FirstPersonController
 {
     using namespace StartingPointInput;
 
-    NetworkFPCController::NetworkFPCController(NetworkFPC& parent)
-        : NetworkFPCControllerBase(parent)
-        , m_enableNetworkFPCChangedEvent(
-              [this](bool enable)
+    void NetworkFPC::Reflect(AZ::ReflectContext* context)
+    {
+        AZ::SerializeContext* serializeContext = azrtti_cast<AZ::SerializeContext*>(context);
+        if (serializeContext)
+        {
+            serializeContext->Class<NetworkFPC, NetworkFPCBase>()->Version(1);
+        }
+        NetworkFPCBase::Reflect(context);
+    }
+
+    NetworkFPC::NetworkFPC()
+        : m_preRenderEventHandler(
+              [this](float deltaTime)
               {
-                  OnEnableNetworkFPCChanged(enable);
+                  OnPreRender(deltaTime);
               })
         , m_enableNetworkAnimationChangedEvent(
               [this](bool enable)
               {
                   OnEnableNetworkAnimationChanged(enable);
               })
-        , m_preRenderEventHandler(
-              [this](float deltaTime)
+    {
+        ;
+    }
+
+    void NetworkFPC::OnInit()
+    {
+    }
+
+    void NetworkFPC::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
+    {
+        // Subscribe to EnableNetworkFPC change events
+        EnableNetworkAnimationAddEvent(m_enableNetworkAnimationChangedEvent);
+
+        // Network animation setup
+        if (GetEnableNetworkAnimation())
+        {
+            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
+            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
+            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
+
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
+
+            GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
+        }
+    }
+
+    void NetworkFPC::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
+    {
+        if (GetEnableNetworkAnimation())
+        {
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
+        }
+    }
+
+    void NetworkFPC::OnEnableNetworkAnimationChanged(const bool& enable)
+    {
+        if (enable)
+        {
+            // Reconnect network animation buses and handler
+            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
+            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
+            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
+
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
+
+            GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
+        }
+        else
+        {
+            // Disconnect network animation buses and handler
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
+            m_preRenderEventHandler.Disconnect();
+            m_actorRequests = nullptr;
+            m_networkRequests = nullptr;
+            m_animationGraph = nullptr;
+            m_walkSpeedParamId = InvalidParamIndex;
+            m_sprintParamId = InvalidParamIndex;
+            m_crouchToStandParamId = InvalidParamIndex;
+            m_crouchParamId = InvalidParamIndex;
+            m_standToCrouchParamId = InvalidParamIndex;
+            m_jumpStartParamId = InvalidParamIndex;
+            m_fallParamId = InvalidParamIndex;
+            m_jumpLandParamId = InvalidParamIndex;
+            m_groundedParamId = InvalidParamIndex;
+        }
+    }
+
+    void NetworkFPC::OnPreRender(float deltaTime)
+    {
+        if (!GetEnableNetworkAnimation() || m_animationGraph == nullptr || m_networkRequests == nullptr)
+        {
+            return;
+        }
+
+        if (m_walkSpeedParamId == InvalidParamIndex)
+        {
+            m_walkSpeedParamId = m_animationGraph->FindParameterIndex(GetWalkSpeedParamName().c_str());
+        }
+
+        if (m_sprintParamId == InvalidParamIndex)
+        {
+            m_sprintParamId = m_animationGraph->FindParameterIndex(GetSprintParamName().c_str());
+        }
+
+        if (m_standToCrouchParamId == InvalidParamIndex)
+        {
+            m_standToCrouchParamId = m_animationGraph->FindParameterIndex(GetStandToCrouchParamName().c_str());
+        }
+
+        if (m_crouchParamId == InvalidParamIndex)
+        {
+            m_crouchParamId = m_animationGraph->FindParameterIndex(GetCrouchParamName().c_str());
+        }
+
+        if (m_crouchToStandParamId == InvalidParamIndex)
+        {
+            m_crouchToStandParamId = m_animationGraph->FindParameterIndex(GetCrouchToStandParamName().c_str());
+        }
+
+        if (m_jumpStartParamId == InvalidParamIndex)
+        {
+            m_jumpStartParamId = m_animationGraph->FindParameterIndex(GetJumpStartParamName().c_str());
+        }
+
+        if (m_fallParamId == InvalidParamIndex)
+        {
+            m_fallParamId = m_animationGraph->FindParameterIndex(GetFallParamName().c_str());
+        }
+
+        if (m_jumpLandParamId == InvalidParamIndex)
+        {
+            m_jumpLandParamId = m_animationGraph->FindParameterIndex(GetJumpLandParamName().c_str());
+        }
+
+        if (m_groundedParamId == InvalidParamIndex)
+        {
+            m_groundedParamId = m_animationGraph->FindParameterIndex(GetGroundedParamName().c_str());
+        }
+
+        // Get networked velocity from component base
+        if (m_walkSpeedParamId != InvalidParamIndex)
+        {
+            AZ::Vector3 velocity = GetDesiredVelocity();
+            // Ignore Z for ground speed
+            velocity.SetZ(0.0f);
+            float speed = velocity.GetLength();
+
+            // Set the parameter directly; anim graph handles transitions
+            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, speed);
+        }
+
+        if (m_sprintParamId != InvalidParamIndex)
+        {
+            bool isSprinting = GetIsSprinting();
+            m_animationGraph->SetParameterBool(m_sprintParamId, isSprinting);
+        }
+
+        if (m_standToCrouchParamId != InvalidParamIndex)
+        {
+            bool isCrouchingDown = GetIsCrouchingDown();
+            m_animationGraph->SetParameterBool(m_standToCrouchParamId, isCrouchingDown);
+        }
+
+        if (m_crouchToStandParamId != InvalidParamIndex)
+        {
+            bool isStandingUp = GetIsStandingUp();
+            m_animationGraph->SetParameterBool(m_crouchToStandParamId, isStandingUp);
+        }
+
+        if (m_crouchParamId != InvalidParamIndex)
+        {
+            bool isCrouching = GetIsCrouching();
+            m_animationGraph->SetParameterBool(m_crouchParamId, isCrouching);
+        }
+
+        if (m_jumpStartParamId != InvalidParamIndex)
+        {
+            bool isJumpStarting = GetIsJumpStarting();
+            m_animationGraph->SetParameterBool(m_jumpStartParamId, isJumpStarting);
+        }
+
+        if (m_fallParamId != InvalidParamIndex)
+        {
+            bool isFalling = GetIsFalling();
+            m_animationGraph->SetParameterBool(m_fallParamId, isFalling);
+        }
+
+        if (m_jumpLandParamId != InvalidParamIndex)
+        {
+            bool isJumpLanding = GetIsJumpLanding();
+            m_animationGraph->SetParameterBool(m_jumpLandParamId, isJumpLanding);
+        }
+
+        if (m_groundedParamId != InvalidParamIndex)
+        {
+            bool isGrounded = GetIsGrounded();
+            m_animationGraph->SetParameterBool(m_groundedParamId, isGrounded);
+        }
+
+        m_networkRequests->UpdateActorExternal(deltaTime);
+    }
+
+    void NetworkFPC::OnActorInstanceCreated([[maybe_unused]] EMotionFX::ActorInstance* actorInstance)
+    {
+        m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
+    }
+
+    void NetworkFPC::OnActorInstanceDestroyed([[maybe_unused]] EMotionFX::ActorInstance* actorInstance)
+    {
+        m_actorRequests = nullptr;
+    }
+
+    void NetworkFPC::OnAnimGraphInstanceCreated([[maybe_unused]] EMotionFX::AnimGraphInstance* animGraphInstance)
+    {
+        EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
+
+        if (m_actorRequests)
+        {
+            // Network controls transforms
+            m_actorRequests->EnableInstanceUpdate(false);
+        }
+    }
+
+    NetworkFPCController::NetworkFPCController(NetworkFPC& parent)
+        : NetworkFPCControllerBase(parent)
+        , m_enableNetworkFPCChangedEvent(
+              [this](bool enable)
               {
-                  OnPreRender(deltaTime);
+                  OnEnableNetworkFPCChanged(enable);
               })
     {
     }
@@ -124,9 +341,6 @@ namespace FirstPersonController
         // Subscribe to EnableNetworkFPC change events
         EnableNetworkFPCAddEvent(m_enableNetworkFPCChangedEvent);
 
-        // Subscribe to EnableNetworkFPC change events
-        GetParent().EnableNetworkAnimationAddEvent(m_enableNetworkAnimationChangedEvent);
-
         // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
         const AZ::Entity* entity = GetParent().GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
@@ -154,29 +368,12 @@ namespace FirstPersonController
             else
                 m_firstPersonControllerObject->m_isAutonomousClient = true;
         }
-
-        // Network animation setup
-        if (GetParent().GetEnableNetworkAnimation())
-        {
-            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
-            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
-            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
-
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
-            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
-
-            GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
-        }
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
         NetworkFPCControllerRequestBus::Handler::BusDisconnect();
         InputEventNotificationBus::MultiHandler::BusDisconnect();
-        if (GetParent().GetEnableNetworkAnimation())
-        {
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
-        }
     }
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -330,182 +527,6 @@ namespace FirstPersonController
             m_firstPersonControllerObject->AssignConnectInputEvents();
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->AssignConnectInputEvents();
-        }
-    }
-
-    void NetworkFPCController::OnEnableNetworkAnimationChanged(const bool& enable)
-    {
-        if (enable)
-        {
-            // Reconnect network animation buses and handler
-            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
-            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
-            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
-
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
-            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
-
-            GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
-        }
-        else
-        {
-            // Disconnect network animation buses and handler
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
-            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
-            m_preRenderEventHandler.Disconnect();
-            m_actorRequests = nullptr;
-            m_networkRequests = nullptr;
-            m_animationGraph = nullptr;
-            m_walkSpeedParamId = InvalidParamIndex;
-            m_sprintParamId = InvalidParamIndex;
-            m_crouchToStandParamId = InvalidParamIndex;
-            m_crouchParamId = InvalidParamIndex;
-            m_standToCrouchParamId = InvalidParamIndex;
-            m_jumpStartParamId = InvalidParamIndex;
-            m_fallParamId = InvalidParamIndex;
-            m_jumpLandParamId = InvalidParamIndex;
-            m_groundedParamId = InvalidParamIndex;
-        }
-    }
-
-    void NetworkFPCController::OnPreRender(float deltaTime)
-    {
-        if (!GetParent().GetEnableNetworkAnimation() || m_animationGraph == nullptr || m_networkRequests == nullptr)
-        {
-            return;
-        }
-
-        if (IsNetEntityRoleAutonomous() && IsNetEntityRoleAuthority())
-        {
-            deltaTime /= 2.f;
-        }
-
-        if (m_walkSpeedParamId == InvalidParamIndex)
-        {
-            m_walkSpeedParamId = m_animationGraph->FindParameterIndex(GetParent().GetWalkSpeedParamName().c_str());
-        }
-
-        if (m_sprintParamId == InvalidParamIndex)
-        {
-            m_sprintParamId = m_animationGraph->FindParameterIndex(GetParent().GetSprintParamName().c_str());
-        }
-
-        if (m_standToCrouchParamId == InvalidParamIndex)
-        {
-            m_standToCrouchParamId = m_animationGraph->FindParameterIndex(GetParent().GetStandToCrouchParamName().c_str());
-        }
-
-        if (m_crouchParamId == InvalidParamIndex)
-        {
-            m_crouchParamId = m_animationGraph->FindParameterIndex(GetParent().GetCrouchParamName().c_str());
-        }
-
-        if (m_crouchToStandParamId == InvalidParamIndex)
-        {
-            m_crouchToStandParamId = m_animationGraph->FindParameterIndex(GetParent().GetCrouchToStandParamName().c_str());
-        }
-
-        if (m_jumpStartParamId == InvalidParamIndex)
-        {
-            m_jumpStartParamId = m_animationGraph->FindParameterIndex(GetParent().GetJumpStartParamName().c_str());
-        }
-
-        if (m_fallParamId == InvalidParamIndex)
-        {
-            m_fallParamId = m_animationGraph->FindParameterIndex(GetParent().GetFallParamName().c_str());
-        }
-
-        if (m_jumpLandParamId == InvalidParamIndex)
-        {
-            m_jumpLandParamId = m_animationGraph->FindParameterIndex(GetParent().GetJumpLandParamName().c_str());
-        }
-
-        if (m_groundedParamId == InvalidParamIndex)
-        {
-            m_groundedParamId = m_animationGraph->FindParameterIndex(GetParent().GetGroundedParamName().c_str());
-        }
-
-        // Get networked velocity from component base
-        if (m_walkSpeedParamId != InvalidParamIndex)
-        {
-            AZ::Vector3 velocity = GetParent().GetDesiredVelocity();
-            // Ignore Z for ground speed
-            velocity.SetZ(0.0f);
-            float speed = velocity.GetLength();
-
-            // Set the parameter directly; anim graph handles transitions
-            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, speed);
-        }
-
-        if (m_sprintParamId != InvalidParamIndex)
-        {
-            bool isSprinting = GetParent().GetIsSprinting();
-            m_animationGraph->SetParameterBool(m_sprintParamId, isSprinting);
-        }
-
-        if (m_standToCrouchParamId != InvalidParamIndex)
-        {
-            bool isCrouchingDown = GetParent().GetIsCrouchingDown();
-            m_animationGraph->SetParameterBool(m_standToCrouchParamId, isCrouchingDown);
-        }
-
-        if (m_crouchToStandParamId != InvalidParamIndex)
-        {
-            bool isStandingUp = GetParent().GetIsStandingUp();
-            m_animationGraph->SetParameterBool(m_crouchToStandParamId, isStandingUp);
-        }
-
-        if (m_crouchParamId != InvalidParamIndex)
-        {
-            bool isCrouching = GetParent().GetIsCrouching();
-            m_animationGraph->SetParameterBool(m_crouchParamId, isCrouching);
-        }
-
-        if (m_jumpStartParamId != InvalidParamIndex)
-        {
-            bool isJumpStarting = GetParent().GetIsJumpStarting();
-            m_animationGraph->SetParameterBool(m_jumpStartParamId, isJumpStarting);
-        }
-
-        if (m_fallParamId != InvalidParamIndex)
-        {
-            bool isFalling = GetParent().GetIsFalling();
-            m_animationGraph->SetParameterBool(m_fallParamId, isFalling);
-        }
-
-        if (m_jumpLandParamId != InvalidParamIndex)
-        {
-            bool isJumpLanding = GetParent().GetIsJumpLanding();
-            m_animationGraph->SetParameterBool(m_jumpLandParamId, isJumpLanding);
-        }
-
-        if (m_groundedParamId != InvalidParamIndex)
-        {
-            bool isGrounded = GetParent().GetIsGrounded();
-            m_animationGraph->SetParameterBool(m_groundedParamId, isGrounded);
-        }
-
-        m_networkRequests->UpdateActorExternal(deltaTime);
-    }
-
-    void NetworkFPCController::OnActorInstanceCreated([[maybe_unused]] EMotionFX::ActorInstance* actorInstance)
-    {
-        m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
-    }
-
-    void NetworkFPCController::OnActorInstanceDestroyed([[maybe_unused]] EMotionFX::ActorInstance* actorInstance)
-    {
-        m_actorRequests = nullptr;
-    }
-
-    void NetworkFPCController::OnAnimGraphInstanceCreated([[maybe_unused]] EMotionFX::AnimGraphInstance* animGraphInstance)
-    {
-        EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
-
-        if (m_actorRequests)
-        {
-            // Network controls transforms
-            m_actorRequests->EnableInstanceUpdate(false);
         }
     }
 
