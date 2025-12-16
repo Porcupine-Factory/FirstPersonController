@@ -153,9 +153,11 @@ namespace FirstPersonController
 
     void CameraCoupledChildComponent::ProcessInput(const float& deltaTime)
     {
+        bool networkFPCEnabled = true;
+        FirstPersonControllerComponentRequestBus::BroadcastResult(
+            networkFPCEnabled, &FirstPersonControllerComponentRequestBus::Events::GetLocallyEnableNetworkFPC);
         if (!m_enable || m_firstPersonControllerObject == nullptr || !m_firstPersonControllerObject->m_cameraSmoothFollow ||
-            (m_firstPersonControllerObject->m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient &&
-             !m_firstPersonControllerObject->m_isHost))
+            (networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isHost))
             return;
 
         CoupleChildToCamera(deltaTime);
