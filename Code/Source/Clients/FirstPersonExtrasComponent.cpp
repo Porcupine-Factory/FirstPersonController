@@ -235,7 +235,7 @@ namespace FirstPersonController
         NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
         FirstPersonExtrasComponentRequestBus::Handler::BusConnect(GetEntityId());
 
-        // Get access to the FirstPersonControllerComponent and Netw object and its members
+        // Get access to the FirstPersonControllerComponent and NetwworkFPC objects and their members
         const AZ::Entity* entity = GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
         m_networkFPCObject = entity->FindComponent<NetworkFPC>();

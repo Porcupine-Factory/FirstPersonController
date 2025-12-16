@@ -95,6 +95,7 @@ namespace FirstPersonController
     {
         friend class FirstPersonControllerComponent;
         friend class FirstPersonExtrasComponent;
+        friend class CameraCoupledChildComponent;
 
     public:
         explicit NetworkFPCController(NetworkFPC& parent);

@@ -486,16 +486,6 @@ namespace FirstPersonController
             deltaTime,
             m_firstPersonControllerObject->m_isServer,
             GetEntityId());
-
-        // AZ_Printf("NetworkFPC", "Forward: %f", playerInput->m_forward);
-        // AZ_Printf("NetworkFPC", "Back: %f", playerInput->m_back);
-        // AZ_Printf("NetworkFPC", "Left: %f", playerInput->m_left);
-        // AZ_Printf("NetworkFPC", "Right: %f", playerInput->m_right);
-        // AZ_Printf("NetworkFPC", "Yaw: %f", playerInput->m_yaw);
-        // AZ_Printf("NetworkFPC", "Pitch: %f", playerInput->m_pitch);
-        // AZ_Printf("NetworkFPC", "Sprint: %f", playerInput->m_sprint);
-        // AZ_Printf("NetworkFPC", "Crouch: %f", playerInput->m_crouch);
-        // AZ_Printf("NetworkFPC", "Jump: %f", playerInput->m_jump);
     }
 
     // Event Notification methods for use in scripts

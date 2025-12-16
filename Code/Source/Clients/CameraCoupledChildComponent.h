@@ -5,8 +5,10 @@
 #pragma once
 #include <FirstPersonController/CameraCoupledChildComponentBus.h>
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
+#include <FirstPersonController/FirstPersonExtrasComponentBus.h>
 
 #include <Clients/FirstPersonControllerComponent.h>
+#include <Clients/FirstPersonExtrasComponent.h>
 
 #include <AzFramework/Components/CameraBus.h>
 
@@ -26,6 +28,10 @@ namespace FirstPersonController
         , public AZ::EntityBus::Handler
         , public CameraCoupledChildComponentRequestBus::Handler
     {
+        friend class FirstPersonControllerComponent;
+        friend class FirstPersonExtrasComponent;
+        friend class NetworkFPCController;
+
     public:
         AZ_COMPONENT(CameraCoupledChildComponent, "{76b7172d-6196-4e4b-b22c-4afbb20580be}");
 
@@ -45,6 +51,8 @@ namespace FirstPersonController
         // CameraCoupledChildRequestBus
         bool GetEnableCameraCoupledChild() const override;
         void SetEnableCameraCoupledChild(const bool& new_enable) override;
+        float GetInitialZOffset() const override;
+        void SetInitialZOffset(const float& new_initialZOffset) override;
 
     private:
         // Input event assignment and notification bus connection
@@ -56,11 +64,21 @@ namespace FirstPersonController
         // Called on each tick
         void ProcessInput(const float& deltaTime);
 
+        // Function that does the coupling to the camera
+        void CoupleChildToCamera(const float& deltaTime);
+
+        // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
+        FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
+        FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
+
         // Enable/disable this component
-        bool m_enable;
+        bool m_enable = true;
 
         // Previous deltaTime
         float m_prevDeltaTime = 1.f / 60.f;
+
+        // The inital Z offset of the child entity with respect to the parent character entity
+        float m_initialZOffset = 0.f;
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;

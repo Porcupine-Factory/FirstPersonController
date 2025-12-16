@@ -1171,6 +1171,9 @@ namespace FirstPersonController
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
                 ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
                 ->Event("Get Camera Yaw", &FirstPersonControllerComponentRequests::GetYaw)
+                ->Event("Get Is Autonomous Client", &FirstPersonControllerComponentRequests::GetIsAutonomousClient)
+                ->Event("Get Is Server", &FirstPersonControllerComponentRequests::GetIsServer)
+                ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
                 ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC);
 
@@ -1859,6 +1862,7 @@ namespace FirstPersonController
                         m_cameraPitchMaxAngle),
                     m_cameraRotationTransform->GetLocalRotation().GetY(),
                     m_cameraRotationTransform->GetLocalRotation().GetZ()));
+                m_cameraYaw = m_cameraRotationTransform->GetLocalRotation().GetZ();
             }
             else if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
             {
@@ -6210,6 +6214,18 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetYaw() const
     {
         return m_cameraYaw;
+    }
+    bool FirstPersonControllerComponent::GetIsAutonomousClient() const
+    {
+        return m_isAutonomousClient;
+    }
+    bool FirstPersonControllerComponent::GetIsServer() const
+    {
+        return m_isServer;
+    }
+    bool FirstPersonControllerComponent::GetIsHost() const
+    {
+        return m_isHost;
     }
     bool FirstPersonControllerComponent::GetLocallyEnableNetworkFPC() const
     {

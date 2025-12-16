@@ -31,6 +31,8 @@ namespace FirstPersonController
         , public FirstPersonExtrasComponentRequestBus::Handler
         , public Camera::CameraNotificationBus::Handler
     {
+        friend class FirstPersonControllerComponent;
+        friend class CameraCoupledChildComponent;
         friend class NetworkFPCController;
 
     public:

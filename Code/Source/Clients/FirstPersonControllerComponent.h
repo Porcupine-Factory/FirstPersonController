@@ -40,6 +40,7 @@ namespace FirstPersonController
         , public Camera::CameraNotificationBus::Handler
     {
         friend class FirstPersonExtrasComponent;
+        friend class CameraCoupledChildComponent;
         friend class NetworkFPCController;
 
     public:
@@ -486,6 +487,9 @@ namespace FirstPersonController
         void SetHeadingForTick(const float& new_currentHeading) override;
         float GetPitch() const override;
         float GetYaw() const override;
+        bool GetIsAutonomousClient() const override;
+        bool GetIsServer() const override;
+        bool GetIsHost() const override;
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
         void NetworkFPCEnabledIgnoreInputs() override;
