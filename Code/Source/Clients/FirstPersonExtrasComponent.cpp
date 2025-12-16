@@ -544,14 +544,12 @@ namespace FirstPersonController
         if (m_moveHeadDown)
         {
             m_currentHeadPitchAngle -= m_deltaAngle;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_deltaAngle, true);
+            m_firstPersonControllerObject->UpdateCameraPitch(-m_deltaAngle, true);
         }
         else
         {
             m_currentHeadPitchAngle += m_deltaAngle;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, m_deltaAngle, true);
+            m_firstPersonControllerObject->UpdateCameraPitch(m_deltaAngle, true);
         }
 
         if (m_currentHeadPitchAngle >= 0.f)
@@ -559,18 +557,13 @@ namespace FirstPersonController
             m_moveHeadDown = true;
             m_tiltJumped = false;
             m_tiltLanded = false;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch, -m_currentHeadPitchAngle, true);
+            m_firstPersonControllerObject->UpdateCameraPitch(-m_currentHeadPitchAngle, true);
             m_currentHeadPitchAngle = 0.f;
         }
         else if (m_currentHeadPitchAngle <= m_totalHeadAngle)
         {
             m_moveHeadDown = false;
-            FirstPersonControllerComponentRequestBus::Event(
-                GetEntityId(),
-                &FirstPersonControllerComponentRequestBus::Events::UpdateCameraPitch,
-                (m_totalHeadAngle - m_currentHeadPitchAngle),
-                true);
+            m_firstPersonControllerObject->UpdateCameraPitch(m_totalHeadAngle - m_currentHeadPitchAngle, true);
             m_currentHeadPitchAngle = m_totalHeadAngle;
         }
     }
