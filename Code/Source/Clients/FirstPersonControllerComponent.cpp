@@ -3933,6 +3933,7 @@ namespace FirstPersonController
         {
             m_sprintHeldDuration = m_networkFPCControllerObject->GetSprintHeldDuration();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
+            m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
         }
@@ -3950,6 +3951,7 @@ namespace FirstPersonController
         m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
         m_networkFPCControllerObject->SetIsGrounded(m_grounded);
         m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
+        m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
         m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
         m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
     }
