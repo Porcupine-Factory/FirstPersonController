@@ -801,6 +801,8 @@ namespace FirstPersonController
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
         float m_jumpHeadSphereCastOffset = 0.1f;
+        bool m_onFirstJump = false;
+        bool m_onGroundSoonHit = false;
 
         // Variables used for impulses and hit detection
         bool m_enableImpulses = true;

@@ -704,8 +704,10 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance)
     {
-        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-            !m_firstPersonControllerObject->m_isHost)
+        if (m_networkFPCEnabled &&
+            ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+              !m_firstPersonControllerObject->m_isHost) ||
+             !m_firstPersonControllerObject->m_onGroundSoonHit))
             return;
         m_tiltLanded = true;
         m_tiltJumped = false;
@@ -775,8 +777,10 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnFirstJump()
     {
-        if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-            !m_firstPersonControllerObject->m_isHost)
+        if (m_networkFPCEnabled &&
+            ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+              !m_firstPersonControllerObject->m_isHost) ||
+             !m_firstPersonControllerObject->m_onFirstJump))
             return;
         m_tiltJumped = true;
         m_tiltLanded = false;
