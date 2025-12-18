@@ -62,7 +62,7 @@ namespace FirstPersonController
         AZ::EntityBus::Handler::BusDisconnect();
     }
 
-    void CameraCoupledChildComponent::OnEntityActivated(const AZ::EntityId& entityId)
+    void CameraCoupledChildComponent::OnEntityActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
         m_initialZOffset = GetEntity()->GetTransform()->GetLocalTranslation().GetZ();
 
@@ -107,7 +107,7 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void CameraCoupledChildComponent::CoupleChildToCamera(const float& deltaTime)
+    void CameraCoupledChildComponent::CoupleChildToCamera([[maybe_unused]] const float& deltaTime)
     {
         // Get the camera translation, based on whether headbob is enabled
         AZ::Vector3 cameraTranslation = m_firstPersonExtrasObject->m_cameraTranslationWithoutHeadbob;
