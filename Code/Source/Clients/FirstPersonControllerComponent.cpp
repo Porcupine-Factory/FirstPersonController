@@ -1785,7 +1785,7 @@ namespace FirstPersonController
         else
             m_rotatingPitchViaScriptGamepad = false;
 
-        const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerAnglesRadians(m_cameraRotationAnglesDelta);
+        const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerRadiansXYZ(m_cameraRotationAnglesDelta);
 
         m_cameraRotationAnglesDelta.SetZ(0.f);
         m_cameraRotationAnglesDelta.SetX(0.f);
@@ -3770,7 +3770,7 @@ namespace FirstPersonController
 
         // Set the pose rotation based on the angle between the X axis and the m_sphereCastsAxisDirectionPose,
         // this was experimentally found to be necessary to get the capsule orientation correct
-        capsulePose.SetRotation(AZ::Quaternion::CreateFromEulerAnglesRadians(
+        capsulePose.SetRotation(AZ::Quaternion::CreateFromEulerRadiansXYZ(
             GetVectorAnglesBetweenVectorsRadians(AZ::Vector3::CreateAxisX(), m_sphereCastsAxisDirectionPose)));
 
         // Set the translation and shift the capsule based on the character's capsule height

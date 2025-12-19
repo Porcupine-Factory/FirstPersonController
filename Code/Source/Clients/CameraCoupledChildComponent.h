@@ -65,7 +65,7 @@ namespace FirstPersonController
         void ProcessInput(const float& deltaTime);
 
         // Function that does the coupling to the camera
-        void CoupleChildToCamera(const float& deltaTime);
+        void CoupleChildToCamera();
 
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
