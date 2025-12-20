@@ -414,6 +414,9 @@ namespace FirstPersonController
         playerInput->m_yaw = m_yawValue;
         playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
         playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
+        playerInput->m_overrideTransformForTick = GetOverrideTransformForTick();
+        playerInput->m_overrideRotationForTick = GetOverrideRotationForTick();
+        playerInput->m_overrideTransform = GetOverrideTransform();
         playerInput->m_pitch = m_pitchValue;
         playerInput->m_sprint = m_sprintValue;
         playerInput->m_crouch = m_crouchValue;
@@ -466,6 +469,23 @@ namespace FirstPersonController
         {
             m_firstPersonControllerObject->m_sprintEffectiveValue = 0.f;
             m_firstPersonControllerObject->m_sprintAccelValue = 0.f;
+        }
+
+        if (playerInput->m_overrideTransformForTick || playerInput->m_overrideRotationForTick)
+        {
+            if (playerInput->m_overrideTransformForTick)
+            {
+                GetEntity()->GetTransform()->SetWorldTM(playerInput->m_overrideTransform);
+                SetOverrideTransformForTick(false);
+            }
+            else
+            {
+                GetEntity()->GetTransform()->SetWorldRotationQuaternion(playerInput->m_overrideTransform.GetRotation());
+                SetOverrideRotationForTick(false);
+            }
+            m_firstPersonControllerObject->m_currentHeading = playerInput->m_overrideTransform.GetEulerRadians().GetZ();
+            m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
+            m_firstPersonControllerObject->m_networkFPCRotationSliceAccumulator = 0.f;
         }
 
         NetworkFPCControllerNotificationBus::Broadcast(

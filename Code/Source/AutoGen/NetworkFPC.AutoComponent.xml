@@ -27,13 +27,13 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      Init="AZ::Vector3::CreateZero()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
-                     ExposeToScript="false" GenerateEventBindings="true"
+                     ExposeToScript="true" GenerateEventBindings="true"
                      Description="The euler angle change in the character and camera rotation in radians"/>
     <NetworkProperty Type="AZ::Quaternion" Name="LookRotationDeltaQuat"
                      Init="AZ::Quaternion::CreateZero()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
-                     ExposeToScript="false" GenerateEventBindings="true"
+                     ExposeToScript="true" GenerateEventBindings="true"
                      Description="The quaternion change in the character and camera rotation"/>
     <NetworkProperty Type="float" Name="YawDeltaOvershoot"
                      Init="0.f" ReplicateFrom="Authority"
@@ -65,6 +65,24 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The component of the character's velocity due to an impulse"/>
+    <NetworkProperty Type="bool" Name="OverrideTransformForTick"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the transform will be set by OverrideTransform for one network tick"/>
+    <NetworkProperty Type="bool" Name="OverrideRotationForTick"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the rotation will be set by OverrideTransform for one network tick"/>
+    <NetworkProperty Type="AZ::Transform" Name="OverrideTransform"
+                     Init="AZ::Transform::CreateIdentity()" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Transform to set the character to for one network tick"/>
     <NetworkProperty Type="bool" Name="EnableNetworkAnimation"
                      Init="true" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="false"
@@ -135,6 +153,9 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkInput Type="float" Name="Yaw" Init="0.f"/>
     <NetworkInput Type="float" Name="YawDelta" Init="0.f"/>
     <NetworkInput Type="float" Name="YawDeltaOvershoot" Init="0.f"/>
+    <NetworkInput Type="AZ::Transform" Name="OverrideTransform" Init="AZ::Transform::CreateIdentity()"/>
+    <NetworkInput Type="bool" Name="OverrideTransformForTick" Init="false"/>
+    <NetworkInput Type="bool" Name="OverrideRotationForTick" Init="false"/>
     <NetworkInput Type="float" Name="Pitch" Init="0.f"/>
     <NetworkInput Type="float" Name="Sprint" Init="0.f"/>
     <NetworkInput Type="float" Name="Crouch" Init="0.f"/>

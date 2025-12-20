@@ -1812,7 +1812,7 @@ namespace FirstPersonController
         if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
         {
             // Get the current heading
-            if (m_networkFPCEnabled)
+            if (m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick)
                 m_currentHeading = characterTransform->GetWorldRotation().GetZ();
 
             // Apply the yaw to the character
