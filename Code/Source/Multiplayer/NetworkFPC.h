@@ -77,6 +77,13 @@ namespace FirstPersonController
         EMotionFX::AnimGraphComponentNetworkRequests* m_networkRequests = nullptr;
         EMotionFX::Integration::AnimGraphComponentRequests* m_animationGraph = nullptr;
 
+        bool m_animationChildFound = false;
+
+        AZ::EntityId m_animationEntityId = AZ::EntityId();
+
+        void DetectAnimationChild();
+        void SetupAnimationConnections(const AZ::EntityId& targetId);
+
         size_t m_walkSpeedParamId = InvalidParamIndex;
         size_t m_sprintParamId = InvalidParamIndex;
         size_t m_crouchToStandParamId = InvalidParamIndex;

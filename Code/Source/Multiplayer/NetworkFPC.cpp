@@ -51,16 +51,21 @@ namespace FirstPersonController
         // Subscribe to EnableNetworkFPC change events
         EnableNetworkAnimationAddEvent(m_enableNetworkAnimationChangedEvent);
 
+        // Find child entity with anim graph component
+        DetectAnimationChild();
+
         // Network animation setup
+        if (!m_animationEntityId.IsValid())
+        {
+            AZLOG_WARN("No animation child detected. Falling back to parent entity (self).");
+            m_animationEntityId = GetEntityId();
+        }
+
+        // Network animation setup
+        SetupAnimationConnections(m_animationEntityId);
+
         if (GetEnableNetworkAnimation())
         {
-            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
-            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
-            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
-
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
-            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
-
             GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
         }
     }
@@ -78,12 +83,7 @@ namespace FirstPersonController
         if (enable)
         {
             // Reconnect network animation buses and handler
-            m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
-            m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(GetEntityId());
-            m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(GetEntityId());
-
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(GetEntityId());
-            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(GetEntityId());
+            SetupAnimationConnections(m_animationEntityId);
 
             GetNetBindComponent()->AddEntityPreRenderEventHandler(m_preRenderEventHandler);
         }
@@ -108,8 +108,62 @@ namespace FirstPersonController
         }
     }
 
+    void NetworkFPC::DetectAnimationChild()
+    {
+        AZStd::vector<AZ::EntityId> children;
+        AZ::TransformBus::EventResult(children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+
+        for (const AZ::EntityId& childId : children)
+        {
+            if (EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(childId) != nullptr)
+            {
+                m_animationEntityId = childId;
+
+                auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+                AZ_Printf(
+                    "NetworkFPC::OnPreRender",
+                    "Animation child EntityId = %llu, Animation child entity name = %s",
+                    static_cast<AZ::u64>(m_animationEntityId),
+                    ca->FindEntity(m_animationEntityId)->GetName().c_str());
+
+                SetupAnimationConnections(m_animationEntityId);
+
+                m_animationChildFound = true;
+                return;
+            }
+        }
+    }
+
+    void NetworkFPC::SetupAnimationConnections(const AZ::EntityId& targetId)
+    {
+        if (!GetEnableNetworkAnimation() || !targetId.IsValid())
+        {
+            return;
+        }
+
+        // If changing IDs, disconnect from old
+        if (targetId != m_animationEntityId && m_animationEntityId.IsValid())
+        {
+            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect(m_animationEntityId);
+            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect(m_animationEntityId);
+        }
+
+        m_animationEntityId = targetId;
+        m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(m_animationEntityId);
+        m_networkRequests = EMotionFX::AnimGraphComponentNetworkRequestBus::FindFirstHandler(m_animationEntityId);
+        m_animationGraph = EMotionFX::Integration::AnimGraphComponentRequestBus::FindFirstHandler(m_animationEntityId);
+
+        EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusConnect(m_animationEntityId);
+        EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusConnect(m_animationEntityId);
+    }
+
     void NetworkFPC::OnPreRender(float deltaTime)
     {
+        if (!m_animationChildFound)
+        {
+            DetectAnimationChild();
+        }
+
         if (!GetEnableNetworkAnimation() || m_animationGraph == nullptr || m_networkRequests == nullptr)
         {
             return;
@@ -225,7 +279,7 @@ namespace FirstPersonController
 
     void NetworkFPC::OnActorInstanceCreated([[maybe_unused]] EMotionFX::ActorInstance* actorInstance)
     {
-        m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(GetEntityId());
+        m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(m_animationEntityId);
     }
 
     void NetworkFPC::OnActorInstanceDestroyed([[maybe_unused]] EMotionFX::ActorInstance* actorInstance)
