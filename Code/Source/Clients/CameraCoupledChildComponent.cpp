@@ -151,7 +151,7 @@ namespace FirstPersonController
             GetEntity()->GetTransform()->SetWorldTranslation(newChildTranslation);
     }
 
-    void CameraCoupledChildComponent::ProcessInput(const float& deltaTime)
+    void CameraCoupledChildComponent::ProcessInput([[maybe_unused]] const float& deltaTime)
     {
         bool networkFPCEnabled = true;
         FirstPersonControllerComponentRequestBus::BroadcastResult(
