@@ -119,12 +119,12 @@ namespace FirstPersonController
             {
                 m_animationEntityId = childId;
 
-                auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
-                AZ_Printf(
-                    "NetworkFPC::OnPreRender",
-                    "Animation child EntityId = %llu, Animation child entity name = %s",
-                    static_cast<AZ::u64>(m_animationEntityId),
-                    ca->FindEntity(m_animationEntityId)->GetName().c_str());
+                // auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+                // AZ_Printf(
+                //     "NetworkFPC::OnPreRender",
+                //     "Animation child EntityId = %llu, Animation child entity name = %s",
+                //     static_cast<AZ::u64>(m_animationEntityId),
+                //     ca->FindEntity(m_animationEntityId)->GetName().c_str());
 
                 SetupAnimationConnections(m_animationEntityId);
 
