@@ -612,15 +612,19 @@ namespace FirstPersonController
             effectiveVerticalAmplitude *= m_sprintVerticalAmplitudeScale;
         }
 
-        // Increment m_walkingTime only when walking, reset otherwise.
+        // When the frequency changes, adjust the input to the sine functions to retain continuity
+        if (m_prevEffectiveFrequency != effectiveFrequency)
+        {
+            m_walkingTime *= m_prevEffectiveFrequency / effectiveFrequency;
+            m_prevEffectiveFrequency = effectiveFrequency;
+        }
+
+        // Increment m_walkingTime only when walking, reset otherwise
         if (m_isWalking)
-        {
             m_walkingTime += deltaTime;
-        }
         else
-        {
             m_walkingTime = 0.f;
-        }
+
         // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce).
         const float horizontalOffset = -sinf(m_walkingTime * effectiveFrequency) * effectiveHorizontalAmplitude;
         const float verticalOffset = -sinf(m_walkingTime * effectiveFrequency * 2.f) * effectiveVerticalAmplitude;

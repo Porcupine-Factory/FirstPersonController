@@ -149,6 +149,7 @@ namespace FirstPersonController
         bool m_isWalking = false;
         bool m_needsHeadbobFallback = false;
         float m_headbobFrequency = 6.15f;
+        float m_prevEffectiveFrequency = 6.15f;
         float m_headbobHorizontalAmplitude = 0.01f;
         AZ::Vector3 m_cameraTranslationWithoutHeadbob = AZ::Vector3::CreateZero();
         float m_headbobVerticalAmplitude = 0.03f;
