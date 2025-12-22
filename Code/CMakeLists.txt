@@ -57,7 +57,7 @@ ly_add_target(
             Gem::Atom_RPI.Public
             Gem::MultiplayerPhysX5.Client
             # For autogen components
-            PRIVATE
+        PRIVATE
             Gem::MultiplayerPhysX5.Client.Static
     AUTOGEN_RULES
         *.AutoComponent.xml,AutoComponent_Header.jinja,$path/$fileprefix.AutoComponent.h
