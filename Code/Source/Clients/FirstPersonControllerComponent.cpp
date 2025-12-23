@@ -1609,7 +1609,8 @@ namespace FirstPersonController
         if (!((m_isHost && server) || (m_isServer && !server)))
         {
             FirstPersonControllerComponentNotificationBus::Broadcast(
-                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickStart, deltaTime * m_physicsTimestepScaleFactor);
+                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickStart,
+                (deltaTime * m_physicsTimestepScaleFactor + m_prevNetworkFPCDeltaTime) / 2.f);
             if (!m_networkFPCEnabled)
                 NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
@@ -1624,14 +1625,16 @@ namespace FirstPersonController
             CaptureCharacterEyeTranslation();
         if (!((m_isHost && server) || (m_isServer && !server)))
             FirstPersonControllerComponentNotificationBus::Broadcast(
-                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickFinish, deltaTime * m_physicsTimestepScaleFactor);
-        m_prevNetworkFPCDeltaTime = deltaTime;
+                &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickFinish,
+                (deltaTime * m_physicsTimestepScaleFactor + m_prevNetworkFPCDeltaTime) / 2.f);
+        m_prevNetworkFPCDeltaTime = deltaTime * m_physicsTimestepScaleFactor;
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {
         FirstPersonControllerComponentNotificationBus::Broadcast(
-            &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart, physicsTimestep * m_physicsTimestepScaleFactor);
+            &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart,
+            (physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f);
         ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
     }
 
@@ -1641,7 +1644,7 @@ namespace FirstPersonController
             CaptureCharacterEyeTranslation();
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepFinish,
-            physicsTimestep * m_physicsTimestepScaleFactor);
+            (physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f);
         m_prevTimestep = physicsTimestep * m_physicsTimestepScaleFactor;
     }
 
