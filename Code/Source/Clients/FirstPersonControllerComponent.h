@@ -546,7 +546,7 @@ namespace FirstPersonController
         void GetNetworkFPCProperties(const AZ::u8& tickTimestepNetwork);
 
         // Method for getting a pointer to an entity
-        AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
+        AZ::Entity* GetEntityPtr(AZ::EntityId entityId) const;
 
         // These getter methods are not exposed to the request bus, they're used for the visibility attribute in the editor
         bool GetCameraNotSmoothFollow() const;

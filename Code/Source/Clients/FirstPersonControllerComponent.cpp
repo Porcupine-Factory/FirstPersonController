@@ -1671,10 +1671,10 @@ namespace FirstPersonController
         }
     }
 
-    AZ::Entity* FirstPersonControllerComponent::GetEntityPtr(AZ::EntityId pointer) const
+    AZ::Entity* FirstPersonControllerComponent::GetEntityPtr(AZ::EntityId entityId) const
     {
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
-        return ca ? ca->FindEntity(pointer) : nullptr;
+        return ca ? ca->FindEntity(entityId) : nullptr;
     }
 
     void FirstPersonControllerComponent::InitializeCameraTranslation()
