@@ -55,10 +55,8 @@ ly_add_target(
             Gem::EMotionFXStaticLib
             Gem::PhysX5.Static
             Gem::Atom_RPI.Public
-            Gem::MultiplayerPhysX5.Client
             # For autogen components
-        PRIVATE
-            Gem::MultiplayerPhysX5.Client.Static
+            Gem::MultiplayerPhysX5.Unified.Static
     AUTOGEN_RULES
         *.AutoComponent.xml,AutoComponent_Header.jinja,$path/$fileprefix.AutoComponent.h
         *.AutoComponent.xml,AutoComponent_Source.jinja,$path/$fileprefix.AutoComponent.cpp

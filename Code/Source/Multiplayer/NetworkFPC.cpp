@@ -552,8 +552,11 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
         GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
 
-        GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
+        const AZ::Vector3 newTranslation = GetNetworkCharacterComponentController()->TryMoveWithVelocity(
+            playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
         m_prevDeltaTime = deltaTime;
+        SetCurrentTransform(
+            AZ::Transform::CreateFromQuaternionAndTranslation(GetEntity()->GetTransform()->GetWorldRotationQuaternion(), newTranslation));
 
         NetworkFPCControllerNotificationBus::Broadcast(
             &NetworkFPCControllerNotificationBus::Events::OnNetworkTickFinish,
