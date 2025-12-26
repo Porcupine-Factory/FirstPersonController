@@ -3938,7 +3938,8 @@ namespace FirstPersonController
     {
         if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
         {
-            m_sprintHeldDuration = m_networkFPCControllerObject->GetSprintHeldDuration();
+            m_staminaPercentage = m_networkFPCControllerObject->GetStaminaPercentage();
+            m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
@@ -3948,7 +3949,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SetNetworkFPCProperties() const
     {
-        m_networkFPCControllerObject->SetSprintHeldDuration(m_sprintHeldDuration);
+        m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
         m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
         m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
         m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
