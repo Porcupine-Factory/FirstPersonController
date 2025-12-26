@@ -264,11 +264,10 @@ namespace FirstPersonController
                         "follows its parent transform.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(
-                        0,
+                        nullptr,
                         &FirstPersonControllerComponent::m_cameraEntityId,
                         "Camera Entity",
                         "The camera entity to use for the first-person view.")
-                    ->Attribute(AZ::Edit::Attributes::ReadOnly, &FirstPersonControllerComponent::GetCameraNotSmoothFollow)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->DataElement(
                         nullptr,
@@ -719,6 +718,8 @@ namespace FirstPersonController
                 ->Event("Get Active Camera EntityId", &FirstPersonControllerComponentRequests::GetActiveCameraEntityId)
                 ->Event("Get Active Camera Entity Pointer", &FirstPersonControllerComponentRequests::GetActiveCameraEntityPtr)
                 ->Event("Set Camera Entity", &FirstPersonControllerComponentRequests::SetCameraEntity)
+                ->Event("Get Make Camera Child Of Character", &FirstPersonControllerComponentRequests::GetMakeCameraChildOfCharacter)
+                ->Event("Set Make Camera Child Of Character", &FirstPersonControllerComponentRequests::SetMakeCameraChildOfCharacter)
                 ->Event("Get Is Camera Child Of Character", &FirstPersonControllerComponentRequests::IsCameraChildOfCharacter)
                 ->Event("Get Camera Smooth Follow", &FirstPersonControllerComponentRequests::GetCameraSmoothFollow)
                 ->Event("Set Camera Smooth Follow", &FirstPersonControllerComponentRequests::SetCameraSmoothFollow)
@@ -1654,6 +1655,7 @@ namespace FirstPersonController
         {
             m_cameraEntityId = cameraId;
             m_activeCameraEntity = GetEntityPtr(cameraId);
+
             if (m_activeCameraEntity)
             {
                 InitializeCameraTranslation();
@@ -1672,6 +1674,8 @@ namespace FirstPersonController
                 m_cameraEntityId = AZ::EntityId();
             }
         }
+        if (m_makeCameraChildOfCharacter && !IsCameraChildOfCharacter())
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetParent, GetEntityId());
     }
 
     AZ::Entity* FirstPersonControllerComponent::GetEntityPtr(AZ::EntityId entityId) const
@@ -4209,18 +4213,17 @@ namespace FirstPersonController
                     m_cameraEntityId = AZ::EntityId();
                 }
             }
-            // Update m_cameraParentEntityId to reflect the new camera's current parent
-            if (m_activeCameraEntity)
-            {
-                AZ::EntityId parentId;
-                AZ::TransformBus::EventResult(parentId, m_cameraEntityId, &AZ::TransformBus::Events::GetParentId);
-                m_cameraParentEntityId = parentId;
-            }
-            else
-            {
-                m_cameraParentEntityId = AZ::EntityId();
-            }
         }
+    }
+    bool FirstPersonControllerComponent::GetMakeCameraChildOfCharacter() const
+    {
+        return m_makeCameraChildOfCharacter;
+    }
+    void FirstPersonControllerComponent::SetMakeCameraChildOfCharacter(const bool& new_makeCameraChildOfCharacter)
+    {
+        m_makeCameraChildOfCharacter = new_makeCameraChildOfCharacter;
+        if (m_makeCameraChildOfCharacter && !IsCameraChildOfCharacter())
+            AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetParent, GetEntityId());
     }
     bool FirstPersonControllerComponent::GetCameraSmoothFollow() const
     {

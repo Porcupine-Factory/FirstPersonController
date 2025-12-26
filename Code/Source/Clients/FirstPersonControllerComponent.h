@@ -86,6 +86,8 @@ namespace FirstPersonController
         AZ::EntityId GetActiveCameraEntityId() const override;
         AZ::Entity* GetActiveCameraEntityPtr() const override;
         void SetCameraEntity(const AZ::EntityId new_cameraEntityId) override;
+        bool GetMakeCameraChildOfCharacter() const override;
+        void SetMakeCameraChildOfCharacter(const bool& new_makeCameraChildOfCharacter) override;
         bool IsCameraChildOfCharacter() override;
         bool GetCameraSmoothFollow() const override;
         void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow) override;
@@ -514,8 +516,8 @@ namespace FirstPersonController
         AZ::Entity* m_activeCameraEntity = nullptr;
         AZ::EntityId m_cameraEntityId;
 
-        // User-specified camera parent
-        AZ::EntityId m_cameraParentEntityId;
+        // Whether to force the camera to be a child of the character entity
+        bool m_makeCameraChildOfCharacter = false;
 
         // Child EntityIds
         bool m_obtainedChildIds = false;
