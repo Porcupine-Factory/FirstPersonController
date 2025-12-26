@@ -3936,10 +3936,16 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::GetNetworkFPCProperties(const AZ::u8& tickTimestepNetwork)
     {
-        if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
+        if (m_networkFPCControllerObject != nullptr)
         {
+            m_speed = m_networkFPCControllerObject->GetTopWalkSpeed();
             m_staminaPercentage = m_networkFPCControllerObject->GetStaminaPercentage();
             m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
+            m_sprintRegenRate = m_networkFPCControllerObject->GetSprintRegenRate();
+            m_sprintMaxTime = m_networkFPCControllerObject->GetSprintMaxTime();
+            m_sprintTotalCooldownTime = m_networkFPCControllerObject->GetSprintCooldownTime();
+            m_sprintCooldownTimer = m_networkFPCControllerObject->GetSprintCooldownTimer();
+            m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
@@ -3949,12 +3955,18 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::SetNetworkFPCProperties() const
     {
+        m_networkFPCControllerObject->SetTopWalkSpeed(m_speed);
         m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
+        m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
+        m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
+        m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
+        m_networkFPCControllerObject->SetSprintCooldownTimer(m_sprintCooldownTimer);
+        m_networkFPCControllerObject->SetJumpInitialVelocity(m_jumpInitialVelocity);
         m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
-        m_networkFPCControllerObject->SetIsCrouchingDown(GetCrouchingDownMove());
-        m_networkFPCControllerObject->SetIsStandingUp(GetStandingUpMove());
-        m_networkFPCControllerObject->SetIsCrouching(GetCrouching());
-        m_networkFPCControllerObject->SetIsJumpStarting(GetUngroundedDueToJump());
+        m_networkFPCControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
+        m_networkFPCControllerObject->SetIsStandingUpMove(m_standingUpMove);
+        m_networkFPCControllerObject->SetIsCrouching(m_crouching);
+        m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump);
         m_networkFPCControllerObject->SetIsFalling(!m_groundClose);
         m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
         m_networkFPCControllerObject->SetIsGrounded(m_grounded);
@@ -3967,8 +3979,11 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonControllerComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
-        // Get the various NetworkFPC properties, synchronizing with the server
-        GetNetworkFPCProperties(tickTimestepNetwork);
+        if (tickTimestepNetwork == 2)
+        {
+            // Get the various NetworkFPC properties, synchronizing with the server
+            GetNetworkFPCProperties(tickTimestepNetwork);
+        }
 
         // Only interpolate the camera to the character on frame ticks
         if (tickTimestepNetwork == 0)
@@ -3991,7 +4006,7 @@ namespace FirstPersonController
         // Sample the current velocity during physics timesteps when NetworkFPC is enabled
         // and retain this value for use in CheckCharacterMovementObstructed(...).
         // This is done because GetVelocity will return zero during network ticks.
-        if (tickTimestepNetwork == 1 && m_networkFPCEnabled)
+        if (m_networkFPCEnabled && tickTimestepNetwork == 1)
         {
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
             if (!m_currentVelocity.IsZero())
@@ -4055,10 +4070,10 @@ namespace FirstPersonController
                 SetNetworkFPCProperties();
                 m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
             }
-            else if (!m_networkFPCEnabled && m_addVelocityForTimestepVsTick)
+            else if (m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
-            else if (!m_networkFPCEnabled)
+            else
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
         }

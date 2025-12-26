@@ -228,49 +228,49 @@ namespace FirstPersonController
 
         if (m_sprintParamId != InvalidParamIndex)
         {
-            bool isSprinting = GetIsSprinting();
+            const bool isSprinting = GetIsSprinting();
             m_animationGraph->SetParameterBool(m_sprintParamId, isSprinting);
         }
 
         if (m_standToCrouchParamId != InvalidParamIndex)
         {
-            bool isCrouchingDown = GetIsCrouchingDown();
-            m_animationGraph->SetParameterBool(m_standToCrouchParamId, isCrouchingDown);
+            const bool isCrouchingDownMove = GetIsCrouchingDownMove();
+            m_animationGraph->SetParameterBool(m_standToCrouchParamId, isCrouchingDownMove);
         }
 
         if (m_crouchToStandParamId != InvalidParamIndex)
         {
-            bool isStandingUp = GetIsStandingUp();
-            m_animationGraph->SetParameterBool(m_crouchToStandParamId, isStandingUp);
+            const bool isStandingUpMove = GetIsStandingUpMove();
+            m_animationGraph->SetParameterBool(m_crouchToStandParamId, isStandingUpMove);
         }
 
         if (m_crouchParamId != InvalidParamIndex)
         {
-            bool isCrouching = GetIsCrouching();
+            const bool isCrouching = GetIsCrouching();
             m_animationGraph->SetParameterBool(m_crouchParamId, isCrouching);
         }
 
         if (m_jumpStartParamId != InvalidParamIndex)
         {
-            bool isJumpStarting = GetIsJumpStarting();
+            const bool isJumpStarting = GetIsJumpStarting();
             m_animationGraph->SetParameterBool(m_jumpStartParamId, isJumpStarting);
         }
 
         if (m_fallParamId != InvalidParamIndex)
         {
-            bool isFalling = GetIsFalling();
+            const bool isFalling = GetIsFalling();
             m_animationGraph->SetParameterBool(m_fallParamId, isFalling);
         }
 
         if (m_jumpLandParamId != InvalidParamIndex)
         {
-            bool isJumpLanding = GetIsJumpLanding();
+            const bool isJumpLanding = GetIsJumpLanding();
             m_animationGraph->SetParameterBool(m_jumpLandParamId, isJumpLanding);
         }
 
         if (m_groundedParamId != InvalidParamIndex)
         {
-            bool isGrounded = GetIsGrounded();
+            const bool isGrounded = GetIsGrounded();
             m_animationGraph->SetParameterBool(m_groundedParamId, isGrounded);
         }
 
