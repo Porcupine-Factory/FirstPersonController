@@ -82,8 +82,5 @@ namespace FirstPersonController
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
-
-        // Called on each tick
-        void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
     };
 } // namespace FirstPersonController
