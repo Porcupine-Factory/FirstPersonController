@@ -51,10 +51,9 @@ namespace FirstPersonController
         void OnActivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
         void OnDeactivate(Multiplayer::EntityIsMigrating entityIsMigrating) override;
 
-    protected:
+    private:
         void OnPreRender(float deltaTime);
 
-    private:
         // EnableAnimationNetworkFPC Changed Event
         AZ::Event<bool>::Handler m_enableNetworkAnimationChangedEvent;
         void OnEnableNetworkAnimationChanged(const bool& enable);
