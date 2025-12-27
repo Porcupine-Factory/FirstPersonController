@@ -62,7 +62,6 @@ ly_add_target(
         *.AutoComponent.xml,AutoComponent_Source.jinja,$path/$fileprefix.AutoComponent.cpp
         *.AutoComponent.xml,AutoComponentTypes_Header.jinja,$path/AutoComponentTypes.h
         *.AutoComponent.xml,AutoComponentTypes_Source.jinja,$path/AutoComponentTypes.cpp
-
 )
 
 # Here add ${gem_name} target, it depends on the Private Object library and Public API interface
