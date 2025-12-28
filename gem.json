@@ -21,7 +21,7 @@
         "FirstPersonController"
     ],
     "icon_path": "preview.png",
-    "requirements": "This requires the PhysX and Starting Point Input gems.",
+    "requirements": "This requires the PhysX, Starting Point Input, and MultiplayerPhysX5 gems.",
     "documentation_url": "https://github.com/Porcupine-Factory/FirstPersonController/wiki",
     "dependencies": [
         "PhysX5",
