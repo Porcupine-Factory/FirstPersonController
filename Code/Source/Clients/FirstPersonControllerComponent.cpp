@@ -5711,6 +5711,8 @@ namespace FirstPersonController
     {
         m_sprintMaxTime = new_sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
     }
     float FirstPersonControllerComponent::GetSprintHeldTime() const
     {
@@ -5734,6 +5736,8 @@ namespace FirstPersonController
             m_staminaDecreasing = false;
             m_staminaIncreasing = true;
         }
+        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
     }
     float FirstPersonControllerComponent::GetSprintRegenRate() const
     {
@@ -5767,6 +5771,8 @@ namespace FirstPersonController
             m_staminaDecreasing = false;
             m_staminaIncreasing = true;
         }
+        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
     }
     bool FirstPersonControllerComponent::GetStaminaIncreasing() const
     {
@@ -5805,6 +5811,9 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintTotalCooldownTime(const float& new_sprintTotalCooldownTime)
     {
         m_sprintTotalCooldownTime = new_sprintTotalCooldownTime;
+        m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
+        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
     }
     float FirstPersonControllerComponent::GetSprintCooldownTimer() const
     {
