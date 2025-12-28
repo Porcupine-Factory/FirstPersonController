@@ -128,7 +128,6 @@ namespace FirstPersonController
 
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
-        bool GetIsNetEntityAutonomous() const override;
         bool GetEnabled() const override;
         void SetEnabled(const bool& new_enabled) override;
 

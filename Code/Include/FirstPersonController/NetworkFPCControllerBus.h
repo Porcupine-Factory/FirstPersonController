@@ -16,7 +16,6 @@ namespace FirstPersonController
         ~NetworkFPCControllerRequests() override = default;
 
         virtual void TryAddVelocityForNetworkTick(const AZ::Vector3&, const float&) = 0;
-        virtual bool GetIsNetEntityAutonomous() const = 0;
         virtual bool GetEnabled() const = 0;
         virtual void SetEnabled(const bool&) = 0;
     };

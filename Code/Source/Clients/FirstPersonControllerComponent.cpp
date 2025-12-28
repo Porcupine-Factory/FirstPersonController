@@ -3934,7 +3934,7 @@ namespace FirstPersonController
         return tiltedXY;
     }
 
-    void FirstPersonControllerComponent::GetNetworkFPCProperties(const AZ::u8& tickTimestepNetwork)
+    void FirstPersonControllerComponent::GetNetworkFPCProperties()
     {
         if (m_networkFPCControllerObject != nullptr)
         {
@@ -3982,7 +3982,7 @@ namespace FirstPersonController
         if (tickTimestepNetwork == 2)
         {
             // Get the various NetworkFPC properties, synchronizing with the server
-            GetNetworkFPCProperties(tickTimestepNetwork);
+            GetNetworkFPCProperties();
         }
 
         // Only interpolate the camera to the character on frame ticks

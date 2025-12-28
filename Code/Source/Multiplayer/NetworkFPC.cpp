@@ -602,10 +602,6 @@ namespace FirstPersonController
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
     }
-    bool NetworkFPCController::GetIsNetEntityAutonomous() const
-    {
-        return IsNetEntityRoleAutonomous();
-    }
     bool NetworkFPCController::GetEnabled() const
     {
         return !m_disabled;

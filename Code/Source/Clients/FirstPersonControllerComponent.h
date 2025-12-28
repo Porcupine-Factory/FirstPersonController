@@ -544,8 +544,8 @@ namespace FirstPersonController
         void CheckCharacterMovementObstructed();
         void ProcessLinearImpulse(const float& deltaTime);
         void ProcessCharacterHits(const float& deltaTime);
+        void GetNetworkFPCProperties();
         void SetNetworkFPCProperties() const;
-        void GetNetworkFPCProperties(const AZ::u8& tickTimestepNetwork);
 
         // Method for getting a pointer to an entity
         AZ::Entity* GetEntityPtr(AZ::EntityId entityId) const;
@@ -593,7 +593,7 @@ namespace FirstPersonController
         // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
         float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;
-        float m_prevNetworkFPCDeltaTime = 1.f / 60.f;
+        float m_prevNetworkFPCDeltaTime = 0.033f;
 
         // Provides the functionality when AddVelocityForPhysicsTimestep is used
         void OnSceneSimulationStart(float physicsTimestep);
