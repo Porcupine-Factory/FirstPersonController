@@ -92,7 +92,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkProperty Type="float" Name="TopWalkSpeed"
                      Init="5.f" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
-                     IsPublic="true" Container="Object" ExposeToEditor="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines maximum walking speed of the character."/>
     <NetworkProperty Type="float" Name="StaminaPercentage"
@@ -110,13 +110,13 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkProperty Type="float" Name="SprintMaxTime"
                      Init="120.f" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
-                     IsPublic="true" Container="Object" ExposeToEditor="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The maximum consecutive sprinting time before beginning Sprint Cooldown. The underlying quantity of Stamina is set by this number."/>
     <NetworkProperty Type="float" Name="SprintCooldownTime"
                      Init="1.f" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
-                     IsPublic="true" Container="Object" ExposeToEditor="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The time required to wait before sprinting or using Stamina once Sprint Max Time has been reached or Stamina hits 0%."/>
     <NetworkProperty Type="float" Name="SprintCooldownTimer"
@@ -128,7 +128,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkProperty Type="float" Name="JumpInitialVelocity"
                      Init="6.f" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
-                     IsPublic="true" Container="Object" ExposeToEditor="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The velocity used when initiating the jump."/>
     <NetworkProperty Type="bool" Name="EnableNetworkAnimation"

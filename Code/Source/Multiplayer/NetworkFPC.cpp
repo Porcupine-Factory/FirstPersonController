@@ -485,6 +485,16 @@ namespace FirstPersonController
         if (m_disabled)
             return;
 
+        // Initialize various network properties to the initial values in the First Person Controller component
+        if (m_init)
+        {
+            m_init = false;
+            SetTopWalkSpeed(m_firstPersonControllerObject->m_speed);
+            SetSprintMaxTime(m_firstPersonControllerObject->m_sprintMaxTime);
+            SetSprintCooldownTime(m_firstPersonControllerObject->m_sprintTotalCooldownTime);
+            SetJumpInitialVelocity(m_firstPersonControllerObject->m_jumpInitialVelocity);
+        }
+
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
         {
