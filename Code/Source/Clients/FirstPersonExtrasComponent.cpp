@@ -8,6 +8,7 @@
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
 #include <AzCore/Serialization/EditContext.h>
+#include <AzFramework/Components/CameraBus.h>
 
 namespace FirstPersonController
 {
@@ -32,6 +33,13 @@ namespace FirstPersonController
                 ->Field("Jump Delta Angle Speed Factor", &FirstPersonExtrasComponent::m_deltaAngleFactorJump)
                 ->Field("Land Delta Angle Speed Factor", &FirstPersonExtrasComponent::m_deltaAngleFactorLand)
                 ->Field("Complete Head Angle Land Time", &FirstPersonExtrasComponent::m_completeHeadLandTime)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+
+                // Sprint FoV Group
+                ->Field("Sprint FoV", &FirstPersonExtrasComponent::m_sprintFoVEnabled)
+                ->Field("FoV Increase When Sprinting", &FirstPersonExtrasComponent::m_sprintFoVDelta)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
+                ->Field("Sprint FoV Lerp Time", &FirstPersonExtrasComponent::m_sprintFoVLerpTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
 
                 // Headbob group
@@ -111,6 +119,22 @@ namespace FirstPersonController
                         "The time it takes to be in the air for the entire Head Angle Land to apply, "
                         "any time in the air less than this will cause the angle to be proportional to the air time divided by this value.")
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
+
+                    // Sprint FoV group
+                    ->GroupElementToggle("Sprint FoV", &FirstPersonExtrasComponent::m_sprintFoVEnabled)
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_sprintFoVDelta,
+                        "FoV Increase When Sprinting",
+                        "The increase in the camera's field of view while sprinting.")
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_sprintFoVLerpTime,
+                        "Sprint FoV Lerp Time",
+                        "The time it takes to get to the maximum field of view when sprinting, and the time it takes to get back.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetSprintFoVEnabled)
 
                     ->GroupElementToggle("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -217,6 +241,14 @@ namespace FirstPersonController
                 ->Event("Set Delta Angle Factor Land", &FirstPersonExtrasComponentRequests::SetDeltaAngleFactorLand)
                 ->Event("Get Complete Head Land Time", &FirstPersonExtrasComponentRequests::GetCompleteHeadLandTime)
                 ->Event("Set Complete Head Land Time", &FirstPersonExtrasComponentRequests::SetCompleteHeadLandTime)
+                ->Event("Get Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::GetSprintFoVEnabled)
+                ->Event("Set Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::SetSprintFoVEnabled)
+                ->Event("Get Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::GetSprintFoVLerpTime)
+                ->Event("Get Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::SetSprintFoVLerpTime)
+                ->Event("Get Sprinting FoV", &FirstPersonExtrasComponentRequests::GetSprintingFoV)
+                ->Event("Set Sprinting FoV", &FirstPersonExtrasComponentRequests::SetSprintingFoV)
+                ->Event("Get Walking FoV", &FirstPersonExtrasComponentRequests::GetWalkingFoV)
+                ->Event("Set Walking FoV", &FirstPersonExtrasComponentRequests::SetWalkingFoV)
                 ->Event("Get Headbob Enabled", &FirstPersonExtrasComponentRequests::GetHeadbobEnabled)
                 ->Event("Set Headbob Enabled", &FirstPersonExtrasComponentRequests::SetHeadbobEnabled)
                 ->Event("Get Headbob Entity Id", &FirstPersonExtrasComponentRequests::GetHeadbobEntityId)
@@ -259,10 +291,10 @@ namespace FirstPersonController
         if (m_headbobEnabled)
         {
             // Setup Headbob entity
-            if (!m_headbobEntityId.IsValid())
+            if (!m_cameraEntityId.IsValid())
             {
-                m_headbobEntityPtr = GetActiveCamera();
-                if (m_headbobEntityPtr == nullptr)
+                m_cameraEntityPtr = GetActiveCamera();
+                if (m_cameraEntityPtr == nullptr)
                 {
                     m_needsHeadbobFallback = true;
                     Camera::CameraNotificationBus::Handler::BusConnect();
@@ -270,13 +302,13 @@ namespace FirstPersonController
             }
             else
             {
-                AZ::EntityBus::Handler::BusConnect(m_headbobEntityId);
+                AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
             }
 
             // Initialize original translation and offsets if pointer is set
-            if (m_headbobEntityPtr)
+            if (m_cameraEntityPtr)
             {
-                m_originalCameraTranslation = m_headbobEntityPtr->GetTransform()->GetLocalTranslation();
+                m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
                 m_previousOffset = AZ::Vector3::CreateZero();
             }
         }
@@ -299,21 +331,50 @@ namespace FirstPersonController
             }
             AZ::EntityBus::Handler::BusDisconnect();
         }
-        m_headbobEntityPtr = nullptr;
+        m_cameraEntityPtr = nullptr;
+    }
+
+    void FirstPersonExtrasComponent::OnCameraAdded(const AZ::EntityId& cameraId)
+    {
+        if (!m_cameraEntityId.IsValid())
+        {
+            m_cameraEntityId = cameraId;
+            m_cameraEntityPtr = GetEntityPtr(cameraId);
+
+            if (m_cameraEntityPtr)
+            {
+                Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
+                // AZ_Printf("First Person Extras Component", "Default camera %s assigned and set as active view.",
+                //     m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() :
+                //     m_activeCameraEntity->GetName().c_str());
+            }
+            else
+            {
+                AZ_Warning(
+                    "FirstPersonExtrasComponent",
+                    false,
+                    "Default camera ID %s from CameraNotificationBus is invalid.",
+                    cameraId.ToString().c_str());
+                m_cameraEntityId = AZ::EntityId();
+            }
+        }
+        // Whenevera a camera is added, use its FoV as the walking FoV value
+        Camera::CameraRequestBus::EventResult(m_walkFoV, m_cameraEntityId, &Camera::CameraComponentRequests::GetFovDegrees);
+        m_sprintFoV = m_walkFoV + m_sprintFoVDelta;
     }
 
     void FirstPersonExtrasComponent::OnActiveViewChanged(const AZ::EntityId& activeEntityId)
     {
         if (m_needsHeadbobFallback)
         {
-            m_headbobEntityPtr = GetEntityPtr(activeEntityId);
-            if (m_headbobEntityPtr != nullptr)
+            m_cameraEntityPtr = GetEntityPtr(activeEntityId);
+            if (m_cameraEntityPtr != nullptr)
             {
-                m_headbobEntityId = activeEntityId;
+                m_cameraEntityId = activeEntityId;
                 Camera::CameraNotificationBus::Handler::BusDisconnect();
                 m_needsHeadbobFallback = false;
 
-                m_originalCameraTranslation = m_headbobEntityPtr->GetTransform()->GetLocalTranslation();
+                m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
                 m_previousOffset = AZ::Vector3::CreateZero();
             }
         }
@@ -332,13 +393,13 @@ namespace FirstPersonController
             m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
         }
 
-        if (entityId == m_headbobEntityId)
+        if (entityId == m_cameraEntityId)
         {
-            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
+            m_cameraEntityPtr = GetEntityPtr(m_cameraEntityId);
             AZ::EntityBus::Handler::BusDisconnect();
-            if (m_headbobEntityPtr)
+            if (m_cameraEntityPtr)
             {
-                m_originalCameraTranslation = m_headbobEntityPtr->GetTransform()->GetLocalTranslation();
+                m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
                 m_previousOffset = AZ::Vector3::CreateZero();
             }
         }
@@ -529,6 +590,37 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
+    void FirstPersonExtrasComponent::PerformSprintFoV(const float& deltaTime)
+    {
+        if (!m_sprintFoVEnabled)
+            return;
+
+        // Obtain whether the character is sprinting and the speed to determine the lerped FoV
+        bool sprinting = false;
+        FirstPersonControllerComponentRequestBus::EventResult(
+            sprinting, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetSprinting);
+        const float currentSpeed = m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
+        const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
+        const float walkSpeed = m_firstPersonControllerObject->m_speed;
+        // Scale the FoV based on the current speed, assuming forward is the fastest direction
+        if (m_firstPersonControllerObject != nullptr && sprinting &&
+            (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
+        {
+            m_sprintFoVTimeAccumulator += deltaTime;
+            if (m_sprintFoVTimeAccumulator > m_sprintFoVLerpTime)
+                m_sprintFoVTimeAccumulator = m_sprintFoVLerpTime;
+        }
+        else
+        {
+            m_sprintFoVTimeAccumulator -= deltaTime;
+            if (m_sprintFoVTimeAccumulator < 0.f)
+                m_sprintFoVTimeAccumulator = 0.f;
+        }
+        // Lerp the FoV and apply it
+        const float newCameraFoV = AZ::Lerp(m_walkFoV, m_sprintFoV, m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime);
+        Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraComponentRequests::SetFovDegrees, newCameraFoV);
+    }
+
     void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float& deltaTime)
     {
         if (!m_jumpHeadTiltEnabled)
@@ -635,17 +727,17 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::UpdateHeadbob(const float& deltaTime)
     {
-        if (!m_headbobEnabled || !m_headbobEntityPtr)
+        if (!m_headbobEnabled || !m_cameraEntityPtr)
             return;
 
         // Compute new headbob offset
         m_headbobOffset = CalculateHeadbobOffset(deltaTime);
 
         // Bail if no entity
-        if (m_headbobEntityPtr == nullptr)
+        if (m_cameraEntityPtr == nullptr)
             return;
 
-        auto* headbobEntityTransform = m_headbobEntityPtr->GetTransform();
+        auto* headbobEntityTransform = m_cameraEntityPtr->GetTransform();
 
         // Get the "clean" local translation
         m_cameraTranslationWithoutHeadbob = headbobEntityTransform->GetLocalTM().GetTranslation();
@@ -673,6 +765,8 @@ namespace FirstPersonController
     {
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
+
+        PerformSprintFoV(deltaTime);
 
         if (tickTimestepNetwork == 0)
         {
@@ -873,6 +967,39 @@ namespace FirstPersonController
     {
         m_completeHeadLandTime = new_completeHeadLandTime;
     }
+    bool FirstPersonExtrasComponent::GetSprintFoVEnabled() const
+    {
+        return m_sprintFoVEnabled;
+    }
+    void FirstPersonExtrasComponent::SetSprintFoVEnabled(const bool& new_sprintFoVEnabled)
+    {
+        m_sprintFoVEnabled = new_sprintFoVEnabled;
+    }
+    float FirstPersonExtrasComponent::GetSprintFoVLerpTime() const
+    {
+        return m_sprintFoVLerpTime;
+    }
+    void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float& new_sprintFoVLerpTime)
+    {
+        m_sprintFoVLerpTime = new_sprintFoVLerpTime;
+    }
+    float FirstPersonExtrasComponent::GetSprintingFoV() const
+    {
+        return m_sprintFoV;
+    }
+    void FirstPersonExtrasComponent::SetSprintingFoV(const float& new_sprintFoV)
+    {
+        m_sprintFoV = new_sprintFoV;
+        m_sprintFoVDelta = m_sprintFoV - m_walkFoV;
+    }
+    float FirstPersonExtrasComponent::GetWalkingFoV() const
+    {
+        return m_walkFoV;
+    }
+    void FirstPersonExtrasComponent::SetWalkingFoV(const float& new_walkFoV)
+    {
+        m_walkFoV = new_walkFoV;
+    }
     bool FirstPersonExtrasComponent::GetHeadbobEnabled() const
     {
         return m_headbobEnabled;
@@ -883,7 +1010,7 @@ namespace FirstPersonController
     }
     AZ::EntityId FirstPersonExtrasComponent::GetHeadbobEntityId() const
     {
-        return m_headbobEntityId;
+        return m_cameraEntityId;
     }
     void FirstPersonExtrasComponent::SetHeadbobEntityId(const AZ::EntityId& new_headbobEntityId)
     {
@@ -895,13 +1022,13 @@ namespace FirstPersonController
         }
         AZ::EntityBus::Handler::BusDisconnect();
 
-        m_headbobEntityId = new_headbobEntityId;
-        m_headbobEntityPtr = nullptr;
+        m_cameraEntityId = new_headbobEntityId;
+        m_cameraEntityPtr = nullptr;
 
-        if (!m_headbobEntityId.IsValid())
+        if (!m_cameraEntityId.IsValid())
         {
-            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
-            if (m_headbobEntityPtr == nullptr)
+            m_cameraEntityPtr = GetEntityPtr(m_cameraEntityId);
+            if (m_cameraEntityPtr == nullptr)
             {
                 m_needsHeadbobFallback = true;
                 Camera::CameraNotificationBus::Handler::BusConnect();
@@ -909,16 +1036,16 @@ namespace FirstPersonController
         }
         else
         {
-            m_headbobEntityPtr = GetEntityPtr(m_headbobEntityId);
-            if (m_headbobEntityPtr == nullptr)
+            m_cameraEntityPtr = GetEntityPtr(m_cameraEntityId);
+            if (m_cameraEntityPtr == nullptr)
             {
-                AZ::EntityBus::Handler::BusConnect(m_headbobEntityId);
+                AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
             }
         }
         // Reset original translation if new entity
-        if (m_headbobEntityPtr)
+        if (m_cameraEntityPtr)
         {
-            m_originalCameraTranslation = m_headbobEntityPtr->GetTransform()->GetLocalTranslation();
+            m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
             m_previousOffset = AZ::Vector3::CreateZero();
         }
     }

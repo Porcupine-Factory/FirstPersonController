@@ -73,6 +73,14 @@ namespace FirstPersonController
         void SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand) override;
         float GetCompleteHeadLandTime() const override;
         void SetCompleteHeadLandTime(const float& new_completeHeadLandTime) override;
+        bool GetSprintFoVEnabled() const override;
+        void SetSprintFoVEnabled(const bool& new_sprintFoVEnabled) override;
+        float GetSprintFoVLerpTime() const override;
+        void SetSprintFoVLerpTime(const float& new_sprintFoVLerpTime) override;
+        float GetSprintingFoV() const override;
+        void SetSprintingFoV(const float& new_sprintFoV) override;
+        float GetWalkingFoV() const override;
+        void SetWalkingFoV(const float& new_walkFoV) override;
         bool GetHeadbobEnabled() const override;
         void SetHeadbobEnabled(const bool& new_headbobEnabled) override;
         AZ::EntityId GetHeadbobEntityId() const override;
@@ -87,6 +95,8 @@ namespace FirstPersonController
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
 
+        // Assigns a camera to m_cameraEntityId if none is specified
+        void OnCameraAdded(const AZ::EntityId& cameraId);
         AZ::Entity* GetActiveCamera() const;
         AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
 
@@ -102,6 +112,9 @@ namespace FirstPersonController
 
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
+
+        // Change the camera field of view when sprinting
+        void PerformSprintFoV(const float& deltaTime);
 
         // Jump Head Tilt
         void PerformJumpHeadTilt(const float& deltaTime);
@@ -142,6 +155,14 @@ namespace FirstPersonController
         float m_deltaAngleFactorJump = 5.f;
         float m_deltaAngleFactorLand = 8.f;
 
+        // Sprint FoV
+        bool m_sprintFoVEnabled = true;
+        float m_sprintFoVTimeAccumulator = 0.f;
+        float m_sprintFoVLerpTime = 0.5f;
+        float m_sprintFoV = 90.f;
+        float m_sprintFoVDelta = 2.5f;
+        float m_walkFoV = 80.f;
+
         // Headbob
         void UpdateHeadbob(const float& deltaTime);
         AZ::Vector3 CalculateHeadbobOffset(const float& deltaTime);
@@ -167,8 +188,8 @@ namespace FirstPersonController
         AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();
         AZ::Vector3 m_headbobOffset = AZ::Vector3::CreateZero();
         AZ::Vector3 m_previousOffset = AZ::Vector3::CreateZero();
-        AZ::EntityId m_headbobEntityId = AZ::EntityId();
-        AZ::Entity* m_headbobEntityPtr = nullptr;
+        AZ::EntityId m_cameraEntityId = AZ::EntityId();
+        AZ::Entity* m_cameraEntityPtr = nullptr;
 
         // FirstPersonController event value multipliers
         float* m_jumpValue = nullptr;
