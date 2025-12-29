@@ -121,7 +121,7 @@ namespace FirstPersonController
 
                 // auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
                 // AZ_Printf(
-                //     "NetworkFPC::OnPreRender",
+                //     "Network FPC Component",
                 //     "Animation child EntityId = %llu, Animation child entity name = %s",
                 //     static_cast<AZ::u64>(m_animationEntityId),
                 //     ca->FindEntity(m_animationEntityId)->GetName().c_str());
@@ -345,7 +345,7 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                // AZ_Printf("Pressed", it_event.first->ToString().c_str());
+                // AZ_Printf("Network FPC Component", "Pressed: %s", it_event.first->ToString().c_str());
             }
         }
     }
@@ -362,7 +362,7 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 // print the local user ID and the action name CRC
-                // AZ_Printf("Released", it_event.first->ToString().c_str());
+                // AZ_Printf("Network FPC Component", "Released: %s", it_event.first->ToString().c_str());
             }
         }
     }
