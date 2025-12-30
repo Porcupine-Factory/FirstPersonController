@@ -802,7 +802,7 @@ namespace FirstPersonController
         AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
-        float m_jumpHeadSphereCastOffset = 0.1f;
+        float m_jumpHeadSphereCastOffset = 0.2f;
         bool m_onFirstJump = false;
         bool m_onGroundSoonHit = false;
 
