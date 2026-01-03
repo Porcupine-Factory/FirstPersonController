@@ -421,6 +421,8 @@ namespace FirstPersonController
                 m_firstPersonControllerObject->m_isHost = true;
             else
                 m_firstPersonControllerObject->m_isAutonomousClient = true;
+
+            m_firstPersonControllerObject->m_eyeHeight = GetEyeHeight();
         }
     }
 

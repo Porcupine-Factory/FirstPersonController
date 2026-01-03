@@ -64,8 +64,6 @@ namespace FirstPersonController
 
     void CameraCoupledChildComponent::OnEntityActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
-        m_initialZOffset = GetEntity()->GetTransform()->GetLocalTranslation().GetZ();
-
         // Get access to the FirstPersonControllerComponent object and its members
         AZ::EntityId characterEntityId;
         AZ::TransformBus::EventResult(characterEntityId, GetEntityId(), &AZ::TransformBus::Events::GetParentId);
@@ -75,6 +73,12 @@ namespace FirstPersonController
         {
             m_firstPersonControllerObject = characterEntity->FindComponent<FirstPersonControllerComponent>();
             m_firstPersonExtrasObject = characterEntity->FindComponent<FirstPersonExtrasComponent>();
+
+            if (m_firstPersonControllerObject != nullptr &&
+                (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost))
+                m_initialZOffset = GetEntity()->GetTransform()->GetWorldTranslation().GetZ();
+            else
+                m_initialZOffset = GetEntity()->GetTransform()->GetLocalTranslation().GetZ();
         }
     }
 
