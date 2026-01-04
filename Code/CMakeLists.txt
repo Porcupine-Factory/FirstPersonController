@@ -34,6 +34,7 @@ ly_add_target(
 
 # The ${gem_name}.Private.Object target is an internal target
 # It should not be used outside of this Gems CMakeLists.txt
+if(TARGET Gem::AMultiplayerPhysX5.Unified.Static)
 ly_add_target(
     NAME ${gem_name}.Private.Object STATIC
     NAMESPACE Gem
@@ -56,13 +57,36 @@ ly_add_target(
             Gem::PhysX5.Static
             Gem::Atom_RPI.Public
             # For autogen components
-            Gem::MultiplayerPhysX5.Unified.Static
+            Gem::AMultiplayerPhysX5.Unified.Static
     AUTOGEN_RULES
         *.AutoComponent.xml,AutoComponent_Header.jinja,$path/$fileprefix.AutoComponent.h
         *.AutoComponent.xml,AutoComponent_Source.jinja,$path/$fileprefix.AutoComponent.cpp
         *.AutoComponent.xml,AutoComponentTypes_Header.jinja,$path/AutoComponentTypes.h
         *.AutoComponent.xml,AutoComponentTypes_Source.jinja,$path/AutoComponentTypes.cpp
 )
+else()
+ly_add_target(
+    NAME ${gem_name}.Private.Object STATIC
+    NAMESPACE Gem
+    FILES_CMAKE
+        firstpersoncontroller_private_files.cmake
+        ${pal_dir}/firstpersoncontroller_private_files.cmake
+    TARGET_PROPERTIES
+        O3DE_PRIVATE_TARGET TRUE
+    INCLUDE_DIRECTORIES
+        PRIVATE
+            Include
+            Source
+    BUILD_DEPENDENCIES
+        PUBLIC
+            AZ::AzCore
+            AZ::AzFramework
+            Gem::StartingPointInput.Static
+            Gem::EMotionFXStaticLib
+            Gem::PhysX5.Static
+            Gem::Atom_RPI.Public
+)
+endif()
 
 # Here add ${gem_name} target, it depends on the Private Object library and Public API interface
 ly_add_target(

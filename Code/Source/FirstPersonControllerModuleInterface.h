@@ -10,7 +10,9 @@
 #include <Clients/FirstPersonControllerComponent.h>
 #include <Clients/FirstPersonControllerSystemComponent.h>
 #include <Clients/FirstPersonExtrasComponent.h>
+#if __has_include(<Source/AutoGen/AutoComponentTypes.h>)
 #include <Source/AutoGen/AutoComponentTypes.h>
+#endif
 
 namespace FirstPersonController
 {

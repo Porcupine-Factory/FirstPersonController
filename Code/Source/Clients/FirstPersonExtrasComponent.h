@@ -27,7 +27,9 @@ namespace FirstPersonController
         , public AZ::EntityBus::Handler
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentNotificationBus::Handler
+#ifdef NETWORKFPC
         , public NetworkFPCControllerNotificationBus::Handler
+#endif
         , public FirstPersonExtrasComponentRequestBus::Handler
         , public Camera::CameraNotificationBus::Handler
     {
@@ -121,7 +123,11 @@ namespace FirstPersonController
 
         // FirstPersonControllerComponent and NetworkFPC objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
+#ifdef NETWORKFPC
         NetworkFPC* m_networkFPCObject = nullptr;
+#else
+        bool* m_networkFPCObject = nullptr;
+#endif
 
         // Networking related variables
         bool m_networkFPCEnabled = false;

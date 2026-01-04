@@ -3,7 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <Clients/FirstPersonControllerComponent.h>
+#ifdef NETWORKFPC
 #include <Multiplayer/NetworkFPC.h>
+#endif
 
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
@@ -1248,7 +1250,9 @@ namespace FirstPersonController
         //     m_cameraSmoothFollow ? "true" : "false");
 
         AZ::TickBus::Handler::BusConnect();
+#ifdef NETWORKFPC
         NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
+#endif
 
         // Initialize PID controllers
         m_crouchDownPidController = PidController<float>(
@@ -1317,7 +1321,9 @@ namespace FirstPersonController
     {
         InputEventNotificationBus::MultiHandler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
+#ifdef NETWORKFPC
         NetworkFPCControllerNotificationBus::Handler::BusDisconnect();
+#endif
         InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
         Camera::CameraNotificationBus::Handler::BusDisconnect();
@@ -1336,17 +1342,21 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnEntityActivated(const AZ::EntityId& entityId)
     {
         // Get access to the NetworkFPC object and its member
+#ifdef NETWORKFPC
         const AZ::Entity* entity = GetEntity();
         m_networkFPCObject = entity->FindComponent<NetworkFPC>();
+#endif
 
         // Determine if the NetworkFPC is enabled
         if (m_networkFPCObject != nullptr)
         {
-            m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             InputChannelEventListener::Disconnect();
             SetAddVelocityForTimestepVsTick(true);
+#ifdef NETWORKFPC
+            m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
             NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
+#endif
         }
         else
         {
@@ -1582,8 +1592,10 @@ namespace FirstPersonController
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickStart,
                 (deltaTime * m_physicsTimestepScaleFactor + m_prevNetworkFPCDeltaTime) / 2.f);
+#ifdef NETWORKFPC
             if (!m_networkFPCEnabled)
                 NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
+#endif
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
         }
     }
@@ -1802,8 +1814,10 @@ namespace FirstPersonController
 
         // Get the character's transform
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             characterTransform = m_networkFPCControllerObject->GetEntity()->GetTransform();
+#endif
 
         if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
         {
@@ -1824,8 +1838,10 @@ namespace FirstPersonController
                     m_cameraYaw = m_currentHeading;
                     m_newtworkFPCCameraAligned = true;
                 }
+#ifdef NETWORKFPC
                 m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
                 m_networkFPCControllerObject->SetYawDeltaOvershoot(0.f);
+#endif
             }
 
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
@@ -1837,10 +1853,12 @@ namespace FirstPersonController
             // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
             const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
             m_networkFPCRotationSliceAccumulator += 1.f / slice;
+#ifdef NETWORKFPC
             newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
             // Compensate the character's yaw from the camera overshooting due to network jitter
             if (m_networkFPCRotationSliceAccumulator > 1.f)
                 m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + newLookRotationDelta.GetZ()) - m_currentHeading);
+#endif
         }
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
@@ -3927,6 +3945,7 @@ namespace FirstPersonController
     {
         if (m_networkFPCControllerObject != nullptr)
         {
+#ifdef NETWORKFPC
             m_speed = m_networkFPCControllerObject->GetTopWalkSpeed();
             m_staminaPercentage = m_networkFPCControllerObject->GetStaminaPercentage();
             m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
@@ -3939,11 +3958,13 @@ namespace FirstPersonController
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
+#endif
         }
     }
 
     void FirstPersonControllerComponent::SetNetworkFPCProperties() const
     {
+#ifdef NETWORKFPC
         m_networkFPCControllerObject->SetTopWalkSpeed(m_speed);
         m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
         m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
@@ -3963,6 +3984,7 @@ namespace FirstPersonController
         m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
         m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
         m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
+#endif
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
@@ -4057,7 +4079,9 @@ namespace FirstPersonController
             {
                 // Set the NetworkFPC properties, informing the server of the client's latest simulation
                 SetNetworkFPCProperties();
+#ifdef NETWORKFPC
                 m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
+#endif
             }
             else if (m_addVelocityForTimestepVsTick)
                 Physics::CharacterRequestBus::Event(
@@ -4368,8 +4392,10 @@ namespace FirstPersonController
     {
         m_strForward = new_strForward;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetForwardScale() const
     {
@@ -4395,8 +4421,10 @@ namespace FirstPersonController
     {
         m_strBack = new_strBack;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetBackScale() const
     {
@@ -4422,8 +4450,10 @@ namespace FirstPersonController
     {
         m_strLeft = new_strLeft;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetLeftScale() const
     {
@@ -4449,8 +4479,10 @@ namespace FirstPersonController
     {
         m_strRight = new_strRight;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetRightScale() const
     {
@@ -4476,8 +4508,10 @@ namespace FirstPersonController
     {
         m_strYaw = new_strYaw;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetYawInputValue() const
     {
@@ -4495,8 +4529,10 @@ namespace FirstPersonController
     {
         m_strPitch = new_strPitch;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetPitchInputValue() const
     {
@@ -4514,8 +4550,10 @@ namespace FirstPersonController
     {
         m_strSprint = new_strSprint;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetSprintInputValue() const
     {
@@ -4549,8 +4587,10 @@ namespace FirstPersonController
     {
         m_strCrouch = new_strCrouch;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetCrouchInputValue() const
     {
@@ -4568,8 +4608,10 @@ namespace FirstPersonController
     {
         m_strJump = new_strJump;
         AssignConnectInputEvents();
+#ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->AssignConnectInputEvents();
+#endif
     }
     float FirstPersonControllerComponent::GetJumpInputValue() const
     {
@@ -5700,8 +5742,10 @@ namespace FirstPersonController
     {
         m_sprintMaxTime = new_sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+#ifdef NETWORKFPC
         if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
+#endif
     }
     float FirstPersonControllerComponent::GetSprintHeldTime() const
     {
@@ -5725,8 +5769,10 @@ namespace FirstPersonController
             m_staminaDecreasing = false;
             m_staminaIncreasing = true;
         }
+#ifdef NETWORKFPC
         if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
+#endif
     }
     float FirstPersonControllerComponent::GetSprintRegenRate() const
     {
@@ -5760,8 +5806,10 @@ namespace FirstPersonController
             m_staminaDecreasing = false;
             m_staminaIncreasing = true;
         }
+#ifdef NETWORKFPC
         if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
+#endif
     }
     bool FirstPersonControllerComponent::GetStaminaIncreasing() const
     {
@@ -5801,8 +5849,10 @@ namespace FirstPersonController
     {
         m_sprintTotalCooldownTime = new_sprintTotalCooldownTime;
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
+#ifdef NETWORKFPC
         if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
+#endif
     }
     float FirstPersonControllerComponent::GetSprintCooldownTimer() const
     {
@@ -6264,7 +6314,9 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled)
     {
         m_networkFPCEnabled = new_networkFPCEnabled;
+#ifdef NETWORKFPC
         NetworkFPCControllerRequestBus::Event(GetEntityId(), &NetworkFPCControllerRequestBus::Events::SetEnabled, m_networkFPCEnabled);
+#endif
     }
     void FirstPersonControllerComponent::NetworkFPCEnabledIgnoreInputs()
     {
