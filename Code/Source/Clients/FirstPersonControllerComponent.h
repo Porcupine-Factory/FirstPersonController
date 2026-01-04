@@ -4,7 +4,9 @@
 
 #pragma once
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
+#ifdef NETWORKFPC
 #include <FirstPersonController/NetworkFPCControllerBus.h>
+#endif
 #include <FirstPersonController/PidController.h>
 
 #include <AzCore/Component/Component.h>
@@ -32,7 +34,9 @@ namespace FirstPersonController
         : public AZ::Component
         , public AZ::TickBus::Handler
         , protected Physics::CharacterNotificationBus::Handler
+#ifdef NETWORKFPC
         , public NetworkFPCControllerNotificationBus::Handler
+#endif
         , public AzFramework::InputChannelEventListener
         , public StartingPointInput::InputEventNotificationBus::MultiHandler
         , public FirstPersonControllerComponentRequestBus::Handler
@@ -509,8 +513,13 @@ namespace FirstPersonController
         void InitializeCameraTranslation();
 
         // NetworkFPC object
+#ifdef NETWORKFPC
         NetworkFPC* m_networkFPCObject = nullptr;
         NetworkFPCController* m_networkFPCControllerObject = nullptr;
+#else
+        bool* m_networkFPCObject = nullptr;
+        bool* m_networkFPCControllerObject = nullptr;
+#endif
 
         // Active camera entity pointer and ID
         AZ::Entity* m_activeCameraEntity = nullptr;

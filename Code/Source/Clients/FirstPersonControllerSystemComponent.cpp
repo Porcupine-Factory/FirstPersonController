@@ -9,7 +9,9 @@
 #include <AzCore/Serialization/EditContext.h>
 #include <AzCore/Serialization/EditContextConstants.inl>
 #include <AzCore/Serialization/SerializeContext.h>
+#if __has_include(<Source/AutoGen/AutoComponentTypes.h>)
 #include <Source/AutoGen/AutoComponentTypes.h>
+#endif
 
 namespace FirstPersonController
 {
@@ -42,11 +44,13 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
 
+#ifdef NETWORKFPC
                 ec->Class<FirstPersonControllerSystemComponent>(
                       "NetworkFPC", "[Description of functionality provided by this System Component]")
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
+#endif
             }
         }
     }
@@ -56,7 +60,9 @@ namespace FirstPersonController
         provided.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         provided.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
         provided.push_back(AZ_CRC_CE("CameraCoupledChildService"));
+#ifdef NETWORKFPC
         provided.push_back(AZ_CRC_CE("NetworkFPCService"));
+#endif
     }
 
     void FirstPersonControllerSystemComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
@@ -64,7 +70,9 @@ namespace FirstPersonController
         incompatible.push_back(AZ_CRC_CE("FirstPersonControllerService"));
         incompatible.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
         incompatible.push_back(AZ_CRC_CE("CameraCoupledChildService"));
+#ifdef NETWORKFPC
         incompatible.push_back(AZ_CRC_CE("NetworkFPCService"));
+#endif
     }
 
     void FirstPersonControllerSystemComponent::GetRequiredServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -101,19 +109,23 @@ namespace FirstPersonController
         FirstPersonControllerRequestBus::Handler::BusConnect();
         FirstPersonExtrasRequestBus::Handler::BusConnect();
         CameraCoupledChildRequestBus::Handler::BusConnect();
-        NetworkFPCRequestBus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
+#ifdef NETWORKFPC
+        NetworkFPCRequestBus::Handler::BusConnect();
         // Register multiplayer components
         RegisterMultiplayerComponents();
+#endif
     }
 
     void FirstPersonControllerSystemComponent::Deactivate()
     {
+#ifdef NETWORKFPC
+        NetworkFPCRequestBus::Handler::BusDisconnect();
+#endif
         AZ::TickBus::Handler::BusDisconnect();
         FirstPersonControllerRequestBus::Handler::BusDisconnect();
         FirstPersonExtrasRequestBus::Handler::BusDisconnect();
         CameraCoupledChildRequestBus::Handler::BusDisconnect();
-        NetworkFPCRequestBus::Handler::BusDisconnect();
     }
 
     void FirstPersonControllerSystemComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)

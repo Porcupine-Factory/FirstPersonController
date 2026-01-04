@@ -29,8 +29,10 @@ namespace FirstPersonController
               FirstPersonExtrasComponent::CreateDescriptor(),
               CameraCoupledChildComponent::CreateDescriptor() });
 
+#ifdef NETWORKFPC
         //< Register multiplayer components
         CreateComponentDescriptors(m_descriptors);
+#endif
     }
 
     AZ::ComponentTypeList FirstPersonControllerModuleInterface::GetRequiredSystemComponents() const

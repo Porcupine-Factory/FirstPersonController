@@ -1,4 +1,6 @@
 
+if(TARGET Gem::AMultiplayerPhysX5.Unified.Static)
+add_compile_definitions(-DNETWORKFPC)
 set(FILES
     Include/FirstPersonController/FirstPersonControllerBus.h
     Include/FirstPersonController/FirstPersonControllerTypeIds.h
@@ -10,3 +12,14 @@ set(FILES
     Include/FirstPersonController/NetworkFPCBus.h
     Include/FirstPersonController/NetworkFPCControllerBus.h
 )
+else()
+set(FILES
+    Include/FirstPersonController/FirstPersonControllerBus.h
+    Include/FirstPersonController/FirstPersonControllerTypeIds.h
+    Include/FirstPersonController/FirstPersonControllerComponentBus.h
+    Include/FirstPersonController/FirstPersonExtrasBus.h
+    Include/FirstPersonController/FirstPersonExtrasComponentBus.h
+    Include/FirstPersonController/CameraCoupledChildBus.h
+    Include/FirstPersonController/CameraCoupledChildComponentBus.h
+)
+endif()

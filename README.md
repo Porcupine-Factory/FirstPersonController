@@ -6,7 +6,7 @@ You can install this gem in your project using O3DE's project manager. Navigate 
 
 NOTE:
 You will need to disable the PhysX4 gem if it is enabled for your project. This gem has PhysX5 set as a dependency and both cannot be enabled simultaneously.
-Additionally, you will need the [MultiplayerPhysX5 gem](https://github.com/Porcupine-Factory/MultiplayerPhysX5), until upstream O3DE [supports PhysX5 with multiplayer](https://github.com/o3de/o3de/issues/19428).
+Additionally, you will need the [MultiplayerPhysX5 gem](https://github.com/Porcupine-Factory/MultiplayerPhysX5) if you want to use this gem for multiplayer, until upstream O3DE [supports PhysX5 with multiplayer](https://github.com/o3de/o3de/issues/19428).
 
 For more information, see the instructions found in O3DE's documentation: https://www.docs.o3de.org/docs/user-guide/remote-content/use-a-remote-repository
 

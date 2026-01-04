@@ -3,7 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <Clients/FirstPersonExtrasComponent.h>
+#ifdef NETWORKFPC
 #include <Multiplayer/NetworkFPC.h>
+#endif
 
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
@@ -264,13 +266,17 @@ namespace FirstPersonController
     {
         AZ::TickBus::Handler::BusConnect();
         FirstPersonControllerComponentNotificationBus::Handler::BusConnect(GetEntityId());
+#ifdef NETWORKFPC
         NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
+#endif
         FirstPersonExtrasComponentRequestBus::Handler::BusConnect(GetEntityId());
 
         // Get access to the FirstPersonControllerComponent and NetwworkFPC objects and their members
         const AZ::Entity* entity = GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
+#ifdef NETWORKFPC
         m_networkFPCObject = entity->FindComponent<NetworkFPC>();
+#endif
 
         // Assign pointer attributes to the associated attributes of the FirstPersonControllerComponent, accessible via friendship
         if (m_firstPersonControllerObject)
@@ -318,7 +324,9 @@ namespace FirstPersonController
     {
         InputEventNotificationBus::MultiHandler::BusDisconnect();
         FirstPersonExtrasComponentRequestBus::Handler::BusDisconnect();
+#ifdef NETWORKFPC
         NetworkFPCControllerNotificationBus::Handler::BusDisconnect();
+#endif
         FirstPersonControllerComponentNotificationBus::Handler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
 
@@ -383,14 +391,18 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnEntityActivated(const AZ::EntityId& entityId)
     {
         // Get access to the NetworkFPC object and its member
+#ifdef NETWORKFPC
         const AZ::Entity* entity = GetEntity();
         m_networkFPCObject = entity->FindComponent<NetworkFPC>();
+#endif
 
         // Determine if the NetworkFPC is enabled
         if (m_networkFPCObject != nullptr)
         {
             InputEventNotificationBus::MultiHandler::BusDisconnect();
+#ifdef NETWORKFPC
             m_networkFPCEnabled = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController())->GetEnableNetworkFPC();
+#endif
         }
 
         if (entityId == m_cameraEntityId)
