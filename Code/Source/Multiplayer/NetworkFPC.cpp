@@ -560,9 +560,12 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_isServer,
             GetEntityId());
 
-        const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
-            m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
-        GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
+        if (!m_firstPersonControllerObject->m_isHost)
+        {
+            const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
+                m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
+            GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
+        }
 
         const AZ::Vector3 newTranslation = GetNetworkCharacterComponentController()->TryMoveWithVelocity(
             playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
