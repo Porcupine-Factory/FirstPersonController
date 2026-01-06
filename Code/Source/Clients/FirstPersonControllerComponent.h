@@ -163,8 +163,6 @@ namespace FirstPersonController
         AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const override;
         AZ::Vector3 GetGroundSumNormalsDirection() const override;
         AZ::Vector3 GetGroundCloseSumNormalsDirection() const override;
-        bool GetUseGameplayGroundCheckMultiplayer() const override;
-        void SetUseGameplayGroundCheckMultiplayer(const bool& new_useGameplayGroundCheckMultiplayer) override;
         AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const override;
         AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit hit) const override;
         AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit hit) const override;
@@ -754,7 +752,6 @@ namespace FirstPersonController
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundHits;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundCloseHits;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundCloseCoyoteTimeHits;
-        bool m_useGameplayGroundCheckMultiplayer = false;
         float m_maxGroundedAngleDegrees = 30.f;
         bool m_scriptGrounded = true;
         bool m_scriptJump = false;

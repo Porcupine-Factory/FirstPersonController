@@ -24,7 +24,6 @@
 #include <Atom/RPI.Public/ViewportContextBus.h>
 
 #include <PhysX/CharacterControllerBus.h>
-#include <PhysX/CharacterGameplayBus.h>
 #include <PhysX/Material/PhysXMaterial.h>
 #include <System/PhysXSystem.h>
 
@@ -797,12 +796,6 @@ namespace FirstPersonController
                 ->Event("Get Ground Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundSumNormalsDirection)
                 ->Event(
                     "Get Ground Close Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundCloseSumNormalsDirection)
-                ->Event(
-                    "Get Use Gameplay Ground Check Multiplayer",
-                    &FirstPersonControllerComponentRequests::GetUseGameplayGroundCheckMultiplayer)
-                ->Event(
-                    "Set Use Gameplay Ground Check Multiplayer",
-                    &FirstPersonControllerComponentRequests::SetUseGameplayGroundCheckMultiplayer)
                 ->Event("Get Scene Query Hit Result Flags", &FirstPersonControllerComponentRequests::GetSceneQueryHitResultFlags)
                 ->Event("Get Scene Query Hit EntityId", &FirstPersonControllerComponentRequests::GetSceneQueryHitEntityId)
                 ->Event("Get Scene Query Hit Normal", &FirstPersonControllerComponentRequests::GetSceneQueryHitNormal)
@@ -3288,7 +3281,6 @@ namespace FirstPersonController
 
         steepNormals.clear();
 
-        const bool scriptSetGroundTick = m_scriptSetGroundTick;
         if (m_scriptSetGroundTick)
         {
             m_grounded = m_scriptGrounded;
@@ -3297,15 +3289,6 @@ namespace FirstPersonController
 
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
         {
-            if (m_useGameplayGroundCheckMultiplayer && !scriptSetGroundTick)
-            {
-                // If enabled, use the Character Gameplay component's ground check as well
-                bool onGround = false;
-                PhysX::CharacterGameplayRequestBus::EventResult(
-                    onGround, GetEntityId(), &PhysX::CharacterGameplayRequestBus::Events::IsOnGround);
-                m_grounded |= onGround;
-                // AZ_Printf("First Person Controller Component", "onGround = %s", onGround ? "true" : "false");
-            }
             m_networkFPCControllerObject->SetIsGrounded(m_grounded);
             m_grounded = m_networkFPCControllerObject->GetIsGrounded();
         }
@@ -4733,14 +4716,6 @@ namespace FirstPersonController
         for (AzPhysics::SceneQueryHit hit : m_groundCloseHits)
             sumNormals += hit.m_normal;
         return sumNormals.GetNormalized();
-    }
-    bool FirstPersonControllerComponent::GetUseGameplayGroundCheckMultiplayer() const
-    {
-        return m_useGameplayGroundCheckMultiplayer;
-    }
-    void FirstPersonControllerComponent::SetUseGameplayGroundCheckMultiplayer(const bool& new_useGameplayGroundCheckMultiplayer)
-    {
-        m_useGameplayGroundCheckMultiplayer = new_useGameplayGroundCheckMultiplayer;
     }
     AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const
     {
