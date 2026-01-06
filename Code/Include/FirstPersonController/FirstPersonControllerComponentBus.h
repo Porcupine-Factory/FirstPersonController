@@ -100,6 +100,8 @@ namespace FirstPersonController
         virtual AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const = 0;
         virtual AZ::Vector3 GetGroundSumNormalsDirection() const = 0;
         virtual AZ::Vector3 GetGroundCloseSumNormalsDirection() const = 0;
+        virtual bool GetUseGameplayGroundCheckMultiplayer() const = 0;
+        virtual void SetUseGameplayGroundCheckMultiplayer(const bool&) = 0;
         virtual AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit) const = 0;
         virtual AZ::Vector3 GetSceneQueryHitPosition(AzPhysics::SceneQueryHit) const = 0;
@@ -228,6 +230,8 @@ namespace FirstPersonController
         virtual void SetFinalJumpPerformed(const bool&) = 0;
         virtual float GetGroundedOffset() const = 0;
         virtual void SetGroundedOffset(const float&) = 0;
+        virtual float GetGroundedExtraOffsetMultiplayerDynamic() const = 0;
+        virtual void SetGroundedExtraOffsetMultiplayerDynamic(const float&) = 0;
         virtual float GetGroundCloseOffset() const = 0;
         virtual void SetGroundCloseOffset(const float&) = 0;
         virtual float GetGroundCloseCoyoteTimeOffset() const = 0;

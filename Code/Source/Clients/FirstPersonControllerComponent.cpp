@@ -24,6 +24,7 @@
 #include <Atom/RPI.Public/ViewportContextBus.h>
 
 #include <PhysX/CharacterControllerBus.h>
+#include <PhysX/CharacterGameplayBus.h>
 #include <PhysX/Material/PhysXMaterial.h>
 #include <System/PhysXSystem.h>
 
@@ -796,6 +797,12 @@ namespace FirstPersonController
                 ->Event("Get Ground Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundSumNormalsDirection)
                 ->Event(
                     "Get Ground Close Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundCloseSumNormalsDirection)
+                ->Event(
+                    "Get Use Gameplay Ground Check Multiplayer",
+                    &FirstPersonControllerComponentRequests::GetUseGameplayGroundCheckMultiplayer)
+                ->Event(
+                    "Set Use Gameplay Ground Check Multiplayer",
+                    &FirstPersonControllerComponentRequests::SetUseGameplayGroundCheckMultiplayer)
                 ->Event("Get Scene Query Hit Result Flags", &FirstPersonControllerComponentRequests::GetSceneQueryHitResultFlags)
                 ->Event("Get Scene Query Hit EntityId", &FirstPersonControllerComponentRequests::GetSceneQueryHitEntityId)
                 ->Event("Get Scene Query Hit Normal", &FirstPersonControllerComponentRequests::GetSceneQueryHitNormal)
@@ -948,6 +955,12 @@ namespace FirstPersonController
                 ->Event("Set Final Jump Performed", &FirstPersonControllerComponentRequests::SetFinalJumpPerformed)
                 ->Event("Get Grounded Offset", &FirstPersonControllerComponentRequests::GetGroundedOffset)
                 ->Event("Set Grounded Offset", &FirstPersonControllerComponentRequests::SetGroundedOffset)
+                ->Event(
+                    "Get Grounded Extra Offset Multiplayer Dynamic",
+                    &FirstPersonControllerComponentRequests::GetGroundedExtraOffsetMultiplayerDynamic)
+                ->Event(
+                    "Set Grounded Extra Offset Multiplayer Dynamic",
+                    &FirstPersonControllerComponentRequests::SetGroundedExtraOffsetMultiplayerDynamic)
                 ->Event("Get Ground Close Offset", &FirstPersonControllerComponentRequests::GetGroundCloseOffset)
                 ->Event("Set Ground Close Offset", &FirstPersonControllerComponentRequests::SetGroundCloseOffset)
                 ->Event("Get Ground Close Coyote Time Offset", &FirstPersonControllerComponentRequests::GetGroundCloseCoyoteTimeOffset)
@@ -3157,14 +3170,29 @@ namespace FirstPersonController
                             -AZ::Vector3::CreateAxisZ((1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius)));
         }
 
-        AzPhysics::ShapeCastRequest request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
-            sphereCastPose,
-            sphereCastDirection,
-            m_groundedSphereCastOffset,
-            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-            m_groundedCollisionGroup,
-            nullptr);
+        AzPhysics::ShapeCastRequest request;
+        if (!m_networkFPCEnabled)
+        {
+            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
+                sphereCastPose,
+                sphereCastDirection,
+                m_groundedSphereCastOffset,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                m_groundedCollisionGroup,
+                nullptr);
+        }
+        else
+        {
+            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
+                sphereCastPose,
+                sphereCastDirection,
+                m_groundedSphereCastOffset + m_groundedExtraOffsetMultiplayerDynamic,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                m_groundedCollisionGroup,
+                nullptr);
+        }
 
         request.m_reportMultipleHits = true;
 
@@ -3200,6 +3228,16 @@ namespace FirstPersonController
             for (AZ::EntityId id : m_children)
             {
                 if (hit.m_entityId == id)
+                    return true;
+            }
+
+            if (m_networkFPCEnabled && hit.m_distance >= m_groundedSphereCastOffset)
+            {
+                // Allow dynamic rigid bodies to report as a valid ground at a farther distance
+                AzPhysics::RigidBody* bodyHit = NULL;
+                Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId, &Physics::RigidBodyRequests::GetRigidBody);
+                // Don't apply the extra distance to static or kinematic rigid bodies
+                if (bodyHit == NULL || bodyHit->IsKinematic())
                     return true;
             }
 
@@ -3250,10 +3288,26 @@ namespace FirstPersonController
 
         steepNormals.clear();
 
+        const bool scriptSetGroundTick = m_scriptSetGroundTick;
         if (m_scriptSetGroundTick)
         {
             m_grounded = m_scriptGrounded;
             m_scriptSetGroundTick = false;
+        }
+
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+        {
+            if (m_useGameplayGroundCheckMultiplayer && !scriptSetGroundTick)
+            {
+                // If enabled, use the Character Gameplay component's ground check as well
+                bool onGround = false;
+                PhysX::CharacterGameplayRequestBus::EventResult(
+                    onGround, GetEntityId(), &PhysX::CharacterGameplayRequestBus::Events::IsOnGround);
+                m_grounded |= onGround;
+                // AZ_Printf("First Person Controller Component", "onGround = %s", onGround ? "true" : "false");
+            }
+            m_networkFPCControllerObject->SetIsGrounded(m_grounded);
+            m_grounded = m_networkFPCControllerObject->GetIsGrounded();
         }
 
         // Accumulate airtime if the character isn't grounded, otherwise set it to zero
@@ -3986,7 +4040,6 @@ namespace FirstPersonController
         m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump);
         m_networkFPCControllerObject->SetIsFalling(!m_groundClose);
         m_networkFPCControllerObject->SetIsJumpLanding(m_groundClose && (m_applyVelocityZ < 0.f));
-        m_networkFPCControllerObject->SetIsGrounded(m_grounded);
         m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
         m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
         m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
@@ -4681,6 +4734,14 @@ namespace FirstPersonController
             sumNormals += hit.m_normal;
         return sumNormals.GetNormalized();
     }
+    bool FirstPersonControllerComponent::GetUseGameplayGroundCheckMultiplayer() const
+    {
+        return m_useGameplayGroundCheckMultiplayer;
+    }
+    void FirstPersonControllerComponent::SetUseGameplayGroundCheckMultiplayer(const bool& new_useGameplayGroundCheckMultiplayer)
+    {
+        m_useGameplayGroundCheckMultiplayer = new_useGameplayGroundCheckMultiplayer;
+    }
     AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const
     {
         return hit.m_resultFlags;
@@ -5364,6 +5425,14 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetGroundCloseOffset() const
     {
         return m_groundCloseSphereCastOffset;
+    }
+    float FirstPersonControllerComponent::GetGroundedExtraOffsetMultiplayerDynamic() const
+    {
+        return m_groundedExtraOffsetMultiplayerDynamic;
+    }
+    void FirstPersonControllerComponent::SetGroundedExtraOffsetMultiplayerDynamic(const float& new_groundedExtraOffsetMultiplayerDynamic)
+    {
+        m_groundedExtraOffsetMultiplayerDynamic = new_groundedExtraOffsetMultiplayerDynamic;
     }
     void FirstPersonControllerComponent::SetGroundCloseOffset(const float& new_groundCloseSphereCastOffset)
     {

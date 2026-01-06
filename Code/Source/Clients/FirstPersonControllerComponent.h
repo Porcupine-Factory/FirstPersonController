@@ -163,6 +163,8 @@ namespace FirstPersonController
         AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const override;
         AZ::Vector3 GetGroundSumNormalsDirection() const override;
         AZ::Vector3 GetGroundCloseSumNormalsDirection() const override;
+        bool GetUseGameplayGroundCheckMultiplayer() const override;
+        void SetUseGameplayGroundCheckMultiplayer(const bool& new_useGameplayGroundCheckMultiplayer) override;
         AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const override;
         AZ::EntityId GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit hit) const override;
         AZ::Vector3 GetSceneQueryHitNormal(AzPhysics::SceneQueryHit hit) const override;
@@ -293,6 +295,8 @@ namespace FirstPersonController
         void SetFinalJumpPerformed(const bool& new_finalJump) override;
         float GetGroundedOffset() const override;
         void SetGroundedOffset(const float& new_groundedSphereCastOffset) override;
+        float GetGroundedExtraOffsetMultiplayerDynamic() const override;
+        void SetGroundedExtraOffsetMultiplayerDynamic(const float& new_groundedExtraOffsetMultiplayerDynamic) override;
         float GetGroundCloseOffset() const override;
         void SetGroundCloseOffset(const float& new_groundCloseSphereCastOffset) override;
         float GetGroundCloseCoyoteTimeOffset() const override;
@@ -750,6 +754,7 @@ namespace FirstPersonController
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundHits;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundCloseHits;
         AZStd::vector<AzPhysics::SceneQueryHit> m_groundCloseCoyoteTimeHits;
+        bool m_useGameplayGroundCheckMultiplayer = false;
         float m_maxGroundedAngleDegrees = 30.f;
         bool m_scriptGrounded = true;
         bool m_scriptJump = false;
@@ -774,6 +779,8 @@ namespace FirstPersonController
         float m_capsuleCurrentHeight = 1.8f;
         // The grounded sphere cast offset determines how far below the character's feet the ground is detected
         float m_groundedSphereCastOffset = 0.001f;
+        // The grounded extra offset multiplayer dynamic is an extra projection distance for detecting dynamic bodies in multiplayer
+        float m_groundedExtraOffsetMultiplayerDynamic = 0.8f;
         // The ground close sphere cast offset determines how far below the character's feet the ground is considered to be close
         float m_groundCloseSphereCastOffset = 0.5f;
         // The ground close coyote time offset determines how far below the character's feet the ground is considered to be close for Coyote
