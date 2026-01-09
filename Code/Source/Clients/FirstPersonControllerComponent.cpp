@@ -3226,7 +3226,8 @@ namespace FirstPersonController
                     return true;
             }
 
-            if (m_networkFPCEnabled && hit.m_distance >= m_groundedSphereCastOffset)
+            if (m_networkFPCEnabled && groundedGroundCloseOrGroundCloseCoyoteTime == grounded &&
+                hit.m_distance >= m_groundedSphereCastOffset)
             {
                 // Allow dynamic rigid bodies to report as a valid ground at a farther distance
                 AzPhysics::RigidBody* bodyHit = NULL;
@@ -3395,7 +3396,10 @@ namespace FirstPersonController
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnGroundHit, m_fellDistance);
         }
-        else if (!prevGroundClose && m_groundClose)
+        else if (prevGrounded && !m_grounded)
+            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnUngrounded);
+
+        if (!prevGroundClose && m_groundClose)
         {
             if (m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
                 m_soonFellDistance = GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetZ() - m_fellFromHeight;
@@ -3407,8 +3411,6 @@ namespace FirstPersonController
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnGroundSoonHit, m_soonFellDistance);
         }
-        else if (prevGrounded && !m_grounded)
-            FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnUngrounded);
     }
 
     void FirstPersonControllerComponent::UpdateJumpMaxHoldTime()
@@ -5416,10 +5418,6 @@ namespace FirstPersonController
     {
         m_groundedSphereCastOffset = new_groundedSphereCastOffset;
     }
-    float FirstPersonControllerComponent::GetGroundCloseOffset() const
-    {
-        return m_groundCloseSphereCastOffset;
-    }
     float FirstPersonControllerComponent::GetGroundedExtraOffsetMultiplayerDynamic() const
     {
         return m_groundedExtraOffsetMultiplayerDynamic;
@@ -5427,6 +5425,10 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGroundedExtraOffsetMultiplayerDynamic(const float& new_groundedExtraOffsetMultiplayerDynamic)
     {
         m_groundedExtraOffsetMultiplayerDynamic = new_groundedExtraOffsetMultiplayerDynamic;
+    }
+    float FirstPersonControllerComponent::GetGroundCloseOffset() const
+    {
+        return m_groundCloseSphereCastOffset;
     }
     void FirstPersonControllerComponent::SetGroundCloseOffset(const float& new_groundCloseSphereCastOffset)
     {
