@@ -408,6 +408,8 @@ namespace FirstPersonController
         void SetSprintBackwards(const bool& new_sprintBackwards) override;
         bool GetSprintWhileCrouched() const override;
         void SetSprintWhileCrouched(const bool& new_sprintWhileCrouched) override;
+        bool GetSprintInAir() const override;
+        void SetSprintInAir(const bool& new_sprintInAir) override;
         bool GetSprintEnableToggle() const override;
         void SetSprintEnableToggle(const bool& new_sprintEnableToggle) override;
         bool GetSprintToggleAutomatically() const override;
@@ -681,6 +683,7 @@ namespace FirstPersonController
         float m_sprintPause = 0.f;
         bool m_sprintBackwards = true;
         bool m_sprintWhileCrouched = false;
+        bool m_sprintInAir = false;
         bool m_sprintEnableToggle = false;
         bool m_sprintInputEngaged = false;
         bool m_sprintToggleAutomatically = false;

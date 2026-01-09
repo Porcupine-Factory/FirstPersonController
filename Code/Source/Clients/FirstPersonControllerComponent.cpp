@@ -1085,6 +1085,8 @@ namespace FirstPersonController
                 ->Event("Set Sprint Backwards", &FirstPersonControllerComponentRequests::SetSprintBackwards)
                 ->Event("Get Sprint While Crouched", &FirstPersonControllerComponentRequests::GetSprintWhileCrouched)
                 ->Event("Set Sprint While Crouched", &FirstPersonControllerComponentRequests::SetSprintWhileCrouched)
+                ->Event("Get Sprint In Air", &FirstPersonControllerComponentRequests::GetSprintInAir)
+                ->Event("Set Sprint In Air", &FirstPersonControllerComponentRequests::SetSprintInAir)
                 ->Event("Get Sprint Enable Toggle", &FirstPersonControllerComponentRequests::GetSprintEnableToggle)
                 ->Event("Set Sprint Enable Toggle", &FirstPersonControllerComponentRequests::SetSprintEnableToggle)
                 ->Event("Get Sprint Toggle Automatically", &FirstPersonControllerComponentRequests::GetSprintToggleAutomatically)
@@ -1446,7 +1448,7 @@ namespace FirstPersonController
         if (*inputId == m_sprintEventId)
         {
             m_sprintValue = value;
-            if (m_grounded)
+            if (m_sprintInAir || m_grounded)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
@@ -1510,7 +1512,7 @@ namespace FirstPersonController
         else if (*inputId == m_sprintEventId)
         {
             m_sprintValue = value;
-            if (m_grounded || m_sprintPrevValue == 0.f)
+            if (m_sprintInAir || m_grounded || m_sprintPrevValue == 0.f)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
@@ -5965,6 +5967,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetSprintWhileCrouched(const bool& new_sprintWhileCrouched)
     {
         m_sprintWhileCrouched = new_sprintWhileCrouched;
+    }
+    bool FirstPersonControllerComponent::GetSprintInAir() const
+    {
+        return m_sprintInAir;
+    }
+    void FirstPersonControllerComponent::SetSprintInAir(const bool& new_sprintInAir)
+    {
+        m_sprintInAir = new_sprintInAir;
     }
     bool FirstPersonControllerComponent::GetSprintEnableToggle() const
     {

@@ -615,7 +615,8 @@ namespace FirstPersonController
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
         // Scale the FoV based on the current speed, assuming forward is the fastest direction
-        if (m_firstPersonControllerObject != nullptr && sprinting &&
+        if (m_firstPersonControllerObject != nullptr &&
+            (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_grounded) && sprinting &&
             (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
         {
             m_sprintFoVTimeAccumulator += deltaTime;

@@ -344,6 +344,8 @@ namespace FirstPersonController
         virtual void SetSprintBackwards(const bool&) = 0;
         virtual bool GetSprintWhileCrouched() const = 0;
         virtual void SetSprintWhileCrouched(const bool&) = 0;
+        virtual bool GetSprintInAir() const = 0;
+        virtual void SetSprintInAir(const bool&) = 0;
         virtual bool GetSprintEnableToggle() const = 0;
         virtual void SetSprintEnableToggle(const bool&) = 0;
         virtual bool GetSprintToggleAutomatically() const = 0;

@@ -384,7 +384,11 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if (*inputId == m_sprintEventId)
         {
-            m_sprintValue = value;
+            if (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_grounded ||
+                m_firstPersonControllerObject->m_sprintPrevValue == 0.f)
+                m_sprintValue = value;
+            else
+                m_sprintValue = 0.f;
         }
     }
 
@@ -514,7 +518,7 @@ namespace FirstPersonController
 
         const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
-        // Assign the First Person Controller's inputs from the input prediction
+        // Assign the First Person Controller's inputs from the network inputs
         m_firstPersonControllerObject->m_forwardValue = playerInput->m_forward;
         m_firstPersonControllerObject->m_backValue = playerInput->m_back;
         m_firstPersonControllerObject->m_leftValue = playerInput->m_left;
@@ -525,8 +529,7 @@ namespace FirstPersonController
         m_firstPersonControllerObject->m_crouchValue = playerInput->m_crouch;
         m_firstPersonControllerObject->m_jumpValue = playerInput->m_jump;
 
-        if (playerInput->m_sprint != 0.f &&
-            (m_firstPersonControllerObject->m_grounded || m_firstPersonControllerObject->m_sprintPrevValue == 0.f))
+        if (playerInput->m_sprint != 0.f && (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_grounded))
         {
             m_firstPersonControllerObject->m_sprintEffectiveValue = playerInput->m_sprint;
             m_firstPersonControllerObject->m_sprintAccelValue = playerInput->m_sprint * m_firstPersonControllerObject->m_sprintAccelScale;
