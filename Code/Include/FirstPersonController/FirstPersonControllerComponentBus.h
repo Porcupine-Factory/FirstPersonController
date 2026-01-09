@@ -95,6 +95,7 @@ namespace FirstPersonController
         virtual void SetGroundedForTick(const bool&) = 0;
         virtual bool GetScriptJump() const = 0;
         virtual void SetScriptJump(const bool&) = 0;
+        virtual AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const = 0;
         virtual AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const = 0;
         virtual AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const = 0;
         virtual AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const = 0;
@@ -209,6 +210,7 @@ namespace FirstPersonController
         virtual void SetCharacterHitCollisionGroupByName(const AZStd::string&) = 0;
         virtual AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const = 0;
         virtual void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType&) = 0;
+        virtual AZStd::vector<AZ::EntityId> GetCharacterHitEntityIds() const = 0;
         virtual AzPhysics::SceneQueryHits GetCharacterSceneQueryHits() const = 0;
         virtual float GetJumpInitialVelocity() const = 0;
         virtual void SetJumpInitialVelocity(const float&) = 0;

@@ -788,6 +788,7 @@ namespace FirstPersonController
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Script Jump", &FirstPersonControllerComponentRequests::GetScriptJump)
                 ->Event("Set Script Jump", &FirstPersonControllerComponentRequests::SetScriptJump)
+                ->Event("Get Ground Hit EntityIds", &FirstPersonControllerComponentRequests::GetGroundHitEntityIds)
                 ->Event("Get Ground Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundSceneQueryHits)
                 ->Event("Get Ground Close Scene Query Hits", &FirstPersonControllerComponentRequests::GetGroundCloseSceneQueryHits)
                 ->Event(
@@ -929,6 +930,7 @@ namespace FirstPersonController
                     &FirstPersonControllerComponentRequests::SetCharacterHitCollisionGroupByName)
                 ->Event("Get Character Hit By", &FirstPersonControllerComponentRequests::GetCharacterHitBy)
                 ->Event("Set Character Hit By", &FirstPersonControllerComponentRequests::SetCharacterHitBy)
+                ->Event("Get Character Hit EntityIds", &FirstPersonControllerComponentRequests::GetCharacterHitEntityIds)
                 ->Event("Get Character Scene Query Hits", &FirstPersonControllerComponentRequests::GetCharacterSceneQueryHits)
                 ->Event("Get Initial Jump Velocity", &FirstPersonControllerComponentRequests::GetJumpInitialVelocity)
                 ->Event("Set Initial Jump Velocity", &FirstPersonControllerComponentRequests::SetJumpInitialVelocity)
@@ -3257,6 +3259,11 @@ namespace FirstPersonController
         AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
         m_grounded = hits ? true : false;
 
+        m_groundHitEntityIds.clear();
+        if (m_grounded)
+            for (AzPhysics::SceneQueryHit hit : hits.m_hits)
+                m_groundHitEntityIds.push_back(hit.m_entityId);
+
         bool normalsSumNotSteep = false;
 
         // Check to see if the sum of the steep angles is less than or equal to m_maxGroundedAngleDegrees
@@ -3886,6 +3893,10 @@ namespace FirstPersonController
         };
 
         AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
+        m_characterHitEntityIds.clear();
+        if (m_grounded)
+            for (AzPhysics::SceneQueryHit hit : hits.m_hits)
+                m_characterHitEntityIds.push_back(hit.m_entityId);
 
         m_characterHits = hits.m_hits;
 
@@ -4681,6 +4692,10 @@ namespace FirstPersonController
     {
         m_scriptJump = new_scriptJump;
     }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetGroundHitEntityIds() const
+    {
+        return m_groundHitEntityIds;
+    }
     AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundSceneQueryHits() const
     {
         AzPhysics::SceneQueryHits groundHits;
@@ -5317,6 +5332,10 @@ namespace FirstPersonController
         // 1 = Dynamic
         // 2 = StaticAndDynamic
         m_characterHitBy = new_characterHitBy;
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetCharacterHitEntityIds() const
+    {
+        return m_characterHitEntityIds;
     }
     AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
     {

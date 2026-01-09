@@ -158,6 +158,7 @@ namespace FirstPersonController
         void SetGroundedForTick(const bool& new_grounded) override;
         bool GetScriptJump() const override;
         void SetScriptJump(const bool& new_scriptJump) override;
+        AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const override;
         AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const override;
         AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const override;
         AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const override;
@@ -274,6 +275,7 @@ namespace FirstPersonController
         void SetCharacterHitCollisionGroupByName(const AZStd::string& new_characterHitCollisionGroupName) override;
         AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const override;
         void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& new_characterHitBy) override;
+        AZStd::vector<AZ::EntityId> GetCharacterHitEntityIds() const override;
         AzPhysics::SceneQueryHits GetCharacterSceneQueryHits() const override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
@@ -814,6 +816,8 @@ namespace FirstPersonController
         float m_soonFellDistance = 0.f;
         AzPhysics::CollisionGroups::Id m_headCollisionGroupId = AzPhysics::CollisionGroups::Id();
         AzPhysics::CollisionGroup m_headCollisionGroup = AzPhysics::CollisionGroup::All;
+        AZStd::vector<AZ::EntityId> m_characterHitEntityIds;
+        AZStd::vector<AZ::EntityId> m_groundHitEntityIds;
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
         float m_jumpHeadSphereCastOffset = 0.2f;
         bool m_onFirstJump = false;
