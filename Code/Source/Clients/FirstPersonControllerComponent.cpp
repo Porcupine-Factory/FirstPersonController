@@ -1349,7 +1349,7 @@ namespace FirstPersonController
         m_activeCameraEntity = nullptr;
     }
 
-    void FirstPersonControllerComponent::OnEntityActivated(const AZ::EntityId& entityId)
+    void FirstPersonControllerComponent::OnEntityActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
         // Get access to the NetworkFPC object and its member
 #ifdef NETWORKFPC
