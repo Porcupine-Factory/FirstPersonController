@@ -431,8 +431,8 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_crouchScale,
                         "Crouch Movement Speed Scale",
-                        "Determines how much slow the character will move when crouched. The product of this number and the top walk speed "
-                        "is the top crouch walk speed.")
+                        "Determines how much slower the character will move when crouched. The product of this number and the top walk "
+                        "speed is the top crouch walk speed.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
