@@ -3299,8 +3299,10 @@ namespace FirstPersonController
 
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
         {
+#ifdef NETWORKFPC
             m_networkFPCControllerObject->SetIsGrounded(m_grounded);
             m_grounded = m_networkFPCControllerObject->GetIsGrounded();
+#endif
         }
 
         // Accumulate airtime if the character isn't grounded, otherwise set it to zero
