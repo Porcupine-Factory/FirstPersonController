@@ -156,6 +156,8 @@ namespace FirstPersonController
         void SetJumpInputValue(const float& new_jumpValue) override;
         bool GetGrounded() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
+        AZ::u16 GetNumTicksRecentGrounded() const override;
+        void SetNumTicksRecentGrounded(const AZ::u16& new_numTicksRecentGrounded) override;
         bool GetScriptJump() const override;
         void SetScriptJump(const bool& new_scriptJump) override;
         AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const override;
@@ -742,6 +744,9 @@ namespace FirstPersonController
         // Jumping and gravity
         float m_gravity = -30.f;
         bool m_grounded = true;
+        AZ::u16 m_numTicksRecentGrounded = 3;
+        AZStd::vector<bool> m_prevNTicksGrounded = { true };
+        bool m_prevPrevGrounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_coyoteVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();

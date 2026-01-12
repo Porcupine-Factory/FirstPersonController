@@ -93,6 +93,8 @@ namespace FirstPersonController
         virtual void SetJumpInputValue(const float&) = 0;
         virtual bool GetGrounded() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
+        virtual AZ::u16 GetNumTicksRecentGrounded() const = 0;
+        virtual void SetNumTicksRecentGrounded(const AZ::u16&) = 0;
         virtual bool GetScriptJump() const = 0;
         virtual void SetScriptJump(const bool&) = 0;
         virtual AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const = 0;

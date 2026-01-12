@@ -164,6 +164,9 @@ namespace FirstPersonController
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
 
+        // Used in determining if the character was recently grounded
+        bool m_groundedRecently = true;
+
         // Event value multipliers
         float m_forwardValue = 0.f;
         float m_backValue = 0.f;

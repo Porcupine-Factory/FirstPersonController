@@ -786,6 +786,8 @@ namespace FirstPersonController
                 ->Event("Set Jump Input Value", &FirstPersonControllerComponentRequests::SetJumpInputValue)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
+                ->Event("Get Number of Ticks Buffer Grounded", &FirstPersonControllerComponentRequests::GetNumTicksRecentGrounded)
+                ->Event("Set Number of Ticks Buffer Grounded", &FirstPersonControllerComponentRequests::SetNumTicksRecentGrounded)
                 ->Event("Get Script Jump", &FirstPersonControllerComponentRequests::GetScriptJump)
                 ->Event("Set Script Jump", &FirstPersonControllerComponentRequests::SetScriptJump)
                 ->Event("Get Ground Hit EntityIds", &FirstPersonControllerComponentRequests::GetGroundHitEntityIds)
@@ -1264,6 +1266,8 @@ namespace FirstPersonController
         NetworkFPCControllerNotificationBus::Handler::BusConnect(GetEntityId());
 #endif
 
+        m_prevNTicksGrounded.resize(m_numTicksRecentGrounded);
+
         // Initialize PID controllers
         m_crouchDownPidController = PidController<float>(
             m_crouchDownProportionalGain,
@@ -1512,7 +1516,17 @@ namespace FirstPersonController
         else if (*inputId == m_sprintEventId)
         {
             m_sprintValue = value;
-            if (m_sprintInAir || m_grounded || m_sprintPrevValue == 0.f)
+
+            const bool notRecentlyGrounded = AZStd::all_of(
+                m_prevNTicksGrounded.begin(),
+                m_prevNTicksGrounded.end(),
+                [](bool gnd)
+                {
+                    return gnd == false;
+                });
+            const bool groundedRecently = !notRecentlyGrounded;
+
+            if (m_grounded || groundedRecently || m_prevPrevGrounded || m_sprintPrevValue == 0.f || m_sprintInAir)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
@@ -3136,8 +3150,13 @@ namespace FirstPersonController
     {
         auto* sceneInterface = AZ::Interface<AzPhysics::SceneInterface>::Get();
 
-        // Used to determine when event notifications occur
-        const bool prevGrounded = m_grounded;
+        if (!m_prevNTicksGrounded.empty())
+        {
+            // Shift the last grounded check through the prevNTickGrounded vector
+            AZStd::rotate(m_prevNTicksGrounded.rbegin(), m_prevNTicksGrounded.rbegin() + 1, m_prevNTicksGrounded.rend());
+            // Used to determine when event notifications occur
+            m_prevNTicksGrounded.front() = m_grounded;
+        }
         const bool prevGroundClose = m_groundClose;
 
         AZ::Transform sphereCastPose = AZ::Transform::CreateIdentity();
@@ -3388,7 +3407,7 @@ namespace FirstPersonController
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
-        if (!prevGrounded && m_grounded)
+        if (!m_prevNTicksGrounded.front() && m_grounded)
         {
             m_ungroundedDueToJump = false;
             if (m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
@@ -3400,7 +3419,7 @@ namespace FirstPersonController
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnGroundHit, m_fellDistance);
         }
-        else if (prevGrounded && !m_grounded)
+        else if (m_prevNTicksGrounded.front() && !m_grounded)
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnUngrounded);
 
         if (!prevGroundClose && m_groundClose)
@@ -4689,6 +4708,21 @@ namespace FirstPersonController
     {
         m_scriptGrounded = new_grounded;
         m_scriptSetGroundTick = true;
+    }
+    AZ::u16 FirstPersonControllerComponent::GetNumTicksRecentGrounded() const
+    {
+        return m_numTicksRecentGrounded;
+    }
+    void FirstPersonControllerComponent::SetNumTicksRecentGrounded(const AZ::u16& new_numTicksRecentGrounded)
+    {
+        if (new_numTicksRecentGrounded >= 1)
+            m_numTicksRecentGrounded = new_numTicksRecentGrounded;
+        else
+        {
+            AZ_Warning("First Person Controller Component", false, "Number of recently ticks recently grounded must be at least 1.")
+                m_numTicksRecentGrounded = 1;
+        }
+        m_prevNTicksGrounded.resize(m_numTicksRecentGrounded);
     }
     bool FirstPersonControllerComponent::GetScriptJump() const
     {

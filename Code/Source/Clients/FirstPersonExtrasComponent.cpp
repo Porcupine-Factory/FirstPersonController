@@ -366,7 +366,7 @@ namespace FirstPersonController
                 m_cameraEntityId = AZ::EntityId();
             }
         }
-        // Whenevera a camera is added, use its FoV as the walking FoV value
+        // Whenever a camera is added, use its FoV as the walking FoV value
         Camera::CameraRequestBus::EventResult(m_walkFoV, m_cameraEntityId, &Camera::CameraComponentRequests::GetFovDegrees);
         m_sprintFoV = m_walkFoV + m_sprintFoVDelta;
     }
@@ -614,9 +614,18 @@ namespace FirstPersonController
         const float currentSpeed = m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
+
+        const bool notRecentlyGrounded = AZStd::all_of(
+            m_firstPersonControllerObject->m_prevNTicksGrounded.begin(),
+            m_firstPersonControllerObject->m_prevNTicksGrounded.end(),
+            [](bool gnd)
+            {
+                return gnd == false;
+            });
+        const bool groundedRecently = !notRecentlyGrounded;
+
         // Scale the FoV based on the current speed, assuming forward is the fastest direction
-        if (m_firstPersonControllerObject != nullptr &&
-            (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_grounded) && sprinting &&
+        if (m_firstPersonControllerObject != nullptr && (m_firstPersonControllerObject->m_sprintInAir || groundedRecently) && sprinting &&
             (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
         {
             m_sprintFoVTimeAccumulator += deltaTime;

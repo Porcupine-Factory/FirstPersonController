@@ -384,8 +384,17 @@ namespace FirstPersonController
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if (*inputId == m_sprintEventId)
         {
-            if (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_grounded ||
-                m_firstPersonControllerObject->m_sprintPrevValue == 0.f)
+            const bool notRecentlyGrounded = AZStd::all_of(
+                m_firstPersonControllerObject->m_prevNTicksGrounded.begin(),
+                m_firstPersonControllerObject->m_prevNTicksGrounded.end(),
+                [](bool gnd)
+                {
+                    return gnd == false;
+                });
+            m_groundedRecently = !notRecentlyGrounded;
+
+            if (m_firstPersonControllerObject->m_grounded || m_groundedRecently ||
+                m_firstPersonControllerObject->m_sprintPrevValue == 0.f || m_firstPersonControllerObject->m_sprintInAir)
                 m_sprintValue = value;
             else
                 m_sprintValue = 0.f;
@@ -529,7 +538,9 @@ namespace FirstPersonController
         m_firstPersonControllerObject->m_crouchValue = playerInput->m_crouch;
         m_firstPersonControllerObject->m_jumpValue = playerInput->m_jump;
 
-        if (playerInput->m_sprint != 0.f && (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_grounded))
+        if (playerInput->m_sprint != 0.f &&
+            (m_firstPersonControllerObject->m_grounded || m_groundedRecently || m_firstPersonControllerObject->m_sprintPrevValue == 0.f ||
+             m_firstPersonControllerObject->m_sprintInAir))
         {
             m_firstPersonControllerObject->m_sprintEffectiveValue = playerInput->m_sprint;
             m_firstPersonControllerObject->m_sprintAccelValue = playerInput->m_sprint * m_firstPersonControllerObject->m_sprintAccelScale;
