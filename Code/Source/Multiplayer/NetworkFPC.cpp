@@ -15,6 +15,14 @@
 
 namespace FirstPersonController
 {
+    AZ_CVAR(
+        float,
+        cl_VelocityTolerance,
+        50.0f,
+        nullptr,
+        AZ::ConsoleFunctorFlags::Null,
+        "The tolerance used for ground obstruction checks, set this to a large number to avoid false-positive checks");
+
     using namespace StartingPointInput;
 
     void NetworkFPC::Reflect(AZ::ReflectContext* context)
@@ -417,7 +425,7 @@ namespace FirstPersonController
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
         // Set the velocity tolerance to a big number to avoid false-positive ground obstruction checks
-        m_firstPersonControllerObject->m_velocityCloseTolerance = 50.f;
+        m_firstPersonControllerObject->m_velocityCloseTolerance = cl_VelocityTolerance;
 
         m_firstPersonControllerObject->NetworkFPCEnabledIgnoreInputs();
         if (m_firstPersonExtrasObject != nullptr)
