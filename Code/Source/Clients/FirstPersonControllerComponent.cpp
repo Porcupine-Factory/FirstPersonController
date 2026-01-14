@@ -3919,9 +3919,8 @@ namespace FirstPersonController
 
         AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
         m_characterHitEntityIds.clear();
-        if (m_grounded)
-            for (AzPhysics::SceneQueryHit hit : hits.m_hits)
-                m_characterHitEntityIds.push_back(hit.m_entityId);
+        for (AzPhysics::SceneQueryHit hit : hits.m_hits)
+            m_characterHitEntityIds.push_back(hit.m_entityId);
 
         m_characterHits = hits.m_hits;
 
