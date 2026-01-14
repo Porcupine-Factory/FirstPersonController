@@ -3248,7 +3248,7 @@ namespace FirstPersonController
             }
 
             if (m_networkFPCEnabled && groundedGroundCloseOrGroundCloseCoyoteTime == grounded &&
-                hit.m_distance >= m_groundedSphereCastOffset)
+                hit.m_distance > m_groundedSphereCastOffset)
             {
                 // Allow dynamic rigid bodies to report as a valid ground at a farther distance
                 AzPhysics::RigidBody* bodyHit = NULL;
