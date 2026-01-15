@@ -561,7 +561,9 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_groundedSphereCastOffset,
                         "Grounded Offset",
-                        "Determines the offset distance between the bottom of the character and ground.")
+                        "Determines the offset distance between the bottom of the character and ground. It is highly recommended to set "
+                        "the PhysX Character Controller component's Scale value to 1.0, or very close to it, in order to ensure that the "
+                        "spherecasts successfully hit other PhysX Character entities.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_groundCloseSphereCastOffset,
@@ -683,7 +685,9 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_hitRadiusPercentageIncrease,
                         "Capsule Radius Detection Percentage Increase",
-                        "Percentage to increase the character's capsule collider radius by to determine hits / collisions.")
+                        "Percentage to increase the character's capsule collider radius by to determine hits / collisions. It is highly "
+                        "recommended to set the PhysX Character Controller component's Scale value to 1.0, or very close to it, in order "
+                        "to ensure that the spherecasts successfully hit other PhysX Character entities.")
                     ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetEnableCharacterHits)
                     ->DataElement(
                         nullptr,
