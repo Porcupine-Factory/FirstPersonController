@@ -3190,7 +3190,7 @@ namespace FirstPersonController
         if (!m_networkFPCEnabled)
         {
             request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
+                m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
                 sphereCastPose,
                 sphereCastDirection,
                 m_groundedSphereCastOffset,
@@ -3201,7 +3201,7 @@ namespace FirstPersonController
         else
         {
             request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
+                m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
                 sphereCastPose,
                 sphereCastDirection,
                 m_groundedSphereCastOffset + m_groundedExtraOffsetMultiplayerDynamic,
@@ -3332,7 +3332,7 @@ namespace FirstPersonController
             m_airTime += deltaTime;
 
         request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
+            m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
             sphereCastPose,
             sphereCastDirection,
             m_groundCloseSphereCastOffset,
@@ -3367,7 +3367,7 @@ namespace FirstPersonController
             if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > noRadiusUseRacast)
             {
                 request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                    (1.f + m_groundCloseCoyoteTimeRadiusPercentageIncrease / 100.f) * m_capsuleRadius,
+                    m_capsuleRadius * (1.f + m_groundCloseCoyoteTimeRadiusPercentageIncrease / 100.f),
                     sphereCastPose,
                     sphereCastDirection,
                     m_groundCloseCoyoteTimeOffset,
