@@ -155,6 +155,8 @@ namespace FirstPersonController
         float GetJumpInputValue() const override;
         void SetJumpInputValue(const float& new_jumpValue) override;
         bool GetGrounded() const override;
+        float GetFellDistance() const override;
+        float GetSoonFellDistance() const override;
         void SetGroundedForTick(const bool& new_grounded) override;
         AZ::u16 GetNumTicksRecentGrounded() const override;
         void SetNumTicksRecentGrounded(const AZ::u16& new_numTicksRecentGrounded) override;
@@ -578,8 +580,8 @@ namespace FirstPersonController
         void OnPhysicsTimestepFinish(const float& timeStep);
         void OnNetworkFPCTickStart(const float& deltaTime);
         void OnNetworkFPCTickFinish(const float& deltaTime);
-        void OnGroundHit(const float& fellDistance);
-        void OnGroundSoonHit(const float& soonFellDistance);
+        void OnGroundHit(const float& fellVelocity);
+        void OnGroundSoonHit(const float& soonFellVelocity);
         void OnUngrounded();
         void OnStartedFalling();
         void OnJumpApogeeReached();

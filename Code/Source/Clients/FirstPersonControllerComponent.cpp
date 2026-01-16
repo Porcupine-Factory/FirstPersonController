@@ -789,6 +789,8 @@ namespace FirstPersonController
                 ->Event("Get Jump Input Value", &FirstPersonControllerComponentRequests::GetJumpInputValue)
                 ->Event("Set Jump Input Value", &FirstPersonControllerComponentRequests::SetJumpInputValue)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
+                ->Event("Get Fell Distance", &FirstPersonControllerComponentRequests::GetFellDistance)
+                ->Event("Get Soon Fell Distance", &FirstPersonControllerComponentRequests::GetSoonFellDistance)
                 ->Event("Set Grounded For Tick", &FirstPersonControllerComponentRequests::SetGroundedForTick)
                 ->Event("Get Number of Ticks Buffer Grounded", &FirstPersonControllerComponentRequests::GetNumTicksRecentGrounded)
                 ->Event("Set Number of Ticks Buffer Grounded", &FirstPersonControllerComponentRequests::SetNumTicksRecentGrounded)
@@ -3420,8 +3422,9 @@ namespace FirstPersonController
                 m_fellDistance =
                     GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() -
                     m_fellFromHeight;
+            const float fellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_prevTargetVelocity);
             FirstPersonControllerComponentNotificationBus::Broadcast(
-                &FirstPersonControllerComponentNotificationBus::Events::OnGroundHit, m_fellDistance);
+                &FirstPersonControllerComponentNotificationBus::Events::OnGroundHit, fellVelocity);
         }
         else if (m_prevNTicksGrounded.front() && !m_grounded)
             FirstPersonControllerComponentNotificationBus::Broadcast(&FirstPersonControllerComponentNotificationBus::Events::OnUngrounded);
@@ -3434,9 +3437,10 @@ namespace FirstPersonController
                 m_soonFellDistance =
                     GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() -
                     m_fellFromHeight;
+            const float soonFellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_prevTargetVelocity);
             m_onGroundSoonHit = true;
             FirstPersonControllerComponentNotificationBus::Broadcast(
-                &FirstPersonControllerComponentNotificationBus::Events::OnGroundSoonHit, m_soonFellDistance);
+                &FirstPersonControllerComponentNotificationBus::Events::OnGroundSoonHit, soonFellVelocity);
         }
     }
 
@@ -4187,10 +4191,10 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnNetworkFPCTickFinish([[maybe_unused]] const float& deltaTime)
     {
     }
-    void FirstPersonControllerComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)
+    void FirstPersonControllerComponent::OnGroundHit([[maybe_unused]] const float& fellVelocity)
     {
     }
-    void FirstPersonControllerComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellDistance)
+    void FirstPersonControllerComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellVelocity)
     {
     }
     void FirstPersonControllerComponent::OnUngrounded()
@@ -4706,6 +4710,14 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetGrounded() const
     {
         return m_grounded;
+    }
+    float FirstPersonControllerComponent::GetFellDistance() const
+    {
+        return m_fellDistance;
+    }
+    float FirstPersonControllerComponent::GetSoonFellDistance() const
+    {
+        return m_soonFellDistance;
     }
     void FirstPersonControllerComponent::SetGroundedForTick(const bool& new_grounded)
     {

@@ -92,6 +92,8 @@ namespace FirstPersonController
         virtual float GetJumpInputValue() const = 0;
         virtual void SetJumpInputValue(const float&) = 0;
         virtual bool GetGrounded() const = 0;
+        virtual float GetFellDistance() const = 0;
+        virtual float GetSoonFellDistance() const = 0;
         virtual void SetGroundedForTick(const bool&) = 0;
         virtual AZ::u16 GetNumTicksRecentGrounded() const = 0;
         virtual void SetNumTicksRecentGrounded(const AZ::u16&) = 0;
@@ -545,13 +547,13 @@ namespace FirstPersonController
         {
             Call(FN_OnNetworkFPCTickFinish, deltaTime);
         }
-        void OnGroundHit(const float& fellDistance) override
+        void OnGroundHit(const float& fellVelocity) override
         {
-            Call(FN_OnGroundHit, fellDistance);
+            Call(FN_OnGroundHit, fellVelocity);
         }
-        void OnGroundSoonHit(const float& soonFellDistance) override
+        void OnGroundSoonHit(const float& soonFellVelocity) override
         {
-            Call(FN_OnGroundSoonHit, soonFellDistance);
+            Call(FN_OnGroundSoonHit, soonFellVelocity);
         }
         void OnUngrounded() override
         {
