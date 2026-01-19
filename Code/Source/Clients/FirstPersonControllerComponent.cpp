@@ -820,6 +820,9 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
                 ->Event("Get Scene Query Hit Is In Group Name", &FirstPersonControllerComponentRequests::GetSceneQueryHitIsInGroupName)
                 ->Event(
+                    "Get EntityIds Character Hit In Group Name",
+                    &FirstPersonControllerComponentRequests::GetEntityIdsCharacterHitInGroupName)
+                ->Event(
                     "Get Scene Query Hit Simulated Body Handle",
                     &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
                 ->Event("Get Layer Name Is In Group Name", &FirstPersonControllerComponentRequests::GetLayerNameIsInGroupName)
@@ -4901,6 +4904,23 @@ namespace FirstPersonController
             return collisionGroup.IsSet(hit.m_shape->GetCollisionLayer());
         else
             return false;
+    }
+    AZStd::unordered_set<AZ::EntityId> FirstPersonControllerComponent::GetEntityIdsCharacterHitInGroupName(
+        const AZStd::string& groupName) const
+    {
+        AZStd::unordered_set<AZ::EntityId> entityIdsHitByCharacterInGroupName;
+
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(
+            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, groupName, collisionGroup);
+
+        if (success)
+            for (auto hit : m_characterHits)
+                if (collisionGroup.IsSet(hit.m_shape->GetCollisionLayer()))
+                    entityIdsHitByCharacterInGroupName.emplace(hit.m_entityId);
+
+        return entityIdsHitByCharacterInGroupName;
     }
     AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(
         const AzPhysics::SceneQueryHit& hit) const

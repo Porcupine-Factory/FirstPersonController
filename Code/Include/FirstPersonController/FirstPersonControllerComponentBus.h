@@ -119,6 +119,7 @@ namespace FirstPersonController
         virtual Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit&) const = 0;
         virtual bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit&, const AZStd::string&) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit&) const = 0;
+        virtual AZStd::unordered_set<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string&) const = 0;
         virtual bool GetLayerNameIsInGroupName(const AZStd::string&, const AZStd::string&) const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;

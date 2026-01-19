@@ -183,6 +183,7 @@ namespace FirstPersonController
         Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit) const override;
         bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName) const override;
         AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit& hit) const override;
+        AZStd::unordered_set<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string& groupName) const override;
         bool GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName) const override;
         bool GetGroundClose() const override;
         void SetGroundCloseForTick(const bool& new_groundClose) override;
