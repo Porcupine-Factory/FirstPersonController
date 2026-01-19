@@ -4033,6 +4033,24 @@ namespace FirstPersonController
         if (m_networkFPCControllerObject != nullptr)
         {
 #ifdef NETWORKFPC
+            const bool crouching = m_networkFPCControllerObject->GetIsCrouching();
+            if (m_crouching != crouching)
+            {
+                m_crouching = crouching;
+                if (m_crouching)
+                    m_crouchingDownMove = true;
+                else
+                    m_standingUpMove = true;
+
+                m_standing = !m_crouching;
+            }
+            const bool standingUpMove = m_networkFPCControllerObject->GetIsStandingUpMove();
+            const bool crouchingDownMove = m_networkFPCControllerObject->GetIsCrouchingDownMove();
+            if (!m_standing && !m_crouching && !standingUpMove && !crouchingDownMove)
+            {
+                m_standing = true;
+                m_standingUpMove = true;
+            }
             m_speed = m_networkFPCControllerObject->GetTopWalkSpeed();
             m_staminaPercentage = m_networkFPCControllerObject->GetStaminaPercentage();
             m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
