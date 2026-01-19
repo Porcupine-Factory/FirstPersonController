@@ -4805,50 +4805,52 @@ namespace FirstPersonController
             sumNormals += hit.m_normal;
         return sumNormals.GetNormalized();
     }
-    AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(AzPhysics::SceneQueryHit hit) const
+    AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(
+        const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_resultFlags;
     }
-    AZ::EntityId FirstPersonControllerComponent::GetSceneQueryHitEntityId(AzPhysics::SceneQueryHit hit) const
+    AZ::EntityId FirstPersonControllerComponent::GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_entityId;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitNormal(AzPhysics::SceneQueryHit hit) const
+    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitNormal(const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_normal;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitPosition(AzPhysics::SceneQueryHit hit) const
+    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitPosition(const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_position;
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitDistance(AzPhysics::SceneQueryHit hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitDistance(const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_distance;
     }
-    Physics::MaterialId FirstPersonControllerComponent::GetSceneQueryHitMaterialId(AzPhysics::SceneQueryHit hit) const
+    Physics::MaterialId FirstPersonControllerComponent::GetSceneQueryHitMaterialId(const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_physicsMaterialId;
     }
-    AZStd::shared_ptr<Physics::Material> FirstPersonControllerComponent::GetSceneQueryHitMaterialPtr(AzPhysics::SceneQueryHit hit) const
+    AZStd::shared_ptr<Physics::Material> FirstPersonControllerComponent::GetSceneQueryHitMaterialPtr(
+        const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_shape->GetMaterial();
     }
     AZ::Data::Asset<Physics::MaterialAsset> FirstPersonControllerComponent::GetSceneQueryHitMaterialAsset(
-        AzPhysics::SceneQueryHit hit) const
+        const AzPhysics::SceneQueryHit& hit) const
     {
         AZStd::shared_ptr<Physics::Material> material = AZStd::rtti_pointer_cast<Physics::Material>(
             AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
 
         return material->GetMaterialAsset();
     }
-    AZ::Data::AssetId FirstPersonControllerComponent::GetSceneQueryHitMaterialAssetId(AzPhysics::SceneQueryHit hit) const
+    AZ::Data::AssetId FirstPersonControllerComponent::GetSceneQueryHitMaterialAssetId(const AzPhysics::SceneQueryHit& hit) const
     {
         AZStd::shared_ptr<Physics::Material> material = AZStd::rtti_pointer_cast<Physics::Material>(
             AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
 
         return material->GetMaterialAsset().GetId();
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitDynamicFriction(AzPhysics::SceneQueryHit hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitDynamicFriction(const AzPhysics::SceneQueryHit& hit) const
     {
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
@@ -4860,7 +4862,7 @@ namespace FirstPersonController
 
         return physxMaterial->GetProperty("DynamicFriction").GetValue<float>();
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitStaticFriction(AzPhysics::SceneQueryHit hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitStaticFriction(const AzPhysics::SceneQueryHit& hit) const
     {
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
@@ -4872,7 +4874,7 @@ namespace FirstPersonController
 
         return physxMaterial->GetProperty("StaticFriction").GetValue<float>();
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitRestitution(AzPhysics::SceneQueryHit hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitRestitution(const AzPhysics::SceneQueryHit& hit) const
     {
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
@@ -4884,11 +4886,12 @@ namespace FirstPersonController
 
         return physxMaterial->GetProperty("Restitution").GetValue<float>();
     }
-    Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(AzPhysics::SceneQueryHit hit) const
+    Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_shape;
     }
-    bool FirstPersonControllerComponent::GetSceneQueryHitIsInGroupName(AzPhysics::SceneQueryHit hit, AZStd::string groupName) const
+    bool FirstPersonControllerComponent::GetSceneQueryHitIsInGroupName(
+        const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName) const
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
@@ -4899,11 +4902,12 @@ namespace FirstPersonController
         else
             return false;
     }
-    AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(AzPhysics::SceneQueryHit hit) const
+    AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(
+        const AzPhysics::SceneQueryHit& hit) const
     {
         return hit.m_bodyHandle;
     }
-    bool FirstPersonControllerComponent::GetLayerNameIsInGroupName(AZStd::string layerName, AZStd::string groupName) const
+    bool FirstPersonControllerComponent::GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName) const
     {
         bool groupSuccess = false;
         AzPhysics::CollisionGroup collisionGroup;
