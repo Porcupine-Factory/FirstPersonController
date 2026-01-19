@@ -819,6 +819,7 @@ namespace FirstPersonController
                 ->Event("Get Scene Query Hit Restitution", &FirstPersonControllerComponentRequests::GetSceneQueryHitRestitution)
                 ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
                 ->Event("Get Scene Query Hit Is In Group Name", &FirstPersonControllerComponentRequests::GetSceneQueryHitIsInGroupName)
+                ->Event("Get Character Hits In Group Name", &FirstPersonControllerComponentRequests::GetCharacterHitsInGroupName)
                 ->Event(
                     "Get EntityIds Character Hit In Group Name",
                     &FirstPersonControllerComponentRequests::GetEntityIdsCharacterHitInGroupName)
@@ -4772,23 +4773,17 @@ namespace FirstPersonController
     {
         return m_groundHitEntityIds;
     }
-    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundSceneQueryHits() const
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundSceneQueryHits() const
     {
-        AzPhysics::SceneQueryHits groundHits;
-        groundHits.m_hits = m_groundHits;
-        return groundHits;
+        return m_groundHits;
     }
-    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundCloseSceneQueryHits() const
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundCloseSceneQueryHits() const
     {
-        AzPhysics::SceneQueryHits groundCloseHits;
-        groundCloseHits.m_hits = m_groundCloseHits;
-        return groundCloseHits;
+        return m_groundCloseHits;
     }
-    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetGroundCloseCoyoteTimeSceneQueryHits() const
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetGroundCloseCoyoteTimeSceneQueryHits() const
     {
-        AzPhysics::SceneQueryHits groundCloseCoyoteTimeHits;
-        groundCloseCoyoteTimeHits.m_hits = m_groundCloseCoyoteTimeHits;
-        return groundCloseCoyoteTimeHits;
+        return m_groundCloseCoyoteTimeHits;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetGroundSumNormalsDirection() const
     {
@@ -4905,10 +4900,10 @@ namespace FirstPersonController
         else
             return false;
     }
-    AZStd::unordered_set<AZ::EntityId> FirstPersonControllerComponent::GetEntityIdsCharacterHitInGroupName(
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetCharacterHitsInGroupName(
         const AZStd::string& groupName) const
     {
-        AZStd::unordered_set<AZ::EntityId> entityIdsHitByCharacterInGroupName;
+        AZStd::vector<AzPhysics::SceneQueryHit> characterHitsInGroupName;
 
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
@@ -4917,8 +4912,24 @@ namespace FirstPersonController
 
         if (success)
             for (auto hit : m_characterHits)
-                if (collisionGroup.IsSet(hit.m_shape->GetCollisionLayer()))
-                    entityIdsHitByCharacterInGroupName.emplace(hit.m_entityId);
+                if (hit.IsValid() && collisionGroup.IsSet(hit.m_shape->GetCollisionLayer()))
+                    characterHitsInGroupName.push_back(hit);
+
+        return characterHitsInGroupName;
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetEntityIdsCharacterHitInGroupName(const AZStd::string& groupName) const
+    {
+        AZStd::vector<AZ::EntityId> entityIdsHitByCharacterInGroupName;
+
+        bool success = false;
+        AzPhysics::CollisionGroup collisionGroup;
+        Physics::CollisionRequestBus::BroadcastResult(
+            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, groupName, collisionGroup);
+
+        if (success)
+            for (auto hit : m_characterHits)
+                if (hit.IsValid() && collisionGroup.IsSet(hit.m_shape->GetCollisionLayer()))
+                    entityIdsHitByCharacterInGroupName.push_back(hit.m_entityId);
 
         return entityIdsHitByCharacterInGroupName;
     }

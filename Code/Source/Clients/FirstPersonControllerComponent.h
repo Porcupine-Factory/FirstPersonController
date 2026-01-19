@@ -163,9 +163,9 @@ namespace FirstPersonController
         bool GetScriptJump() const override;
         void SetScriptJump(const bool& new_scriptJump) override;
         AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const override;
-        AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const override;
-        AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const override;
-        AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseSceneQueryHits() const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseCoyoteTimeSceneQueryHits() const override;
         AZ::Vector3 GetGroundSumNormalsDirection() const override;
         AZ::Vector3 GetGroundCloseSumNormalsDirection() const override;
         AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(const AzPhysics::SceneQueryHit& hit) const override;
@@ -183,7 +183,8 @@ namespace FirstPersonController
         Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit) const override;
         bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName) const override;
         AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit& hit) const override;
-        AZStd::unordered_set<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string& groupName) const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterHitsInGroupName(const AZStd::string& groupName) const override;
+        AZStd::vector<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string& groupName) const override;
         bool GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName) const override;
         bool GetGroundClose() const override;
         void SetGroundCloseForTick(const bool& new_groundClose) override;

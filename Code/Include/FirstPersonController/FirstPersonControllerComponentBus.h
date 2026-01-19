@@ -100,9 +100,9 @@ namespace FirstPersonController
         virtual bool GetScriptJump() const = 0;
         virtual void SetScriptJump(const bool&) = 0;
         virtual AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const = 0;
-        virtual AzPhysics::SceneQueryHits GetGroundSceneQueryHits() const = 0;
-        virtual AzPhysics::SceneQueryHits GetGroundCloseSceneQueryHits() const = 0;
-        virtual AzPhysics::SceneQueryHits GetGroundCloseCoyoteTimeSceneQueryHits() const = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundSceneQueryHits() const = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseSceneQueryHits() const = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseCoyoteTimeSceneQueryHits() const = 0;
         virtual AZ::Vector3 GetGroundSumNormalsDirection() const = 0;
         virtual AZ::Vector3 GetGroundCloseSumNormalsDirection() const = 0;
         virtual AZ::EntityId GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit&) const = 0;
@@ -119,7 +119,8 @@ namespace FirstPersonController
         virtual Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit&) const = 0;
         virtual bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit&, const AZStd::string&) const = 0;
         virtual AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit&) const = 0;
-        virtual AZStd::unordered_set<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string&) const = 0;
+        virtual AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterHitsInGroupName(const AZStd::string&) const = 0;
+        virtual AZStd::vector<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string&) const = 0;
         virtual bool GetLayerNameIsInGroupName(const AZStd::string&, const AZStd::string&) const = 0;
         virtual bool GetGroundClose() const = 0;
         virtual void SetGroundCloseForTick(const bool&) = 0;
