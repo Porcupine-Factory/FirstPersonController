@@ -1199,6 +1199,14 @@ namespace FirstPersonController
                 ->Event("Get Is Autonomous Client", &FirstPersonControllerComponentRequests::GetIsAutonomousClient)
                 ->Event("Get Is Server", &FirstPersonControllerComponentRequests::GetIsServer)
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
+                ->Event(
+                    "Get NetworkFPC Allow All Movement Inputs",
+                    &FirstPersonControllerComponentRequests::GetNetworkFPCAllowAllMovementInputs)
+                ->Event(
+                    "Set NetworkFPC Allow All Movement Inputs",
+                    &FirstPersonControllerComponentRequests::SetNetworkFPCAllowAllMovementInputs)
+                ->Event("Get NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::GetNetworkFPCAllowRotationInputs)
+                ->Event("Set NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::SetNetworkFPCAllowRotationInputs)
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
                 ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC);
 
@@ -5921,7 +5929,7 @@ namespace FirstPersonController
         m_sprintMaxTime = new_sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
 #ifdef NETWORKFPC
-        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+        if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
 #endif
     }
@@ -5948,7 +5956,7 @@ namespace FirstPersonController
             m_staminaIncreasing = true;
         }
 #ifdef NETWORKFPC
-        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+        if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
 #endif
     }
@@ -5985,7 +5993,7 @@ namespace FirstPersonController
             m_staminaIncreasing = true;
         }
 #ifdef NETWORKFPC
-        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+        if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
 #endif
     }
@@ -6028,7 +6036,7 @@ namespace FirstPersonController
         m_sprintTotalCooldownTime = new_sprintTotalCooldownTime;
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
 #ifdef NETWORKFPC
-        if (m_networkFPCObject && m_networkFPCControllerObject != nullptr)
+        if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
 #endif
     }
@@ -6492,6 +6500,30 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetIsHost() const
     {
         return m_isHost;
+    }
+    bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const
+    {
+        if (m_networkFPCControllerObject != nullptr)
+            return m_networkFPCControllerObject->m_allowAllMovementInputs;
+        else
+            return true;
+    }
+    void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs)
+    {
+        if (m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->m_allowAllMovementInputs = new_allowAllMovementInputs;
+    }
+    bool FirstPersonControllerComponent::GetNetworkFPCAllowRotationInputs() const
+    {
+        if (m_networkFPCControllerObject != nullptr)
+            return m_networkFPCControllerObject->m_allowRotationInputs;
+        else
+            return true;
+    }
+    void FirstPersonControllerComponent::SetNetworkFPCAllowRotationInputs(const bool& new_allowRotationInputs)
+    {
+        if (m_networkFPCControllerObject != nullptr)
+            m_networkFPCControllerObject->m_allowRotationInputs = new_allowRotationInputs;
     }
     bool FirstPersonControllerComponent::GetLocallyEnableNetworkFPC() const
     {

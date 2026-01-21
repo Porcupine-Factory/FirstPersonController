@@ -443,6 +443,10 @@ namespace FirstPersonController
         virtual bool GetIsAutonomousClient() const = 0;
         virtual bool GetIsServer() const = 0;
         virtual bool GetIsHost() const = 0;
+        virtual bool GetNetworkFPCAllowAllMovementInputs() const = 0;
+        virtual void SetNetworkFPCAllowAllMovementInputs(const bool&) = 0;
+        virtual bool GetNetworkFPCAllowRotationInputs() const = 0;
+        virtual void SetNetworkFPCAllowRotationInputs(const bool&) = 0;
         virtual bool GetLocallyEnableNetworkFPC() const = 0;
         virtual void SetLocallyEnableNetworkFPC(const bool&) = 0;
         virtual void NetworkFPCEnabledIgnoreInputs() = 0;

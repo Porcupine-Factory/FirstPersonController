@@ -483,21 +483,28 @@ namespace FirstPersonController
         auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
         // Assign input values
-        playerInput->m_forward = m_forwardValue;
-        playerInput->m_back = m_backValue;
-        playerInput->m_left = m_leftValue;
-        playerInput->m_right = m_rightValue;
+        if (m_allowAllMovementInputs)
+        {
+            if (m_allowRotationInputs)
+            {
+                playerInput->m_pitch = m_pitchValue;
+                playerInput->m_yaw = m_yawValue;
+            }
+            playerInput->m_forward = m_forwardValue;
+            playerInput->m_back = m_backValue;
+            playerInput->m_left = m_leftValue;
+            playerInput->m_right = m_rightValue;
+            playerInput->m_sprint = m_sprintValue;
+            playerInput->m_crouch = m_crouchValue;
+            playerInput->m_jump = m_jumpValue;
+        }
+
         playerInput->m_desiredVelocity = GetDesiredVelocity();
-        playerInput->m_yaw = m_yawValue;
         playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
         playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
         playerInput->m_overrideTransformForTick = GetOverrideTransformForTick();
         playerInput->m_overrideRotationForTick = GetOverrideRotationForTick();
         playerInput->m_overrideTransform = GetOverrideTransform();
-        playerInput->m_pitch = m_pitchValue;
-        playerInput->m_sprint = m_sprintValue;
-        playerInput->m_crouch = m_crouchValue;
-        playerInput->m_jump = m_jumpValue;
 
         m_yawValue = 0.0f;
         m_pitchValue = 0.0f;
@@ -638,6 +645,22 @@ namespace FirstPersonController
     void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime)
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
+    }
+    bool NetworkFPCController::GetAllowAllMovementInputs() const
+    {
+        return m_allowAllMovementInputs;
+    }
+    void NetworkFPCController::SetAllowAllMovementInputs(const bool& new_allowAllMovementInputs)
+    {
+        m_allowAllMovementInputs = new_allowAllMovementInputs;
+    }
+    bool NetworkFPCController::GetAllowRotationInputs() const
+    {
+        return m_allowRotationInputs;
+    }
+    void NetworkFPCController::SetAllowRotationInputs(const bool& new_allowRotationInputs)
+    {
+        m_allowRotationInputs = new_allowRotationInputs;
     }
     bool NetworkFPCController::GetEnabled() const
     {

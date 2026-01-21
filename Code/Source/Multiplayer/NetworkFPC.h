@@ -128,6 +128,10 @@ namespace FirstPersonController
 
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
+        bool GetAllowAllMovementInputs() const override;
+        void SetAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
+        bool GetAllowRotationInputs() const override;
+        void SetAllowRotationInputs(const bool& new_allowRotationInputs) override;
         bool GetEnabled() const override;
         void SetEnabled(const bool& new_enabled) override;
 
@@ -156,6 +160,12 @@ namespace FirstPersonController
         AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
         void OnEnableNetworkFPCChanged(const bool& enable);
         bool m_disabled = false;
+
+        // Used to allow or prevent all player character inputs from going to the server (e.g. in menus)
+        bool m_allowAllMovementInputs = true;
+
+        // Used to allow or prevent the rotation inputs from being applied to the character (e.g. in menus)
+        bool m_allowRotationInputs = true;
 
         // Signals when the controller is determined to be autonomous or not
         bool m_autonomousNotDetermined = true;

@@ -508,6 +508,10 @@ namespace FirstPersonController
         bool GetIsAutonomousClient() const override;
         bool GetIsServer() const override;
         bool GetIsHost() const override;
+        bool GetNetworkFPCAllowAllMovementInputs() const override;
+        void SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
+        bool GetNetworkFPCAllowRotationInputs() const override;
+        void SetNetworkFPCAllowRotationInputs(const bool& new_allowRotationInputs) override;
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
         void NetworkFPCEnabledIgnoreInputs() override;
