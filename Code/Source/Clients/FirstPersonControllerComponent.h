@@ -63,6 +63,7 @@ namespace FirstPersonController
         void OnCharacterActivated(const AZ::EntityId& entityId) override;
 
         static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
+        static void GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
 
@@ -508,12 +509,15 @@ namespace FirstPersonController
         bool GetIsAutonomousClient() const override;
         bool GetIsServer() const override;
         bool GetIsHost() const override;
+        bool GetIsNetBot() const override;
+        void SetIsNetBot(const bool& new_isNetBot) override;
         bool GetNetworkFPCAllowAllMovementInputs() const override;
         void SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
         bool GetNetworkFPCAllowRotationInputs() const override;
         void SetNetworkFPCAllowRotationInputs(const bool& new_allowRotationInputs) override;
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
+        bool GetIsNetworkingActive() const override;
         void NetworkFPCEnabledIgnoreInputs() override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
@@ -863,11 +867,16 @@ namespace FirstPersonController
         AzPhysics::SceneQuery::QueryType m_characterHitBy = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;
         AZStd::vector<AzPhysics::SceneQueryHit> m_characterHits;
 
-        // Networking related variables
+        // Networking related variables (Note: m_isNetBot is true by default because it is set to false by NetworkFPC when autonomous)
         bool m_networkFPCEnabled = false;
         bool m_isServer = false;
         bool m_isHost = false;
         bool m_isAutonomousClient = false;
+#ifdef NETWORKFPC
+        bool m_isNetBot = true;
+#else
+        bool m_isNetBot = false;
+#endif
         bool m_newtworkFPCCameraAligned = false;
         float m_networkFPCRotationSliceAccumulator = 0.f;
         float m_networkFPCYawOvershootAngle = 0.f;

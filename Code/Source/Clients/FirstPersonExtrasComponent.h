@@ -50,6 +50,7 @@ namespace FirstPersonController
         void OnEntityActivated(const AZ::EntityId& entityId) override;
 
         static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
+        static void GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent);
         static void GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided);
         static void GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible);
 

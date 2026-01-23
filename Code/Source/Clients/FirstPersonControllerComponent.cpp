@@ -1199,6 +1199,8 @@ namespace FirstPersonController
                 ->Event("Get Is Autonomous Client", &FirstPersonControllerComponentRequests::GetIsAutonomousClient)
                 ->Event("Get Is Server", &FirstPersonControllerComponentRequests::GetIsServer)
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
+                ->Event("Get Is Net Bot", &FirstPersonControllerComponentRequests::GetIsNetBot)
+                ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
                 ->Event(
                     "Get NetworkFPC Allow All Movement Inputs",
                     &FirstPersonControllerComponentRequests::GetNetworkFPCAllowAllMovementInputs)
@@ -1208,7 +1210,8 @@ namespace FirstPersonController
                 ->Event("Get NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::GetNetworkFPCAllowRotationInputs)
                 ->Event("Set NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::SetNetworkFPCAllowRotationInputs)
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
-                ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC);
+                ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC)
+                ->Event("Get Is Networking Active", &FirstPersonControllerComponentRequests::GetIsNetworkingActive);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
@@ -1380,15 +1383,22 @@ namespace FirstPersonController
 #endif
 
         // Determine if the NetworkFPC is enabled
-        if (m_networkFPCObject != nullptr)
+        if (m_networkFPCObject != nullptr
+#ifdef NETWORKFPC
+            || Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1)
+#endif
+        )
         {
             InputEventNotificationBus::MultiHandler::BusDisconnect();
             InputChannelEventListener::Disconnect();
             SetAddVelocityForTimestepVsTick(true);
+            if (m_networkFPCObject != nullptr)
+            {
 #ifdef NETWORKFPC
-            m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
-            NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
+                m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
+                NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
 #endif
+            }
         }
         else
         {
@@ -1423,10 +1433,14 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
-        required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("PhysicsCharacterControllerService"));
         required.push_back(AZ_CRC_CE("PhysicsWorldBodyService"));
         required.push_back(AZ_CRC_CE("TransformService"));
+    }
+
+    void FirstPersonControllerComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    {
+        dependent.push_back(AZ_CRC_CE("InputConfigurationService"));
     }
 
     void FirstPersonControllerComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
@@ -1622,7 +1636,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
     {
-        if (!m_isAutonomousClient && !m_isServer && !m_isHost)
+        if (!m_isAutonomousClient && !m_isServer && !m_isHost && !m_isNetBot)
         {
             NotAutonomousSoDisconnect();
             return;
@@ -1644,7 +1658,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
     {
-        if ((!m_isAutonomousClient && !m_isServer && !m_isHost) || (entity != GetEntityId()))
+        if ((!m_isAutonomousClient && !m_isServer && !m_isHost && !m_isNetBot) || (entity != GetEntityId()))
             return;
         if (!m_isServer)
             CaptureCharacterEyeTranslation();
@@ -1746,7 +1760,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
     {
-        if (m_networkFPCEnabled && m_isServer)
+        if (m_networkFPCEnabled && m_isServer || m_isNetBot)
             return;
 
         const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
@@ -1800,7 +1814,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
-        if (m_networkFPCEnabled && m_isServer)
+        if (m_networkFPCEnabled && m_isServer || m_isNetBot)
             return;
         // Set the translation of the camera to where the character is on each physics timestep
         if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
@@ -1947,7 +1961,11 @@ namespace FirstPersonController
                 const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
                 const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
                 const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
-                m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
+
+#ifdef NETWORKFPC
+                if (Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1) && !m_isNetBot && !m_isServer)
+#endif
+                    m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
             }
             else
             {
@@ -1956,7 +1974,11 @@ namespace FirstPersonController
                 const AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
                 m_cameraPitch = AZ::GetClamp(m_cameraPitch + newLookRotationDelta.GetX(), m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
                 const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
-                m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
+
+#ifdef NETWORKFPC
+                if (Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1) && !m_isNetBot && !m_isServer)
+#endif
+                    m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
             }
         }
 
@@ -4142,7 +4164,8 @@ namespace FirstPersonController
 
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,
         // depending on which is selected and which is currently executing
-        if (tickTimestepNetwork == 2 || (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && !m_networkFPCEnabled) ||
+        if (tickTimestepNetwork == 2 ||
+            (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && (!m_networkFPCEnabled || m_isServer)) ||
             (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !m_networkFPCEnabled))
         {
             // Perform the check to see if the character's movement is obstructed
@@ -6501,29 +6524,45 @@ namespace FirstPersonController
     {
         return m_isHost;
     }
+    bool FirstPersonControllerComponent::GetIsNetBot() const
+    {
+        return m_isNetBot;
+    }
+    void FirstPersonControllerComponent::SetIsNetBot(const bool& new_isNetBot)
+    {
+        m_isNetBot = new_isNetBot;
+    }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const
     {
+#ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
             return m_networkFPCControllerObject->m_allowAllMovementInputs;
         else
+#endif
             return true;
     }
     void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs)
     {
+#ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->m_allowAllMovementInputs = new_allowAllMovementInputs;
+#endif
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowRotationInputs() const
     {
+#ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
             return m_networkFPCControllerObject->m_allowRotationInputs;
         else
+#endif
             return true;
     }
     void FirstPersonControllerComponent::SetNetworkFPCAllowRotationInputs(const bool& new_allowRotationInputs)
     {
+#ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->m_allowRotationInputs = new_allowRotationInputs;
+#endif
     }
     bool FirstPersonControllerComponent::GetLocallyEnableNetworkFPC() const
     {
@@ -6534,6 +6573,14 @@ namespace FirstPersonController
         m_networkFPCEnabled = new_networkFPCEnabled;
 #ifdef NETWORKFPC
         NetworkFPCControllerRequestBus::Event(GetEntityId(), &NetworkFPCControllerRequestBus::Events::SetEnabled, m_networkFPCEnabled);
+#endif
+    }
+    bool FirstPersonControllerComponent::GetIsNetworkingActive() const
+    {
+#ifdef NETWORKFPC
+        return Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1);
+#else
+        return false;
 #endif
     }
     void FirstPersonControllerComponent::NetworkFPCEnabledIgnoreInputs()

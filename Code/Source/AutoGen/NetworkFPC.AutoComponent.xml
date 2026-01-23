@@ -23,6 +23,20 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines whether NetworkFPC is enabled or disabled."/>
+    <NetworkProperty Type="AZ::u64" Name="ServerFPCEntityId"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="false"
+                     IsPredictable="false" IsPublic="true"
+                     Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Used to get the server's EntityId of the FPC entity."/>
+    <NetworkProperty Type="bool" Name="IsNetBot"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="false"
+                     IsPredictable="false" IsPublic="true"
+                     Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Determines whether the FPC entity is an AI bot, true by default in FPC, set to false when autonomous."/>
     <NetworkProperty Type="AZ::Vector3" Name="LookRotationDelta"
                      Init="AZ::Vector3::CreateZero()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"

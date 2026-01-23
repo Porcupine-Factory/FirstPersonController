@@ -424,6 +424,9 @@ namespace FirstPersonController
         if (m_firstPersonExtrasObject != nullptr)
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
+        // Set the server's FPC EntityId to be obtained by the autonomous client
+        SetServerFPCEntityId(AZ::u64(m_firstPersonControllerObject->GetEntity()));
+
         // Set the velocity tolerance to a big number to avoid false-positive ground obstruction checks
         m_firstPersonControllerObject->m_velocityCloseTolerance = cl_VelocityTolerance;
 
@@ -435,6 +438,7 @@ namespace FirstPersonController
         {
             m_autonomousNotDetermined = false;
             m_firstPersonControllerObject->IsAutonomousSoConnect();
+            m_firstPersonControllerObject->m_isNetBot = false;
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
             AssignConnectInputEvents();
@@ -455,12 +459,12 @@ namespace FirstPersonController
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
-        required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("FirstPersonControllerService"));
     }
 
     void NetworkFPCController::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
     {
+        dependent.push_back(AZ_CRC_CE("InputConfigurationService"));
         dependent.push_back(AZ_CRC_CE("FirstPersonExtrasService"));
     }
 
@@ -528,17 +532,21 @@ namespace FirstPersonController
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
         {
-            m_firstPersonControllerObject->NotAutonomousSoDisconnect();
-            if (m_firstPersonExtrasObject != nullptr)
-                m_firstPersonExtrasObject->NotAutonomousSoDisconnect();
+            if (!GetIsNetBot())
+            {
+                m_firstPersonControllerObject->m_isNetBot = false;
+                m_firstPersonControllerObject->NotAutonomousSoDisconnect();
+                if (m_firstPersonExtrasObject != nullptr)
+                    m_firstPersonExtrasObject->NotAutonomousSoDisconnect();
+            }
+            else
+                m_firstPersonControllerObject->m_isNetBot = true;
             if (IsNetEntityRoleAuthority())
                 m_firstPersonControllerObject->m_isServer = true;
+            if (!m_firstPersonControllerObject->m_isServer && !m_firstPersonControllerObject->m_isNetBot)
+                m_disabled = true;
             m_autonomousNotDetermined = false;
         }
-
-        if (!m_firstPersonControllerObject->m_isServer && !m_firstPersonControllerObject->m_isHost &&
-            !m_firstPersonControllerObject->m_isAutonomousClient)
-            return;
 
         const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 

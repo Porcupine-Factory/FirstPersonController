@@ -427,8 +427,12 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
     {
-        required.push_back(AZ_CRC_CE("InputConfigurationService"));
         required.push_back(AZ_CRC_CE("FirstPersonControllerService"));
+    }
+
+    void FirstPersonExtrasComponent::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    {
+        dependent.push_back(AZ_CRC_CE("InputConfigurationService"));
     }
 
     void FirstPersonExtrasComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
