@@ -1208,6 +1208,7 @@ namespace FirstPersonController
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
                 ->Event("Get Is Net Bot", &FirstPersonControllerComponentRequests::GetIsNetBot)
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
+                ->Event("Get NetEntityId By Id", &FirstPersonControllerComponentRequests::GetNetEntityIdById)
                 ->Event(
                     "Get NetworkFPC Allow All Movement Inputs",
                     &FirstPersonControllerComponentRequests::GetNetworkFPCAllowAllMovementInputs)
@@ -6570,6 +6571,21 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetIsNetBot(const bool& new_isNetBot)
     {
         m_isNetBot = new_isNetBot;
+    }
+    uint64_t FirstPersonControllerComponent::GetNetEntityIdById(const AZ::EntityId& entityId) const
+    {
+#ifdef NETWORKFPC
+        if (GetIsNetworkingActive())
+        {
+            const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+            if (!networkEntityManager)
+                return 0;
+            const Multiplayer::NetEntityId netEntityId = networkEntityManager->GetNetEntityIdById(entityId);
+            return uint64_t(netEntityId);
+        }
+        else
+#endif
+            return 0;
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const
     {

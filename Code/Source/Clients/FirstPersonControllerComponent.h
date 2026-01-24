@@ -514,6 +514,7 @@ namespace FirstPersonController
         bool GetIsHost() const override;
         bool GetIsNetBot() const override;
         void SetIsNetBot(const bool& new_isNetBot) override;
+        uint64_t GetNetEntityIdById(const AZ::EntityId& entityId) const override;
         bool GetNetworkFPCAllowAllMovementInputs() const override;
         void SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
         bool GetNetworkFPCAllowRotationInputs() const override;
