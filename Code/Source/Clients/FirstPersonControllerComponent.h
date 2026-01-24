@@ -231,9 +231,12 @@ namespace FirstPersonController
         void SetPhysicsTimestepScaleFactor(const float& new_physicsTimestepScaleFactor) override;
         bool GetScriptSetsTargetVelocityXY() const override;
         void SetScriptSetsTargetVelocityXY(const bool& new_scriptSetsTargetVelocityXY) override;
-        AZ::Vector2 GetTargetVelocityXY() const override;
-        void SetTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY) override;
-        AZ::Vector2 GetTargetVelocityXYWorld() const override;
+        AZ::Vector2 GetScriptTargetVelocityXY() const override;
+        void SetScriptTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY) override;
+        AZ::Vector2 GetScriptTargetVelocityXYWorld() const override;
+        void SetScriptTargetVelocityXYWorld(const AZ::Vector2& new_scriptTargetVelocityXYWorld) override;
+        float GetScriptTargetVelocityXYEulerAngle() const override;
+        float ConvertVectorToHeading(const AZ::Vector3& convertVector) const override;
         AZ::Vector2 GetCorrectedVelocityXY() const override;
         void SetCorrectedVelocityXY(const AZ::Vector2& new_correctedVelocityXY) override;
         float GetCorrectedVelocityZ() const override;

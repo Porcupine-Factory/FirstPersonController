@@ -884,9 +884,16 @@ namespace FirstPersonController
                 ->Event("Set Physics Timestep Scale Factor", &FirstPersonControllerComponentRequests::SetPhysicsTimestepScaleFactor)
                 ->Event("Get Script Sets Target Velocity XY", &FirstPersonControllerComponentRequests::GetScriptSetsTargetVelocityXY)
                 ->Event("Set Script Sets Target Velocity XY", &FirstPersonControllerComponentRequests::SetScriptSetsTargetVelocityXY)
-                ->Event("Get Target XY Velocity", &FirstPersonControllerComponentRequests::GetTargetVelocityXY)
-                ->Event("Set Target XY Velocity", &FirstPersonControllerComponentRequests::SetTargetVelocityXY)
-                ->Event("Get Target XY Velocity Using World", &FirstPersonControllerComponentRequests::GetTargetVelocityXYWorld)
+                ->Event("Get Script Target XY Velocity", &FirstPersonControllerComponentRequests::GetScriptTargetVelocityXY)
+                ->Event("Set Script Target XY Velocity", &FirstPersonControllerComponentRequests::SetScriptTargetVelocityXY)
+                ->Event(
+                    "Get Script Target XY Velocity Using World", &FirstPersonControllerComponentRequests::GetScriptTargetVelocityXYWorld)
+                ->Event(
+                    "Set Script Target XY Velocity Using World", &FirstPersonControllerComponentRequests::SetScriptTargetVelocityXYWorld)
+                ->Event(
+                    "Get Script Target XY Velocity Euler Angle",
+                    &FirstPersonControllerComponentRequests::GetScriptTargetVelocityXYEulerAngle)
+                ->Event("Convert Vector To Heading", &FirstPersonControllerComponentRequests::ConvertVectorToHeading)
                 ->Event("Get Corrected Velocity XY", &FirstPersonControllerComponentRequests::GetCorrectedVelocityXY)
                 ->Event("Set Corrected Velocity XY", &FirstPersonControllerComponentRequests::SetCorrectedVelocityXY)
                 ->Event("Get Corrected Velocity Z", &FirstPersonControllerComponentRequests::GetCorrectedVelocityZ)
@@ -1882,8 +1889,11 @@ namespace FirstPersonController
                 m_currentHeading = characterTransform->GetWorldRotation().GetZ();
 
             // Apply the yaw to the character
-            if (!m_networkFPCEnabled || m_isHost)
+            if ((!m_networkFPCEnabled || m_isHost) && !m_scriptSetCurrentHeadingTick)
                 characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
+            else if (m_scriptSetCurrentHeadingTick)
+                characterTransform->SetLocalRotation(AZ::Vector3(
+                    characterTransform->GetLocalRotation().GetX(), characterTransform->GetLocalRotation().GetY(), m_currentHeading));
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
             if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr && !m_isHost)
@@ -5232,17 +5242,40 @@ namespace FirstPersonController
     {
         m_scriptSetsTargetVelocityXY = new_scriptSetsTargetVelocityXY;
     }
-    AZ::Vector2 FirstPersonControllerComponent::GetTargetVelocityXY() const
+    AZ::Vector2 FirstPersonControllerComponent::GetScriptTargetVelocityXY() const
     {
         return m_scriptTargetVelocityXY;
     }
-    void FirstPersonControllerComponent::SetTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY)
+    void FirstPersonControllerComponent::SetScriptTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY)
     {
         m_scriptTargetVelocityXY = new_scriptTargetVelocityXY;
     }
-    AZ::Vector2 FirstPersonControllerComponent::GetTargetVelocityXYWorld() const
+    AZ::Vector2 FirstPersonControllerComponent::GetScriptTargetVelocityXYWorld() const
     {
         return AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(m_scriptTargetVelocityXY)));
+    }
+    void FirstPersonControllerComponent::SetScriptTargetVelocityXYWorld(const AZ::Vector2& new_scriptTargetVelocityXYWorld)
+    {
+        m_scriptTargetVelocityXY =
+            AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(new_scriptTargetVelocityXYWorld)));
+        ;
+    }
+    float FirstPersonControllerComponent::GetScriptTargetVelocityXYEulerAngle() const
+    {
+        const AZ::Vector2 worldTargetVelocityXY =
+            AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(m_scriptTargetVelocityXY)));
+        float angle = worldTargetVelocityXY.AngleSafe(AZ::Vector2::CreateAxisY());
+        if (worldTargetVelocityXY.GetX() > 0.f)
+            angle *= -1.f;
+        return angle;
+    }
+    float FirstPersonControllerComponent::ConvertVectorToHeading(const AZ::Vector3& convertVector) const
+    {
+        // Ignore the Z component
+        float angle = AZ::Vector2(convertVector).AngleSafe(AZ::Vector2::CreateAxisY());
+        if (convertVector.GetX() > 0.f)
+            angle *= -1.f;
+        return angle;
     }
     AZ::Vector2 FirstPersonControllerComponent::GetCorrectedVelocityXY() const
     {

@@ -165,9 +165,12 @@ namespace FirstPersonController
         virtual void SetPhysicsTimestepScaleFactor(const float&) = 0;
         virtual bool GetScriptSetsTargetVelocityXY() const = 0;
         virtual void SetScriptSetsTargetVelocityXY(const bool&) = 0;
-        virtual AZ::Vector2 GetTargetVelocityXY() const = 0;
-        virtual void SetTargetVelocityXY(const AZ::Vector2&) = 0;
-        virtual AZ::Vector2 GetTargetVelocityXYWorld() const = 0;
+        virtual AZ::Vector2 GetScriptTargetVelocityXY() const = 0;
+        virtual void SetScriptTargetVelocityXY(const AZ::Vector2&) = 0;
+        virtual AZ::Vector2 GetScriptTargetVelocityXYWorld() const = 0;
+        virtual void SetScriptTargetVelocityXYWorld(const AZ::Vector2&) = 0;
+        virtual float GetScriptTargetVelocityXYEulerAngle() const = 0;
+        virtual float ConvertVectorToHeading(const AZ::Vector3&) const = 0;
         virtual AZ::Vector2 GetCorrectedVelocityXY() const = 0;
         virtual void SetCorrectedVelocityXY(const AZ::Vector2&) = 0;
         virtual float GetCorrectedVelocityZ() const = 0;
