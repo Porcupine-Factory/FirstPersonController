@@ -455,6 +455,7 @@ namespace FirstPersonController
     {
         NetworkFPCControllerRequestBus::Handler::BusDisconnect();
         InputEventNotificationBus::MultiHandler::BusDisconnect();
+        m_enableNetworkFPCChangedEvent.Disconnect();
     }
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
