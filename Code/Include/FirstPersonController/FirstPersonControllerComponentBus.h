@@ -469,6 +469,7 @@ namespace FirstPersonController
         virtual void OnPhysicsTimestepFinish(const float&) = 0;
         virtual void OnNetworkFPCTickStart(const float&) = 0;
         virtual void OnNetworkFPCTickFinish(const float&) = 0;
+        virtual void OnFPCActivated(const AZ::EntityId&) = 0;
         virtual void OnGroundHit(const float&) = 0;
         virtual void OnGroundSoonHit(const float&) = 0;
         virtual void OnUngrounded() = 0;
@@ -515,6 +516,7 @@ namespace FirstPersonController
             OnNetworkFPCTickStart,
             OnNetworkFPCTickFinish,
             OnGroundHit,
+            OnFPCActivated,
             OnGroundSoonHit,
             OnUngrounded,
             OnStartedFalling,
@@ -558,6 +560,10 @@ namespace FirstPersonController
         void OnNetworkFPCTickFinish(const float& deltaTime) override
         {
             Call(FN_OnNetworkFPCTickFinish, deltaTime);
+        }
+        void OnFPCActivated(const AZ::EntityId& entityId) override
+        {
+            Call(FN_OnFPCActivated, entityId);
         }
         void OnGroundHit(const float& fellVelocity) override
         {

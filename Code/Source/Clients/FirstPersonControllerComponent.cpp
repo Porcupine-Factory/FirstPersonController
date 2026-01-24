@@ -1357,6 +1357,9 @@ namespace FirstPersonController
         // AZ_Printf("First Person Controller Component", "m_capsuleHeight = %.10f", m_capsuleHeight);
         // AZ_Printf("First Person Controller Component", "m_capsuleRadius = %.10f", m_capsuleRadius);
         // AZ_Printf("First Person Controller Component", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
+
+        FirstPersonControllerComponentNotificationBus::Broadcast(
+            &FirstPersonControllerComponentNotificationBus::Events::OnFPCActivated, GetEntityId());
     }
 
     void FirstPersonControllerComponent::Deactivate()
@@ -4252,6 +4255,9 @@ namespace FirstPersonController
     {
     }
     void FirstPersonControllerComponent::OnNetworkFPCTickFinish([[maybe_unused]] const float& deltaTime)
+    {
+    }
+    void FirstPersonControllerComponent::OnFPCActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonControllerComponent::OnGroundHit([[maybe_unused]] const float& fellVelocity)

@@ -823,6 +823,9 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnNetworkFPCTickFinish([[maybe_unused]] const float& deltaTime)
     {
     }
+    void FirstPersonExtrasComponent::OnFPCActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+    }
     void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellDistance)
     {
     }
