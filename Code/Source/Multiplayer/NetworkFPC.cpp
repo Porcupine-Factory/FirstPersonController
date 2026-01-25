@@ -428,9 +428,9 @@ namespace FirstPersonController
         // Set the velocity tolerance to a big number to avoid false-positive ground obstruction checks
         m_firstPersonControllerObject->m_velocityCloseTolerance = cl_VelocityTolerance;
 
-        m_firstPersonControllerObject->NetworkFPCEnabledIgnoreInputs();
+        m_firstPersonControllerObject->IgnoreInputs(true);
         if (m_firstPersonExtrasObject != nullptr)
-            m_firstPersonExtrasObject->NetworkFPCEnabledIgnoreInputs();
+            m_firstPersonExtrasObject->IgnoreInputs(true);
 
         if (IsNetEntityRoleAutonomous())
         {
@@ -638,9 +638,9 @@ namespace FirstPersonController
             m_firstPersonExtrasObject->m_networkFPCEnabled = enable;
         if (!m_disabled)
         {
-            m_firstPersonControllerObject->NetworkFPCEnabledIgnoreInputs();
+            m_firstPersonControllerObject->IgnoreInputs(true);
             if (m_firstPersonExtrasObject != nullptr)
-                m_firstPersonExtrasObject->NetworkFPCEnabledIgnoreInputs();
+                m_firstPersonExtrasObject->IgnoreInputs(true);
             AssignConnectInputEvents();
         }
         else
@@ -685,9 +685,9 @@ namespace FirstPersonController
             m_firstPersonExtrasObject->m_networkFPCEnabled = new_enabled;
         if (!m_disabled)
         {
-            m_firstPersonControllerObject->NetworkFPCEnabledIgnoreInputs();
+            m_firstPersonControllerObject->IgnoreInputs(true);
             if (m_firstPersonExtrasObject != nullptr)
-                m_firstPersonExtrasObject->NetworkFPCEnabledIgnoreInputs();
+                m_firstPersonExtrasObject->IgnoreInputs(true);
             AssignConnectInputEvents();
         }
         else

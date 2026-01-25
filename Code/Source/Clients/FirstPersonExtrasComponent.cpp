@@ -1090,9 +1090,12 @@ namespace FirstPersonController
     {
         return m_previousOffset;
     }
-    void FirstPersonExtrasComponent::NetworkFPCEnabledIgnoreInputs()
+    void FirstPersonExtrasComponent::IgnoreInputs(const bool& ignoreInputs)
     {
-        InputEventNotificationBus::MultiHandler::BusDisconnect();
+        if (ignoreInputs)
+            InputEventNotificationBus::MultiHandler::BusDisconnect();
+        else
+            AssignConnectInputEvents();
     }
     void FirstPersonExtrasComponent::IsAutonomousSoConnect()
     {

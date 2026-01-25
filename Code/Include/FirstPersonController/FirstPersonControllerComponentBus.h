@@ -456,7 +456,7 @@ namespace FirstPersonController
         virtual bool GetLocallyEnableNetworkFPC() const = 0;
         virtual void SetLocallyEnableNetworkFPC(const bool&) = 0;
         virtual bool GetIsNetworkingActive() const = 0;
-        virtual void NetworkFPCEnabledIgnoreInputs() = 0;
+        virtual void IgnoreInputs(const bool&) = 0;
         virtual void IsAutonomousSoConnect() = 0;
         virtual void NotAutonomousSoDisconnect() = 0;
     };

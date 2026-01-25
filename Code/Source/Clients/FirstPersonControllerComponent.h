@@ -522,7 +522,7 @@ namespace FirstPersonController
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
         bool GetIsNetworkingActive() const override;
-        void NetworkFPCEnabledIgnoreInputs() override;
+        void IgnoreInputs(const bool& ignoreInputs) override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
 

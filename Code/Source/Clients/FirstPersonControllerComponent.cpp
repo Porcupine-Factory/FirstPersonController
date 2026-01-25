@@ -1220,6 +1220,7 @@ namespace FirstPersonController
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
                 ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC)
                 ->Event("Get Is Networking Active", &FirstPersonControllerComponentRequests::GetIsNetworkingActive)
+                ->Event("Ignore Inputs", &FirstPersonControllerComponentRequests::IgnoreInputs)
                 ->Event("Not Autonomous So Disconnect", &FirstPersonControllerComponentRequests::NotAutonomousSoDisconnect);
 
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
@@ -6652,10 +6653,18 @@ namespace FirstPersonController
         return false;
 #endif
     }
-    void FirstPersonControllerComponent::NetworkFPCEnabledIgnoreInputs()
+    void FirstPersonControllerComponent::IgnoreInputs(const bool& ignoreInputs)
     {
-        InputEventNotificationBus::MultiHandler::BusDisconnect();
-        InputChannelEventListener::Disconnect();
+        if (ignoreInputs)
+        {
+            InputEventNotificationBus::MultiHandler::BusDisconnect();
+            InputChannelEventListener::Disconnect();
+        }
+        else
+        {
+            InputChannelEventListener::Connect();
+            AssignConnectInputEvents();
+        }
     }
     void FirstPersonControllerComponent::IsAutonomousSoConnect()
     {

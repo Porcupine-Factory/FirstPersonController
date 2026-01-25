@@ -90,7 +90,7 @@ namespace FirstPersonController
         void SetHeadbobEntityId(const AZ::EntityId& new_headbobEntityId) override;
         AZ::Vector3 GetCameraTranslationWithoutHeadbob() const override;
         AZ::Vector3 GetPreviousOffset() const override;
-        void NetworkFPCEnabledIgnoreInputs() override;
+        void IgnoreInputs(const bool& ignoreInputs) override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
 
