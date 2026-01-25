@@ -424,9 +424,6 @@ namespace FirstPersonController
         if (m_firstPersonExtrasObject != nullptr)
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
-        // Set the server's FPC EntityId to be obtained by the autonomous client
-        SetServerFPCEntityId(AZ::u64(m_firstPersonControllerObject->GetEntity()));
-
         // Set the velocity tolerance to a big number to avoid false-positive ground obstruction checks
         m_firstPersonControllerObject->m_velocityCloseTolerance = cl_VelocityTolerance;
 
@@ -543,7 +540,11 @@ namespace FirstPersonController
             else
                 m_firstPersonControllerObject->m_isNetBot = true;
             if (IsNetEntityRoleAuthority())
+            {
                 m_firstPersonControllerObject->m_isServer = true;
+                // Set the server's FPC EntityId to be obtained by the autonomous client
+                SetServerFPCEntityId(AZ::u64(m_firstPersonControllerObject->GetEntity()));
+            }
             if (!m_firstPersonControllerObject->m_isServer && !m_firstPersonControllerObject->m_isNetBot)
                 m_disabled = true;
             m_autonomousNotDetermined = false;
