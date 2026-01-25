@@ -84,6 +84,7 @@ namespace FirstPersonController
         {
             EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
         }
+        m_enableNetworkAnimationChangedEvent.Disconnect();
     }
 
     void NetworkFPC::OnEnableNetworkAnimationChanged(const bool& enable)
