@@ -829,11 +829,11 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnFPCActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
-    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellDistance, [[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellVelocity, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonExtrasComponent::OnGroundSoonHit(
-        [[maybe_unused]] const float& soonFellDistance, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float& soonFellVelocity, [[maybe_unused]] const AZ::EntityId& entityId)
     {
         if (m_networkFPCEnabled &&
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&

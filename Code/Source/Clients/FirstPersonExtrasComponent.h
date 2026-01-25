@@ -222,8 +222,8 @@ namespace FirstPersonController
         void OnNetworkFPCTickStart(const float& deltaTime, const AZ::EntityId& entityId);
         void OnNetworkFPCTickFinish(const float& deltaTime, const AZ::EntityId& entityId);
         void OnFPCActivated(const AZ::EntityId& entityId);
-        void OnGroundHit(const float& fellDistance, const AZ::EntityId& entityId);
-        void OnGroundSoonHit(const float& soonFellDistance, const AZ::EntityId& entityId);
+        void OnGroundHit(const float& fellVelocity, const AZ::EntityId& entityId);
+        void OnGroundSoonHit(const float& soonFellVelocity, const AZ::EntityId& entityId);
         void OnUngrounded(const AZ::EntityId& entityId);
         void OnStartedFalling(const AZ::EntityId& entityId);
         void OnJumpApogeeReached(const AZ::EntityId& entityId);
