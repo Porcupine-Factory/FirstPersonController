@@ -441,9 +441,17 @@ namespace FirstPersonController
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
             AssignConnectInputEvents();
             if (IsNetEntityRoleAuthority())
+            {
                 m_firstPersonControllerObject->m_isHost = true;
+                NetworkFPCControllerNotificationBus::Broadcast(
+                    &NetworkFPCControllerNotificationBus::Events::OnHostActivated, GetEntityId());
+            }
             else
+            {
                 m_firstPersonControllerObject->m_isAutonomousClient = true;
+                NetworkFPCControllerNotificationBus::Broadcast(
+                    &NetworkFPCControllerNotificationBus::Events::OnAutonomousClientActivated, GetEntityId());
+            }
 
             m_firstPersonControllerObject->m_eyeHeight = GetEyeHeight();
         }
@@ -676,6 +684,10 @@ namespace FirstPersonController
     bool NetworkFPCController::GetEnabled() const
     {
         return !m_disabled;
+    }
+    bool NetworkFPCController::GetIsNetEntityRoleAuthority() const
+    {
+        return IsNetEntityRoleAuthority();
     }
     void NetworkFPCController::SetEnabled(const bool& new_enabled)
     {

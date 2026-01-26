@@ -22,6 +22,7 @@ namespace FirstPersonController
         virtual void SetAllowRotationInputs(const bool&) = 0;
         virtual bool GetEnabled() const = 0;
         virtual void SetEnabled(const bool&) = 0;
+        virtual bool GetIsNetEntityRoleAuthority() const = 0;
     };
 
     using NetworkFPCControllerRequestBus = AZ::EBus<NetworkFPCControllerRequests>;
@@ -31,6 +32,8 @@ namespace FirstPersonController
     public:
         virtual void OnNetworkTickStart(const float&, const bool&, const AZ::EntityId&) = 0;
         virtual void OnNetworkTickFinish(const float&, const bool&, const AZ::EntityId&) = 0;
+        virtual void OnAutonomousClientActivated(const AZ::EntityId&) = 0;
+        virtual void OnHostActivated(const AZ::EntityId&) = 0;
     };
 
     using NetworkFPCControllerNotificationBus = AZ::EBus<NetworkFPCControllerNotifications>;
@@ -45,7 +48,9 @@ namespace FirstPersonController
             "{4f610d12-82bc-4e01-a792-7730beb321d0}",
             AZ::SystemAllocator,
             OnNetworkTickStart,
-            OnNetworkTickFinish);
+            OnNetworkTickFinish,
+            OnAutonomousClientActivated,
+            OnHostActivated);
 
         void OnNetworkTickStart(
             [[maybe_unused]] const float& deltaTime,
@@ -60,6 +65,14 @@ namespace FirstPersonController
             [[maybe_unused]] const AZ::EntityId& entity) override
         {
             Call(FN_OnNetworkTickFinish);
+        }
+        void OnAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entity) override
+        {
+            Call(FN_OnAutonomousClientActivated);
+        }
+        void OnHostActivated([[maybe_unused]] const AZ::EntityId& entity) override
+        {
+            Call(FN_OnHostActivated);
         }
     };
 } // namespace FirstPersonController

@@ -530,6 +530,12 @@ namespace FirstPersonController
         [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entity)
     {
     }
+    void FirstPersonExtrasComponent::OnAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+    }
+    void FirstPersonExtrasComponent::OnHostActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+    }
 
     void FirstPersonExtrasComponent::OnPhysicsTimestepStart(
         [[maybe_unused]] const float& physicsTimestep, [[maybe_unused]] const AZ::EntityId& entityId)
@@ -824,6 +830,12 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnNetworkFPCTickFinish(
         [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const AZ::EntityId& entityId)
+    {
+    }
+    void FirstPersonExtrasComponent::OnNetworkFPCAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+    }
+    void FirstPersonExtrasComponent::OnNetworkFPCHostActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonExtrasComponent::OnFPCActivated([[maybe_unused]] const AZ::EntityId& entityId)

@@ -1654,10 +1654,18 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
     {
-        if (!m_isAutonomousClient && !m_isServer && !m_isHost && !m_isNetBot)
+        if (!m_isAutonomousClient && !m_isServer && !m_isHost)
         {
-            NotAutonomousSoDisconnect();
-            return;
+#ifdef NETWORKFPC
+            NetworkFPCControllerRequestBus::BroadcastResult(
+                m_isServer, &NetworkFPCControllerRequestBus::Events::GetIsNetEntityRoleAuthority);
+#endif
+            if (!m_isServer)
+            {
+                NotAutonomousSoDisconnect();
+                FirstPersonControllerComponentRequestBus::Handler::BusDisconnect(GetEntityId());
+                return;
+            }
         }
         if (entity != GetEntityId())
             return;
@@ -1687,6 +1695,16 @@ namespace FirstPersonController
                 (deltaTime * m_physicsTimestepScaleFactor + m_prevNetworkFPCDeltaTime) / 2.f,
                 GetEntityId());
         m_prevNetworkFPCDeltaTime = deltaTime * m_physicsTimestepScaleFactor;
+    }
+    void FirstPersonControllerComponent::OnAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+        FirstPersonControllerComponentNotificationBus::Broadcast(
+            &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCAutonomousClientActivated, entityId);
+    }
+    void FirstPersonControllerComponent::OnHostActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+        FirstPersonControllerComponentNotificationBus::Broadcast(
+            &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCHostActivated, entityId);
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)

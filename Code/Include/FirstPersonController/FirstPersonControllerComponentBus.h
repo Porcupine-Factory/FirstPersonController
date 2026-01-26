@@ -478,6 +478,8 @@ namespace FirstPersonController
         virtual void OnPhysicsTimestepFinish(const float&, const AZ::EntityId&) = 0;
         virtual void OnNetworkFPCTickStart(const float&, const AZ::EntityId&) = 0;
         virtual void OnNetworkFPCTickFinish(const float&, const AZ::EntityId&) = 0;
+        virtual void OnNetworkFPCAutonomousClientActivated(const AZ::EntityId&) = 0;
+        virtual void OnNetworkFPCHostActivated(const AZ::EntityId&) = 0;
         virtual void OnFPCActivated(const AZ::EntityId&) = 0;
         virtual void OnGroundHit(const float&, const AZ::EntityId&) = 0;
         virtual void OnGroundSoonHit(const float&, const AZ::EntityId&) = 0;
@@ -524,6 +526,8 @@ namespace FirstPersonController
             OnPhysicsTimestepFinish,
             OnNetworkFPCTickStart,
             OnNetworkFPCTickFinish,
+            OnNetworkFPCAutonomousClientActivated,
+            OnNetworkFPCHostActivated,
             OnGroundHit,
             OnFPCActivated,
             OnGroundSoonHit,
@@ -569,6 +573,14 @@ namespace FirstPersonController
         void OnNetworkFPCTickFinish(const float& deltaTime, const AZ::EntityId& entityId) override
         {
             Call(FN_OnNetworkFPCTickFinish, deltaTime, entityId);
+        }
+        void OnNetworkFPCAutonomousClientActivated(const AZ::EntityId& entityId) override
+        {
+            Call(FN_OnNetworkFPCAutonomousClientActivated, entityId);
+        }
+        void OnNetworkFPCHostActivated(const AZ::EntityId& entityId) override
+        {
+            Call(FN_OnNetworkFPCHostActivated, entityId);
         }
         void OnFPCActivated(const AZ::EntityId& entityId) override
         {

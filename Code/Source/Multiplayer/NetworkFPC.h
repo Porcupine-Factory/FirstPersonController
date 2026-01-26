@@ -134,6 +134,7 @@ namespace FirstPersonController
         void SetAllowRotationInputs(const bool& new_allowRotationInputs) override;
         bool GetEnabled() const override;
         void SetEnabled(const bool& new_enabled) override;
+        bool GetIsNetEntityRoleAuthority() const override;
 
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;
@@ -149,6 +150,8 @@ namespace FirstPersonController
         // NetworkFPCControllerNotificationBus
         void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
         void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
+        void OnAutonomousClientActivated(const AZ::EntityId& entityId);
+        void OnHostActivated(const AZ::EntityId& entityId);
 
         // Used to initialize Network Properties from initial values in the First Person Controller component
         bool m_init = true;
