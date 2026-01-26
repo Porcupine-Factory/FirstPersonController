@@ -235,6 +235,7 @@ namespace FirstPersonController
         void SetScriptTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY) override;
         AZ::Vector2 GetScriptTargetVelocityXYWorld() const override;
         void SetScriptTargetVelocityXYWorld(const AZ::Vector2& new_scriptTargetVelocityXYWorld) override;
+        float SlerpHeadings(const float& a, const float& b, const float& t) const override;
         float GetScriptTargetVelocityXYEulerAngle() const override;
         float ConvertVectorToHeading(const AZ::Vector3& convertVector) const override;
         AZ::Vector2 GetCorrectedVelocityXY() const override;

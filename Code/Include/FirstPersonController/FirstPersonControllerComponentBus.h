@@ -169,6 +169,7 @@ namespace FirstPersonController
         virtual void SetScriptTargetVelocityXY(const AZ::Vector2&) = 0;
         virtual AZ::Vector2 GetScriptTargetVelocityXYWorld() const = 0;
         virtual void SetScriptTargetVelocityXYWorld(const AZ::Vector2&) = 0;
+        virtual float SlerpHeadings(const float&, const float&, const float&) const = 0;
         virtual float GetScriptTargetVelocityXYEulerAngle() const = 0;
         virtual float ConvertVectorToHeading(const AZ::Vector3&) const = 0;
         virtual AZ::Vector2 GetCorrectedVelocityXY() const = 0;

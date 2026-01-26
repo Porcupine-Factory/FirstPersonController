@@ -893,6 +893,7 @@ namespace FirstPersonController
                 ->Event(
                     "Get Script Target XY Velocity Euler Angle",
                     &FirstPersonControllerComponentRequests::GetScriptTargetVelocityXYEulerAngle)
+                ->Event("Slerp Headings", &FirstPersonControllerComponentRequests::SlerpHeadings)
                 ->Event("Convert Vector To Heading", &FirstPersonControllerComponentRequests::ConvertVectorToHeading)
                 ->Event("Get Corrected Velocity XY", &FirstPersonControllerComponentRequests::GetCorrectedVelocityXY)
                 ->Event("Set Corrected Velocity XY", &FirstPersonControllerComponentRequests::SetCorrectedVelocityXY)
@@ -5280,7 +5281,16 @@ namespace FirstPersonController
     {
         m_scriptTargetVelocityXY =
             AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(new_scriptTargetVelocityXYWorld)));
-        ;
+    }
+    float FirstPersonControllerComponent::SlerpHeadings(const float& a, const float& b, const float& t) const
+    {
+        const AZ::Vector2 avec = AZ::Vector2::CreateFromAngle(a);
+        const AZ::Vector2 bvec = AZ::Vector2::CreateFromAngle(b);
+        const AZ::Vector2 slerpedVec = avec.Slerp(bvec, t);
+        float slerpedHeading = slerpedVec.AngleSafe(AZ::Vector2::CreateAxisY());
+        if (slerpedVec.GetX() < 0.f)
+            slerpedHeading *= -1.f;
+        return slerpedHeading;
     }
     float FirstPersonControllerComponent::GetScriptTargetVelocityXYEulerAngle() const
     {
