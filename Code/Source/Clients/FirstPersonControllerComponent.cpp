@@ -1209,7 +1209,11 @@ namespace FirstPersonController
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
                 ->Event("Get Is Net Bot", &FirstPersonControllerComponentRequests::GetIsNetBot)
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
-                ->Event("Get NetEntityId By Id", &FirstPersonControllerComponentRequests::GetNetEntityIdById)
+#ifdef NETWORKFPC
+                ->Event("Get NetEntityId By EntityId", &FirstPersonControllerComponentRequests::GetNetEntityIdById)
+                ->Event("Get EntityId By NetEntityId", &FirstPersonControllerComponentRequests::GetEntityIdByNetId)
+                ->Event("Get EntityId By NetEntityId Num", &FirstPersonControllerComponentRequests::GetEntityIdByIntNetId)
+#endif
                 ->Event(
                     "Get NetworkFPC Allow All Movement Inputs",
                     &FirstPersonControllerComponentRequests::GetNetworkFPCAllowAllMovementInputs)
@@ -6597,21 +6601,27 @@ namespace FirstPersonController
     {
         m_isNetBot = new_isNetBot;
     }
-    uint64_t FirstPersonControllerComponent::GetNetEntityIdById(const AZ::EntityId& entityId) const
-    {
 #ifdef NETWORKFPC
-        if (GetIsNetworkingActive())
-        {
-            const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
-            if (!networkEntityManager)
-                return 0;
-            const Multiplayer::NetEntityId netEntityId = networkEntityManager->GetNetEntityIdById(entityId);
-            return uint64_t(netEntityId);
-        }
-        else
-#endif
-            return 0;
+    Multiplayer::NetEntityId FirstPersonControllerComponent::GetNetEntityIdById(const AZ::EntityId& entityId) const
+    {
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        const Multiplayer::NetEntityId netEntityId = networkEntityManager->GetNetEntityIdById(entityId);
+        return netEntityId;
     }
+    AZ::EntityId FirstPersonControllerComponent::GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId) const
+    {
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        const Multiplayer::ConstNetworkEntityHandle entity = networkEntityManager->GetEntity(netEntityId);
+        return entity.GetEntity()->GetId();
+    }
+    AZ::EntityId FirstPersonControllerComponent::GetEntityIdByIntNetId(const uint64_t& intNetEntityId) const
+    {
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        const Multiplayer::ConstNetworkEntityHandle entity =
+            networkEntityManager->GetEntity(static_cast<Multiplayer::NetEntityId>(intNetEntityId));
+        return entity.GetEntity()->GetId();
+    }
+#endif
     bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const
     {
 #ifdef NETWORKFPC

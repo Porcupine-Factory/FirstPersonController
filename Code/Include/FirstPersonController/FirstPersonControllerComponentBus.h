@@ -15,6 +15,9 @@
 #include <AzFramework/Physics/PhysicsScene.h>
 
 #include <FirstPersonController/PidController.h>
+#ifdef NETWORKFPC
+#include <Multiplayer/MultiplayerTypes.h>
+#endif
 
 namespace FirstPersonController
 {
@@ -449,7 +452,11 @@ namespace FirstPersonController
         virtual bool GetIsHost() const = 0;
         virtual bool GetIsNetBot() const = 0;
         virtual void SetIsNetBot(const bool&) = 0;
-        virtual uint64_t GetNetEntityIdById(const AZ::EntityId&) const = 0;
+#ifdef NETWORKFPC
+        virtual Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId&) const = 0;
+        virtual AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId&) const = 0;
+        virtual AZ::EntityId GetEntityIdByIntNetId(const uint64_t&) const = 0;
+#endif
         virtual bool GetNetworkFPCAllowAllMovementInputs() const = 0;
         virtual void SetNetworkFPCAllowAllMovementInputs(const bool&) = 0;
         virtual bool GetNetworkFPCAllowRotationInputs() const = 0;
