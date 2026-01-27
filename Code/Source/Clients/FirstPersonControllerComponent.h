@@ -526,6 +526,7 @@ namespace FirstPersonController
         void SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
         bool GetNetworkFPCAllowRotationInputs() const override;
         void SetNetworkFPCAllowRotationInputs(const bool& new_allowRotationInputs) override;
+        AZ::TimeMs GetNetworkFPCHostTimeMs() const override;
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool& new_networkFPCEnabled) override;
         bool GetIsNetworkingActive() const override;

@@ -681,6 +681,11 @@ namespace FirstPersonController
     {
         m_allowRotationInputs = new_allowRotationInputs;
     }
+    AZ::TimeMs NetworkFPCController::GetHostTimeMs() const
+    {
+        Multiplayer::INetworkTime* time = Multiplayer::GetNetworkTime();
+        return time->GetHostTimeMs();
+    }
     bool NetworkFPCController::GetEnabled() const
     {
         return !m_disabled;

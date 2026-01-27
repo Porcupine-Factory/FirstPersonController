@@ -10,6 +10,7 @@
 #include <AzCore/Component/TransformBus.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/RTTI/BehaviorContext.h>
+#include <AzCore/Time/ITime.h>
 
 #include <AzFramework/Physics/Material/PhysicsMaterialManager.h>
 #include <AzFramework/Physics/PhysicsScene.h>
@@ -461,6 +462,7 @@ namespace FirstPersonController
         virtual void SetNetworkFPCAllowAllMovementInputs(const bool&) = 0;
         virtual bool GetNetworkFPCAllowRotationInputs() const = 0;
         virtual void SetNetworkFPCAllowRotationInputs(const bool&) = 0;
+        virtual AZ::TimeMs GetNetworkFPCHostTimeMs() const = 0;
         virtual bool GetLocallyEnableNetworkFPC() const = 0;
         virtual void SetLocallyEnableNetworkFPC(const bool&) = 0;
         virtual bool GetIsNetworkingActive() const = 0;

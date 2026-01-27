@@ -8,6 +8,8 @@
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/RTTI/BehaviorContext.h>
 
+#include <Multiplayer/NetworkTime/INetworkTime.h>
+
 namespace FirstPersonController
 {
     class NetworkFPCControllerRequests : public AZ::ComponentBus
@@ -20,6 +22,7 @@ namespace FirstPersonController
         virtual void SetAllowAllMovementInputs(const bool&) = 0;
         virtual bool GetAllowRotationInputs() const = 0;
         virtual void SetAllowRotationInputs(const bool&) = 0;
+        virtual AZ::TimeMs GetHostTimeMs() const = 0;
         virtual bool GetEnabled() const = 0;
         virtual void SetEnabled(const bool&) = 0;
         virtual bool GetIsNetEntityRoleAuthority() const = 0;

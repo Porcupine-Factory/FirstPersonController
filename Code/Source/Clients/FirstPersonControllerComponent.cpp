@@ -1222,6 +1222,7 @@ namespace FirstPersonController
                     &FirstPersonControllerComponentRequests::SetNetworkFPCAllowAllMovementInputs)
                 ->Event("Get NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::GetNetworkFPCAllowRotationInputs)
                 ->Event("Set NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::SetNetworkFPCAllowRotationInputs)
+                ->Event("Get NetworkFPC Host Time Ms", &FirstPersonControllerComponentRequests::GetNetworkFPCHostTimeMs)
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
                 ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC)
                 ->Event("Get Is Networking Active", &FirstPersonControllerComponentRequests::GetIsNetworkingActive)
@@ -6671,6 +6672,14 @@ namespace FirstPersonController
         if (m_networkFPCControllerObject != nullptr)
             m_networkFPCControllerObject->m_allowRotationInputs = new_allowRotationInputs;
 #endif
+    }
+    AZ::TimeMs FirstPersonControllerComponent::GetNetworkFPCHostTimeMs() const
+    {
+        AZ::TimeMs time = AZ::Time::ZeroTimeMs;
+#ifdef NETWORKFPC
+        NetworkFPCControllerRequestBus::BroadcastResult(time, &NetworkFPCControllerRequestBus::Events::GetHostTimeMs);
+#endif
+        return time;
     }
     bool FirstPersonControllerComponent::GetLocallyEnableNetworkFPC() const
     {

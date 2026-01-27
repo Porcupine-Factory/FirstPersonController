@@ -132,6 +132,7 @@ namespace FirstPersonController
         void SetAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
         bool GetAllowRotationInputs() const override;
         void SetAllowRotationInputs(const bool& new_allowRotationInputs) override;
+        AZ::TimeMs GetHostTimeMs() const override;
         bool GetEnabled() const override;
         void SetEnabled(const bool& new_enabled) override;
         bool GetIsNetEntityRoleAuthority() const override;
