@@ -112,7 +112,7 @@ namespace FirstPersonController
             m_standToCrouchParamId = InvalidParamIndex;
             m_jumpStartParamId = InvalidParamIndex;
             m_fallParamId = InvalidParamIndex;
-            m_jumpLandParamId = InvalidParamIndex;
+            m_landParamId = InvalidParamIndex;
             m_groundedParamId = InvalidParamIndex;
         }
     }
@@ -213,9 +213,9 @@ namespace FirstPersonController
             m_fallParamId = m_animationGraph->FindParameterIndex(GetFallParamName().c_str());
         }
 
-        if (m_jumpLandParamId == InvalidParamIndex)
+        if (m_landParamId == InvalidParamIndex)
         {
-            m_jumpLandParamId = m_animationGraph->FindParameterIndex(GetJumpLandParamName().c_str());
+            m_landParamId = m_animationGraph->FindParameterIndex(GetLandParamName().c_str());
         }
 
         if (m_groundedParamId == InvalidParamIndex)
@@ -271,10 +271,10 @@ namespace FirstPersonController
             m_animationGraph->SetParameterBool(m_fallParamId, isFalling);
         }
 
-        if (m_jumpLandParamId != InvalidParamIndex)
+        if (m_landParamId != InvalidParamIndex)
         {
-            const bool isJumpLanding = GetIsJumpLanding();
-            m_animationGraph->SetParameterBool(m_jumpLandParamId, isJumpLanding);
+            const bool isLanding = GetIsLanding();
+            m_animationGraph->SetParameterBool(m_landParamId, isLanding);
         }
 
         if (m_groundedParamId != InvalidParamIndex)

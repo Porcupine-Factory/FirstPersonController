@@ -90,7 +90,7 @@ namespace FirstPersonController
         size_t m_standToCrouchParamId = InvalidParamIndex;
         size_t m_jumpStartParamId = InvalidParamIndex;
         size_t m_fallParamId = InvalidParamIndex;
-        size_t m_jumpLandParamId = InvalidParamIndex;
+        size_t m_landParamId = InvalidParamIndex;
         size_t m_groundedParamId = InvalidParamIndex;
     };
 
