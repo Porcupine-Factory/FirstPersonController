@@ -227,9 +227,8 @@ namespace FirstPersonController
         if (m_walkSpeedParamId != InvalidParamIndex)
         {
             AZ::Vector3 velocity = GetDesiredVelocity();
-            // Ignore Z for ground speed
             velocity.SetZ(0.0f);
-            float speed = velocity.GetLength();
+            const float speed = velocity.GetLength();
 
             // Set the parameter directly; anim graph handles transitions
             m_animationGraph->SetParameterFloat(m_walkSpeedParamId, speed);
