@@ -730,6 +730,10 @@ namespace FirstPersonController
                 ->Event("Get Is Camera Child Of Character", &FirstPersonControllerComponentRequests::IsCameraChildOfCharacter)
                 ->Event("Get Camera Smooth Follow", &FirstPersonControllerComponentRequests::GetCameraSmoothFollow)
                 ->Event("Set Camera Smooth Follow", &FirstPersonControllerComponentRequests::SetCameraSmoothFollow)
+                ->Event(
+                    "Get NetworkFPC Keep Camera At Character", &FirstPersonControllerComponentRequests::GetNetworkFPCKeepCameraAtCharacter)
+                ->Event(
+                    "Set NetworkFPC Keep Camera At Character", &FirstPersonControllerComponentRequests::SetNetworkFPCKeepCameraAtCharacter)
                 ->Event("Set Do Not Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeDoNotUpdate)
                 ->Event("Set Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeUpdate)
                 ->Event("Get On Parent Changed Behavior", &FirstPersonControllerComponentRequests::GetParentChangeBehavior)
@@ -1814,7 +1818,7 @@ namespace FirstPersonController
             return;
 
         const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
-        if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
+        if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled && m_networkFPCKeepCameraAtCharacter)
         {
             m_cameraSmoothFollow = !m_cameraSmoothFollow;
             CaptureCharacterEyeTranslation();
@@ -1832,7 +1836,7 @@ namespace FirstPersonController
         float alpha;
         if (!m_networkFPCEnabled)
             alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevTimestep, 1.f);
-        else if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled)
+        else if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled && m_networkFPCKeepCameraAtCharacter)
         {
             // Skip the interpolation when it's disabled with NetworkFPC
             alpha = 1.f;
@@ -1942,10 +1946,10 @@ namespace FirstPersonController
             if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr && !m_isHost)
             {
                 m_networkFPCRotationSliceAccumulator = 0.f;
-                if (!m_newtworkFPCCameraAligned)
+                if (!m_networkFPCCameraAligned)
                 {
                     m_cameraYaw = m_currentHeading;
-                    m_newtworkFPCCameraAligned = true;
+                    m_networkFPCCameraAligned = true;
                 }
 #ifdef NETWORKFPC
                 m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
@@ -4494,6 +4498,14 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetCameraNotSmoothFollow() const
     {
         return !m_cameraSmoothFollow;
+    }
+    bool FirstPersonControllerComponent::GetNetworkFPCKeepCameraAtCharacter() const
+    {
+        return m_networkFPCKeepCameraAtCharacter;
+    }
+    void FirstPersonControllerComponent::SetNetworkFPCKeepCameraAtCharacter(const bool& new_networkFPCKeepCameraAtCharacter)
+    {
+        m_networkFPCKeepCameraAtCharacter = new_networkFPCKeepCameraAtCharacter;
     }
     void FirstPersonControllerComponent::SetParentChangeDoNotUpdate(const AZ::EntityId& entityId)
     {

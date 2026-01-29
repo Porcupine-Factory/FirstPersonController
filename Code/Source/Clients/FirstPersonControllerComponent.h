@@ -104,6 +104,8 @@ namespace FirstPersonController
         bool IsCameraChildOfCharacter() override;
         bool GetCameraSmoothFollow() const override;
         void SetCameraSmoothFollow(const bool& new_cameraSmoothFollow) override;
+        bool GetNetworkFPCKeepCameraAtCharacter() const override;
+        void SetNetworkFPCKeepCameraAtCharacter(const bool& new_networkFPCKeepCameraAtCharacter) override;
         void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) override;
         void SetParentChangeUpdate(const AZ::EntityId& entityId) override;
         AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const override;
@@ -902,7 +904,9 @@ namespace FirstPersonController
 #else
         bool m_isNetBot = false;
 #endif
-        bool m_newtworkFPCCameraAligned = false;
+        bool m_networkFPCCameraAligned = false;
+        // To have the camera not follow the character with multiplayer, m_cameraSmoothFollow will have to be set false as well
+        bool m_networkFPCKeepCameraAtCharacter = true;
         float m_networkFPCRotationSliceAccumulator = 0.f;
         float m_networkFPCYawOvershootAngle = 0.f;
 

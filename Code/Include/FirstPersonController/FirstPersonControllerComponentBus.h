@@ -36,6 +36,8 @@ namespace FirstPersonController
         virtual bool IsCameraChildOfCharacter() = 0;
         virtual bool GetCameraSmoothFollow() const = 0;
         virtual void SetCameraSmoothFollow(const bool&) = 0;
+        virtual bool GetNetworkFPCKeepCameraAtCharacter() const = 0;
+        virtual void SetNetworkFPCKeepCameraAtCharacter(const bool&) = 0;
         virtual void SetParentChangeDoNotUpdate(const AZ::EntityId&) = 0;
         virtual void SetParentChangeUpdate(const AZ::EntityId&) = 0;
         virtual AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId&) const = 0;
