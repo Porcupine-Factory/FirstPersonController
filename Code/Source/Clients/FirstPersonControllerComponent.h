@@ -5,6 +5,7 @@
 #pragma once
 #include <FirstPersonController/FirstPersonControllerComponentBus.h>
 #ifdef NETWORKFPC
+#include <FirstPersonController/NetworkFPCBotAnimationControllerBus.h>
 #include <FirstPersonController/NetworkFPCControllerBus.h>
 #endif
 #include <FirstPersonController/PidController.h>
@@ -29,6 +30,8 @@ namespace FirstPersonController
 {
     class NetworkFPC;
     class NetworkFPCController;
+    class NetworkFPCBotAnimation;
+    class NetworkFPCBotAnimationController;
 
     class FirstPersonControllerComponent
         : public AZ::Component
@@ -45,7 +48,10 @@ namespace FirstPersonController
     {
         friend class FirstPersonExtrasComponent;
         friend class CameraCoupledChildComponent;
+        friend class NetworkFPC;
         friend class NetworkFPCController;
+        friend class NetworkFPCBotAnimation;
+        friend class NetworkFPCBotAnimationController;
 
     public:
         AZ_COMPONENT(FirstPersonControllerComponent, "{0a47c7c2-0f94-48dd-8e3f-fd55c30475b9}");
@@ -548,9 +554,13 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
         NetworkFPC* m_networkFPCObject = nullptr;
         NetworkFPCController* m_networkFPCControllerObject = nullptr;
+        NetworkFPCBotAnimation* m_networkFPCBotAnimationObject = nullptr;
+        NetworkFPCBotAnimationController* m_networkFPCBotAnimationControllerObject = nullptr;
 #else
         bool* m_networkFPCObject = nullptr;
         bool* m_networkFPCControllerObject = nullptr;
+        bool* m_networkFPCBotAnimationObject = nullptr;
+        bool* m_networkFPCBotAnimationControllerObject = nullptr;
 #endif
 
         // Active camera entity pointer and ID

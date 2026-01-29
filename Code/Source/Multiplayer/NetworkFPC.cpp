@@ -56,6 +56,10 @@ namespace FirstPersonController
 
     void NetworkFPC::OnActivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
     {
+        // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
+        const AZ::Entity* entity = GetEntity();
+        m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
+
         // Subscribe to EnableNetworkFPC change events
         EnableNetworkAnimationAddEvent(m_enableNetworkAnimationChangedEvent);
 
@@ -105,6 +109,7 @@ namespace FirstPersonController
             m_actorRequests = nullptr;
             m_networkRequests = nullptr;
             m_animationGraph = nullptr;
+            m_paramIdsNotSet = true;
             m_walkSpeedParamId = InvalidParamIndex;
             m_sprintParamId = InvalidParamIndex;
             m_crouchToStandParamId = InvalidParamIndex;
@@ -178,56 +183,33 @@ namespace FirstPersonController
             return;
         }
 
-        if (m_walkSpeedParamId == InvalidParamIndex)
+        if (m_paramIdsNotSet)
         {
-            m_walkSpeedParamId = m_animationGraph->FindParameterIndex(GetWalkSpeedParamName().c_str());
-        }
-
-        if (m_sprintParamId == InvalidParamIndex)
-        {
-            m_sprintParamId = m_animationGraph->FindParameterIndex(GetSprintParamName().c_str());
-        }
-
-        if (m_standToCrouchParamId == InvalidParamIndex)
-        {
-            m_standToCrouchParamId = m_animationGraph->FindParameterIndex(GetStandToCrouchParamName().c_str());
-        }
-
-        if (m_crouchParamId == InvalidParamIndex)
-        {
-            m_crouchParamId = m_animationGraph->FindParameterIndex(GetCrouchParamName().c_str());
-        }
-
-        if (m_crouchToStandParamId == InvalidParamIndex)
-        {
-            m_crouchToStandParamId = m_animationGraph->FindParameterIndex(GetCrouchToStandParamName().c_str());
-        }
-
-        if (m_jumpStartParamId == InvalidParamIndex)
-        {
-            m_jumpStartParamId = m_animationGraph->FindParameterIndex(GetJumpStartParamName().c_str());
-        }
-
-        if (m_fallParamId == InvalidParamIndex)
-        {
-            m_fallParamId = m_animationGraph->FindParameterIndex(GetFallParamName().c_str());
-        }
-
-        if (m_landParamId == InvalidParamIndex)
-        {
-            m_landParamId = m_animationGraph->FindParameterIndex(GetLandParamName().c_str());
-        }
-
-        if (m_groundedParamId == InvalidParamIndex)
-        {
-            m_groundedParamId = m_animationGraph->FindParameterIndex(GetGroundedParamName().c_str());
+            m_paramIdsNotSet = false;
+            if (m_walkSpeedParamId == InvalidParamIndex)
+                m_walkSpeedParamId = m_animationGraph->FindParameterIndex(GetWalkSpeedParamName().c_str());
+            if (m_sprintParamId == InvalidParamIndex)
+                m_sprintParamId = m_animationGraph->FindParameterIndex(GetSprintParamName().c_str());
+            if (m_standToCrouchParamId == InvalidParamIndex)
+                m_standToCrouchParamId = m_animationGraph->FindParameterIndex(GetStandToCrouchParamName().c_str());
+            if (m_crouchParamId == InvalidParamIndex)
+                m_crouchParamId = m_animationGraph->FindParameterIndex(GetCrouchParamName().c_str());
+            if (m_crouchToStandParamId == InvalidParamIndex)
+                m_crouchToStandParamId = m_animationGraph->FindParameterIndex(GetCrouchToStandParamName().c_str());
+            if (m_jumpStartParamId == InvalidParamIndex)
+                m_jumpStartParamId = m_animationGraph->FindParameterIndex(GetJumpStartParamName().c_str());
+            if (m_fallParamId == InvalidParamIndex)
+                m_fallParamId = m_animationGraph->FindParameterIndex(GetFallParamName().c_str());
+            if (m_landParamId == InvalidParamIndex)
+                m_landParamId = m_animationGraph->FindParameterIndex(GetLandParamName().c_str());
+            if (m_groundedParamId == InvalidParamIndex)
+                m_groundedParamId = m_animationGraph->FindParameterIndex(GetGroundedParamName().c_str());
         }
 
         // Get networked velocity from component base
         if (m_walkSpeedParamId != InvalidParamIndex)
         {
-            AZ::Vector3 velocity = GetDesiredVelocity();
-            velocity.SetZ(0.0f);
+            AZ::Vector2 velocity = m_firstPersonControllerObject->m_applyVelocityXY;
             const float speed = velocity.GetLength();
 
             // Set the parameter directly; anim graph handles transitions

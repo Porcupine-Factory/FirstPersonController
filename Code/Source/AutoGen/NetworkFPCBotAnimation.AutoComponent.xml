@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+
+<!--
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this file,
+You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<Component
+    Name="NetworkFPCBotAnimation"
+    Namespace="FirstPersonController"
+    OverrideComponent="true"
+    OverrideController="true"
+    OverrideInclude="Multiplayer/NetworkFPCBotAnimation.h"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <NetworkProperty Type="bool" Name="EnableNetworkAnimation"
+                     Init="true" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="false"
+                     IsPredictable="false" IsPublic="true"
+                     Container="Object" ExposeToEditor="true"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Determines whether network animations are enabled."/>
+    <NetworkProperty Type="bool" Name="IsSprinting"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is currently sprinting."/>
+    <NetworkProperty Type="bool" Name="IsCrouchingDownMove"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is doing a crouching down movement."/>
+    <NetworkProperty Type="bool" Name="IsCrouching"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is currently crouching."/>
+    <NetworkProperty Type="bool" Name="IsStandingUpMove"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is doing a standing up movement."/>
+    <NetworkProperty Type="bool" Name="IsJumpStarting"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is initiating jump."/>
+    <NetworkProperty Type="bool" Name="IsFalling"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is falling or in the middle of a jump."/>
+    <NetworkProperty Type="bool" Name="IsLanding"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is about to land."/>
+    <NetworkProperty Type="bool" Name="IsGrounded"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the character is grounded."/>
+
+    <ArchetypeProperty Type="AZStd::string" Name="WalkSpeedParamName" Init="&quot;WalkSpeed&quot;" ExposeToEditor="true" Description="Anim graph walk speed parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="SprintParamName" Init="&quot;Sprint&quot;" ExposeToEditor="true" Description="Anim graph sprint parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="CrouchParamName" Init="&quot;Crouch&quot;" ExposeToEditor="true" Description="Anim graph crouch parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="CrouchToStandParamName" Init="&quot;CrouchToStand&quot;" ExposeToEditor="true" Description="Anim graph crouch to stand parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="StandToCrouchParamName" Init="&quot;StandToCrouch&quot;" ExposeToEditor="true" Description="Anim graph stand to crouch parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="JumpStartParamName" Init="&quot;JumpStart&quot;" ExposeToEditor="true" Description="Anim graph jump start parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="FallParamName" Init="&quot;Fall&quot;" ExposeToEditor="true" Description="Anim graph fall parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="LandParamName" Init="&quot;Land&quot;" ExposeToEditor="true" Description="Anim graph jump land parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="GroundedParamName" Init="&quot;Grounded&quot;" ExposeToEditor="true" Description="Anim graph grounded parameter name."/>
+</Component>

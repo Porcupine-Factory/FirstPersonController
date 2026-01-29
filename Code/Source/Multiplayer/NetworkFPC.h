@@ -69,6 +69,9 @@ namespace FirstPersonController
         void OnAnimGraphInstanceCreated(EMotionFX::AnimGraphInstance* animGraphInstance) override;
         //! @}
 
+        // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
+        FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
+
         // Network animation members
         Multiplayer::EntityPreRenderEvent::Handler m_preRenderEventHandler;
 
@@ -83,6 +86,7 @@ namespace FirstPersonController
         void DetectAnimationChild();
         void SetupAnimationConnections(const AZ::EntityId& targetId);
 
+        bool m_paramIdsNotSet = true;
         size_t m_walkSpeedParamId = InvalidParamIndex;
         size_t m_sprintParamId = InvalidParamIndex;
         size_t m_crouchToStandParamId = InvalidParamIndex;

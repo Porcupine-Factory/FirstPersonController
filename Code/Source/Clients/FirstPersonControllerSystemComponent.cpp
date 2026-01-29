@@ -50,6 +50,12 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
+
+                ec->Class<FirstPersonControllerSystemComponent>(
+                      "NetworkFPCBotAnimation", "[Description of functionality provided by this System Component]")
+                    ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
+                    ->Attribute(AZ::Edit::Attributes::AppearsInAddComponentMenu, AZ_CRC("System"))
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, true);
 #endif
             }
         }
@@ -62,6 +68,7 @@ namespace FirstPersonController
         provided.push_back(AZ_CRC_CE("CameraCoupledChildService"));
 #ifdef NETWORKFPC
         provided.push_back(AZ_CRC_CE("NetworkFPCService"));
+        provided.push_back(AZ_CRC_CE("NetworkFPCBotAnimationService"));
 #endif
     }
 
@@ -72,6 +79,7 @@ namespace FirstPersonController
         incompatible.push_back(AZ_CRC_CE("CameraCoupledChildService"));
 #ifdef NETWORKFPC
         incompatible.push_back(AZ_CRC_CE("NetworkFPCService"));
+        incompatible.push_back(AZ_CRC_CE("NetworkFPCBotAnimationService"));
 #endif
     }
 
@@ -112,6 +120,7 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusConnect();
 #ifdef NETWORKFPC
         NetworkFPCRequestBus::Handler::BusConnect();
+        NetworkFPCBotAnimationRequestBus::Handler::BusConnect();
         // Register multiplayer components
         RegisterMultiplayerComponents();
 #endif
@@ -120,6 +129,7 @@ namespace FirstPersonController
     void FirstPersonControllerSystemComponent::Deactivate()
     {
 #ifdef NETWORKFPC
+        NetworkFPCBotAnimationRequestBus::Handler::BusDisconnect();
         NetworkFPCRequestBus::Handler::BusDisconnect();
 #endif
         AZ::TickBus::Handler::BusDisconnect();

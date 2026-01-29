@@ -11,6 +11,8 @@ set(FILES
     Include/FirstPersonController/CameraCoupledChildComponentBus.h
     Include/FirstPersonController/NetworkFPCBus.h
     Include/FirstPersonController/NetworkFPCControllerBus.h
+    Include/FirstPersonController/NetworkFPCBotAnimationBus.h
+    Include/FirstPersonController/NetworkFPCBotAnimationControllerBus.h
 )
 else()
 set(FILES

@@ -10,6 +10,8 @@
 #include <FirstPersonController/FirstPersonControllerBus.h>
 #include <FirstPersonController/FirstPersonExtrasBus.h>
 #ifdef NETWORKFPC
+#include <FirstPersonController/NetworkFPCBotAnimationBus.h>
+#include <FirstPersonController/NetworkFPCBotAnimationControllerBus.h>
 #include <FirstPersonController/NetworkFPCBus.h>
 #include <FirstPersonController/NetworkFPCControllerBus.h>
 #endif
@@ -23,6 +25,7 @@ namespace FirstPersonController
         , protected CameraCoupledChildRequestBus::Handler
 #ifdef NETWORKFPC
         , protected NetworkFPCRequestBus::Handler
+        , protected NetworkFPCBotAnimationRequestBus::Handler
 #endif
         , public AZ::TickBus::Handler
     {

@@ -5,6 +5,7 @@
 #include <Clients/FirstPersonControllerComponent.h>
 #ifdef NETWORKFPC
 #include <Multiplayer/NetworkFPC.h>
+#include <Multiplayer/NetworkFPCBotAnimation.h>
 #endif
 
 #include <AzCore/Component/ComponentApplicationBus.h>
@@ -1399,10 +1400,11 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
         const AZ::Entity* entity = GetEntity();
         m_networkFPCObject = entity->FindComponent<NetworkFPC>();
+        m_networkFPCBotAnimationObject = entity->FindComponent<NetworkFPCBotAnimation>();
 #endif
 
         // Determine if the NetworkFPC is enabled
-        if (m_networkFPCObject != nullptr
+        if (m_networkFPCObject != nullptr || m_networkFPCBotAnimationObject != nullptr
 #ifdef NETWORKFPC
             || Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1)
 #endif
@@ -1416,6 +1418,13 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
                 m_networkFPCControllerObject = static_cast<NetworkFPCController*>(m_networkFPCObject->GetController());
                 NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
+#endif
+            }
+            if (m_networkFPCBotAnimationObject != nullptr)
+            {
+#ifdef NETWORKFPC
+                m_networkFPCBotAnimationControllerObject =
+                    static_cast<NetworkFPCBotAnimationController*>(m_networkFPCBotAnimationObject->GetController());
 #endif
             }
         }
@@ -4151,24 +4160,37 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetNetworkFPCProperties() const
     {
 #ifdef NETWORKFPC
-        m_networkFPCControllerObject->SetTopWalkSpeed(m_speed);
-        m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
-        m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
-        m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
-        m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
-        m_networkFPCControllerObject->SetSprintCooldownTimer(m_sprintCooldownTimer);
-        m_networkFPCControllerObject->SetJumpInitialVelocity(m_jumpInitialVelocity);
-        m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
-        m_networkFPCControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
-        m_networkFPCControllerObject->SetIsStandingUpMove(m_standingUpMove);
-        m_networkFPCControllerObject->SetIsCrouching(m_crouching);
-        m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump);
-        m_networkFPCControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
-        m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
-        m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
-        m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
-        m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
-        m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
+        if (m_networkFPCControllerObject != nullptr)
+        {
+            m_networkFPCControllerObject->SetTopWalkSpeed(m_speed);
+            m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
+            m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
+            m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
+            m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
+            m_networkFPCControllerObject->SetSprintCooldownTimer(m_sprintCooldownTimer);
+            m_networkFPCControllerObject->SetJumpInitialVelocity(m_jumpInitialVelocity);
+            m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
+            m_networkFPCControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
+            m_networkFPCControllerObject->SetIsStandingUpMove(m_standingUpMove);
+            m_networkFPCControllerObject->SetIsCrouching(m_crouching);
+            m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump);
+            m_networkFPCControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
+            m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+            m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
+            m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
+            m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
+            m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
+        }
+        else if (m_networkFPCBotAnimationControllerObject != nullptr)
+        {
+            m_networkFPCBotAnimationControllerObject->SetIsSprinting(GetSprinting());
+            m_networkFPCBotAnimationControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
+            m_networkFPCBotAnimationControllerObject->SetIsStandingUpMove(m_standingUpMove);
+            m_networkFPCBotAnimationControllerObject->SetIsCrouching(m_crouching);
+            m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump);
+            m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
+            m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+        }
 #endif
     }
 
@@ -4270,8 +4292,11 @@ namespace FirstPersonController
 #endif
             }
             else if (m_addVelocityForTimestepVsTick)
+            {
+                SetNetworkFPCProperties();
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
+            }
             else
                 Physics::CharacterRequestBus::Event(
                     GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
