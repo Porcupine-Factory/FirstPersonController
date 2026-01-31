@@ -86,7 +86,7 @@ namespace FirstPersonController
         void DetectAnimationChild();
         void SetupAnimationConnections(const AZ::EntityId& targetId);
 
-        bool m_paramIdsNotSet = true;
+        bool m_paramIdsSet = false;
         size_t m_walkSpeedParamId = InvalidParamIndex;
         size_t m_sprintParamId = InvalidParamIndex;
         size_t m_crouchToStandParamId = InvalidParamIndex;
@@ -96,6 +96,11 @@ namespace FirstPersonController
         size_t m_fallParamId = InvalidParamIndex;
         size_t m_landParamId = InvalidParamIndex;
         size_t m_groundedParamId = InvalidParamIndex;
+
+        // NOTE: Make sure to add any new param Ids to this param Ids array
+        size_t* m_paramIds[9] = { &m_walkSpeedParamId, &m_sprintParamId,        &m_crouchToStandParamId,
+                                  &m_crouchParamId,    &m_standToCrouchParamId, &m_jumpStartParamId,
+                                  &m_fallParamId,      &m_landParamId,          &m_groundedParamId };
     };
 
     class NetworkFPCController

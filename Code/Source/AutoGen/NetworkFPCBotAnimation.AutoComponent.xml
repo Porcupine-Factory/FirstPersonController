@@ -21,6 +21,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      Container="Object" ExposeToEditor="true"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines whether network animations are enabled."/>
+    <NetworkProperty Type="AZ::Vector2" Name="ApplyVelocityXY"
+                     Init="AZ::Vector2::CreateZero()" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="The local XY velocity that is ultimately used in calculating DesiredVelocity."/>
     <NetworkProperty Type="bool" Name="IsSprinting"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"

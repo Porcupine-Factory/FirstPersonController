@@ -4194,6 +4194,7 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump);
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+            m_networkFPCBotAnimationControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
         }
 #endif
     }

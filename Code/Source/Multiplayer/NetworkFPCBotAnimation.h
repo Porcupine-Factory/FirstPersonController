@@ -8,6 +8,7 @@
 #include <Source/AutoGen/NetworkFPCBotAnimation.AutoComponent.h>
 
 #include <Clients/FirstPersonControllerComponent.h>
+#include <Multiplayer/NetworkFPC.h>
 
 #include <Integration/ActorComponentBus.h>
 #include <Integration/AnimGraphComponentBus.h>
@@ -26,10 +27,6 @@ namespace EMotionFX
 
 namespace FirstPersonController
 {
-    // This is not documented, you kind of have to jump into EMotionFX's private headers to find this, invalid parameter index values are
-    // max size_t See InvalidIndex in Gems\EMotionFX\Code\EMotionFX\Source\EMotionFXConfig.h
-    constexpr size_t BotInvalidParamIndex = 0xffffffffffffffff;
-
     class FirstPersonControllerComponent;
 
     class NetworkFPCBotAnimation
@@ -86,16 +83,21 @@ namespace FirstPersonController
         void DetectAnimationChild();
         void SetupAnimationConnections(const AZ::EntityId& targetId);
 
-        bool m_paramIdsNotSet = true;
-        size_t m_walkSpeedParamId = BotInvalidParamIndex;
-        size_t m_sprintParamId = BotInvalidParamIndex;
-        size_t m_crouchToStandParamId = BotInvalidParamIndex;
-        size_t m_crouchParamId = BotInvalidParamIndex;
-        size_t m_standToCrouchParamId = BotInvalidParamIndex;
-        size_t m_jumpStartParamId = BotInvalidParamIndex;
-        size_t m_fallParamId = BotInvalidParamIndex;
-        size_t m_landParamId = BotInvalidParamIndex;
-        size_t m_groundedParamId = BotInvalidParamIndex;
+        bool m_paramIdsSet = false;
+        size_t m_walkSpeedParamId = InvalidParamIndex;
+        size_t m_sprintParamId = InvalidParamIndex;
+        size_t m_crouchToStandParamId = InvalidParamIndex;
+        size_t m_crouchParamId = InvalidParamIndex;
+        size_t m_standToCrouchParamId = InvalidParamIndex;
+        size_t m_jumpStartParamId = InvalidParamIndex;
+        size_t m_fallParamId = InvalidParamIndex;
+        size_t m_landParamId = InvalidParamIndex;
+        size_t m_groundedParamId = InvalidParamIndex;
+
+        // NOTE: Make sure to add any new param Ids to this param Ids array
+        size_t* m_paramIds[9] = { &m_walkSpeedParamId, &m_sprintParamId,        &m_crouchToStandParamId,
+                                  &m_crouchParamId,    &m_standToCrouchParamId, &m_jumpStartParamId,
+                                  &m_fallParamId,      &m_landParamId,          &m_groundedParamId };
     };
 
     class NetworkFPCBotAnimationController
