@@ -527,9 +527,10 @@ namespace FirstPersonController
         bool GetIsNetBot() const override;
         void SetIsNetBot(const bool& new_isNetBot) override;
 #ifdef NETWORKFPC
+        AZStd::string GetStringNetEntityIdById(const AZ::EntityId& entityId) const override;
         Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId& entityId) const override;
         AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId) const override;
-        AZ::EntityId GetEntityIdByIntNetId(const uint64_t& intNetEntityId) const override;
+        AZ::EntityId GetEntityIdByStringNetId(const AZStd::string& intNetEntityId) const override;
 #endif
         bool GetNetworkFPCAllowAllMovementInputs() const override;
         void SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;

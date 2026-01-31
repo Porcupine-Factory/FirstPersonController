@@ -457,8 +457,9 @@ namespace FirstPersonController
         virtual void SetIsNetBot(const bool&) = 0;
 #ifdef NETWORKFPC
         virtual Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId&) const = 0;
+        virtual AZStd::string GetStringNetEntityIdById(const AZ::EntityId&) const = 0;
         virtual AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId&) const = 0;
-        virtual AZ::EntityId GetEntityIdByIntNetId(const uint64_t&) const = 0;
+        virtual AZ::EntityId GetEntityIdByStringNetId(const AZStd::string&) const = 0;
 #endif
         virtual bool GetNetworkFPCAllowAllMovementInputs() const = 0;
         virtual void SetNetworkFPCAllowAllMovementInputs(const bool&) = 0;
