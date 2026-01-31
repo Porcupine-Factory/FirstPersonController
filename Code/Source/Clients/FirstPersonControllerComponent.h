@@ -93,6 +93,7 @@ namespace FirstPersonController
         void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
         void OnAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnHostActivated(const AZ::EntityId& entityId);
+        void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
 
         // FirstPersonControllerRequestBus
         AZ::EntityId GetCharacterEntityId() const override;
@@ -616,6 +617,7 @@ namespace FirstPersonController
         void OnNetworkFPCTickFinish(const float& deltaTime, const AZ::EntityId& entityId);
         void OnNetworkFPCAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnNetworkFPCHostActivated(const AZ::EntityId& entityId);
+        void OnNetworkFPCNonAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnFPCActivated(const AZ::EntityId& entityId);
         void OnGroundHit(const float& fellVelocity, const AZ::EntityId& entityId);
         void OnGroundSoonHit(const float& soonFellVelocity, const AZ::EntityId& entityId);

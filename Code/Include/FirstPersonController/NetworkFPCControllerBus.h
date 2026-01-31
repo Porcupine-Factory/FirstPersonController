@@ -37,6 +37,7 @@ namespace FirstPersonController
         virtual void OnNetworkTickFinish(const float&, const bool&, const AZ::EntityId&) = 0;
         virtual void OnAutonomousClientActivated(const AZ::EntityId&) = 0;
         virtual void OnHostActivated(const AZ::EntityId&) = 0;
+        virtual void OnNonAutonomousClientActivated(const AZ::EntityId&) = 0;
     };
 
     using NetworkFPCControllerNotificationBus = AZ::EBus<NetworkFPCControllerNotifications>;
@@ -53,7 +54,8 @@ namespace FirstPersonController
             OnNetworkTickStart,
             OnNetworkTickFinish,
             OnAutonomousClientActivated,
-            OnHostActivated);
+            OnHostActivated,
+            OnNonAutonomousClientActivated);
 
         void OnNetworkTickStart(
             [[maybe_unused]] const float& deltaTime,
@@ -76,6 +78,10 @@ namespace FirstPersonController
         void OnHostActivated([[maybe_unused]] const AZ::EntityId& entity) override
         {
             Call(FN_OnHostActivated);
+        }
+        void OnNonAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entity) override
+        {
+            Call(FN_OnNonAutonomousClientActivated);
         }
     };
 } // namespace FirstPersonController

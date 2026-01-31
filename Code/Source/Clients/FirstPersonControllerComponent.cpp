@@ -1720,6 +1720,11 @@ namespace FirstPersonController
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCHostActivated, entityId);
     }
+    void FirstPersonControllerComponent::OnNonAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
+    {
+        FirstPersonControllerComponentNotificationBus::Broadcast(
+            &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCNonAutonomousClientActivated, entityId);
+    }
 
     void FirstPersonControllerComponent::OnSceneSimulationStart(float physicsTimestep)
     {

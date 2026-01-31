@@ -162,6 +162,7 @@ namespace FirstPersonController
         void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entity);
         void OnAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnHostActivated(const AZ::EntityId& entityId);
+        void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
 
         // Used to initialize Network Properties from initial values in the First Person Controller component
         bool m_init = true;

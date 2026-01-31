@@ -402,6 +402,9 @@ namespace FirstPersonController
 
             m_firstPersonControllerObject->m_eyeHeight = GetEyeHeight();
         }
+        else
+            NetworkFPCControllerNotificationBus::Broadcast(
+                &NetworkFPCControllerNotificationBus::Events::OnNonAutonomousClientActivated, GetEntityId());
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
