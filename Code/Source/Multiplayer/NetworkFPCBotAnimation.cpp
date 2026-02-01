@@ -261,7 +261,7 @@ namespace FirstPersonController
         required.push_back(AZ_CRC_CE("FirstPersonControllerService"));
     }
 
-    void NetworkFPCBotAnimationController::GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent)
+    void NetworkFPCBotAnimationController::GetDependentServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& dependent)
     {
     }
 
@@ -279,7 +279,7 @@ namespace FirstPersonController
     {
     }
 
-    void NetworkFPCBotAnimationController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, float deltaTime)
+    void NetworkFPCBotAnimationController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, [[maybe_unused]] float deltaTime)
     {
     }
 } // namespace FirstPersonController
