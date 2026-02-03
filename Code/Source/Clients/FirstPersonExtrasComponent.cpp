@@ -625,7 +625,8 @@ namespace FirstPersonController
         bool sprinting = false;
         FirstPersonControllerComponentRequestBus::EventResult(
             sprinting, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetSprinting);
-        const float currentSpeed = m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
+        const float currentSpeed =
+            m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor;
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
 
