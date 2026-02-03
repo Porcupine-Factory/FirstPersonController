@@ -105,6 +105,11 @@ namespace FirstPersonController
         incompatible.push_back(AZ_CRC_CE("CameraCoupledChildService"));
     }
 
+    int CameraCoupledChildComponent::GetTickOrder()
+    {
+        return (AZ::TICK_DEFAULT);
+    }
+
     void CameraCoupledChildComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
         ProcessInput((deltaTime + m_prevDeltaTime) / 2.f);

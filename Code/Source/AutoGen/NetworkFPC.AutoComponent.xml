@@ -200,6 +200,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the character is grounded."/>
+    <NetworkProperty Type="AZStd::string" Name="ChildParentStringNetEntityId"
+                     Init="&quot;&quot;" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="A string containing the child and parent NetEntityId, separated by a comma, created from calling the ObtainParentNetEntityId RPC."/>
 
     <NetworkInput Type="float" Name="Forward" Init="0.f"/>
     <NetworkInput Type="float" Name="Back" Init="0.f"/>
@@ -227,4 +233,8 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <ArchetypeProperty Type="AZStd::string" Name="FallParamName" Init="&quot;Fall&quot;" ExposeToEditor="true" Description="Anim graph fall parameter name."/>
     <ArchetypeProperty Type="AZStd::string" Name="LandParamName" Init="&quot;Land&quot;" ExposeToEditor="true" Description="Anim graph jump land parameter name."/>
     <ArchetypeProperty Type="AZStd::string" Name="GroundedParamName" Init="&quot;Grounded&quot;" ExposeToEditor="true" Description="Anim graph grounded parameter name."/>
+
+    <RemoteProcedure Name="ObtainParentNetEntityId" InvokeFrom="Autonomous" HandleOn="Authority" IsPublic="true" IsReliable="true" GenerateEventBindings="true" Description="Takes a NetEntityId as a string and constructs another string that is the provided NetEntityId and its parent's NetEntityId separated by a comma and stores the result in ChildParentStringNetEntityId">
+        <Param Type="AZStd::string" Name="name"/>
+    </RemoteProcedure>
 </Component>

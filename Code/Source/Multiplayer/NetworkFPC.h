@@ -151,6 +151,10 @@ namespace FirstPersonController
         void OnReleased(float value) override;
         void OnHeld(float value) override;
 
+#if AZ_TRAIT_SERVER
+        void HandleObtainParentNetEntityId(AzNetworking::IConnection* invokingConnection, const AZStd::string& strNetEntityId) override;
+#endif
+
     private:
         void OnPreRender(float deltaTime);
 

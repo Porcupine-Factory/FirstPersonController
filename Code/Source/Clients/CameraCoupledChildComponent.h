@@ -82,5 +82,6 @@ namespace FirstPersonController
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
+        int GetTickOrder() override;
     };
 } // namespace FirstPersonController

@@ -6680,14 +6680,20 @@ namespace FirstPersonController
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::ConstNetworkEntityHandle entity = networkEntityManager->GetEntity(netEntityId);
-        return entity.GetEntity()->GetId();
+        if (entity)
+            return entity.GetEntity()->GetId();
+        else
+            return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
     AZ::EntityId FirstPersonControllerComponent::GetEntityIdByStringNetId(const AZStd::string& strNetEntityId) const
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::ConstNetworkEntityHandle entity =
             networkEntityManager->GetEntity(static_cast<Multiplayer::NetEntityId>(AZStd::stoull(strNetEntityId)));
-        return entity.GetEntity()->GetId();
+        if (entity)
+            return entity.GetEntity()->GetId();
+        else
+            return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
 #endif
     bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const

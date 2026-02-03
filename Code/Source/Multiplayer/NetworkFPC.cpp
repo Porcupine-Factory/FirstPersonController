@@ -578,6 +578,26 @@ namespace FirstPersonController
             GetEntityId());
     }
 
+#if AZ_TRAIT_SERVER
+    void NetworkFPCController::HandleObtainParentNetEntityId(
+        [[maybe_unused]] AzNetworking::IConnection* invokingConnection, const AZStd::string& strNetEntityId)
+    {
+        Multiplayer::NetEntityId providedNetEntityId = static_cast<Multiplayer::NetEntityId>(AZStd::stoull(strNetEntityId));
+        const Multiplayer::ConstNetworkEntityHandle providedEntity = Multiplayer::GetNetworkEntityManager()->GetEntity(providedNetEntityId);
+        if (providedEntity)
+        {
+            const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+            const AZ::EntityId parentId = providedEntity.GetEntity()->GetTransform()->GetParentId();
+            const Multiplayer::NetEntityId parentNetEntityId = networkEntityManager->GetNetEntityIdById(parentId);
+            const AZStd::string parentStringNetEntityId = AZStd::to_string(parentNetEntityId);
+            const AZStd::string childParentStringNetEntityId = strNetEntityId + ',' + parentStringNetEntityId;
+            SetChildParentStringNetEntityId(childParentStringNetEntityId);
+        }
+        else
+            SetChildParentStringNetEntityId("");
+    }
+#endif
+
     // Event Notification methods for use in scripts
     void NetworkFPCController::OnNetworkTickStart(
         [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entity)
