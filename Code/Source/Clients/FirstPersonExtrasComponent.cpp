@@ -857,7 +857,7 @@ namespace FirstPersonController
         if (m_networkFPCEnabled &&
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
               !m_firstPersonControllerObject->m_isHost) ||
-             !m_firstPersonControllerObject->m_onGroundSoonHit))
+             entityId != GetEntityId()))
             return;
         m_tiltLanded = true;
         m_tiltJumped = false;
@@ -930,7 +930,7 @@ namespace FirstPersonController
         if (m_networkFPCEnabled &&
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
               !m_firstPersonControllerObject->m_isHost) ||
-             !m_firstPersonControllerObject->m_onFirstJump))
+             entityId != GetEntityId()))
             return;
         m_tiltJumped = true;
         m_tiltLanded = false;
