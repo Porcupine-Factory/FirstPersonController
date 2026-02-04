@@ -82,6 +82,22 @@ namespace FirstPersonController
         }
     }
 
+    void CameraCoupledChildComponent::ObtainFirstPersonControllerObject()
+    {
+        // Get access to the FirstPersonControllerComponent object and its members
+        AZ::EntityId characterEntityId;
+        AZ::TransformBus::EventResult(characterEntityId, GetEntityId(), &AZ::TransformBus::Events::GetParentId);
+        AZ::Entity* characterEntity;
+        AZ::ComponentApplicationBus::BroadcastResult(characterEntity, &AZ::ComponentApplicationBus::Events::FindEntity, characterEntityId);
+        if (characterEntity)
+        {
+            m_firstPersonControllerObject = characterEntity->FindComponent<FirstPersonControllerComponent>();
+            m_firstPersonExtrasObject = characterEntity->FindComponent<FirstPersonExtrasComponent>();
+
+            m_initialZOffset = GetEntity()->GetTransform()->GetLocalTranslation().GetZ();
+        }
+    }
+
     AZ::Entity* CameraCoupledChildComponent::GetActiveCamera() const
     {
         AZ::EntityId activeCameraId;
@@ -121,7 +137,12 @@ namespace FirstPersonController
         // Get the camera translation, based on whether headbob is enabled
         AZ::Vector3 cameraTranslation = m_firstPersonExtrasObject->m_cameraTranslationWithoutHeadbob;
         if (m_firstPersonExtrasObject == nullptr || !m_firstPersonExtrasObject->m_headbobEnabled)
-            cameraTranslation = GetActiveCamera()->GetTransform()->GetWorldTranslation();
+        {
+            if (m_activeCameraEntity == nullptr)
+                m_activeCameraEntity = GetActiveCamera();
+
+            cameraTranslation = m_activeCameraEntity->GetTransform()->GetWorldTranslation();
+        }
 
         // Get the Z offset
         const float childZOffset = m_firstPersonControllerObject->m_eyeHeight - m_initialZOffset;
@@ -165,6 +186,8 @@ namespace FirstPersonController
         bool networkFPCEnabled = true;
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             networkFPCEnabled, &FirstPersonControllerComponentRequestBus::Events::GetLocallyEnableNetworkFPC);
+        if (networkFPCEnabled && m_firstPersonControllerObject == nullptr)
+            ObtainFirstPersonControllerObject();
         if (!m_enable || m_firstPersonControllerObject == nullptr || !m_firstPersonControllerObject->m_cameraSmoothFollow ||
             (networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isHost))
             return;

@@ -67,6 +67,9 @@ namespace FirstPersonController
         // Function that does the coupling to the camera
         void CoupleChildToCamera();
 
+        // Used to (re)obtain the FPC object (e.g. when the child doesn't have a Network Transform component on it)
+        void ObtainFirstPersonControllerObject();
+
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
@@ -79,6 +82,9 @@ namespace FirstPersonController
 
         // The inital Z offset of the child entity with respect to the parent character entity
         float m_initialZOffset = 0.f;
+
+        // The active camera entity, used when FirstPersonExtrasComponent isn't present
+        AZ::Entity* m_activeCameraEntity = nullptr;
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
