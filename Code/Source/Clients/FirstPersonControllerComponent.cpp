@@ -6705,7 +6705,7 @@ namespace FirstPersonController
 #endif
             return true;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs(const bool& new_allowAllMovementInputs)
+    void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs([[maybe_unused]] const bool& new_allowAllMovementInputs)
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
@@ -6721,7 +6721,7 @@ namespace FirstPersonController
 #endif
             return true;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCAllowRotationInputs(const bool& new_allowRotationInputs)
+    void FirstPersonControllerComponent::SetNetworkFPCAllowRotationInputs([[maybe_unused]] const bool& new_allowRotationInputs)
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
