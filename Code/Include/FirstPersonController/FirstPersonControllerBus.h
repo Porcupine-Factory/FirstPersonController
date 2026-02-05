@@ -6,6 +6,7 @@
 
 #include <FirstPersonController/FirstPersonControllerTypeIds.h>
 
+#include <AzCore/Component/EntityId.h>
 #include <AzCore/EBus/EBus.h>
 #include <AzCore/Interface/Interface.h>
 
@@ -25,7 +26,9 @@ namespace FirstPersonController
         //////////////////////////////////////////////////////////////////////////
         // EBusTraits overrides
         static constexpr AZ::EBusHandlerPolicy HandlerPolicy = AZ::EBusHandlerPolicy::Single;
-        static constexpr AZ::EBusAddressPolicy AddressPolicy = AZ::EBusAddressPolicy::Single;
+        static constexpr AZ::EBusAddressPolicy AddressPolicy = AZ::EBusAddressPolicy::ByIdAndOrdered;
+        using BusIdType = AZ::EntityId;
+        using BusIdOrderCompare = AZStd::greater<BusIdType>;
         //////////////////////////////////////////////////////////////////////////
     };
 

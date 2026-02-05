@@ -57,31 +57,25 @@ namespace FirstPersonController
             OnHostActivated,
             OnNonAutonomousClientActivated);
 
-        void OnNetworkTickStart(
-            [[maybe_unused]] const float& deltaTime,
-            [[maybe_unused]] const bool& server,
-            [[maybe_unused]] const AZ::EntityId& entity) override
+        void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId) override
         {
-            Call(FN_OnNetworkTickStart);
+            Call(FN_OnNetworkTickStart, deltaTime, server, entityId);
         }
-        void OnNetworkTickFinish(
-            [[maybe_unused]] const float& deltaTime,
-            [[maybe_unused]] const bool& server,
-            [[maybe_unused]] const AZ::EntityId& entity) override
+        void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entityId) override
         {
-            Call(FN_OnNetworkTickFinish);
+            Call(FN_OnNetworkTickFinish, deltaTime, server, entityId);
         }
-        void OnAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entity) override
+        void OnAutonomousClientActivated(const AZ::EntityId& entityId) override
         {
-            Call(FN_OnAutonomousClientActivated);
+            Call(FN_OnAutonomousClientActivated, entityId);
         }
-        void OnHostActivated([[maybe_unused]] const AZ::EntityId& entity) override
+        void OnHostActivated(const AZ::EntityId& entityId) override
         {
-            Call(FN_OnHostActivated);
+            Call(FN_OnHostActivated, entityId);
         }
-        void OnNonAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entity) override
+        void OnNonAutonomousClientActivated(const AZ::EntityId& entityId) override
         {
-            Call(FN_OnNonAutonomousClientActivated);
+            Call(FN_OnNonAutonomousClientActivated, entityId);
         }
     };
 } // namespace FirstPersonController

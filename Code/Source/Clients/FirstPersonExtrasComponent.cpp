@@ -510,11 +510,11 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entity)
+    void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId)
     {
         if ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
              !m_firstPersonControllerObject->m_isHost) ||
-            (entity != GetEntityId()))
+            (entityId != GetEntityId()))
         {
             NotAutonomousSoDisconnect();
             return;
@@ -527,7 +527,7 @@ namespace FirstPersonController
     }
 
     void FirstPersonExtrasComponent::OnNetworkTickFinish(
-        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entity)
+        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonExtrasComponent::OnAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
