@@ -39,8 +39,14 @@ namespace FirstPersonController
         virtual void SetWalkingFoV(const float&) = 0;
         virtual bool GetHeadbobEnabled() const = 0;
         virtual void SetHeadbobEnabled(const bool&) = 0;
-        virtual AZ::EntityId GetHeadbobEntityId() const = 0;
-        virtual void SetHeadbobEntityId(const AZ::EntityId&) = 0;
+        virtual bool GetHeadbobStartingDirection() const = 0;
+        virtual void SetHeadbobStartingDirection(const bool&) = 0;
+        virtual float GetHeadbobMaxFrequency() const = 0;
+        virtual void SetHeadbobMaxFrequency(const float&) = 0;
+        virtual float GetHeadbobMaxVerticalAmplitude() const = 0;
+        virtual void SetHeadbobMaxVerticalAmplitude(const float&) = 0;
+        virtual float GetHeadbobMaxHorizontalAmplitude() const = 0;
+        virtual void SetHeadbobMaxHorizontalAmplitude(const float&) = 0;
         virtual AZ::Vector3 GetCameraTranslationWithoutHeadbob() const = 0;
         virtual AZ::Vector3 GetPreviousOffset() const = 0;
         virtual void IgnoreInputs(const bool&) = 0;

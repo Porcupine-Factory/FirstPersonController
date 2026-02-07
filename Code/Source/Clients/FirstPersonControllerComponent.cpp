@@ -1828,9 +1828,7 @@ namespace FirstPersonController
             CaptureCharacterEyeTranslation();
         }
 
-        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow ||
-            ((m_physicsTimeAccumulator >= m_prevTimestep) && !m_networkFPCEnabled) ||
-            ((m_physicsTimeAccumulator >= m_prevNetworkFPCDeltaTime) && m_networkFPCEnabled))
+        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow)
             return;
 
         // Update time accumulator
@@ -2819,10 +2817,10 @@ namespace FirstPersonController
         }
         // Determine if starting or switching to stand up movement. Initiates when not crouching, not already standing up,
         // and currently crouched or near crouched position
-        bool isStartingStandUp = !m_crouching && !m_standingUpMove &&
+        const bool isStartingStandUp = !m_crouching && !m_standingUpMove &&
             (m_crouched || AZ::IsClose(m_cameraLocalZTravelDistance, -m_crouchDistance, 0.01f) ||
              fabs(m_cameraLocalZTravelDistance) > 0.01f);
-        bool isSwitchingToStandUp = !m_crouching && m_crouchingDownMove;
+        const bool isSwitchingToStandUp = !m_crouching && m_crouchingDownMove;
         // Start or switch to stand up movement if conditions are met
         if (isStartingStandUp || isSwitchingToStandUp)
         {

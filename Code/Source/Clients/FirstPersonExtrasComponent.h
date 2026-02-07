@@ -86,8 +86,14 @@ namespace FirstPersonController
         void SetWalkingFoV(const float& new_walkFoV) override;
         bool GetHeadbobEnabled() const override;
         void SetHeadbobEnabled(const bool& new_headbobEnabled) override;
-        AZ::EntityId GetHeadbobEntityId() const override;
-        void SetHeadbobEntityId(const AZ::EntityId& new_headbobEntityId) override;
+        bool GetHeadbobStartingDirection() const override;
+        void SetHeadbobStartingDirection(const bool& new_headbobStartingDirection) override;
+        float GetHeadbobMaxFrequency() const override;
+        void SetHeadbobMaxFrequency(const float& new_headbobMaxFrequency) override;
+        float GetHeadbobMaxVerticalAmplitude() const override;
+        void SetHeadbobMaxVerticalAmplitude(const float& new_headbobMaxVerticalAmplitude) override;
+        float GetHeadbobMaxHorizontalAmplitude() const override;
+        void SetHeadbobMaxHorizontalAmplitude(const float& new_headbobMaxHorizontalAmplitude) override;
         AZ::Vector3 GetCameraTranslationWithoutHeadbob() const override;
         AZ::Vector3 GetPreviousOffset() const override;
         void IgnoreInputs(const bool& ignoreInputs) override;
@@ -105,6 +111,7 @@ namespace FirstPersonController
 
         // TickBus interface
         void OnTick(float deltaTime, AZ::ScriptTimePoint) override;
+        int GetTickOrder() override;
 
         // NetworkFPCControllerNotificationBus
         void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId);
@@ -178,22 +185,14 @@ namespace FirstPersonController
         AZ::Vector3 CalculateHeadbobOffset(const float& deltaTime);
         bool m_headbobEnabled = true;
         bool m_isWalking = false;
+        bool m_cameraChildOfCharacter = true;
         bool m_needsHeadbobFallback = false;
-        float m_headbobFrequency = 6.15f;
-        float m_prevEffectiveFrequency = 6.15f;
-        float m_headbobHorizontalAmplitude = 0.01f;
+        bool m_headbobStartingDirection = true;
+        float m_headbobMaxFrequency = 7.75f;
+        float m_prevEffectiveFrequency = 7.75f;
+        float m_headbobMaxHorizontalAmplitude = 0.015f;
+        float m_headbobMaxVerticalAmplitude = 0.035f;
         AZ::Vector3 m_cameraTranslationWithoutHeadbob = AZ::Vector3::CreateZero();
-        float m_headbobVerticalAmplitude = 0.03f;
-        float m_backwardsFrequencyScale = 0.875f;
-        float m_backwardsHorizontalAmplitudeScale = 1.f;
-        float m_backwardsVerticalAmplitudeScale = 1.f;
-        float m_crouchFrequencyScale = 0.875f;
-        float m_crouchHorizontalAmplitudeScale = 0.875f;
-        float m_crouchVerticalAmplitudeScale = 0.875f;
-        float m_sprintFrequencyScale = 1.25f;
-        float m_sprintHorizontalAmplitudeScale = 1.125f;
-        float m_sprintVerticalAmplitudeScale = 1.125f;
-        float m_headbobAttenuation = 0.25f;
         float m_walkingTime = 0.f;
         AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();
         AZ::Vector3 m_headbobOffset = AZ::Vector3::CreateZero();

@@ -123,7 +123,7 @@ namespace FirstPersonController
 
     int CameraCoupledChildComponent::GetTickOrder()
     {
-        return (AZ::TICK_DEFAULT);
+        return AZ::TICK_DEFAULT;
     }
 
     void CameraCoupledChildComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
@@ -135,21 +135,29 @@ namespace FirstPersonController
     void CameraCoupledChildComponent::CoupleChildToCamera()
     {
         // Get the camera translation, based on whether headbob is enabled
-        AZ::Vector3 cameraTranslation = m_firstPersonExtrasObject->m_cameraTranslationWithoutHeadbob;
+        const bool isCameraChildOfCharacter = m_firstPersonControllerObject->IsCameraChildOfCharacter();
+        AZ::Vector3 cameraTranslation = AZ::Vector3::CreateZero();
         if (m_firstPersonExtrasObject == nullptr || !m_firstPersonExtrasObject->m_headbobEnabled)
         {
             if (m_activeCameraEntity == nullptr)
                 m_activeCameraEntity = GetActiveCamera();
 
-            cameraTranslation = m_activeCameraEntity->GetTransform()->GetWorldTranslation();
+            if (m_activeCameraEntity != nullptr)
+            {
+                if (isCameraChildOfCharacter)
+                    cameraTranslation = m_activeCameraEntity->GetTransform()->GetLocalTranslation();
+                else
+                    cameraTranslation = m_activeCameraEntity->GetTransform()->GetWorldTranslation();
+            }
         }
+        else
+            cameraTranslation = m_firstPersonExtrasObject->m_cameraTranslationWithoutHeadbob;
 
         // Get the Z offset
         const float childZOffset = m_firstPersonControllerObject->m_eyeHeight - m_initialZOffset;
 
         // Set the child's yaw rotation to be the same as the camera
         AZ::Vector3 zPositiveDirection = AZ::Vector3::CreateAxisZ();
-        const bool isCameraChildOfCharacter = m_firstPersonControllerObject->IsCameraChildOfCharacter();
         if (isCameraChildOfCharacter)
         {
             const AZ::Vector3 childRotation = GetEntity()->GetTransform()->GetLocalRotation();
@@ -166,7 +174,7 @@ namespace FirstPersonController
 
         // Calculate the child entity's new translation, based on whether the character is crouching
         AZ::Vector3 newChildTranslation = AZ::Vector3::CreateZero();
-        if (m_firstPersonControllerObject->m_crouched)
+        if (m_firstPersonControllerObject->m_crouching)
             newChildTranslation = cameraTranslation + (m_firstPersonControllerObject->m_crouchDistance - childZOffset) * zPositiveDirection;
         else if (m_firstPersonControllerObject->m_crouchingDownMove || m_firstPersonControllerObject->m_standingUpMove)
             newChildTranslation =
