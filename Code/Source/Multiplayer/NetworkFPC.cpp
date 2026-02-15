@@ -582,7 +582,7 @@ namespace FirstPersonController
     void NetworkFPCController::HandleObtainParentNetEntityId(
         [[maybe_unused]] AzNetworking::IConnection* invokingConnection, const AZStd::string& strNetEntityId)
     {
-        Multiplayer::NetEntityId providedNetEntityId = static_cast<Multiplayer::NetEntityId>(AZStd::stoull(strNetEntityId));
+        const Multiplayer::NetEntityId providedNetEntityId = static_cast<Multiplayer::NetEntityId>(AZStd::stoull(strNetEntityId));
         const Multiplayer::ConstNetworkEntityHandle providedEntity = Multiplayer::GetNetworkEntityManager()->GetEntity(providedNetEntityId);
         if (providedEntity)
         {

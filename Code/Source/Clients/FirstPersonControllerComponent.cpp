@@ -6668,8 +6668,8 @@ namespace FirstPersonController
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::NetEntityId netEntityId = networkEntityManager->GetNetEntityIdById(entityId);
-        const AZStd::string entityIdStr = AZStd::to_string(netEntityId);
-        return entityIdStr;
+        const AZStd::string netEntityIdStr = AZStd::to_string(netEntityId);
+        return netEntityIdStr;
     }
     Multiplayer::NetEntityId FirstPersonControllerComponent::GetNetEntityIdById(const AZ::EntityId& entityId) const
     {
