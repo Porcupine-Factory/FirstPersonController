@@ -114,7 +114,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerSystemComponent::Activate()
     {
-        FirstPersonControllerRequestBus::Handler::BusConnect(GetEntityId());
+        FirstPersonControllerRequestBus::Handler::BusConnect();
         FirstPersonExtrasRequestBus::Handler::BusConnect();
         CameraCoupledChildRequestBus::Handler::BusConnect();
         AZ::TickBus::Handler::BusConnect();
