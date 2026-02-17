@@ -779,16 +779,14 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnFPCActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
-    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellVelocity, [[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellVelocity)
     {
     }
-    void FirstPersonExtrasComponent::OnGroundSoonHit(
-        [[maybe_unused]] const float& soonFellVelocity, [[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellVelocity)
     {
         if (m_networkFPCEnabled &&
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-              !m_firstPersonControllerObject->m_isHost) ||
-             entityId != GetEntityId()))
+              !m_firstPersonControllerObject->m_isHost)))
             return;
         m_tiltLanded = true;
         m_tiltJumped = false;
@@ -801,92 +799,91 @@ namespace FirstPersonController
         else
             m_totalHeadAngle = -m_headAngleLand;
     }
-    void FirstPersonExtrasComponent::OnUngrounded([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnUngrounded()
     {
     }
-    void FirstPersonExtrasComponent::OnStartedFalling([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStartedFalling()
     {
     }
-    void FirstPersonExtrasComponent::OnJumpApogeeReached([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnJumpApogeeReached()
     {
     }
-    void FirstPersonExtrasComponent::OnStartedMoving([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStartedMoving()
     {
     }
-    void FirstPersonExtrasComponent::OnTargetVelocityReached([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnTargetVelocityReached()
     {
     }
-    void FirstPersonExtrasComponent::OnStopped([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStopped()
     {
     }
-    void FirstPersonExtrasComponent::OnTopWalkSpeedReached([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnTopWalkSpeedReached()
     {
     }
-    void FirstPersonExtrasComponent::OnTopSprintSpeedReached([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnTopSprintSpeedReached()
     {
     }
-    void FirstPersonExtrasComponent::OnHeadHit([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnHeadHit()
     {
     }
     void FirstPersonExtrasComponent::OnCharacterShapecastHitSomething(
-        [[maybe_unused]] const AZStd::vector<AzPhysics::SceneQueryHit> characterHits, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const AZStd::vector<AzPhysics::SceneQueryHit> characterHits)
     {
     }
-    void FirstPersonExtrasComponent::OnVelocityXYObstructed([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnVelocityXYObstructed()
     {
     }
-    void FirstPersonExtrasComponent::OnCharacterGravityObstructed([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnCharacterGravityObstructed()
     {
     }
-    void FirstPersonExtrasComponent::OnCrouched([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnCrouched()
     {
     }
-    void FirstPersonExtrasComponent::OnStoodUp([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStoodUp()
     {
     }
-    void FirstPersonExtrasComponent::OnStoodUpFromJump([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStoodUpFromJump()
     {
     }
-    void FirstPersonExtrasComponent::OnStandPrevented([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStandPrevented()
     {
     }
-    void FirstPersonExtrasComponent::OnStartedCrouching([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStartedCrouching()
     {
     }
-    void FirstPersonExtrasComponent::OnStartedStanding([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStartedStanding()
     {
     }
-    void FirstPersonExtrasComponent::OnFirstJump([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnFirstJump()
     {
         if (m_networkFPCEnabled &&
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-              !m_firstPersonControllerObject->m_isHost) ||
-             entityId != GetEntityId()))
+              !m_firstPersonControllerObject->m_isHost)))
             return;
         m_tiltJumped = true;
         m_tiltLanded = false;
         m_moveHeadDown = true;
         m_totalHeadAngle = -m_headAngleJump;
     }
-    void FirstPersonExtrasComponent::OnFinalJump([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnFinalJump()
     {
     }
-    void FirstPersonExtrasComponent::OnStaminaCapped([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStaminaCapped()
     {
     }
-    void FirstPersonExtrasComponent::OnStaminaReachedZero([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnStaminaReachedZero()
     {
     }
-    void FirstPersonExtrasComponent::OnSprintStarted([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnSprintStarted()
     {
     }
-    void FirstPersonExtrasComponent::OnSprintStopped([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnSprintStopped()
     {
     }
-    void FirstPersonExtrasComponent::OnCooldownStarted([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnCooldownStarted()
     {
     }
-    void FirstPersonExtrasComponent::OnCooldownDone([[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnCooldownDone()
     {
     }
 

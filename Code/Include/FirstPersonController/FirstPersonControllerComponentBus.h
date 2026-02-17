@@ -487,34 +487,34 @@ namespace FirstPersonController
         virtual void OnNetworkFPCHostActivated(const AZ::EntityId&) = 0;
         virtual void OnNetworkFPCNonAutonomousClientActivated(const AZ::EntityId&) = 0;
         virtual void OnFPCActivated(const AZ::EntityId&) = 0;
-        virtual void OnGroundHit(const float&, const AZ::EntityId&) = 0;
-        virtual void OnGroundSoonHit(const float&, const AZ::EntityId&) = 0;
-        virtual void OnUngrounded(const AZ::EntityId&) = 0;
-        virtual void OnStartedFalling(const AZ::EntityId&) = 0;
-        virtual void OnJumpApogeeReached(const AZ::EntityId&) = 0;
-        virtual void OnStartedMoving(const AZ::EntityId&) = 0;
-        virtual void OnTargetVelocityReached(const AZ::EntityId&) = 0;
-        virtual void OnStopped(const AZ::EntityId&) = 0;
-        virtual void OnTopWalkSpeedReached(const AZ::EntityId&) = 0;
-        virtual void OnTopSprintSpeedReached(const AZ::EntityId&) = 0;
-        virtual void OnHeadHit(const AZ::EntityId&) = 0;
-        virtual void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit>, const AZ::EntityId&) = 0;
-        virtual void OnVelocityXYObstructed(const AZ::EntityId&) = 0;
-        virtual void OnCharacterGravityObstructed(const AZ::EntityId&) = 0;
-        virtual void OnCrouched(const AZ::EntityId&) = 0;
-        virtual void OnStoodUp(const AZ::EntityId&) = 0;
-        virtual void OnStoodUpFromJump(const AZ::EntityId&) = 0;
-        virtual void OnStandPrevented(const AZ::EntityId&) = 0;
-        virtual void OnStartedCrouching(const AZ::EntityId&) = 0;
-        virtual void OnStartedStanding(const AZ::EntityId&) = 0;
-        virtual void OnFirstJump(const AZ::EntityId&) = 0;
-        virtual void OnFinalJump(const AZ::EntityId&) = 0;
-        virtual void OnStaminaCapped(const AZ::EntityId&) = 0;
-        virtual void OnStaminaReachedZero(const AZ::EntityId&) = 0;
-        virtual void OnSprintStarted(const AZ::EntityId&) = 0;
-        virtual void OnSprintStopped(const AZ::EntityId&) = 0;
-        virtual void OnCooldownStarted(const AZ::EntityId&) = 0;
-        virtual void OnCooldownDone(const AZ::EntityId&) = 0;
+        virtual void OnGroundHit(const float&) = 0;
+        virtual void OnGroundSoonHit(const float&) = 0;
+        virtual void OnUngrounded() = 0;
+        virtual void OnStartedFalling() = 0;
+        virtual void OnJumpApogeeReached() = 0;
+        virtual void OnStartedMoving() = 0;
+        virtual void OnTargetVelocityReached() = 0;
+        virtual void OnStopped() = 0;
+        virtual void OnTopWalkSpeedReached() = 0;
+        virtual void OnTopSprintSpeedReached() = 0;
+        virtual void OnHeadHit() = 0;
+        virtual void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit>) = 0;
+        virtual void OnVelocityXYObstructed() = 0;
+        virtual void OnCharacterGravityObstructed() = 0;
+        virtual void OnCrouched() = 0;
+        virtual void OnStoodUp() = 0;
+        virtual void OnStoodUpFromJump() = 0;
+        virtual void OnStandPrevented() = 0;
+        virtual void OnStartedCrouching() = 0;
+        virtual void OnStartedStanding() = 0;
+        virtual void OnFirstJump() = 0;
+        virtual void OnFinalJump() = 0;
+        virtual void OnStaminaCapped() = 0;
+        virtual void OnStaminaReachedZero() = 0;
+        virtual void OnSprintStarted() = 0;
+        virtual void OnSprintStopped() = 0;
+        virtual void OnCooldownStarted() = 0;
+        virtual void OnCooldownDone() = 0;
     };
 
     using FirstPersonControllerComponentNotificationBus = AZ::EBus<FirstPersonControllerComponentNotifications>;
@@ -597,118 +597,117 @@ namespace FirstPersonController
         {
             Call(FN_OnFPCActivated, entityId);
         }
-        void OnGroundHit(const float& fellVelocity, const AZ::EntityId& entityId) override
+        void OnGroundHit(const float& fellVelocity) override
         {
-            Call(FN_OnGroundHit, fellVelocity, entityId);
+            Call(FN_OnGroundHit, fellVelocity);
         }
-        void OnGroundSoonHit(const float& soonFellVelocity, const AZ::EntityId& entityId) override
+        void OnGroundSoonHit(const float& soonFellVelocity) override
         {
-            Call(FN_OnGroundSoonHit, soonFellVelocity, entityId);
+            Call(FN_OnGroundSoonHit, soonFellVelocity);
         }
-        void OnUngrounded(const AZ::EntityId& entityId) override
+        void OnUngrounded() override
         {
-            Call(FN_OnUngrounded, entityId);
+            Call(FN_OnUngrounded);
         }
-        void OnStartedFalling(const AZ::EntityId& entityId) override
+        void OnStartedFalling() override
         {
-            Call(FN_OnStartedFalling, entityId);
+            Call(FN_OnStartedFalling);
         }
-        void OnJumpApogeeReached(const AZ::EntityId& entityId) override
+        void OnJumpApogeeReached() override
         {
-            Call(FN_OnJumpApogeeReached, entityId);
+            Call(FN_OnJumpApogeeReached);
         }
-        void OnStartedMoving(const AZ::EntityId& entityId) override
+        void OnStartedMoving() override
         {
-            Call(FN_OnStartedMoving, entityId);
+            Call(FN_OnStartedMoving);
         }
-        void OnTargetVelocityReached(const AZ::EntityId& entityId) override
+        void OnTargetVelocityReached() override
         {
-            Call(FN_OnTargetVelocityReached, entityId);
+            Call(FN_OnTargetVelocityReached);
         }
-        void OnStopped(const AZ::EntityId& entityId) override
+        void OnStopped() override
         {
-            Call(FN_OnStopped, entityId);
+            Call(FN_OnStopped);
         }
-        void OnTopWalkSpeedReached(const AZ::EntityId& entityId) override
+        void OnTopWalkSpeedReached() override
         {
-            Call(FN_OnTopWalkSpeedReached, entityId);
+            Call(FN_OnTopWalkSpeedReached);
         }
-        void OnTopSprintSpeedReached(const AZ::EntityId& entityId) override
+        void OnTopSprintSpeedReached() override
         {
-            Call(FN_OnTopSprintSpeedReached, entityId);
+            Call(FN_OnTopSprintSpeedReached);
         }
-        void OnHeadHit(const AZ::EntityId& entityId) override
+        void OnHeadHit() override
         {
-            Call(FN_OnHeadHit, entityId);
+            Call(FN_OnHeadHit);
         }
-        void OnCharacterShapecastHitSomething(
-            const AZStd::vector<AzPhysics::SceneQueryHit> characterHits, const AZ::EntityId& entityId) override
+        void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit> characterHits) override
         {
-            Call(FN_OnCharacterShapecastHitSomething, characterHits, entityId);
+            Call(FN_OnCharacterShapecastHitSomething, characterHits);
         }
-        void OnVelocityXYObstructed(const AZ::EntityId& entityId) override
+        void OnVelocityXYObstructed() override
         {
-            Call(FN_OnVelocityXYObstructed, entityId);
+            Call(FN_OnVelocityXYObstructed);
         }
-        void OnCharacterGravityObstructed(const AZ::EntityId& entityId) override
+        void OnCharacterGravityObstructed() override
         {
-            Call(FN_OnCharacterGravityObstructed, entityId);
+            Call(FN_OnCharacterGravityObstructed);
         }
-        void OnCrouched(const AZ::EntityId& entityId) override
+        void OnCrouched() override
         {
-            Call(FN_OnCrouched, entityId);
+            Call(FN_OnCrouched);
         }
-        void OnStoodUp(const AZ::EntityId& entityId) override
+        void OnStoodUp() override
         {
-            Call(FN_OnStoodUp, entityId);
+            Call(FN_OnStoodUp);
         }
-        void OnStoodUpFromJump(const AZ::EntityId& entityId) override
+        void OnStoodUpFromJump() override
         {
-            Call(FN_OnStoodUpFromJump, entityId);
+            Call(FN_OnStoodUpFromJump);
         }
-        void OnStandPrevented(const AZ::EntityId& entityId) override
+        void OnStandPrevented() override
         {
-            Call(FN_OnStandPrevented, entityId);
+            Call(FN_OnStandPrevented);
         }
-        void OnStartedCrouching(const AZ::EntityId& entityId) override
+        void OnStartedCrouching() override
         {
-            Call(FN_OnStartedCrouching, entityId);
+            Call(FN_OnStartedCrouching);
         }
-        void OnStartedStanding(const AZ::EntityId& entityId) override
+        void OnStartedStanding() override
         {
-            Call(FN_OnStartedStanding, entityId);
+            Call(FN_OnStartedStanding);
         }
-        void OnFirstJump(const AZ::EntityId& entityId) override
+        void OnFirstJump() override
         {
-            Call(FN_OnFirstJump, entityId);
+            Call(FN_OnFirstJump);
         }
-        void OnFinalJump(const AZ::EntityId& entityId) override
+        void OnFinalJump() override
         {
-            Call(FN_OnFinalJump, entityId);
+            Call(FN_OnFinalJump);
         }
-        void OnStaminaCapped(const AZ::EntityId& entityId) override
+        void OnStaminaCapped() override
         {
-            Call(FN_OnStaminaCapped, entityId);
+            Call(FN_OnStaminaCapped);
         }
-        void OnStaminaReachedZero(const AZ::EntityId& entityId) override
+        void OnStaminaReachedZero() override
         {
-            Call(FN_OnStaminaReachedZero, entityId);
+            Call(FN_OnStaminaReachedZero);
         }
-        void OnSprintStarted(const AZ::EntityId& entityId) override
+        void OnSprintStarted() override
         {
-            Call(FN_OnSprintStarted, entityId);
+            Call(FN_OnSprintStarted);
         }
-        void OnSprintStopped(const AZ::EntityId& entityId) override
+        void OnSprintStopped() override
         {
-            Call(FN_OnSprintStopped, entityId);
+            Call(FN_OnSprintStopped);
         }
-        void OnCooldownStarted(const AZ::EntityId& entityId) override
+        void OnCooldownStarted() override
         {
-            Call(FN_OnCooldownStarted, entityId);
+            Call(FN_OnCooldownStarted);
         }
-        void OnCooldownDone(const AZ::EntityId& entityId) override
+        void OnCooldownDone() override
         {
-            Call(FN_OnCooldownDone, entityId);
+            Call(FN_OnCooldownDone);
         }
     };
 } // namespace FirstPersonController
