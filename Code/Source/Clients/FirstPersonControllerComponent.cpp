@@ -1233,6 +1233,10 @@ namespace FirstPersonController
                 ->Event("Ignore Inputs", &FirstPersonControllerComponentRequests::IgnoreInputs)
                 ->Event("Not Autonomous So Disconnect", &FirstPersonControllerComponentRequests::NotAutonomousSoDisconnect);
 
+            bc->Class<FirstPersonControllerComponent>("First Person Controller")
+                ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
+                ->Method("Get Host EntityId", &GetHostEntityId);
+
             bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
         }
     }
@@ -6697,6 +6701,40 @@ namespace FirstPersonController
             return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
 #endif
+    AZ::EntityId FirstPersonControllerComponent::GetAutonomousClientEntityId()
+    {
+        AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
+        FirstPersonControllerComponentRequestBus::BroadcastResult(
+            characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
+        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        {
+            bool isAutonomousClient = false;
+            FirstPersonControllerComponentRequestBus::EventResult(
+                isAutonomousClient, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsAutonomousClient);
+            // If the autnomous client was found then return its EntityId
+            if (isAutonomousClient)
+                return characterEntityId;
+        }
+        // If no autonomous client entity was found then return an invalid EntityId
+        return AZ::EntityId(AZ::EntityId::InvalidEntityId);
+    }
+    AZ::EntityId FirstPersonControllerComponent::GetHostEntityId()
+    {
+        AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
+        FirstPersonControllerComponentRequestBus::BroadcastResult(
+            characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
+        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        {
+            bool isHost = false;
+            FirstPersonControllerComponentRequestBus::EventResult(
+                isHost, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsHost);
+            // If the host was found then return its EntityId
+            if (isHost)
+                return characterEntityId;
+        }
+        // If no host entity was found then return an invalid EntityId
+        return AZ::EntityId(AZ::EntityId::InvalidEntityId);
+    }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const
     {
 #ifdef NETWORKFPC
