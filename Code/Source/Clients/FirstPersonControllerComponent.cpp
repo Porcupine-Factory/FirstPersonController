@@ -1234,6 +1234,8 @@ namespace FirstPersonController
                 ->Event("Not Autonomous So Disconnect", &FirstPersonControllerComponentRequests::NotAutonomousSoDisconnect);
 
             bc->Class<FirstPersonControllerComponent>("First Person Controller")
+                ->Method("Get Player EntityIds On Server", &GetPlayerEntityIdsOnServer)
+                ->Method("Get Net Bot EntityIds On Server", &GetNetBotEntityIdsOnServer)
                 ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
                 ->Method("Get Host EntityId", &GetHostEntityId);
 
@@ -6694,6 +6696,74 @@ namespace FirstPersonController
             return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
 #endif
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetPlayerEntityIdsOnServer()
+    {
+        AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
+        FirstPersonControllerComponentRequestBus::BroadcastResult(
+            characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
+        bool checkedIfServerOrHost = false;
+        AZStd::vector<AZ::EntityId> playerEntityIds;
+        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        {
+            if (!checkedIfServerOrHost)
+            {
+                bool isServerOrHost = true;
+                FirstPersonControllerComponentRequestBus::EventResult(
+                    isServerOrHost, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsServer);
+                if (!isServerOrHost)
+                    FirstPersonControllerComponentRequestBus::EventResult(
+                        isServerOrHost, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsHost);
+                if (!isServerOrHost)
+                    AZ_Warning(
+                        "FirstPersonControllerComponent",
+                        false,
+                        "GetPlayerEntityIdsOnServer() called from a client, this method will only work reliably on a server or host.");
+                checkedIfServerOrHost = true;
+            }
+            bool isNetBot = true;
+            FirstPersonControllerComponentRequestBus::EventResult(
+                isNetBot, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsNetBot);
+            // If the character EntityId isn't a bot then add it to the vector
+            if (!isNetBot)
+                playerEntityIds.push_back(characterEntityId);
+        }
+        // Return the vector of all player EntityIds
+        return playerEntityIds;
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetNetBotEntityIdsOnServer()
+    {
+        AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
+        FirstPersonControllerComponentRequestBus::BroadcastResult(
+            characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
+        bool checkedIfServerOrHost = false;
+        AZStd::vector<AZ::EntityId> netBotEntityIds;
+        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        {
+            if (!checkedIfServerOrHost)
+            {
+                bool isServerOrHost = true;
+                FirstPersonControllerComponentRequestBus::EventResult(
+                    isServerOrHost, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsServer);
+                if (!isServerOrHost)
+                    FirstPersonControllerComponentRequestBus::EventResult(
+                        isServerOrHost, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsHost);
+                if (!isServerOrHost)
+                    AZ_Warning(
+                        "FirstPersonControllerComponent",
+                        false,
+                        "GetNetBotEntityIdsOnServer() called from a client, this method will only work reliably on a server or host.");
+                checkedIfServerOrHost = true;
+            }
+            bool isNetBot = false;
+            FirstPersonControllerComponentRequestBus::EventResult(
+                isNetBot, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsNetBot);
+            // If the character EntityId is a bot then add it to the vector
+            if (isNetBot)
+                netBotEntityIds.push_back(characterEntityId);
+        }
+        // Return the vector of all network bot/NPC EntityIds
+        return netBotEntityIds;
+    }
     AZ::EntityId FirstPersonControllerComponent::GetAutonomousClientEntityId()
     {
         AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;

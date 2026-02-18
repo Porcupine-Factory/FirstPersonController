@@ -532,6 +532,8 @@ namespace FirstPersonController
         AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId) const override;
         AZ::EntityId GetEntityIdByStringNetId(const AZStd::string& intNetEntityId) const override;
 #endif
+        static AZStd::vector<AZ::EntityId> GetPlayerEntityIdsOnServer();
+        static AZStd::vector<AZ::EntityId> GetNetBotEntityIdsOnServer();
         static AZ::EntityId GetAutonomousClientEntityId();
         static AZ::EntityId GetHostEntityId();
         bool GetNetworkFPCAllowAllMovementInputs() const override;
