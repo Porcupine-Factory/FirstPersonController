@@ -200,6 +200,18 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the character is grounded."/>
+    <NetworkProperty Type="AZStd::vector&lt;AZStd::string&gt;" Name="PlayerStringNetEntityIds"
+                     Init="AZStd::vector&lt;AZStd::string&gt;&#40;&#41;" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="A vector of NetEntityId strings for all connected player entities."/>
+    <NetworkProperty Type="AZStd::vector&lt;AZStd::string&gt;" Name="BotStringNetEntityIds"
+                     Init="AZStd::vector&lt;AZStd::string&gt;&#40;&#41;" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="A vector of NetEntityId strings for all bot entities."/>
     <NetworkProperty Type="AZStd::string" Name="ChildParentStringNetEntityId"
                      Init="&quot;&quot;" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"

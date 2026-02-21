@@ -168,6 +168,20 @@ namespace FirstPersonController
         void OnHostActivated(const AZ::EntityId& entityId);
         void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
 
+        // Connect and disconnect events
+        void OnConnectionAcquired();
+        void OnEndpointDisconnected();
+        Multiplayer::ConnectionAcquiredEvent::Handler m_connectionAcquiredHandler = Multiplayer::ConnectionAcquiredEvent::Handler(
+            [this](Multiplayer::MultiplayerAgentDatum)
+            {
+                this->OnConnectionAcquired();
+            });
+        Multiplayer::EndpointDisconnectedEvent::Handler m_endpointDisconnectedHandler = Multiplayer::EndpointDisconnectedEvent::Handler(
+            [this](Multiplayer::MultiplayerAgentType)
+            {
+                this->OnEndpointDisconnected();
+            });
+
         // Used to initialize Network Properties from initial values in the First Person Controller component
         bool m_init = true;
 

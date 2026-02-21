@@ -533,7 +533,11 @@ namespace FirstPersonController
         AZ::EntityId GetEntityIdByStringNetId(const AZStd::string& intNetEntityId) const override;
 #endif
         static AZStd::vector<AZ::EntityId> GetPlayerEntityIdsOnServer();
+        static AZStd::vector<AZStd::string> GetPlayerStringNetEntityIdsOnServer();
         static AZStd::vector<AZ::EntityId> GetNetBotEntityIdsOnServer();
+        static AZStd::vector<AZStd::string> GetBotStringNetEntityIdsOnServer();
+        static AZStd::vector<AZStd::string> GetPlayerNetEntityIdStrings();
+        static AZStd::vector<AZStd::string> GetBotNetEntityIdStrings();
         static AZ::EntityId GetAutonomousClientEntityId();
         static AZ::EntityId GetHostEntityId();
         bool GetNetworkFPCAllowAllMovementInputs() const override;
@@ -547,6 +551,12 @@ namespace FirstPersonController
         void IgnoreInputs(const bool& ignoreInputs) override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
+
+        inline static AZStd::vector<AZ::EntityId> m_playerEntityIds;
+        inline static AZStd::vector<AZStd::string> m_playerStringNetEntityIds;
+        inline static AZStd::vector<AZ::EntityId> m_netBotEntityIds;
+        inline static AZStd::vector<AZStd::string> m_botStringNetEntityIds;
+        inline static bool m_reacquirePlayerBotStringNetEntityIds = true;
 
     private:
         // Input event assignment and notification bus connection

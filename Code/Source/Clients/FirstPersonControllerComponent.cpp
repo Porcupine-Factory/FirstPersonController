@@ -1236,6 +1236,8 @@ namespace FirstPersonController
             bc->Class<FirstPersonControllerComponent>("First Person Controller")
                 ->Method("Get Player EntityIds On Server", &GetPlayerEntityIdsOnServer)
                 ->Method("Get Net Bot EntityIds On Server", &GetNetBotEntityIdsOnServer)
+                ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
+                ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
                 ->Method("Get Host EntityId", &GetHostEntityId);
 
@@ -1379,6 +1381,20 @@ namespace FirstPersonController
 
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnFPCActivated, GetEntityId());
+
+        if (m_networkFPCControllerObject != nullptr && (m_isServer || m_isHost))
+        {
+            GetPlayerStringNetEntityIdsOnServer();
+            GetBotStringNetEntityIdsOnServer();
+#ifdef NETWORKFPC
+            m_networkFPCControllerObject->SetBotStringNetEntityIds(m_botStringNetEntityIds);
+            m_networkFPCControllerObject->SetPlayerStringNetEntityIds(m_playerStringNetEntityIds);
+#endif
+        }
+        else if (m_isNetBot)
+        {
+            GetBotStringNetEntityIdsOnServer();
+        }
     }
 
     void FirstPersonControllerComponent::Deactivate()
@@ -1390,6 +1406,15 @@ namespace FirstPersonController
 #endif
         InputChannelEventListener::Disconnect();
         FirstPersonControllerComponentRequestBus::Handler::BusDisconnect();
+        if (m_isServer || m_isHost)
+        {
+            GetPlayerStringNetEntityIdsOnServer();
+            GetBotStringNetEntityIdsOnServer();
+        }
+        else if (m_isNetBot)
+        {
+            GetBotStringNetEntityIdsOnServer();
+        }
         Camera::CameraNotificationBus::Handler::BusDisconnect();
         AZ::EntityBus::Handler::BusDisconnect();
 
@@ -4133,6 +4158,8 @@ namespace FirstPersonController
         if (m_networkFPCControllerObject != nullptr)
         {
 #ifdef NETWORKFPC
+            m_playerStringNetEntityIds = m_networkFPCControllerObject->GetPlayerStringNetEntityIds();
+            m_botStringNetEntityIds = m_networkFPCControllerObject->GetBotStringNetEntityIds();
             const bool crouching = m_networkFPCControllerObject->GetIsCrouching();
             if (m_crouching != crouching)
             {
@@ -4190,6 +4217,17 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
             m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
+            if (m_isServer || m_isHost)
+            {
+                if (m_reacquirePlayerBotStringNetEntityIds)
+                {
+                    GetPlayerStringNetEntityIdsOnServer();
+                    GetBotStringNetEntityIdsOnServer();
+                    m_reacquirePlayerBotStringNetEntityIds = false;
+                }
+                m_networkFPCControllerObject->SetPlayerStringNetEntityIds(m_playerStringNetEntityIds);
+                m_networkFPCControllerObject->SetBotStringNetEntityIds(m_botStringNetEntityIds);
+            }
         }
         else if (m_networkFPCBotAnimationControllerObject != nullptr)
         {
@@ -6702,8 +6740,8 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
         bool checkedIfServerOrHost = false;
-        AZStd::vector<AZ::EntityId> playerEntityIds;
-        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        m_playerEntityIds.clear();
+        for (const AZ::EntityId characterEntityId : characterEntityIds.values)
         {
             if (!checkedIfServerOrHost)
             {
@@ -6725,10 +6763,21 @@ namespace FirstPersonController
                 isNetBot, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsNetBot);
             // If the character EntityId isn't a bot then add it to the vector
             if (!isNetBot)
-                playerEntityIds.push_back(characterEntityId);
+                m_playerEntityIds.push_back(characterEntityId);
         }
         // Return the vector of all player EntityIds
-        return playerEntityIds;
+        return m_playerEntityIds;
+    }
+    AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetPlayerStringNetEntityIdsOnServer()
+    {
+        m_playerStringNetEntityIds.clear();
+#if AZ_TRAIT_SERVER
+        GetPlayerEntityIdsOnServer();
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        for (const AZ::EntityId playerEntityId : m_playerEntityIds)
+            m_playerStringNetEntityIds.push_back(AZStd::to_string(networkEntityManager->GetNetEntityIdById(playerEntityId)));
+#endif
+        return m_playerStringNetEntityIds;
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetNetBotEntityIdsOnServer()
     {
@@ -6736,8 +6785,8 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
         bool checkedIfServerOrHost = false;
-        AZStd::vector<AZ::EntityId> netBotEntityIds;
-        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        m_netBotEntityIds.clear();
+        for (const AZ::EntityId characterEntityId : characterEntityIds.values)
         {
             if (!checkedIfServerOrHost)
             {
@@ -6759,17 +6808,36 @@ namespace FirstPersonController
                 isNetBot, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsNetBot);
             // If the character EntityId is a bot then add it to the vector
             if (isNetBot)
-                netBotEntityIds.push_back(characterEntityId);
+                m_netBotEntityIds.push_back(characterEntityId);
         }
         // Return the vector of all network bot/NPC EntityIds
-        return netBotEntityIds;
+        return m_netBotEntityIds;
+    }
+    AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetBotStringNetEntityIdsOnServer()
+    {
+        m_botStringNetEntityIds.clear();
+#if AZ_TRAIT_SERVER
+        GetNetBotEntityIdsOnServer();
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        for (const AZ::EntityId netBotEntityId : m_netBotEntityIds)
+            m_botStringNetEntityIds.push_back(AZStd::to_string(networkEntityManager->GetNetEntityIdById(netBotEntityId)));
+#endif
+        return m_botStringNetEntityIds;
+    }
+    AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetPlayerNetEntityIdStrings()
+    {
+        return m_playerStringNetEntityIds;
+    }
+    AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetBotNetEntityIdStrings()
+    {
+        return m_botStringNetEntityIds;
     }
     AZ::EntityId FirstPersonControllerComponent::GetAutonomousClientEntityId()
     {
         AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
-        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        for (const AZ::EntityId characterEntityId : characterEntityIds.values)
         {
             bool isAutonomousClient = false;
             FirstPersonControllerComponentRequestBus::EventResult(
@@ -6786,7 +6854,7 @@ namespace FirstPersonController
         AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
-        for (AZ::EntityId characterEntityId : characterEntityIds.values)
+        for (const AZ::EntityId characterEntityId : characterEntityIds.values)
         {
             bool isHost = false;
             FirstPersonControllerComponentRequestBus::EventResult(

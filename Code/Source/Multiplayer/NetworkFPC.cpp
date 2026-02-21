@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <AzCore/std/string/conversions.h>
 #include <Multiplayer/NetworkFPC.h>
 
 #include <AzCore/Component/TransformBus.h>
 #include <AzCore/Serialization/SerializeContext.h>
 
 #include <Multiplayer/Components/NetworkCharacterComponent.h>
+
+#include <AzNetworking/Framework/INetworking.h>
 
 #include <Integration/AnimGraphComponentBus.h>
 #include <Integration/AnimGraphNetworkingBus.h>
@@ -405,6 +408,14 @@ namespace FirstPersonController
         else
             NetworkFPCControllerNotificationBus::Broadcast(
                 &NetworkFPCControllerNotificationBus::Events::OnNonAutonomousClientActivated, GetEntityId());
+
+#if AZ_TRAIT_SERVER
+        if (IsNetEntityRoleAuthority())
+        {
+            AZ::Interface<Multiplayer::IMultiplayer>::Get()->AddConnectionAcquiredHandler(m_connectionAcquiredHandler);
+            AZ::Interface<Multiplayer::IMultiplayer>::Get()->AddEndpointDisconnectedHandler(m_endpointDisconnectedHandler);
+        }
+#endif
     }
 
     void NetworkFPCController::OnDeactivate([[maybe_unused]] Multiplayer::EntityIsMigrating entityIsMigrating)
@@ -412,6 +423,8 @@ namespace FirstPersonController
         NetworkFPCControllerRequestBus::Handler::BusDisconnect();
         InputEventNotificationBus::MultiHandler::BusDisconnect();
         m_enableNetworkFPCChangedEvent.Disconnect();
+        m_connectionAcquiredHandler.Disconnect();
+        m_endpointDisconnectedHandler.Disconnect();
     }
 
     void NetworkFPCController::GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required)
@@ -503,6 +516,9 @@ namespace FirstPersonController
                 m_firstPersonControllerObject->m_isServer = true;
                 // Set the server's FPC EntityId to be obtained by the autonomous client
                 SetServerFPCEntityId(AZ::u64(m_firstPersonControllerObject->GetEntity()));
+                FirstPersonControllerComponent::GetPlayerStringNetEntityIdsOnServer();
+                SetPlayerStringNetEntityIds(FirstPersonControllerComponent::m_playerStringNetEntityIds);
+                FirstPersonControllerComponent::m_reacquirePlayerBotStringNetEntityIds = true;
             }
             if (!m_firstPersonControllerObject->m_isServer && !m_firstPersonControllerObject->m_isNetBot)
                 m_disabled = true;
@@ -595,6 +611,20 @@ namespace FirstPersonController
         }
         else
             SetChildParentStringNetEntityId("");
+    }
+
+    // Connect and disconnect events
+    void NetworkFPCController::OnConnectionAcquired()
+    {
+        FirstPersonControllerComponent::GetPlayerStringNetEntityIdsOnServer();
+        SetPlayerStringNetEntityIds(FirstPersonControllerComponent::m_playerStringNetEntityIds);
+        FirstPersonControllerComponent::m_reacquirePlayerBotStringNetEntityIds = true;
+    }
+    void NetworkFPCController::OnEndpointDisconnected()
+    {
+        FirstPersonControllerComponent::GetPlayerStringNetEntityIdsOnServer();
+        SetPlayerStringNetEntityIds(FirstPersonControllerComponent::m_playerStringNetEntityIds);
+        FirstPersonControllerComponent::m_reacquirePlayerBotStringNetEntityIds = true;
     }
 #endif
 
