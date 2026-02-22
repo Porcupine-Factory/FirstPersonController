@@ -1214,6 +1214,8 @@ namespace FirstPersonController
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
                 ->Event("Get Is Net Bot", &FirstPersonControllerComponentRequests::GetIsNetBot)
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
+                ->Event("Get Player EntityIds", &FirstPersonControllerComponentRequests::GetPlayerEntityIds)
+                ->Event("Get Net Bot EntityIds", &FirstPersonControllerComponentRequests::GetNetBotEntityIds)
 #ifdef NETWORKFPC
                 ->Event("Get NetEntityId String By EntityId", &FirstPersonControllerComponentRequests::GetStringNetEntityIdById)
                 ->Event("Get EntityId By NetEntityId String", &FirstPersonControllerComponentRequests::GetEntityIdByStringNetId)
@@ -1234,8 +1236,6 @@ namespace FirstPersonController
                 ->Event("Not Autonomous So Disconnect", &FirstPersonControllerComponentRequests::NotAutonomousSoDisconnect);
 
             bc->Class<FirstPersonControllerComponent>("First Person Controller")
-                ->Method("Get Player EntityIds On Server", &GetPlayerEntityIdsOnServer)
-                ->Method("Get Net Bot EntityIds On Server", &GetNetBotEntityIdsOnServer)
                 ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
@@ -4158,8 +4158,18 @@ namespace FirstPersonController
         if (m_networkFPCControllerObject != nullptr)
         {
 #ifdef NETWORKFPC
-            m_playerStringNetEntityIds = m_networkFPCControllerObject->GetPlayerStringNetEntityIds();
-            m_botStringNetEntityIds = m_networkFPCControllerObject->GetBotStringNetEntityIds();
+            if (m_isServer || m_isHost)
+            {
+                if (m_networkFPCControllerObject->GetPlayerStringNetEntityIds() != m_playerStringNetEntityIds)
+                    m_networkFPCControllerObject->SetPlayerStringNetEntityIds(m_playerStringNetEntityIds);
+                if (m_networkFPCControllerObject->GetBotStringNetEntityIds() != m_botStringNetEntityIds)
+                    m_networkFPCControllerObject->SetBotStringNetEntityIds(m_botStringNetEntityIds);
+            }
+            else
+            {
+                m_playerStringNetEntityIds = m_networkFPCControllerObject->GetPlayerStringNetEntityIds();
+                m_botStringNetEntityIds = m_networkFPCControllerObject->GetBotStringNetEntityIds();
+            }
             const bool crouching = m_networkFPCControllerObject->GetIsCrouching();
             if (m_crouching != crouching)
             {
@@ -6740,7 +6750,7 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
         bool checkedIfServerOrHost = false;
-        m_playerEntityIds.clear();
+        m_playerEntityIdsOnServer.clear();
         for (const AZ::EntityId characterEntityId : characterEntityIds.values)
         {
             if (!checkedIfServerOrHost)
@@ -6763,10 +6773,10 @@ namespace FirstPersonController
                 isNetBot, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsNetBot);
             // If the character EntityId isn't a bot then add it to the vector
             if (!isNetBot)
-                m_playerEntityIds.push_back(characterEntityId);
+                m_playerEntityIdsOnServer.push_back(characterEntityId);
         }
         // Return the vector of all player EntityIds
-        return m_playerEntityIds;
+        return m_playerEntityIdsOnServer;
     }
     AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetPlayerStringNetEntityIdsOnServer()
     {
@@ -6774,7 +6784,7 @@ namespace FirstPersonController
 #if AZ_TRAIT_SERVER
         GetPlayerEntityIdsOnServer();
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
-        for (const AZ::EntityId playerEntityId : m_playerEntityIds)
+        for (const AZ::EntityId playerEntityId : m_playerEntityIdsOnServer)
             m_playerStringNetEntityIds.push_back(AZStd::to_string(networkEntityManager->GetNetEntityIdById(playerEntityId)));
 #endif
         return m_playerStringNetEntityIds;
@@ -6785,7 +6795,7 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::BroadcastResult(
             characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
         bool checkedIfServerOrHost = false;
-        m_netBotEntityIds.clear();
+        m_netBotEntityIdsOnServer.clear();
         for (const AZ::EntityId characterEntityId : characterEntityIds.values)
         {
             if (!checkedIfServerOrHost)
@@ -6808,10 +6818,10 @@ namespace FirstPersonController
                 isNetBot, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsNetBot);
             // If the character EntityId is a bot then add it to the vector
             if (isNetBot)
-                m_netBotEntityIds.push_back(characterEntityId);
+                m_netBotEntityIdsOnServer.push_back(characterEntityId);
         }
         // Return the vector of all network bot/NPC EntityIds
-        return m_netBotEntityIds;
+        return m_netBotEntityIdsOnServer;
     }
     AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetBotStringNetEntityIdsOnServer()
     {
@@ -6819,10 +6829,18 @@ namespace FirstPersonController
 #if AZ_TRAIT_SERVER
         GetNetBotEntityIdsOnServer();
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
-        for (const AZ::EntityId netBotEntityId : m_netBotEntityIds)
+        for (const AZ::EntityId netBotEntityId : m_netBotEntityIdsOnServer)
             m_botStringNetEntityIds.push_back(AZStd::to_string(networkEntityManager->GetNetEntityIdById(netBotEntityId)));
 #endif
         return m_botStringNetEntityIds;
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetPlayerEntityIds() const
+    {
+        return m_playerEntityIds;
+    }
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetNetBotEntityIds() const
+    {
+        return m_netBotEntityIds;
     }
     AZStd::vector<AZStd::string> FirstPersonControllerComponent::GetPlayerNetEntityIdStrings()
     {

@@ -190,7 +190,11 @@ namespace FirstPersonController
 
         // EnableNetworkFPC Changed Event
         AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
+        AZ::Event<AZStd::vector<AZStd::string>>::Handler m_playerStringNetEntityIdsChangedEvent;
+        AZ::Event<AZStd::vector<AZStd::string>>::Handler m_botStringNetEntityIdsChangedEvent;
         void OnEnableNetworkFPCChanged(const bool& enable);
+        void OnPlayerStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& playerStringNetEntityIds);
+        void OnBotStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& botStringNetEntityIds);
         bool m_disabled = false;
 
         // Used to allow or prevent all player character inputs from going to the server (e.g. in menus)

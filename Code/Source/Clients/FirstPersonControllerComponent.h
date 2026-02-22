@@ -526,6 +526,8 @@ namespace FirstPersonController
         bool GetIsHost() const override;
         bool GetIsNetBot() const override;
         void SetIsNetBot(const bool& new_isNetBot) override;
+        AZStd::vector<AZ::EntityId> GetPlayerEntityIds() const override;
+        AZStd::vector<AZ::EntityId> GetNetBotEntityIds() const override;
 #ifdef NETWORKFPC
         AZStd::string GetStringNetEntityIdById(const AZ::EntityId& entityId) const override;
         Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId& entityId) const override;
@@ -552,9 +554,9 @@ namespace FirstPersonController
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
 
-        inline static AZStd::vector<AZ::EntityId> m_playerEntityIds;
+        inline static AZStd::vector<AZ::EntityId> m_playerEntityIdsOnServer;
         inline static AZStd::vector<AZStd::string> m_playerStringNetEntityIds;
-        inline static AZStd::vector<AZ::EntityId> m_netBotEntityIds;
+        inline static AZStd::vector<AZ::EntityId> m_netBotEntityIdsOnServer;
         inline static AZStd::vector<AZStd::string> m_botStringNetEntityIds;
         inline static bool m_reacquirePlayerBotStringNetEntityIds = true;
 
@@ -916,6 +918,8 @@ namespace FirstPersonController
         bool m_isServer = false;
         bool m_isHost = false;
         bool m_isAutonomousClient = false;
+        AZStd::vector<AZ::EntityId> m_playerEntityIds;
+        AZStd::vector<AZ::EntityId> m_netBotEntityIds;
 #ifdef NETWORKFPC
         bool m_isNetBot = true;
 #else

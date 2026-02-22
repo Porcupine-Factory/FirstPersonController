@@ -455,6 +455,8 @@ namespace FirstPersonController
         virtual bool GetIsHost() const = 0;
         virtual bool GetIsNetBot() const = 0;
         virtual void SetIsNetBot(const bool&) = 0;
+        virtual AZStd::vector<AZ::EntityId> GetPlayerEntityIds() const = 0;
+        virtual AZStd::vector<AZ::EntityId> GetNetBotEntityIds() const = 0;
 #ifdef NETWORKFPC
         virtual Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId&) const = 0;
         virtual AZStd::string GetStringNetEntityIdById(const AZ::EntityId&) const = 0;

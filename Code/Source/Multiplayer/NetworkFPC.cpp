@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <AzCore/std/string/conversions.h>
 #include <Multiplayer/NetworkFPC.h>
 
 #include <AzCore/Component/TransformBus.h>
@@ -264,6 +263,16 @@ namespace FirstPersonController
               {
                   OnEnableNetworkFPCChanged(enable);
               })
+        , m_playerStringNetEntityIdsChangedEvent(
+              [this](AZStd::vector<AZStd::string> playerStringEntityIds)
+              {
+                  OnPlayerStringNetEntityIdsChanged(playerStringEntityIds);
+              })
+        , m_botStringNetEntityIdsChangedEvent(
+              [this](AZStd::vector<AZStd::string> botStringEntityIds)
+              {
+                  OnBotStringNetEntityIdsChanged(botStringEntityIds);
+              })
     {
     }
 
@@ -364,8 +373,10 @@ namespace FirstPersonController
     {
         NetworkFPCControllerRequestBus::Handler::BusConnect(GetEntityId());
 
-        // Subscribe to EnableNetworkFPC change events
+        // Subscribe to network property change events
         EnableNetworkFPCAddEvent(m_enableNetworkFPCChangedEvent);
+        PlayerStringNetEntityIdsAddEvent(m_playerStringNetEntityIdsChangedEvent);
+        BotStringNetEntityIdsAddEvent(m_botStringNetEntityIdsChangedEvent);
 
         // Get access to the FirstPersonControllerComponent and FirstPersonExtrasComponent objects and their members
         const AZ::Entity* entity = GetParent().GetEntity();
@@ -423,6 +434,8 @@ namespace FirstPersonController
         NetworkFPCControllerRequestBus::Handler::BusDisconnect();
         InputEventNotificationBus::MultiHandler::BusDisconnect();
         m_enableNetworkFPCChangedEvent.Disconnect();
+        m_playerStringNetEntityIdsChangedEvent.Disconnect();
+        m_botStringNetEntityIdsChangedEvent.Disconnect();
         m_connectionAcquiredHandler.Disconnect();
         m_endpointDisconnectedHandler.Disconnect();
     }
@@ -657,6 +670,30 @@ namespace FirstPersonController
             m_firstPersonControllerObject->AssignConnectInputEvents();
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->AssignConnectInputEvents();
+        }
+    }
+    void NetworkFPCController::OnPlayerStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& playerStringNetEntityIds)
+    {
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        m_firstPersonControllerObject->m_playerEntityIds.clear();
+        for (AZStd::string playerStringNetEntityId : playerStringNetEntityIds)
+        {
+            const AZ::Entity* playerEntity =
+                networkEntityManager->GetEntity(static_cast<Multiplayer::NetEntityId>(AZStd::stoull(playerStringNetEntityId))).GetEntity();
+            if (playerEntity)
+                m_firstPersonControllerObject->m_playerEntityIds.push_back(playerEntity->GetId());
+        }
+    }
+    void NetworkFPCController::OnBotStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& botStringNetEntityIds)
+    {
+        const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
+        m_firstPersonControllerObject->m_netBotEntityIds.clear();
+        for (AZStd::string botStringNetEntityId : botStringNetEntityIds)
+        {
+            const AZ::Entity* botEntity =
+                networkEntityManager->GetEntity(static_cast<Multiplayer::NetEntityId>(AZStd::stoull(botStringNetEntityId))).GetEntity();
+            if (botEntity)
+                m_firstPersonControllerObject->m_netBotEntityIds.push_back(botEntity->GetId());
         }
     }
 
