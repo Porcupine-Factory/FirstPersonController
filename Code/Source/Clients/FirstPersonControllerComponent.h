@@ -223,7 +223,7 @@ namespace FirstPersonController
         AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
         AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
         AZ::Vector2 CreateEllipseScaledVector(
-            const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) override;
+            const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) const override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -526,7 +526,7 @@ namespace FirstPersonController
         bool GetIsHost() const override;
         bool GetIsNetBot() const override;
         void SetIsNetBot(const bool& new_isNetBot) override;
-        AZStd::vector<AZ::EntityId> GetPlayerEntityIds() const override;
+        AZStd::vector<AZ::EntityId> GetOtherPlayerEntityIds() const override;
         AZStd::vector<AZ::EntityId> GetNetBotEntityIds() const override;
 #ifdef NETWORKFPC
         AZStd::string GetStringNetEntityIdById(const AZ::EntityId& entityId) const override;
@@ -918,7 +918,7 @@ namespace FirstPersonController
         bool m_isServer = false;
         bool m_isHost = false;
         bool m_isAutonomousClient = false;
-        AZStd::vector<AZ::EntityId> m_playerEntityIds;
+        AZStd::vector<AZ::EntityId> m_otherPlayerEntityIds;
         AZStd::vector<AZ::EntityId> m_netBotEntityIds;
 #ifdef NETWORKFPC
         bool m_isNetBot = true;

@@ -675,13 +675,18 @@ namespace FirstPersonController
     void NetworkFPCController::OnPlayerStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& playerStringNetEntityIds)
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
-        m_firstPersonControllerObject->m_playerEntityIds.clear();
+        m_firstPersonControllerObject->m_otherPlayerEntityIds.clear();
         for (AZStd::string playerStringNetEntityId : playerStringNetEntityIds)
         {
             const AZ::Entity* playerEntity =
                 networkEntityManager->GetEntity(static_cast<Multiplayer::NetEntityId>(AZStd::stoull(playerStringNetEntityId))).GetEntity();
             if (playerEntity)
-                m_firstPersonControllerObject->m_playerEntityIds.push_back(playerEntity->GetId());
+            {
+                const AZ::EntityId playerEntityId = playerEntity->GetId();
+                // Don't include this entity in the vector of other players' EntityIds
+                if (playerEntityId != GetEntityId())
+                    m_firstPersonControllerObject->m_otherPlayerEntityIds.push_back(playerEntity->GetId());
+            }
         }
     }
     void NetworkFPCController::OnBotStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& botStringNetEntityIds)

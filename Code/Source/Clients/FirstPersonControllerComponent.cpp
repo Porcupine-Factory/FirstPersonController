@@ -1214,7 +1214,7 @@ namespace FirstPersonController
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
                 ->Event("Get Is Net Bot", &FirstPersonControllerComponentRequests::GetIsNetBot)
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
-                ->Event("Get Player EntityIds", &FirstPersonControllerComponentRequests::GetPlayerEntityIds)
+                ->Event("Get Other Player EntityIds", &FirstPersonControllerComponentRequests::GetOtherPlayerEntityIds)
                 ->Event("Get Net Bot EntityIds", &FirstPersonControllerComponentRequests::GetNetBotEntityIds)
 #ifdef NETWORKFPC
                 ->Event("Get NetEntityId String By EntityId", &FirstPersonControllerComponentRequests::GetStringNetEntityIdById)
@@ -2259,7 +2259,7 @@ namespace FirstPersonController
     }
 
     AZ::Vector2 FirstPersonControllerComponent::CreateEllipseScaledVector(
-        const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale)
+        const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) const
     {
         AZ::Vector2 scaledVector = AZ::Vector2::CreateZero();
 
@@ -6224,7 +6224,17 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetSprinting() const
     {
-        if (m_sprintVelocityAdjust != 1.f && (m_standing || m_sprintWhileCrouched))
+        float currentSpeed = m_applyVelocityXY.GetLength();
+        float topWalkSpeedInDirection = m_speed *
+            CreateEllipseScaledVector(m_applyVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale)
+                .GetLength();
+        if (m_movingUpInclineSlowed)
+        {
+            currentSpeed *= m_movingUpInclineFactor;
+            topWalkSpeedInDirection *= m_movingUpInclineFactor;
+        }
+
+        if (m_sprintVelocityAdjust != 1.f && (m_standing || m_sprintWhileCrouched) && currentSpeed > topWalkSpeedInDirection)
             return true;
         return false;
     }
@@ -6834,9 +6844,9 @@ namespace FirstPersonController
 #endif
         return m_botStringNetEntityIds;
     }
-    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetPlayerEntityIds() const
+    AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetOtherPlayerEntityIds() const
     {
-        return m_playerEntityIds;
+        return m_otherPlayerEntityIds;
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetNetBotEntityIds() const
     {
