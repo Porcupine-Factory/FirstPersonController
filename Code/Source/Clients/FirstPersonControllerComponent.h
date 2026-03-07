@@ -180,24 +180,8 @@ namespace FirstPersonController
         AZStd::vector<AzPhysics::SceneQueryHit> GetGroundCloseCoyoteTimeSceneQueryHits() const override;
         AZ::Vector3 GetGroundSumNormalsDirection() const override;
         AZ::Vector3 GetGroundCloseSumNormalsDirection() const override;
-        AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(const AzPhysics::SceneQueryHit& hit) const override;
-        AZ::EntityId GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit& hit) const override;
-        AZ::Vector3 GetSceneQueryHitNormal(const AzPhysics::SceneQueryHit& hit) const override;
-        AZ::Vector3 GetSceneQueryHitPosition(const AzPhysics::SceneQueryHit& hit) const override;
-        float GetSceneQueryHitDistance(const AzPhysics::SceneQueryHit& hit) const override;
-        Physics::MaterialId GetSceneQueryHitMaterialId(const AzPhysics::SceneQueryHit& hit) const override;
-        AZStd::shared_ptr<Physics::Material> GetSceneQueryHitMaterialPtr(const AzPhysics::SceneQueryHit& hit) const override;
-        AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(const AzPhysics::SceneQueryHit& hit) const override;
-        AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(const AzPhysics::SceneQueryHit& hit) const override;
-        float GetSceneQueryHitDynamicFriction(const AzPhysics::SceneQueryHit& hit) const override;
-        float GetSceneQueryHitStaticFriction(const AzPhysics::SceneQueryHit& hit) const override;
-        float GetSceneQueryHitRestitution(const AzPhysics::SceneQueryHit& hit) const override;
-        Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit) const override;
-        bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName) const override;
-        AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit& hit) const override;
         AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterHitsInGroupName(const AZStd::string& groupName) const override;
         AZStd::vector<AZ::EntityId> GetEntityIdsCharacterHitInGroupName(const AZStd::string& groupName) const override;
-        bool GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName) const override;
         bool GetGroundClose() const override;
         void SetGroundCloseForTick(const bool& new_groundClose) override;
         AZStd::string GetGroundedCollisionGroupName() const override;
@@ -209,7 +193,6 @@ namespace FirstPersonController
         AZ::Vector3 GetPrevTargetVelocityHeading() const override;
         float GetVelocityCloseTolerance() const override;
         void SetVelocityCloseTolerance(const float& new_velocityCloseTolerance) override;
-        AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
         void SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection) override;
         bool GetVelocityXCrossYTracksNormal() const override;
@@ -220,10 +203,6 @@ namespace FirstPersonController
         void SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection) override;
         AZ::Vector3 GetSphereCastsAxisDirectionPose() const override;
         void SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose) override;
-        AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
-        AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2) override;
-        AZ::Vector2 CreateEllipseScaledVector(
-            const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) const override;
         float GetJumpHeldGravityFactor() const override;
         void SetJumpHeldGravityFactor(const float& new_jumpHeldGravityFactor) override;
         float GetJumpFallingGravityFactor() const override;
@@ -246,9 +225,7 @@ namespace FirstPersonController
         void SetScriptTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY) override;
         AZ::Vector2 GetScriptTargetVelocityXYWorld() const override;
         void SetScriptTargetVelocityXYWorld(const AZ::Vector2& new_scriptTargetVelocityXYWorld) override;
-        float SlerpHeadings(const float& a, const float& b, const float& t) const override;
         float GetScriptTargetVelocityXYEulerAngle() const override;
-        float ConvertVectorToHeading(const AZ::Vector3& convertVector) const override;
         AZ::Vector2 GetCorrectedVelocityXY() const override;
         void SetCorrectedVelocityXY(const AZ::Vector2& new_correctedVelocityXY) override;
         float GetCorrectedVelocityZ() const override;
@@ -534,6 +511,29 @@ namespace FirstPersonController
         AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId) const override;
         AZ::EntityId GetEntityIdByStringNetId(const AZStd::string& intNetEntityId) const override;
 #endif
+        static AZ::Vector2 CreateEllipseScaledVector(
+            const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale);
+        static AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection);
+        static AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2);
+        static AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2);
+        static float SlerpHeadings(const float& a, const float& b, const float& t);
+        static float ConvertVectorToHeading(const AZ::Vector3& convertVector);
+        static AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit& hit);
+        static bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName);
+        static bool GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName);
+        static AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(const AzPhysics::SceneQueryHit& hit);
+        static AZ::EntityId GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit& hit);
+        static AZ::Vector3 GetSceneQueryHitNormal(const AzPhysics::SceneQueryHit& hit);
+        static AZ::Vector3 GetSceneQueryHitPosition(const AzPhysics::SceneQueryHit& hit);
+        static float GetSceneQueryHitDistance(const AzPhysics::SceneQueryHit& hit);
+        static Physics::MaterialId GetSceneQueryHitMaterialId(const AzPhysics::SceneQueryHit& hit);
+        static AZStd::shared_ptr<Physics::Material> GetSceneQueryHitMaterialPtr(const AzPhysics::SceneQueryHit& hit);
+        static AZ::Data::Asset<Physics::MaterialAsset> GetSceneQueryHitMaterialAsset(const AzPhysics::SceneQueryHit& hit);
+        static AZ::Data::AssetId GetSceneQueryHitMaterialAssetId(const AzPhysics::SceneQueryHit& hit);
+        static float GetSceneQueryHitDynamicFriction(const AzPhysics::SceneQueryHit& hit);
+        static float GetSceneQueryHitStaticFriction(const AzPhysics::SceneQueryHit& hit);
+        static float GetSceneQueryHitRestitution(const AzPhysics::SceneQueryHit& hit);
+        static Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit);
         static AZStd::vector<AZ::EntityId> GetPlayerEntityIdsOnServer();
         static AZStd::vector<AZStd::string> GetPlayerStringNetEntityIdsOnServer();
         static AZStd::vector<AZ::EntityId> GetNetBotEntityIdsOnServer();

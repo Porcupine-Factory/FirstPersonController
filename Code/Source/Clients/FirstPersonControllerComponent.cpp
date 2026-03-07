@@ -810,28 +810,10 @@ namespace FirstPersonController
                 ->Event("Get Ground Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundSumNormalsDirection)
                 ->Event(
                     "Get Ground Close Sum Normals Direction", &FirstPersonControllerComponentRequests::GetGroundCloseSumNormalsDirection)
-                ->Event("Get Scene Query Hit Result Flags", &FirstPersonControllerComponentRequests::GetSceneQueryHitResultFlags)
-                ->Event("Get Scene Query Hit EntityId", &FirstPersonControllerComponentRequests::GetSceneQueryHitEntityId)
-                ->Event("Get Scene Query Hit Normal", &FirstPersonControllerComponentRequests::GetSceneQueryHitNormal)
-                ->Event("Get Scene Query Hit Position", &FirstPersonControllerComponentRequests::GetSceneQueryHitPosition)
-                ->Event("Get Scene Query Hit Distance", &FirstPersonControllerComponentRequests::GetSceneQueryHitDistance)
-                ->Event("Get Scene Query Hit MaterialId", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialId)
-                ->Event("Get Scene Query Hit Material Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialPtr)
-                ->Event("Get Scene Query Hit Material Asset", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAsset)
-                ->Event("Get Scene Query Hit Material Asset Id", &FirstPersonControllerComponentRequests::GetSceneQueryHitMaterialAssetId)
-                ->Event("Get Scene Query Hit Dynamic Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitDynamicFriction)
-                ->Event("Get Scene Query Hit Static Friction", &FirstPersonControllerComponentRequests::GetSceneQueryHitStaticFriction)
-                ->Event("Get Scene Query Hit Restitution", &FirstPersonControllerComponentRequests::GetSceneQueryHitRestitution)
-                ->Event("Get Scene Query Hit Shape Pointer", &FirstPersonControllerComponentRequests::GetSceneQueryHitShapePtr)
-                ->Event("Get Scene Query Hit Is In Group Name", &FirstPersonControllerComponentRequests::GetSceneQueryHitIsInGroupName)
                 ->Event("Get Character Hits In Group Name", &FirstPersonControllerComponentRequests::GetCharacterHitsInGroupName)
                 ->Event(
                     "Get EntityIds Character Hit In Group Name",
                     &FirstPersonControllerComponentRequests::GetEntityIdsCharacterHitInGroupName)
-                ->Event(
-                    "Get Scene Query Hit Simulated Body Handle",
-                    &FirstPersonControllerComponentRequests::GetSceneQueryHitSimulatedBodyHandle)
-                ->Event("Get Layer Name Is In Group Name", &FirstPersonControllerComponentRequests::GetLayerNameIsInGroupName)
                 ->Event("Get Ground Close", &FirstPersonControllerComponentRequests::GetGroundClose)
                 ->Event("Set Ground Close For Tick", &FirstPersonControllerComponentRequests::SetGroundCloseForTick)
                 ->Event("Get Grounded Collision Group Name", &FirstPersonControllerComponentRequests::GetGroundedCollisionGroupName)
@@ -845,7 +827,6 @@ namespace FirstPersonController
                     &FirstPersonControllerComponentRequests::GetPrevTargetVelocityHeading)
                 ->Event("Get Velocity Close Tolerance", &FirstPersonControllerComponentRequests::GetVelocityCloseTolerance)
                 ->Event("Set Velocity Close Tolerance", &FirstPersonControllerComponentRequests::SetVelocityCloseTolerance)
-                ->Event("Tilt Vector2 Using XcrossY Direction", &FirstPersonControllerComponentRequests::TiltVectorXCrossY)
                 ->Event("Get Velocity XcrossY Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
                 ->Event("Set Velocity XcrossY Direction", &FirstPersonControllerComponentRequests::SetVelocityXCrossYDirection)
                 ->Event("Get Velocity XcrossY Tracks Normal", &FirstPersonControllerComponentRequests::GetVelocityXCrossYTracksNormal)
@@ -860,13 +841,6 @@ namespace FirstPersonController
                 ->Event("Set Velocity Z Positive Direction", &FirstPersonControllerComponentRequests::SetVelocityZPosDirection)
                 ->Event("Get Sphere Casts Axis Direction", &FirstPersonControllerComponentRequests::GetSphereCastsAxisDirectionPose)
                 ->Event("Set Sphere Casts Axis Direction", &FirstPersonControllerComponentRequests::SetSphereCastsAxisDirectionPose)
-                ->Event(
-                    "Get Vector Angles Between Vectors Radians",
-                    &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsRadians)
-                ->Event(
-                    "Get Vector Angles Between Vectors Degrees",
-                    &FirstPersonControllerComponentRequests::GetVectorAnglesBetweenVectorsDegrees)
-                ->Event("Create Ellipse Scaled Vector2", &FirstPersonControllerComponentRequests::CreateEllipseScaledVector)
                 ->Event("Get Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpHeldGravityFactor)
                 ->Event("Set Jump Held Gravity Factor", &FirstPersonControllerComponentRequests::SetJumpHeldGravityFactor)
                 ->Event("Get Jump Falling Gravity Factor", &FirstPersonControllerComponentRequests::GetJumpFallingGravityFactor)
@@ -898,8 +872,6 @@ namespace FirstPersonController
                 ->Event(
                     "Get Script Target XY Velocity Euler Angle",
                     &FirstPersonControllerComponentRequests::GetScriptTargetVelocityXYEulerAngle)
-                ->Event("Slerp Headings", &FirstPersonControllerComponentRequests::SlerpHeadings)
-                ->Event("Convert Vector To Heading", &FirstPersonControllerComponentRequests::ConvertVectorToHeading)
                 ->Event("Get Corrected Velocity XY", &FirstPersonControllerComponentRequests::GetCorrectedVelocityXY)
                 ->Event("Set Corrected Velocity XY", &FirstPersonControllerComponentRequests::SetCorrectedVelocityXY)
                 ->Event("Get Corrected Velocity Z", &FirstPersonControllerComponentRequests::GetCorrectedVelocityZ)
@@ -1236,6 +1208,28 @@ namespace FirstPersonController
                 ->Event("Not Autonomous So Disconnect", &FirstPersonControllerComponentRequests::NotAutonomousSoDisconnect);
 
             bc->Class<FirstPersonControllerComponent>("First Person Controller")
+                ->Method("Create Ellipse Scaled Vector2", &CreateEllipseScaledVector)
+                ->Method("Tilt Vector2 Using XcrossY Direction", &TiltVectorXCrossY)
+                ->Method("Get Vector Angles Between Vectors Radians", &GetVectorAnglesBetweenVectorsRadians)
+                ->Method("Get Vector Angles Between Vectors Degrees", &GetVectorAnglesBetweenVectorsDegrees)
+                ->Method("Slerp Headings", &SlerpHeadings)
+                ->Method("Convert Vector To Heading", &ConvertVectorToHeading)
+                ->Method("Get Scene Query Hit Simulated Body Handle", &GetSceneQueryHitSimulatedBodyHandle)
+                ->Method("Get Scene Query Hit Is In Group Name", &GetSceneQueryHitIsInGroupName)
+                ->Method("Get Layer Name Is In Group Name", &GetLayerNameIsInGroupName)
+                ->Method("Get Scene Query Hit Result Flags", &GetSceneQueryHitResultFlags)
+                ->Method("Get Scene Query Hit EntityId", &GetSceneQueryHitEntityId)
+                ->Method("Get Scene Query Hit Normal", &GetSceneQueryHitNormal)
+                ->Method("Get Scene Query Hit Position", &GetSceneQueryHitPosition)
+                ->Method("Get Scene Query Hit Distance", &GetSceneQueryHitDistance)
+                ->Method("Get Scene Query Hit MaterialId", &GetSceneQueryHitMaterialId)
+                ->Method("Get Scene Query Hit Material Pointer", &GetSceneQueryHitMaterialPtr)
+                ->Method("Get Scene Query Hit Material Asset", &GetSceneQueryHitMaterialAsset)
+                ->Method("Get Scene Query Hit Material Asset Id", &GetSceneQueryHitMaterialAssetId)
+                ->Method("Get Scene Query Hit Dynamic Friction", &GetSceneQueryHitDynamicFriction)
+                ->Method("Get Scene Query Hit Static Friction", &GetSceneQueryHitStaticFriction)
+                ->Method("Get Scene Query Hit Restitution", &GetSceneQueryHitRestitution)
+                ->Method("Get Scene Query Hit Shape Pointer", &GetSceneQueryHitShapePtr)
                 ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
@@ -2259,7 +2253,7 @@ namespace FirstPersonController
     }
 
     AZ::Vector2 FirstPersonControllerComponent::CreateEllipseScaledVector(
-        const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale) const
+        const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale)
     {
         AZ::Vector2 scaledVector = AZ::Vector2::CreateZero();
 
@@ -4980,52 +4974,50 @@ namespace FirstPersonController
             sumNormals += hit.m_normal;
         return sumNormals.GetNormalized();
     }
-    AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(
-        const AzPhysics::SceneQueryHit& hit) const
+    AzPhysics::SceneQuery::ResultFlags FirstPersonControllerComponent::GetSceneQueryHitResultFlags(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_resultFlags;
     }
-    AZ::EntityId FirstPersonControllerComponent::GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit& hit) const
+    AZ::EntityId FirstPersonControllerComponent::GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_entityId;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitNormal(const AzPhysics::SceneQueryHit& hit) const
+    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitNormal(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_normal;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitPosition(const AzPhysics::SceneQueryHit& hit) const
+    AZ::Vector3 FirstPersonControllerComponent::GetSceneQueryHitPosition(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_position;
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitDistance(const AzPhysics::SceneQueryHit& hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitDistance(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_distance;
     }
-    Physics::MaterialId FirstPersonControllerComponent::GetSceneQueryHitMaterialId(const AzPhysics::SceneQueryHit& hit) const
+    Physics::MaterialId FirstPersonControllerComponent::GetSceneQueryHitMaterialId(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_physicsMaterialId;
     }
-    AZStd::shared_ptr<Physics::Material> FirstPersonControllerComponent::GetSceneQueryHitMaterialPtr(
-        const AzPhysics::SceneQueryHit& hit) const
+    AZStd::shared_ptr<Physics::Material> FirstPersonControllerComponent::GetSceneQueryHitMaterialPtr(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_shape->GetMaterial();
     }
     AZ::Data::Asset<Physics::MaterialAsset> FirstPersonControllerComponent::GetSceneQueryHitMaterialAsset(
-        const AzPhysics::SceneQueryHit& hit) const
+        const AzPhysics::SceneQueryHit& hit)
     {
         AZStd::shared_ptr<Physics::Material> material = AZStd::rtti_pointer_cast<Physics::Material>(
             AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
 
         return material->GetMaterialAsset();
     }
-    AZ::Data::AssetId FirstPersonControllerComponent::GetSceneQueryHitMaterialAssetId(const AzPhysics::SceneQueryHit& hit) const
+    AZ::Data::AssetId FirstPersonControllerComponent::GetSceneQueryHitMaterialAssetId(const AzPhysics::SceneQueryHit& hit)
     {
         AZStd::shared_ptr<Physics::Material> material = AZStd::rtti_pointer_cast<Physics::Material>(
             AZ::Interface<Physics::MaterialManager>::Get()->GetMaterial(hit.m_physicsMaterialId));
 
         return material->GetMaterialAsset().GetId();
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitDynamicFriction(const AzPhysics::SceneQueryHit& hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitDynamicFriction(const AzPhysics::SceneQueryHit& hit)
     {
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
@@ -5037,7 +5029,7 @@ namespace FirstPersonController
 
         return physxMaterial->GetProperty("DynamicFriction").GetValue<float>();
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitStaticFriction(const AzPhysics::SceneQueryHit& hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitStaticFriction(const AzPhysics::SceneQueryHit& hit)
     {
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
@@ -5049,7 +5041,7 @@ namespace FirstPersonController
 
         return physxMaterial->GetProperty("StaticFriction").GetValue<float>();
     }
-    float FirstPersonControllerComponent::GetSceneQueryHitRestitution(const AzPhysics::SceneQueryHit& hit) const
+    float FirstPersonControllerComponent::GetSceneQueryHitRestitution(const AzPhysics::SceneQueryHit& hit)
     {
         AZ::Data::Asset<Physics::MaterialAsset> physicsMaterialAsset =
             AZStd::rtti_pointer_cast<Physics::Material>(
@@ -5061,12 +5053,11 @@ namespace FirstPersonController
 
         return physxMaterial->GetProperty("Restitution").GetValue<float>();
     }
-    Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit) const
+    Physics::Shape* FirstPersonControllerComponent::GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_shape;
     }
-    bool FirstPersonControllerComponent::GetSceneQueryHitIsInGroupName(
-        const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName) const
+    bool FirstPersonControllerComponent::GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName)
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
@@ -5110,12 +5101,11 @@ namespace FirstPersonController
 
         return entityIdsHitByCharacterInGroupName;
     }
-    AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(
-        const AzPhysics::SceneQueryHit& hit) const
+    AzPhysics::SimulatedBodyHandle FirstPersonControllerComponent::GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit& hit)
     {
         return hit.m_bodyHandle;
     }
-    bool FirstPersonControllerComponent::GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName) const
+    bool FirstPersonControllerComponent::GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName)
     {
         bool groupSuccess = false;
         AzPhysics::CollisionGroup collisionGroup;
@@ -5395,7 +5385,7 @@ namespace FirstPersonController
         m_scriptTargetVelocityXY =
             AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(new_scriptTargetVelocityXYWorld)));
     }
-    float FirstPersonControllerComponent::SlerpHeadings(const float& a, const float& b, const float& t) const
+    float FirstPersonControllerComponent::SlerpHeadings(const float& a, const float& b, const float& t)
     {
         const AZ::Vector2 avec = AZ::Vector2::CreateFromAngle(a);
         const AZ::Vector2 bvec = AZ::Vector2::CreateFromAngle(b);
@@ -5414,7 +5404,7 @@ namespace FirstPersonController
             angle *= -1.f;
         return angle;
     }
-    float FirstPersonControllerComponent::ConvertVectorToHeading(const AZ::Vector3& convertVector) const
+    float FirstPersonControllerComponent::ConvertVectorToHeading(const AZ::Vector3& convertVector)
     {
         // Ignore the Z component
         float angle = AZ::Vector2(convertVector).AngleSafe(AZ::Vector2::CreateAxisY());
