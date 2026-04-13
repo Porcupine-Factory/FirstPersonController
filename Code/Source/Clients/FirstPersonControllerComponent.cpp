@@ -4058,93 +4058,18 @@ namespace FirstPersonController
 
     // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
     // with the vector 3 that's provided. This is intentionally done without any rotation about the Z axis.
-    AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection)
+    AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2& vXY, const AZ::Vector3& newXCrossYDirection)
     {
-        AZ::Vector3 tiltedXY = AZ::Vector3(vXY);
+        const AZ::Vector3 untilted = AZ::Vector3(vXY);
 
-        if (!newXCrossYDirection.IsZero() && newXCrossYDirection != AZ::Vector3::CreateAxisZ())
-        {
-            if (newXCrossYDirection.GetZ() > 0.f)
-            {
-                AZ::Vector3 tiltedX = AZ::Vector3::CreateZero();
-                if (newXCrossYDirection.GetX() >= 0.f)
-                    tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ().AngleSafe(
-                                                                  AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
-                else
-                    tiltedX = AZ::Quaternion::CreateRotationY(-AZ::Vector3::CreateAxisZ().AngleSafe(
-                                                                  AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
+        if (newXCrossYDirection.IsZero() || newXCrossYDirection.IsClose(AZ::Vector3::CreateAxisZ()))
+            return untilted;
 
-                AZ::Vector3 tiltedY = AZ::Vector3::CreateZero();
-                if (newXCrossYDirection.GetY() >= 0.f)
-                    tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ().AngleSafe(
-                                                                  AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
-                else
-                    tiltedY = AZ::Quaternion::CreateRotationX(AZ::Vector3::CreateAxisZ().AngleSafe(
-                                                                  AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
+        const AZ::Vector3 normal = newXCrossYDirection.GetNormalizedSafe();
 
-                tiltedXY = tiltedX + tiltedY;
-            }
-            else if (newXCrossYDirection.GetZ() < 0.f)
-            {
-                AZ::Vector3 tiltedX = AZ::Vector3::CreateZero();
-                if (newXCrossYDirection.GetX() >= 0.f)
-                    tiltedX = AZ::Quaternion::CreateRotationY(-AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(
-                                                                  AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisX(-vXY.GetX()));
-                else
-                    tiltedX = AZ::Quaternion::CreateRotationY(AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(
-                                                                  AZ::Vector3(newXCrossYDirection.GetX(), 0.f, newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisX(-vXY.GetX()));
+        const AZ::Quaternion tilt = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), normal);
 
-                AZ::Vector3 tiltedY = AZ::Vector3::CreateZero();
-                if (newXCrossYDirection.GetY() >= 0.f)
-                    tiltedY = AZ::Quaternion::CreateRotationX(AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(
-                                                                  AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
-                else
-                    tiltedY = AZ::Quaternion::CreateRotationX(-AZ::Vector3::CreateAxisZ(-1.f).AngleSafe(
-                                                                  AZ::Vector3(0.f, newXCrossYDirection.GetY(), newXCrossYDirection.GetZ())))
-                                  .TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
-
-                tiltedXY = tiltedX + tiltedY;
-            }
-            else
-            {
-                AZ::Vector3 tiltedX = AZ::Vector3::CreateAxisX(vXY.GetX());
-                if (!AZ::IsClose(newXCrossYDirection.GetX(), 0.f))
-                {
-                    if (newXCrossYDirection.GetX() > 0.f)
-                        tiltedX = AZ::Quaternion::CreateRotationY(
-                                      AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, 0.f)))
-                                      .TransformVector(AZ::Vector3::CreateAxisX(vXY.GetX()));
-                    else
-                        tiltedX = AZ::Quaternion::CreateRotationY(
-                                      AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(newXCrossYDirection.GetX(), 0.f, 0.f)))
-                                      .TransformVector(AZ::Vector3::CreateAxisX(-vXY.GetX()));
-                }
-
-                AZ::Vector3 tiltedY = AZ::Vector3::CreateAxisY(vXY.GetY());
-                if (!AZ::IsClose(newXCrossYDirection.GetY(), 0.f))
-                {
-                    if (newXCrossYDirection.GetY() > 0.f)
-                        tiltedY = AZ::Quaternion::CreateRotationX(
-                                      -AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), 0.f)))
-                                      .TransformVector(AZ::Vector3::CreateAxisY(vXY.GetY()));
-                    else
-                        tiltedY = AZ::Quaternion::CreateRotationX(
-                                      -AZ::Vector3::CreateAxisZ().AngleSafe(AZ::Vector3(0.f, newXCrossYDirection.GetY(), 0.f)))
-                                      .TransformVector(AZ::Vector3::CreateAxisY(-vXY.GetY()));
-                }
-
-                tiltedXY = tiltedX + tiltedY;
-            }
-        }
-
-        return tiltedXY;
+        return tilt.TransformVector(untilted);
     }
 
     void FirstPersonControllerComponent::GetNetworkFPCProperties()

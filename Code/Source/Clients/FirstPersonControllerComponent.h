@@ -513,7 +513,7 @@ namespace FirstPersonController
 #endif
         static AZ::Vector2 CreateEllipseScaledVector(
             const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale);
-        static AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2 vXY, const AZ::Vector3& newXCrossYDirection);
+        static AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2& vXY, const AZ::Vector3& newXCrossYDirection);
         static AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2);
         static AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2);
         static float SlerpHeadings(const float& a, const float& b, const float& t);
