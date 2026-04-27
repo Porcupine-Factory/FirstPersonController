@@ -15,6 +15,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <ComponentRelation Constraint="Required" HasController="true" Name="NetworkCharacterComponent" Namespace="Multiplayer" Include="Multiplayer/Components/NetworkCharacterComponent.h"/>
+    <ComponentRelation Constraint="Required" HasController="true" Name="NetworkTransformComponent" Namespace="Multiplayer" Include="Multiplayer/Components/NetworkTransformComponent.h" />
 
     <NetworkProperty Type="bool" Name="EnableNetworkFPC"
                      Init="true" ReplicateFrom="Authority"
@@ -24,7 +25,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines whether NetworkFPC is enabled or disabled."/>
     <NetworkProperty Type="AZ::u64" Name="ServerFPCEntityId"
-                     Init="false" ReplicateFrom="Authority"
+                     Init="0" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="false"
                      IsPredictable="false" IsPublic="true"
                      Container="Object" ExposeToEditor="false"
@@ -87,19 +88,19 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      Description="The observed transform."/>
     <NetworkProperty Type="bool" Name="OverrideTransformForTick"
                      Init="false" ReplicateFrom="Authority"
-                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the transform will be set by OverrideTransform for one network tick."/>
     <NetworkProperty Type="bool" Name="OverrideRotationForTick"
                      Init="false" ReplicateFrom="Authority"
-                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the rotation will be set by OverrideTransform for one network tick."/>
     <NetworkProperty Type="AZ::Transform" Name="OverrideTransform"
                      Init="AZ::Transform::CreateIdentity()" ReplicateFrom="Authority"
-                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Transform to set the character to for one network tick."/>
@@ -219,21 +220,22 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="A string containing the child and parent NetEntityId, separated by a comma, created from calling the ObtainParentNetEntityId RPC."/>
 
-    <NetworkInput Type="float" Name="Forward" Init="0.f"/>
-    <NetworkInput Type="float" Name="Back" Init="0.f"/>
-    <NetworkInput Type="float" Name="Left" Init="0.f"/>
-    <NetworkInput Type="float" Name="Right" Init="0.f"/>
-    <NetworkInput Type="AZ::Vector3" Name="DesiredVelocity" Init="AZ::Vector3::CreateZero()"/>
-    <NetworkInput Type="float" Name="Yaw" Init="0.f"/>
-    <NetworkInput Type="float" Name="YawDelta" Init="0.f"/>
-    <NetworkInput Type="float" Name="YawDeltaOvershoot" Init="0.f"/>
-    <NetworkInput Type="AZ::Transform" Name="OverrideTransform" Init="AZ::Transform::CreateIdentity()"/>
-    <NetworkInput Type="bool" Name="OverrideTransformForTick" Init="false"/>
-    <NetworkInput Type="bool" Name="OverrideRotationForTick" Init="false"/>
-    <NetworkInput Type="float" Name="Pitch" Init="0.f"/>
-    <NetworkInput Type="float" Name="Sprint" Init="0.f"/>
-    <NetworkInput Type="float" Name="Crouch" Init="0.f"/>
-    <NetworkInput Type="float" Name="Jump" Init="0.f"/>
+    <NetworkInput Type="float"         Name="Forward"                  Init="0.f"/>
+    <NetworkInput Type="float"         Name="Back"                     Init="0.f"/>
+    <NetworkInput Type="float"         Name="Left"                     Init="0.f"/>
+    <NetworkInput Type="float"         Name="Right"                    Init="0.f"/>
+    <NetworkInput Type="AZ::Vector3"   Name="DesiredVelocity"          Init="AZ::Vector3::CreateZero()"/>
+    <NetworkInput Type="float"         Name="Yaw"                      Init="0.f"/>
+    <NetworkInput Type="float"         Name="YawDelta"                 Init="0.f"/>
+    <NetworkInput Type="float"         Name="YawDeltaOvershoot"        Init="0.f"/>
+    <NetworkInput Type="AZ::Transform" Name="OverrideTransform"        Init="AZ::Transform::CreateIdentity()"/>
+    <NetworkInput Type="bool"          Name="OverrideTransformForTick" Init="false"/>
+    <NetworkInput Type="bool"          Name="OverrideRotationForTick"  Init="false"/>
+    <NetworkInput Type="float"         Name="Pitch"                    Init="0.f"/>
+    <NetworkInput Type="float"         Name="Sprint"                   Init="0.f"/>
+    <NetworkInput Type="float"         Name="Crouch"                   Init="0.f"/>
+    <NetworkInput Type="float"         Name="Jump"                     Init="0.f"/>
+    <NetworkInput Type="uint8_t"       Name="ResetCount"               Init="0" />
 
     <ArchetypeProperty Type="float" Name="EyeHeight" Init="1.6f" ExposeToEditor="true" Suffix="m" Description="The camera's Z offset with the respect to the parent character entity with the First Person Controller component."/>
     <ArchetypeProperty Type="AZStd::string" Name="WalkSpeedParamName" Init="&quot;WalkSpeed&quot;" ExposeToEditor="true" Description="Anim graph walk speed parameter name."/>

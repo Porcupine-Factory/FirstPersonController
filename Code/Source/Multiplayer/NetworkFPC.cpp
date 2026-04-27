@@ -8,6 +8,7 @@
 #include <AzCore/Serialization/SerializeContext.h>
 
 #include <Multiplayer/Components/NetworkCharacterComponent.h>
+#include <Multiplayer/Components/NetworkTransformComponent.h>
 
 #include <AzNetworking/Framework/INetworking.h>
 
@@ -467,7 +468,7 @@ namespace FirstPersonController
         if (m_disabled)
             return;
 
-        auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
+        NetworkFPCNetworkInput* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
         // Assign input values
         if (m_allowAllMovementInputs)
@@ -495,11 +496,20 @@ namespace FirstPersonController
 
         m_yawValue = 0.0f;
         m_pitchValue = 0.0f;
+
+        // ResetCount is a predictable network property, it gets set on the client through correction packets
+        playerInput->m_resetCount = GetNetworkTransformComponentController()->GetResetCount();
     }
 
     void NetworkFPCController::ProcessInput([[maybe_unused]] Multiplayer::NetworkInput& input, float deltaTime)
     {
-        if (m_disabled)
+        // If the input reset count doesn't match the state's reset count it can mean two things:
+        //  1) On the server: we were reset and we are now receiving inputs from the client for an old reset count
+        //  2) On the client: we were reset and we are replaying old inputs after being corrected
+        // In both cases we don't want to process these inputs
+        const NetworkFPCNetworkInput* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
+        if (m_disabled ||
+            input.FindComponentInput<NetworkFPCNetworkInput>()->m_resetCount != GetNetworkTransformComponentController()->GetResetCount())
             return;
 
         // Initialize various network properties to the initial values in the First Person Controller component
@@ -538,8 +548,6 @@ namespace FirstPersonController
             m_autonomousNotDetermined = false;
         }
 
-        const auto* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
-
         // Assign the First Person Controller's inputs from the network inputs
         m_firstPersonControllerObject->m_forwardValue = playerInput->m_forward;
         m_firstPersonControllerObject->m_backValue = playerInput->m_back;
@@ -576,6 +584,11 @@ namespace FirstPersonController
                 GetEntity()->GetTransform()->SetWorldRotationQuaternion(playerInput->m_overrideTransform.GetRotation());
                 SetOverrideRotationForTick(false);
             }
+#if AZ_TRAIT_SERVER
+            // Increment resetCount to prevent transform interpolation
+            Multiplayer::NetworkTransformComponentController* netTransform = GetNetworkTransformComponentController();
+            netTransform->SetResetCount(netTransform->GetResetCount() + 1);
+#endif
             m_firstPersonControllerObject->m_currentHeading = playerInput->m_overrideTransform.GetEulerRadians().GetZ();
             m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
             m_firstPersonControllerObject->m_networkFPCRotationSliceAccumulator = 0.f;
@@ -593,6 +606,9 @@ namespace FirstPersonController
                 m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
             GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
         }
+
+        // if (GetNetBindComponent()->IsReprocessingInput())
+        //     AZ_Printf("Network FPC Component", "Reprocessing Input");
 
         const AZ::Vector3 newTranslation = GetNetworkCharacterComponentController()->TryMoveWithVelocity(
             playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
