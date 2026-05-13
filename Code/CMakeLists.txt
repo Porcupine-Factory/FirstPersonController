@@ -38,12 +38,12 @@ set(MULTIPLAYER_GEM_ENABLED FALSE)
 # Check project.json for the Multiplayer gem
 if(NOT MULTIPLAYER_GEM_ENABLED AND EXISTS "${CMAKE_SOURCE_DIR}/project.json")
     file(READ "${CMAKE_SOURCE_DIR}/project.json" _project_json_content)
-    if(_project_json_content MATCHES "\"AMultiplayerPhysX5\"" OR
-       _project_json_content MATCHES "\"AMultiplayerPhysX5==" OR
-       _project_json_content MATCHES "\"AMultiplayerPhysX5>=" OR
-       _project_json_content MATCHES "\"AMultiplayerPhysX5~=" OR
-       _project_json_content MATCHES "\"AMultiplayerPhysX5>" OR
-       _project_json_content MATCHES "\"AMultiplayerPhysX5<")
+    if(_project_json_content MATCHES "\"Multiplayer\"" OR
+       _project_json_content MATCHES "\"Multiplayer==" OR
+       _project_json_content MATCHES "\"Multiplayer>=" OR
+       _project_json_content MATCHES "\"Multiplayer~=" OR
+       _project_json_content MATCHES "\"Multiplayer>" OR
+       _project_json_content MATCHES "\"Multiplayer<")
         set(MULTIPLAYER_GEM_ENABLED TRUE)
     endif()
 endif()
@@ -51,14 +51,14 @@ endif()
 # Fallback to checking enabled_gems.cmake
 if(NOT MULTIPLAYER_GEM_ENABLED AND EXISTS "${CMAKE_SOURCE_DIR}/Code/enabled_gems.cmake")
     file(READ "${CMAKE_SOURCE_DIR}/Code/enabled_gems.cmake" _enabled_gems_content)
-    if(_enabled_gems_content MATCHES "\"AMultiplayerPhysX5\"" OR _enabled_gems_content MATCHES "[ \t\r\n]AMultiplayerPhysX5[ \t\r\n]")
+    if(_enabled_gems_content MATCHES "\"Multiplayer\"" OR _enabled_gems_content MATCHES "[ \t\r\n]Multiplayer[ \t\r\n]")
         set(MULTIPLAYER_GEM_ENABLED TRUE)
     endif()
 endif()
 
 # When building the engine workspace directly, standard gems are included
 if(NOT MULTIPLAYER_GEM_ENABLED AND EXISTS "${CMAKE_SOURCE_DIR}/engine.json")
-    if(EXISTS "${CMAKE_SOURCE_DIR}/Gems/AMultiplayerPhysX5")
+    if(EXISTS "${CMAKE_SOURCE_DIR}/Gems/Multiplayer")
         set(MULTIPLAYER_GEM_ENABLED TRUE)
     endif()
 endif()
@@ -88,7 +88,7 @@ ly_add_target(
             Gem::PhysX5.Static
             Gem::Atom_RPI.Public
             # For autogen components
-            Gem::AMultiplayerPhysX5.Unified.Static
+            Gem::Multiplayer.Unified.Static
     AUTOGEN_RULES
         *.AutoComponent.xml,AutoComponent_Header.jinja,$path/$fileprefix.AutoComponent.h
         *.AutoComponent.xml,AutoComponent_Source.jinja,$path/$fileprefix.AutoComponent.cpp
