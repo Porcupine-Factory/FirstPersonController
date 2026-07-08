@@ -696,7 +696,7 @@ namespace FirstPersonController
         const float horizontalOffset = m_headbobStartingDirection
             ? effectiveHorizontalAmplitude * sinf(m_walkingTime * effectiveFrequency)
             : -effectiveHorizontalAmplitude * sinf(m_walkingTime * effectiveFrequency);
-        const float verticalOffset = -effectiveVerticalAmplitude * sinf(2.f * m_walkingTime * effectiveFrequency);
+        float verticalOffset = -sinf(2.f * m_walkingTime * effectiveFrequency);
 
         // Broadcast a notification everytime a "step" is taken from the figure-8 headbobbing pattern
         if (m_isWalking && !m_stepTaken && verticalOffset > m_prevVerticalOffset)
@@ -707,7 +707,11 @@ namespace FirstPersonController
         else if (!m_isWalking || verticalOffset < m_prevVerticalOffset)
             m_stepTaken = false;
 
+        // Store the previous vertical offset without the amplitude applied
         m_prevVerticalOffset = verticalOffset;
+
+        // Apply the effective amplitude to the vertical offset
+        verticalOffset *= effectiveVerticalAmplitude;
 
         // Create a vector from the offets, horizontal along X, vertical along Z
         const AZ::Vector3 offsetVector = AZ::Vector3(horizontalOffset, 0.f, verticalOffset);
