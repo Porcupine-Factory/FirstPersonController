@@ -740,6 +740,7 @@ namespace FirstPersonController
         headbobEntityTransform->SetLocalTranslation(targetLocalTranslation);
     }
 
+    // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Queue up jumps
