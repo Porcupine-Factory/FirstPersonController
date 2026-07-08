@@ -125,6 +125,7 @@ namespace FirstPersonController
 
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
+        void OnHeadbobStepTaken();
 
         // Change the camera field of view when sprinting
         void PerformSprintFoV(const float& deltaTime);
@@ -190,6 +191,8 @@ namespace FirstPersonController
         bool m_headbobStartingDirection = true;
         float m_headbobMaxFrequency = 7.75f;
         float m_prevEffectiveFrequency = 7.75f;
+        float m_prevVerticalOffset = 0.f;
+        bool m_stepTaken = false;
         float m_headbobMaxHorizontalAmplitude = 0.015f;
         float m_headbobMaxVerticalAmplitude = 0.035f;
         AZ::Vector3 m_cameraTranslationWithoutHeadbob = AZ::Vector3::CreateZero();

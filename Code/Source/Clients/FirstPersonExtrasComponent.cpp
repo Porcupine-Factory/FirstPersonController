@@ -144,7 +144,7 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobMaxFrequency,
                         "Headbob Max Frequency When Sprinting",
-                        "The maximum frequency of the headbobing when sprinting.")
+                        "The maximum frequency of the headbobbing when sprinting.")
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
@@ -692,11 +692,22 @@ namespace FirstPersonController
         else
             m_walkingTime = 0.f;
 
-        // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce).
+        // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce)
         const float horizontalOffset = m_headbobStartingDirection
             ? effectiveHorizontalAmplitude * sinf(m_walkingTime * effectiveFrequency)
             : -effectiveHorizontalAmplitude * sinf(m_walkingTime * effectiveFrequency);
         const float verticalOffset = -effectiveVerticalAmplitude * sinf(2.f * m_walkingTime * effectiveFrequency);
+
+        // Broadcast a notification everytime a "step" is taken from the figure-8 headbobbing pattern
+        if (m_isWalking && !m_stepTaken && verticalOffset > m_prevVerticalOffset)
+        {
+            m_stepTaken = true;
+            FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnHeadbobStepTaken);
+        }
+        else if (!m_isWalking || verticalOffset < m_prevVerticalOffset)
+            m_stepTaken = false;
+
+        m_prevVerticalOffset = verticalOffset;
 
         // Create a vector from the offets, horizontal along X, vertical along Z
         const AZ::Vector3 offsetVector = AZ::Vector3(horizontalOffset, 0.f, verticalOffset);
@@ -755,6 +766,9 @@ namespace FirstPersonController
 
     // Event Notification methods for use in scripts
     void FirstPersonExtrasComponent::OnJumpFromQueue()
+    {
+    }
+    void FirstPersonExtrasComponent::OnHeadbobStepTaken()
     {
     }
 
