@@ -126,6 +126,7 @@ namespace FirstPersonController
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
         void OnHeadbobStepTaken();
+        void OnHeadbobZeroCross();
 
         // Change the camera field of view when sprinting
         void PerformSprintFoV(const float& deltaTime);

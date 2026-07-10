@@ -61,6 +61,7 @@ namespace FirstPersonController
     public:
         virtual void OnJumpFromQueue() = 0;
         virtual void OnHeadbobStepTaken() = 0;
+        virtual void OnHeadbobZeroCross() = 0;
     };
 
     using FirstPersonExtrasComponentNotificationBus = AZ::EBus<FirstPersonExtrasComponentNotifications>;
@@ -75,7 +76,8 @@ namespace FirstPersonController
             "{3fafe1bc-50bb-42ba-bd1f-f20df1706517}",
             AZ::SystemAllocator,
             OnJumpFromQueue,
-            OnHeadbobStepTaken);
+            OnHeadbobStepTaken,
+            OnHeadbobZeroCross);
 
         void OnJumpFromQueue() override
         {
@@ -84,6 +86,10 @@ namespace FirstPersonController
         void OnHeadbobStepTaken() override
         {
             Call(FN_OnHeadbobStepTaken);
+        }
+        void OnHeadbobZeroCross() override
+        {
+            Call(FN_OnHeadbobZeroCross);
         }
     };
 } // namespace FirstPersonController

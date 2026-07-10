@@ -704,6 +704,9 @@ namespace FirstPersonController
             m_stepTaken = true;
             FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnHeadbobStepTaken);
         }
+        // Broadcast a notification everytime the zero is crossed
+        else if (m_isWalking && m_prevVerticalOffset >= 0.f && verticalOffset < 0.f)
+            FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnHeadbobZeroCross);
         else if (!m_isWalking || verticalOffset < m_prevVerticalOffset)
             m_stepTaken = false;
 
