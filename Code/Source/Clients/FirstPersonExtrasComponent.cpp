@@ -706,7 +706,7 @@ namespace FirstPersonController
         }
         // Broadcast a notification everytime the zero is crossed
         else if (m_isWalking && m_prevVerticalOffset >= 0.f && verticalOffset < 0.f)
-            FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnHeadbobZeroCross);
+            FirstPersonExtrasComponentNotificationBus::Broadcast(&FirstPersonExtrasComponentNotificationBus::Events::OnHeadbobOriginCross);
         else if (!m_isWalking || verticalOffset < m_prevVerticalOffset)
             m_stepTaken = false;
 
