@@ -2255,61 +2255,29 @@ namespace FirstPersonController
     AZ::Vector2 FirstPersonControllerComponent::CreateEllipseScaledVector(
         const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale)
     {
-        AZ::Vector2 scaledVector = AZ::Vector2::CreateZero();
-
         if (unscaledVector.IsZero())
             return AZ::Vector2::CreateZero();
 
-        // If the input vector isn't normalized then scale the scale factors accordingly
-        if (!unscaledVector.IsNormalized())
-        {
-            forwardScale *= unscaledVector.GetLength();
-            backScale *= unscaledVector.GetLength();
-            leftScale *= unscaledVector.GetLength();
-            rightScale *= unscaledVector.GetLength();
-        }
+        const float x = unscaledVector.GetX();
+        const float y = unscaledVector.GetY();
+        const float length = unscaledVector.GetLength();
 
-        // Quadrant I
-        if (unscaledVector.GetY() >= 0.f && unscaledVector.GetX() >= 0.f)
-        {
-            scaledVector.SetX(
-                (forwardScale * rightScale) /
-                sqrt(
-                    forwardScale * forwardScale +
-                    rightScale * rightScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX())), 2.f)));
-            scaledVector.SetY(scaledVector.GetX() * tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX())));
-        }
-        // Quadrant II
-        else if (unscaledVector.GetY() >= 0.f && unscaledVector.GetX() < 0.f)
-        {
-            scaledVector.SetX(
-                -1.f * (forwardScale * leftScale) /
-                sqrt(
-                    forwardScale * forwardScale +
-                    leftScale * leftScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX(-1.f))), 2.f)));
-            scaledVector.SetY(-1.f * scaledVector.GetX() * tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX(-1.f))));
-        }
-        // Quadrant III
-        else if (unscaledVector.GetY() < 0.f && unscaledVector.GetX() < 0.f)
-        {
-            scaledVector.SetX(
-                -1.f * (backScale * leftScale) /
-                sqrt(
-                    backScale * backScale +
-                    leftScale * leftScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX(-1.f))), 2.f)));
-            scaledVector.SetY(scaledVector.GetX() * tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX(-1.f))));
-        }
-        // Quadrant IV
-        else
-        {
-            scaledVector.SetX(
-                (backScale * rightScale) /
-                sqrt(
-                    backScale * backScale + rightScale * rightScale * pow(tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX())), 2.f)));
-            scaledVector.SetY(-1.f * scaledVector.GetX() * tan(unscaledVector.AngleSafe(AZ::Vector2::CreateAxisX())));
-        }
+        // Select the ellipse radii based on the quadrant
+        const float xScale = (x >= 0.f) ? rightScale : leftScale;
+        const float yScale = (y >= 0.f) ? forwardScale : backScale;
 
-        return scaledVector;
+        // Ellipse intersection
+        const float denominatorSquared = (yScale * x) * (yScale * x) + (xScale * y) * (xScale * y);
+
+        // Prevent division by zero if the scales are zero
+        if (denominatorSquared <= 0.f)
+            return AZ::Vector2::CreateZero();
+
+        // Compute the scaling factor
+        const float scale = (xScale * yScale * length) / sqrt(denominatorSquared);
+
+        // Apply the scaling
+        return AZ::Vector2(scale * x, scale * y);
     }
 
     void FirstPersonControllerComponent::ApplyMovingUpInclineXYSpeedFactor()
