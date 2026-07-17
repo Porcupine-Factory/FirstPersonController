@@ -3049,7 +3049,7 @@ namespace FirstPersonController
         AZ::Vector2 targetVelocityXY = AZ::Vector2(leftRight, forwardBack);
 
         // Normalize the vector if its magnitude is greater than 1 and then scale it
-        if ((forwardBack || leftRight) && sqrt(forwardBack * forwardBack + leftRight * leftRight) > 1.f)
+        if ((forwardBack || leftRight) && (forwardBack * forwardBack + leftRight * leftRight) > 1.f)
             targetVelocityXY.Normalize();
 
         if (m_velocityXCrossYDirection.GetZ() >= 0.f)
