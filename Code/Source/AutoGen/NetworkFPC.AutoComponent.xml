@@ -62,6 +62,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The desired velocity of the character entity."/>
+    <NetworkProperty Type="AZ::Vector3" Name="PrevTargetVelocity"
+                     Init="AZ::Vector3::CreateZero()" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="The very last local target velocity that was performed, excluding PhysX inhibited movement."/>
     <NetworkProperty Type="AZ::Vector2" Name="ApplyVelocityXY"
                      Init="AZ::Vector2::CreateZero()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
