@@ -660,7 +660,7 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
     {
         // Walking if FirstPersonController XYs velocity non-zero and grounded
-        m_isWalking = !m_firstPersonControllerObject->m_correctedVelocityXY.IsZero() && m_firstPersonControllerObject->m_groundClose;
+        m_isWalking = !m_firstPersonControllerObject->m_correctedVelocityXY.IsZero(0.1f) && m_firstPersonControllerObject->m_groundClose;
 
         // Get the speed values
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
