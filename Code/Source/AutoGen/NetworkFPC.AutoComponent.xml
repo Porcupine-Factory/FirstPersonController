@@ -69,8 +69,8 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The very last local target velocity that was performed, excluding PhysX inhibited movement."/>
     <NetworkProperty Type="AZ::Vector2" Name="CorrectedVelocityXY"
-                     Init="AZ::Vector2::CreateZero()" ReplicateFrom="Authority"
-                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     Init="AZ::Vector2::CreateZero()" ReplicateFrom="Autonomous"
+                     ReplicateTo="Authority" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The local XY velocity that was actually performed, including PhysX inhibited movement."/>
@@ -172,8 +172,8 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines whether network animations are enabled."/>
     <NetworkProperty Type="bool" Name="IsSprinting"
-                     Init="false" ReplicateFrom="Authority"
-                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     Init="false" ReplicateFrom="Autonomous"
+                     ReplicateTo="Authority" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the character is currently sprinting."/>
