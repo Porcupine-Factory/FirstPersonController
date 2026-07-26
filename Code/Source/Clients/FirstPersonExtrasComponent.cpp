@@ -581,12 +581,11 @@ namespace FirstPersonController
             return;
 
         // Obtain whether the character is sprinting and the speed to determine the lerped FoV
-        bool sprinting = false;
-        FirstPersonControllerComponentRequestBus::EventResult(
-            sprinting, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetSprinting);
+        const bool sprinting = GetSprinting();
+
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
-            ? m_firstPersonControllerObject->m_correctedVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
-            : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
+            ? m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
+            : m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
 
@@ -616,6 +615,50 @@ namespace FirstPersonController
         // Lerp the FoV and apply it
         const float newCameraFoV = AZ::Lerp(m_walkFoV, m_sprintFoV, m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime);
         Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraComponentRequests::SetFovDegrees, newCameraFoV);
+    }
+
+    bool FirstPersonExtrasComponent::GetSprinting()
+    {
+        float currentSpeed = m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
+
+        // Check to see if sprinting is obstructed for several ticks in a row
+        m_sprintingObstructedCheck[m_sprintingObstructedIndex] =
+            m_firstPersonControllerObject->m_correctedVelocityXY.IsZero(m_firstPersonControllerObject->m_speed / 2.f);
+        m_sprintingObstructedIndex++;
+        if (m_sprintingObstructedIndex == AZStd::size(m_sprintingObstructedCheck))
+            m_sprintingObstructedIndex = 0;
+        const bool sprintingObstructed = AZStd::all_of(
+            AZStd::begin(m_sprintingObstructedCheck),
+            AZStd::end(m_sprintingObstructedCheck),
+            [](bool sprintingObstructedCheckElement)
+            {
+                return sprintingObstructedCheckElement;
+            });
+
+        if (AZ::IsClose(currentSpeed, 0.f) || sprintingObstructed)
+            return false;
+
+        float topWalkSpeedInDirection = m_firstPersonControllerObject->m_speed *
+            m_firstPersonControllerObject
+                ->CreateEllipseScaledVector(
+                    m_firstPersonControllerObject->m_applyVelocityXY.GetNormalized(),
+                    m_firstPersonControllerObject->m_forwardScale,
+                    m_firstPersonControllerObject->m_backScale,
+                    m_firstPersonControllerObject->m_leftScale,
+                    m_firstPersonControllerObject->m_rightScale)
+                .GetLength();
+        if (m_firstPersonControllerObject->m_movingUpInclineSlowed)
+        {
+            currentSpeed *= m_firstPersonControllerObject->m_movingUpInclineFactor;
+            topWalkSpeedInDirection *= m_firstPersonControllerObject->m_movingUpInclineFactor;
+        }
+
+        if (m_firstPersonControllerObject->m_sprintVelocityAdjust != 1.f &&
+            (m_firstPersonControllerObject->m_standing || m_firstPersonControllerObject->m_sprintWhileCrouched) &&
+            currentSpeed > topWalkSpeedInDirection)
+            return true;
+        else
+            return false;
     }
 
     void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float& deltaTime)

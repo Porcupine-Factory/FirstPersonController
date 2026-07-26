@@ -130,6 +130,7 @@ namespace FirstPersonController
 
         // Change the camera field of view when sprinting
         void PerformSprintFoV(const float& deltaTime);
+        bool GetSprinting();
 
         // Jump Head Tilt
         void PerformJumpHeadTilt(const float& deltaTime);
@@ -176,6 +177,8 @@ namespace FirstPersonController
 
         // Sprint FoV
         bool m_sprintFoVEnabled = true;
+        bool m_sprintingObstructedCheck[16] = {};
+        AZ::u8 m_sprintingObstructedIndex = 0;
         float m_sprintFoVTimeAccumulator = 0.f;
         float m_sprintFoVLerpTime = 0.5f;
         float m_sprintFoV = 90.f;
