@@ -4102,7 +4102,6 @@ namespace FirstPersonController
             m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
-            m_prevTargetVelocity = m_networkFPCControllerObject->GetPrevTargetVelocity();
             m_correctedVelocityXY = m_networkFPCControllerObject->GetCorrectedVelocityXY();
             m_correctedVelocityZ = m_networkFPCControllerObject->GetCorrectedVelocityZ();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
@@ -4132,7 +4131,6 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
-            m_networkFPCControllerObject->SetPrevTargetVelocity(m_prevTargetVelocity);
             m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
             m_networkFPCControllerObject->SetCorrectedVelocityZ(m_correctedVelocityZ);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
