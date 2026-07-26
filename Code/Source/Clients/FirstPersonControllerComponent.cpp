@@ -1474,14 +1474,14 @@ namespace FirstPersonController
                 windowHandle = AZ::RPI::ViewportContextRequests::Get()->GetDefaultViewportContext()->GetWindowHandle();
                 if (windowHandle)
                 {
-                    float refreshRate = 60.f;
+                    decltype(AZStd::declval<AzFramework::WindowRequests>().GetDisplayRefreshRate()) refreshRate = 60;
                     AzFramework::WindowRequestBus::EventResult(
                         refreshRate, windowHandle, &AzFramework::WindowRequestBus::Events::GetDisplayRefreshRate);
 
                     const AzPhysics::SystemConfiguration* config = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration();
 
                     // Disable camera smooth follow if the physics timestep is less than or equal to the refresh time
-                    if (config->m_fixedTimestep <= 1.f / refreshRate)
+                    if (config->m_fixedTimestep <= 1.f / static_cast<float>(refreshRate))
                         m_cameraSmoothFollow = false;
                 }
             }
