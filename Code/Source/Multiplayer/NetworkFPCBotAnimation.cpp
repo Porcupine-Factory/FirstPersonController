@@ -190,7 +190,7 @@ namespace FirstPersonController
         // Set the animation graph values
         if (m_paramIdsSet)
         {
-            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetApplyVelocityXY().GetLength());
+            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
             m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             m_animationGraph->SetParameterBool(m_standToCrouchParamId, GetIsCrouchingDownMove());
             m_animationGraph->SetParameterBool(m_crouchToStandParamId, GetIsStandingUpMove());
@@ -203,7 +203,7 @@ namespace FirstPersonController
         else
         {
             if (m_walkSpeedParamId != InvalidParamIndex)
-                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetApplyVelocityXY().GetLength());
+                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
             if (m_sprintParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             if (m_standToCrouchParamId != InvalidParamIndex)

@@ -20,7 +20,7 @@ namespace FirstPersonController
 {
     AZ_CVAR(
         float,
-        cl_VelocityTolerance,
+        cl_VelocityToleranceGravity,
         50.0f,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
@@ -204,7 +204,7 @@ namespace FirstPersonController
         // Set the animation graph values
         if (m_paramIdsSet)
         {
-            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetApplyVelocityXY().GetLength());
+            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
             m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             m_animationGraph->SetParameterBool(m_standToCrouchParamId, GetIsCrouchingDownMove());
             m_animationGraph->SetParameterBool(m_crouchToStandParamId, GetIsStandingUpMove());
@@ -217,7 +217,7 @@ namespace FirstPersonController
         else
         {
             if (m_walkSpeedParamId != InvalidParamIndex)
-                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetApplyVelocityXY().GetLength());
+                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
             if (m_sprintParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             if (m_standToCrouchParamId != InvalidParamIndex)
@@ -388,7 +388,7 @@ namespace FirstPersonController
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
 
         // Set the velocity tolerance to a big number to avoid false-positive ground obstruction checks
-        m_firstPersonControllerObject->m_velocityCloseTolerance = cl_VelocityTolerance;
+        m_firstPersonControllerObject->m_velocityCloseToleranceGravity = cl_VelocityToleranceGravity;
 
         m_firstPersonControllerObject->IgnoreInputs(true);
         if (m_firstPersonExtrasObject != nullptr)

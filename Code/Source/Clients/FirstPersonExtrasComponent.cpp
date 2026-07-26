@@ -585,8 +585,8 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::EventResult(
             sprinting, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetSprinting);
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
-            ? m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
-            : m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
+            ? m_firstPersonControllerObject->m_correctedVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
+            : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
 
@@ -660,12 +660,12 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
     {
         // Walking if FirstPersonController XYs velocity non-zero and grounded
-        m_isWalking = !m_firstPersonControllerObject->m_applyVelocityXY.IsZero() && m_firstPersonControllerObject->m_groundClose;
+        m_isWalking = !m_firstPersonControllerObject->m_correctedVelocityXY.IsZero() && m_firstPersonControllerObject->m_groundClose;
 
         // Get the speed values
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
-            ? m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
-            : m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
+            ? m_firstPersonControllerObject->m_correctedVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
+            : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
         const float appliedSprintScaleForward = m_firstPersonControllerObject->m_sprintValue == 1.f ? sprintScaleForward : 1.f;

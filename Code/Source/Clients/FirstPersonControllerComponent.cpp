@@ -3212,7 +3212,7 @@ namespace FirstPersonController
             else
                 m_correctedVelocityZ = m_currentVelocity.Dot(m_velocityZPosDirection);
 
-            if (!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance) &&
+            if (!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseToleranceGravity) &&
                 m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(m_currentVelocity.Dot(m_velocityZPosDirection), 0.f))
             {
                 // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
@@ -3233,9 +3233,26 @@ namespace FirstPersonController
         }
         else
         {
-            m_correctedVelocityXY = m_applyVelocityXY;
-            m_correctedVelocityZ = m_applyVelocityZ;
-            m_velocityXYObstructed = false;
+            if (m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
+            {
+                // Create a temporary addVelocityHeading variable since it will be manipulated (rotated),
+                // m_addVelocityHeading isn't manipulated since users of its getter likely expect it to be unaltered
+                AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
+                // Rotate addVelocityHeading so it's with respect to the character's heading
+                if (!addVelocityHeading.IsZero())
+                    addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
+
+                m_correctedVelocityXY = m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading);
+                m_correctedVelocityZ = m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ();
+                m_velocityXYObstructed = false;
+            }
+            else
+            {
+                // In order to account for the m_addVelocity variables when m_velocityXCrossYDirection isn't +Z
+                // there would need to be an inverse TiltVectorXCrossY(...) method
+                m_correctedVelocityXY = m_applyVelocityXY;
+                m_correctedVelocityZ = m_applyVelocityZ;
+            }
         }
     }
 
@@ -4086,6 +4103,8 @@ namespace FirstPersonController
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_prevTargetVelocity = m_networkFPCControllerObject->GetPrevTargetVelocity();
+            m_correctedVelocityXY = m_networkFPCControllerObject->GetCorrectedVelocityXY();
+            m_correctedVelocityZ = m_networkFPCControllerObject->GetCorrectedVelocityZ();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
 #endif
@@ -4114,6 +4133,8 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
             m_networkFPCControllerObject->SetPrevTargetVelocity(m_prevTargetVelocity);
+            m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
+            m_networkFPCControllerObject->SetCorrectedVelocityZ(m_correctedVelocityZ);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
             m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
             if (m_isServer || m_isHost)
@@ -4137,7 +4158,7 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump);
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
-            m_networkFPCBotAnimationControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
+            m_networkFPCBotAnimationControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
         }
 #endif
     }
@@ -6109,9 +6130,13 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetSprinting() const
     {
-        float currentSpeed = m_applyVelocityXY.GetLength();
+        float currentSpeed = m_correctedVelocityXY.GetLength();
+
+        if (AZ::IsClose(currentSpeed, 0.f))
+            return false;
+
         float topWalkSpeedInDirection = m_speed *
-            CreateEllipseScaledVector(m_applyVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale)
+            CreateEllipseScaledVector(m_correctedVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale)
                 .GetLength();
         if (m_movingUpInclineSlowed)
         {

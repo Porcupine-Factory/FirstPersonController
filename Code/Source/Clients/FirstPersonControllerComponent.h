@@ -700,6 +700,7 @@ namespace FirstPersonController
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_correctedVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 1.f;
+        float m_velocityCloseToleranceGravity = 1.f;
         bool m_instantVelocityRotation = false;
         bool m_velocityXYIgnoresObstacles = true;
         bool m_gravityIgnoresObstacles = false;
