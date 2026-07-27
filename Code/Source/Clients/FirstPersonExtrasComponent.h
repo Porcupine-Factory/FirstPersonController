@@ -74,8 +74,8 @@ namespace FirstPersonController
         void SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump) override;
         float GetDeltaAngleFactorLand() const override;
         void SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand) override;
-        float GetCompleteHeadLandTime() const override;
-        void SetCompleteHeadLandTime(const float& new_completeHeadLandTime) override;
+        float GetCompleteHeadLandVelocity() const override;
+        void SetCompleteHeadLandVelocity(const float& new_completeHeadLandVelocity) override;
         bool GetSprintFoVEnabled() const override;
         void SetSprintFoVEnabled(const bool& new_sprintFoVEnabled) override;
         float GetSprintFoVLerpTime() const override;
@@ -167,7 +167,7 @@ namespace FirstPersonController
         bool m_tiltLanded = false;
         bool m_moveHeadDown = true;
         float m_totalHeadAngle = 0.f;
-        float m_completeHeadLandTime = 0.4f;
+        float m_completeHeadLandVelocity = 8.1f;
         float m_currentHeadPitchAngle = 0.f;
         float m_deltaAngle = 0.f;
         float m_headAngleJump = 2.5f;

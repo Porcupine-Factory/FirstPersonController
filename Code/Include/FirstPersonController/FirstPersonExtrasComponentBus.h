@@ -27,8 +27,8 @@ namespace FirstPersonController
         virtual void SetDeltaAngleFactorJump(const float&) = 0;
         virtual float GetDeltaAngleFactorLand() const = 0;
         virtual void SetDeltaAngleFactorLand(const float&) = 0;
-        virtual float GetCompleteHeadLandTime() const = 0;
-        virtual void SetCompleteHeadLandTime(const float&) = 0;
+        virtual float GetCompleteHeadLandVelocity() const = 0;
+        virtual void SetCompleteHeadLandVelocity(const float&) = 0;
         virtual bool GetSprintFoVEnabled() const = 0;
         virtual void SetSprintFoVEnabled(const bool&) = 0;
         virtual float GetSprintFoVLerpTime() const = 0;

@@ -12,6 +12,7 @@
 #include <AzCore/Component/Entity.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzFramework/Components/CameraBus.h>
+#include <AzFramework/Physics/NameConstants.h>
 
 namespace FirstPersonController
 {
@@ -35,8 +36,8 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
                 ->Field("Jump Delta Angle Speed Factor", &FirstPersonExtrasComponent::m_deltaAngleFactorJump)
                 ->Field("Land Delta Angle Speed Factor", &FirstPersonExtrasComponent::m_deltaAngleFactorLand)
-                ->Field("Complete Head Angle Land Time", &FirstPersonExtrasComponent::m_completeHeadLandTime)
-                ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+                ->Field("Complete Head Angle Land Velocity", &FirstPersonExtrasComponent::m_completeHeadLandVelocity)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
 
                 // Sprint FoV Group
                 ->Field("Sprint FoV", &FirstPersonExtrasComponent::m_sprintFoVEnabled)
@@ -108,10 +109,12 @@ namespace FirstPersonController
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
                     ->DataElement(
                         nullptr,
-                        &FirstPersonExtrasComponent::m_completeHeadLandTime,
-                        "Complete Head Angle Land Time",
-                        "The time it takes to be in the air for the entire Head Angle Land to apply, "
-                        "any time in the air less than this will cause the angle to be proportional to the air time divided by this value.")
+                        &FirstPersonExtrasComponent::m_completeHeadLandVelocity,
+                        "Complete Head Angle Land Velocity",
+                        "The velocity required when hitting the ground for the entire Head Angle Land to apply, "
+                        "any velocity less than this will cause the angle to be proportional to the velocity when the ground is hit "
+                        "divided by this value.")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
 
                     // Sprint FoV group
@@ -186,8 +189,8 @@ namespace FirstPersonController
                 ->Event("Set Delta Angle Factor Jump", &FirstPersonExtrasComponentRequests::SetDeltaAngleFactorJump)
                 ->Event("Set Delta Angle Factor Land", &FirstPersonExtrasComponentRequests::GetDeltaAngleFactorLand)
                 ->Event("Set Delta Angle Factor Land", &FirstPersonExtrasComponentRequests::SetDeltaAngleFactorLand)
-                ->Event("Get Complete Head Land Time", &FirstPersonExtrasComponentRequests::GetCompleteHeadLandTime)
-                ->Event("Set Complete Head Land Time", &FirstPersonExtrasComponentRequests::SetCompleteHeadLandTime)
+                ->Event("Get Complete Head Land Velocity", &FirstPersonExtrasComponentRequests::GetCompleteHeadLandVelocity)
+                ->Event("Set Complete Head Land Velocity", &FirstPersonExtrasComponentRequests::SetCompleteHeadLandVelocity)
                 ->Event("Get Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::GetSprintFoVEnabled)
                 ->Event("Set Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::SetSprintFoVEnabled)
                 ->Event("Get Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::GetSprintFoVLerpTime)
@@ -853,14 +856,13 @@ namespace FirstPersonController
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
               !m_firstPersonControllerObject->m_isHost)))
             return;
+        if (soonFellVelocity > 0.f)
+            return;
         m_tiltLanded = true;
         m_tiltJumped = false;
         m_moveHeadDown = true;
-        float airTime = 0.f;
-        FirstPersonControllerComponentRequestBus::EventResult(
-            airTime, GetEntityId(), &FirstPersonControllerComponentRequestBus::Events::GetAirTime);
-        if (airTime <= m_completeHeadLandTime)
-            m_totalHeadAngle = -m_headAngleLand * airTime / m_completeHeadLandTime;
+        if (-soonFellVelocity < m_completeHeadLandVelocity)
+            m_totalHeadAngle = -m_headAngleLand * -soonFellVelocity / m_completeHeadLandVelocity;
         else
             m_totalHeadAngle = -m_headAngleLand;
     }
@@ -1004,13 +1006,16 @@ namespace FirstPersonController
     {
         m_deltaAngleFactorLand = new_deltaAngleFactorLand;
     }
-    float FirstPersonExtrasComponent::GetCompleteHeadLandTime() const
+    float FirstPersonExtrasComponent::GetCompleteHeadLandVelocity() const
     {
-        return m_completeHeadLandTime;
+        return m_completeHeadLandVelocity;
     }
-    void FirstPersonExtrasComponent::SetCompleteHeadLandTime(const float& new_completeHeadLandTime)
+    void FirstPersonExtrasComponent::SetCompleteHeadLandVelocity(const float& new_completeHeadLandVelocity)
     {
-        m_completeHeadLandTime = new_completeHeadLandTime;
+        if (new_completeHeadLandVelocity < 0.f)
+            m_completeHeadLandVelocity = -new_completeHeadLandVelocity;
+        else
+            m_completeHeadLandVelocity = new_completeHeadLandVelocity;
     }
     bool FirstPersonExtrasComponent::GetSprintFoVEnabled() const
     {
