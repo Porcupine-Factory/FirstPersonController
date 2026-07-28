@@ -6,7 +6,7 @@ You can install this gem in your project using O3DE's project manager. Navigate 
 
 For more information, see the instructions found in O3DE's documentation: https://www.docs.o3de.org/docs/user-guide/remote-content/use-a-remote-repository
 
-If you want to use this gem for multiplayer you will need to enable the Multiplayer gem in your project. Ensure that "Multiplayer" is listed in your project.json file's "gem_names" list.
+If you want to use this gem for multiplayer, you will need to enable the Multiplayer gem in your project. Ensure that `Multiplayer` is listed in your `project.json` file's `gem_names` list. Then the NetworkFPC component will be available.
 
 ## How To Use This Gem
 [![O3DE First Person Controller Gem - Full Setup + Tutorial](https://porcupinesystems.com/wp-content/uploads/2025/10/first-person-controller.gif)](https://www.youtube.com/watch?v=O7rtXNlCNQQ)
