@@ -4103,8 +4103,6 @@ namespace FirstPersonController
             m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
-            m_correctedVelocityXY = m_networkFPCControllerObject->GetCorrectedVelocityXY();
-            m_correctedVelocityZ = m_networkFPCControllerObject->GetCorrectedVelocityZ();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
 #endif
@@ -4116,6 +4114,18 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
         {
+            if (!m_isServer)
+            {
+                m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
+                m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
+                m_networkFPCControllerObject->SetIsSprintingRelay(GetSprinting());
+                m_networkFPCControllerObject->SetCorrectedVelocityXYRelay(m_correctedVelocityXY);
+            }
+            else
+            {
+                m_networkFPCControllerObject->SetIsSprintingRelay(m_networkFPCControllerObject->GetIsSprinting());
+                m_networkFPCControllerObject->SetCorrectedVelocityXYRelay(m_networkFPCControllerObject->GetCorrectedVelocityXY());
+            }
             m_networkFPCControllerObject->SetTopWalkSpeed(m_speed);
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
             m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
@@ -4123,7 +4133,6 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
             m_networkFPCControllerObject->SetSprintCooldownTimer(m_sprintCooldownTimer);
             m_networkFPCControllerObject->SetJumpInitialVelocity(m_jumpInitialVelocity);
-            m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
             m_networkFPCControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
             m_networkFPCControllerObject->SetIsStandingUpMove(m_standingUpMove);
             m_networkFPCControllerObject->SetIsCrouching(m_crouching);
@@ -4132,8 +4141,6 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
-            m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
-            m_networkFPCControllerObject->SetCorrectedVelocityZ(m_correctedVelocityZ);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
             m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
             if (m_isServer || m_isHost)

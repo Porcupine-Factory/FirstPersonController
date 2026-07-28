@@ -212,15 +212,20 @@ namespace FirstPersonController
         // Set the animation graph values
         if (m_paramIdsSet)
         {
-            if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isAutonomousClient)
+            if (m_firstPersonControllerObject->m_isAutonomousClient)
+            {
+                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, m_firstPersonControllerObject->m_correctedVelocityXY.GetLength());
+                m_animationGraph->SetParameterBool(m_sprintParamId, m_firstPersonControllerObject->GetSprinting());
+            }
+            else if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
             {
                 m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
                 m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             }
             else
             {
-                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, m_firstPersonControllerObject->m_correctedVelocityXY.GetLength());
-                m_animationGraph->SetParameterBool(m_sprintParamId, m_firstPersonControllerObject->GetSprinting());
+                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXYRelay().GetLength());
+                m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprintingRelay());
             }
             m_animationGraph->SetParameterBool(m_standToCrouchParamId, GetIsCrouchingDownMove());
             m_animationGraph->SetParameterBool(m_crouchToStandParamId, GetIsStandingUpMove());
@@ -232,7 +237,15 @@ namespace FirstPersonController
         }
         else
         {
-            if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isAutonomousClient)
+            if (m_firstPersonControllerObject->m_isAutonomousClient)
+            {
+                if (m_walkSpeedParamId != InvalidParamIndex)
+                    m_animationGraph->SetParameterFloat(
+                        m_walkSpeedParamId, m_firstPersonControllerObject->m_correctedVelocityXY.GetLength());
+                if (m_sprintParamId != InvalidParamIndex)
+                    m_animationGraph->SetParameterBool(m_sprintParamId, m_firstPersonControllerObject->GetSprinting());
+            }
+            else if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
             {
                 if (m_walkSpeedParamId != InvalidParamIndex)
                     m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
@@ -242,10 +255,9 @@ namespace FirstPersonController
             else
             {
                 if (m_walkSpeedParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterFloat(
-                        m_walkSpeedParamId, m_firstPersonControllerObject->m_correctedVelocityXY.GetLength());
+                    m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXYRelay().GetLength());
                 if (m_sprintParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterBool(m_sprintParamId, m_firstPersonControllerObject->GetSprinting());
+                    m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprintingRelay());
             }
             if (m_standToCrouchParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_standToCrouchParamId, GetIsCrouchingDownMove());
