@@ -1217,6 +1217,7 @@ namespace FirstPersonController
                 ->Method("Get Scene Query Hit Simulated Body Handle", &GetSceneQueryHitSimulatedBodyHandle)
                 ->Method("Get Scene Query Hit Is In Group Name", &GetSceneQueryHitIsInGroupName)
                 ->Method("Get Layer Name Is In Group Name", &GetLayerNameIsInGroupName)
+                ->Method("Get Scene Query Hit Layer Name", &GetSceneQueryHitLayerName)
                 ->Method("Get Scene Query Hit Result Flags", &GetSceneQueryHitResultFlags)
                 ->Method("Get Scene Query Hit EntityId", &GetSceneQueryHitEntityId)
                 ->Method("Get Scene Query Hit Normal", &GetSceneQueryHitNormal)
@@ -5038,6 +5039,13 @@ namespace FirstPersonController
         }
         else
             return false;
+    }
+    AZStd::string FirstPersonControllerComponent::GetSceneQueryHitLayerName(const AzPhysics::SceneQueryHit& hit)
+    {
+        AZStd::string layerName;
+        Physics::CollisionRequestBus::BroadcastResult(
+            layerName, &Physics::CollisionRequests::GetCollisionLayerName, hit.m_shape->GetCollisionLayer());
+        return layerName;
     }
     bool FirstPersonControllerComponent::GetGroundClose() const
     {

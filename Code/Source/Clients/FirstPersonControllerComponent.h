@@ -521,6 +521,7 @@ namespace FirstPersonController
         static AzPhysics::SimulatedBodyHandle GetSceneQueryHitSimulatedBodyHandle(const AzPhysics::SceneQueryHit& hit);
         static bool GetSceneQueryHitIsInGroupName(const AzPhysics::SceneQueryHit& hit, const AZStd::string& groupName);
         static bool GetLayerNameIsInGroupName(const AZStd::string& layerName, const AZStd::string& groupName);
+        static AZStd::string GetSceneQueryHitLayerName(const AzPhysics::SceneQueryHit& hit);
         static AzPhysics::SceneQuery::ResultFlags GetSceneQueryHitResultFlags(const AzPhysics::SceneQueryHit& hit);
         static AZ::EntityId GetSceneQueryHitEntityId(const AzPhysics::SceneQueryHit& hit);
         static AZ::Vector3 GetSceneQueryHitNormal(const AzPhysics::SceneQueryHit& hit);
