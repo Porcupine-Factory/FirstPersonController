@@ -275,7 +275,7 @@ namespace FirstPersonController
         AzPhysics::SceneQuery::QueryType GetCharacterHitBy() const override;
         void SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& new_characterHitBy) override;
         AZStd::vector<AZ::EntityId> GetCharacterHitEntityIds() const override;
-        AzPhysics::SceneQueryHits GetCharacterSceneQueryHits() const override;
+        AZStd::vector<AzPhysics::SceneQueryHit> GetCharacterSceneQueryHits() const override;
         float GetJumpInitialVelocity() const override;
         void SetJumpInitialVelocity(const float& new_jumpInitialVelocity) override;
         float GetJumpSecondInitialVelocity() const override;

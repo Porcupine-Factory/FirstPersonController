@@ -5573,11 +5573,9 @@ namespace FirstPersonController
     {
         return m_characterHitEntityIds;
     }
-    AzPhysics::SceneQueryHits FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
+    AZStd::vector<AzPhysics::SceneQueryHit> FirstPersonControllerComponent::GetCharacterSceneQueryHits() const
     {
-        AzPhysics::SceneQueryHits characterHits;
-        characterHits.m_hits = m_characterHits;
-        return characterHits;
+        return m_characterHits;
     }
     float FirstPersonControllerComponent::GetJumpInitialVelocity() const
     {
