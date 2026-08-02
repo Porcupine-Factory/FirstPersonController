@@ -347,11 +347,23 @@ namespace FirstPersonController
         if (inputId == nullptr)
             return;
 
+        if (*inputId == m_rotateYawEventId)
+        {
+            m_yawValue += value;
+            return;
+        }
+        else if (*inputId == m_rotatePitchEventId)
+        {
+            m_pitchValue += value;
+            return;
+        }
+
         for (auto& it_event : m_controlMap)
         {
             if (*inputId == *(it_event.first))
             {
                 *(it_event.second) = value;
+                return;
                 // print the local user ID and the action name CRC
                 // AZ_Printf("Network FPC Component", "Pressed: %s", it_event.first->ToString().c_str());
             }
@@ -361,7 +373,7 @@ namespace FirstPersonController
     void NetworkFPCController::OnReleased(float value)
     {
         const InputEventNotificationId* inputId = InputEventNotificationBus::GetCurrentBusId();
-        if (inputId == nullptr)
+        if (inputId == nullptr || *inputId == m_rotateYawEventId || *inputId == m_rotatePitchEventId)
             return;
 
         for (auto& it_event : m_controlMap)
@@ -369,6 +381,7 @@ namespace FirstPersonController
             if (*inputId == *(it_event.first))
             {
                 *(it_event.second) = value;
+                return;
                 // print the local user ID and the action name CRC
                 // AZ_Printf("Network FPC Component", "Released: %s", it_event.first->ToString().c_str());
             }
@@ -640,12 +653,9 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_isServer,
             GetEntityId());
 
-        if (!m_firstPersonControllerObject->m_isHost)
-        {
-            const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
-                m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
-            GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
-        }
+        const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
+            m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
+        GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");

@@ -1551,6 +1551,7 @@ namespace FirstPersonController
                 m_sprintEffectiveValue = 0.f;
                 m_sprintAccelValue = 0.f;
             }
+            return;
         }
 
         for (auto& it_event : m_controlMap)
@@ -1558,6 +1559,7 @@ namespace FirstPersonController
             if (*inputId == *(it_event.first) && !(*(it_event.first) == m_sprintEventId))
             {
                 *(it_event.second) = value;
+                return;
                 // print the local user ID and the action name CRC
                 // AZ_Printf("Pressed", it_event.first->ToString().c_str());
             }
@@ -1574,6 +1576,7 @@ namespace FirstPersonController
         {
             m_sprintEffectiveValue = 0.f;
             m_sprintAccelValue = 0.f;
+            return;
         }
 
         for (auto& it_event : m_controlMap)
@@ -1581,6 +1584,7 @@ namespace FirstPersonController
             if (*inputId == *(it_event.first))
             {
                 *(it_event.second) = value;
+                return;
                 // print the local user ID and the action name CRC
                 // AZ_Printf("Released", it_event.first->ToString().c_str());
             }
@@ -1953,25 +1957,27 @@ namespace FirstPersonController
         // Get the character's transform
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
 #ifdef NETWORKFPC
-        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr && !m_isHost)
+        if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             characterTransform = m_networkFPCControllerObject->GetEntity()->GetTransform();
+        if (m_networkFPCEnabled)
+            m_yawValue = 0.f;
 #endif
 
-        if (!m_networkFPCEnabled || tickTimestepNetwork == 2 || m_isHost)
+        if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
         {
             // Get the current heading
-            if (m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick && !m_isHost)
+            if (m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick)
                 m_currentHeading = characterTransform->GetWorldRotation().GetZ();
 
             // Apply the yaw to the character
-            if ((!m_networkFPCEnabled || m_isHost) && !m_scriptSetCurrentHeadingTick)
+            if (!m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick)
                 characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
             else if (m_scriptSetCurrentHeadingTick)
                 characterTransform->SetLocalRotation(AZ::Vector3(
                     characterTransform->GetLocalRotation().GetX(), characterTransform->GetLocalRotation().GetY(), m_currentHeading));
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
-            if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr && !m_isHost)
+            if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
             {
                 m_networkFPCRotationSliceAccumulator = 0.f;
                 if (!m_networkFPCCameraAligned)
@@ -1984,8 +1990,6 @@ namespace FirstPersonController
                 m_networkFPCControllerObject->SetYawDeltaOvershoot(0.f);
 #endif
             }
-            else if (m_isHost)
-                m_cameraYaw = m_currentHeading;
 
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
             if (tickTimestepNetwork == 2)
@@ -1996,17 +2000,12 @@ namespace FirstPersonController
             // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
             const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
             m_networkFPCRotationSliceAccumulator += 1.f / slice;
-            if (!m_isHost)
-            {
 #ifdef NETWORKFPC
-                newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
-                // Compensate the character's yaw from the camera overshooting due to network jitter
-                if (m_networkFPCRotationSliceAccumulator > 1.f)
-                    m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + newLookRotationDelta.GetZ()) - m_currentHeading);
+            newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
+            // Compensate the character's yaw from the camera overshooting due to network jitter
+            if (m_networkFPCRotationSliceAccumulator > 1.f)
+                m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + newLookRotationDelta.GetZ()) - m_currentHeading);
 #endif
-            }
-            else
-                newLookRotationDelta = newLookRotationDelta / slice;
         }
 
         m_activeCameraEntity = GetActiveCameraEntityPtr();
@@ -2066,6 +2065,11 @@ namespace FirstPersonController
                     m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
             }
         }
+
+#ifdef NETWORKFPC
+        if (m_networkFPCEnabled)
+            m_pitchValue = 0.f;
+#endif
 
         // Update heading and pitch
         if (!m_scriptSetCurrentHeadingTick)
