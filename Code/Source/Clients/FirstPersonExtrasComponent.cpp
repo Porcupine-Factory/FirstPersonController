@@ -474,13 +474,15 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId)
     {
-        if ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
-             !m_firstPersonControllerObject->m_isHost) ||
-            (entityId != GetEntityId()))
+        if (!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+            !m_firstPersonControllerObject->m_isHost)
         {
             NotAutonomousSoDisconnect();
+            FirstPersonExtrasComponentRequestBus::Handler::BusDisconnect(GetEntityId());
             return;
         }
+        if (entityId != GetEntityId())
+            return;
         if (!((m_firstPersonControllerObject->m_isHost && server) || (m_firstPersonControllerObject->m_isServer && !server)))
         {
             ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
@@ -772,15 +774,11 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::UpdateHeadbob(const float& deltaTime)
     {
-        if (!m_headbobEnabled || !m_cameraEntityPtr)
+        if (!m_headbobEnabled || m_cameraEntityPtr == nullptr)
             return;
 
         // Compute new headbob offset
         m_headbobOffset = CalculateHeadbobOffset(deltaTime);
-
-        // Bail if no entity
-        if (m_cameraEntityPtr == nullptr)
-            return;
 
         auto* headbobEntityTransform = m_cameraEntityPtr->GetTransform();
 
