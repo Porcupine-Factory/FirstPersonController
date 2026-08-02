@@ -154,12 +154,12 @@ namespace FirstPersonController
                         &FirstPersonExtrasComponent::m_headbobMaxVerticalAmplitude,
                         "Headbob Max Vertical Amplitude When Sprinting",
                         "Up/down headbob distance when sprinting.")
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobMaxHorizontalAmplitude,
                         "Headbob Max Horizontal Amplitude When Sprinting",
                         "Left/right headbob distance when sprinting.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled);
             }
         }
