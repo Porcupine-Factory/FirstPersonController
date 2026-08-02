@@ -4141,7 +4141,7 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetIsCrouching(m_crouching);
             m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump);
             m_networkFPCControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
-            m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+            m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
@@ -4166,7 +4166,7 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsCrouching(m_crouching);
             m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump);
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
-            m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ < 0.f));
+            m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCBotAnimationControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
         }
 #endif
