@@ -615,7 +615,6 @@ namespace FirstPersonController
                         "walking off a ledge.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->Attribute(AZ::Edit::Attributes::Visibility, &FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZero)
-
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_coyoteTimeTracksLastNormal,
