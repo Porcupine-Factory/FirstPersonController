@@ -135,12 +135,9 @@ namespace FirstPersonController
         if (!GetEnableNetworkAnimation() || !targetId.IsValid())
             return;
 
-        // If changing IDs, disconnect from old
-        if (targetId != m_animationEntityId && m_animationEntityId.IsValid())
-        {
-            EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect(m_animationEntityId);
-            EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect(m_animationEntityId);
-        }
+        // Disconnect any existing connections before reconnecting
+        EMotionFX::Integration::ActorComponentNotificationBus::Handler::BusDisconnect();
+        EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler::BusDisconnect();
 
         m_animationEntityId = targetId;
         m_actorRequests = EMotionFX::Integration::ActorComponentRequestBus::FindFirstHandler(m_animationEntityId);
