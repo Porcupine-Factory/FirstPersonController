@@ -1233,9 +1233,8 @@ namespace FirstPersonController
                 ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
-                ->Method("Get Host EntityId", &GetHostEntityId);
-
-            bc->Class<FirstPersonControllerComponent>()->RequestBus("FirstPersonControllerComponentRequestBus");
+                ->Method("Get Host EntityId", &GetHostEntityId)
+                ->RequestBus("FirstPersonControllerComponentRequestBus");
         }
     }
 
