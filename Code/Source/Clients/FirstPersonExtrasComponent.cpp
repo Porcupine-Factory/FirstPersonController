@@ -194,7 +194,7 @@ namespace FirstPersonController
                 ->Event("Get Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::GetSprintFoVEnabled)
                 ->Event("Set Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::SetSprintFoVEnabled)
                 ->Event("Get Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::GetSprintFoVLerpTime)
-                ->Event("Get Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::SetSprintFoVLerpTime)
+                ->Event("Set Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::SetSprintFoVLerpTime)
                 ->Event("Get Sprinting FoV", &FirstPersonExtrasComponentRequests::GetSprintingFoV)
                 ->Event("Set Sprinting FoV", &FirstPersonExtrasComponentRequests::SetSprintingFoV)
                 ->Event("Get Walking FoV", &FirstPersonExtrasComponentRequests::GetWalkingFoV)
