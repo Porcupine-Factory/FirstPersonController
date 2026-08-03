@@ -608,8 +608,10 @@ namespace FirstPersonController
             (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
         {
             m_sprintFoVTimeAccumulator += deltaTime;
-            if (m_sprintFoVTimeAccumulator > m_sprintFoVLerpTime)
-                m_sprintFoVTimeAccumulator = m_sprintFoVLerpTime;
+            if ((currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) <
+                m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
+                m_sprintFoVTimeAccumulator =
+                    (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) * m_sprintFoVLerpTime;
         }
         else
         {
