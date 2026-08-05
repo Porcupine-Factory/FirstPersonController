@@ -788,13 +788,15 @@ namespace FirstPersonController
 
         auto* headbobEntityTransform = m_cameraEntityPtr->GetTransform();
 
-        // Get the "clean" local translation
-        m_cameraTranslationWithoutHeadbob = headbobEntityTransform->GetLocalTM().GetTranslation();
+        // Get the "clean" local translation by removing the previous bob offset
+        m_cameraTranslationWithoutHeadbob = headbobEntityTransform->GetLocalTM().GetTranslation() - m_previousOffset;
         // Compute the target local translation by adding the new bob offset to the clean position
         const AZ::Vector3 targetLocalTranslation = m_cameraTranslationWithoutHeadbob + m_headbobOffset;
 
         // Set local translation
         headbobEntityTransform->SetLocalTranslation(targetLocalTranslation);
+        // Store the applied offset so it can be removed on the next update
+        m_previousOffset = m_headbobOffset;
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
