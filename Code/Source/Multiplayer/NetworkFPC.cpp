@@ -411,8 +411,9 @@ namespace FirstPersonController
                 });
             m_groundedRecently = !notRecentlyGrounded;
 
-            if (m_firstPersonControllerObject->m_grounded || m_groundedRecently ||
-                m_firstPersonControllerObject->m_sprintPrevValue == 0.f || m_firstPersonControllerObject->m_sprintInAir)
+            if (m_firstPersonControllerObject->m_grounded || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
+                m_groundedRecently || m_firstPersonControllerObject->m_sprintPrevValue == 0.f ||
+                m_firstPersonControllerObject->m_sprintInAir)
                 m_sprintValue = value;
             else
                 m_sprintValue = 0.f;
@@ -610,8 +611,8 @@ namespace FirstPersonController
         m_firstPersonControllerObject->m_jumpValue = playerInput->m_jump;
 
         if (playerInput->m_sprint != 0.f &&
-            (m_firstPersonControllerObject->m_grounded || m_groundedRecently || m_firstPersonControllerObject->m_sprintPrevValue == 0.f ||
-             m_firstPersonControllerObject->m_sprintInAir))
+            (m_firstPersonControllerObject->m_grounded || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
+             m_groundedRecently || m_firstPersonControllerObject->m_sprintPrevValue == 0.f || m_firstPersonControllerObject->m_sprintInAir))
         {
             m_firstPersonControllerObject->m_sprintEffectiveValue = playerInput->m_sprint;
             m_firstPersonControllerObject->m_sprintAccelValue = playerInput->m_sprint * m_firstPersonControllerObject->m_sprintAccelScale;

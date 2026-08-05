@@ -604,7 +604,10 @@ namespace FirstPersonController
         const bool groundedRecently = !notRecentlyGrounded;
 
         // Scale the FoV based on the current speed, assuming forward is the fastest direction
-        if (m_firstPersonControllerObject != nullptr && (m_firstPersonControllerObject->m_sprintInAir || groundedRecently) && sprinting &&
+        if (m_firstPersonControllerObject != nullptr &&
+            (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
+             groundedRecently) &&
+            sprinting &&
             (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
         {
             m_sprintFoVTimeAccumulator += deltaTime;
@@ -710,7 +713,8 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
     {
         // Walking if FirstPersonController XYs velocity non-zero and grounded
-        m_isWalking = !m_firstPersonControllerObject->m_correctedVelocityXY.IsZero(0.1f) && m_firstPersonControllerObject->m_groundClose;
+        m_isWalking = !m_firstPersonControllerObject->m_correctedVelocityXY.IsZero(0.1f) &&
+            (m_firstPersonControllerObject->m_groundClose || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive);
 
         // Get the speed values
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed

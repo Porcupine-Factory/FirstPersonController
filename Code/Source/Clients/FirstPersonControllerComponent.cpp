@@ -979,6 +979,8 @@ namespace FirstPersonController
                 ->Event("Set Jump While Crouched", &FirstPersonControllerComponentRequests::SetJumpWhileCrouched)
                 ->Event("Get Coyote Time", &FirstPersonControllerComponentRequests::GetCoyoteTime)
                 ->Event("Set Coyote Time", &FirstPersonControllerComponentRequests::SetCoyoteTime)
+                ->Event("Get Coyote Time No Gravity Active", &FirstPersonControllerComponentRequests::GetCoyoteTimeNoGravityActive)
+                ->Event("Set Coyote Time No Gravity Active", &FirstPersonControllerComponentRequests::SetCoyoteTimeNoGravityActive)
                 ->Event("Get Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::GetUngroundedDueToJump)
                 ->Event("Set Ungrounded Due To Jump", &FirstPersonControllerComponentRequests::SetUngroundedDueToJump)
                 ->Event("Get Apply Gravity During Coyote", &FirstPersonControllerComponentRequests::GetApplyGravityDuringCoyoteTime)
@@ -1539,7 +1541,7 @@ namespace FirstPersonController
         if (*inputId == m_sprintEventId)
         {
             m_sprintValue = value;
-            if (m_sprintInAir || m_grounded)
+            if (m_sprintInAir || m_grounded || m_coyoteTimeNoGravityActive)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
@@ -1617,7 +1619,8 @@ namespace FirstPersonController
                 });
             const bool groundedRecently = !notRecentlyGrounded;
 
-            if (m_grounded || groundedRecently || m_prevPrevGrounded || m_sprintPrevValue == 0.f || m_sprintInAir)
+            if (m_grounded || m_coyoteTimeNoGravityActive || groundedRecently || m_prevPrevGrounded || m_sprintPrevValue == 0.f ||
+                m_sprintInAir)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
@@ -3676,8 +3679,11 @@ namespace FirstPersonController
 
         bool initialJump = false;
 
-        // Used in First Person Extras
+        // Used in First Person Extras and NetworkFPC
         m_onFirstJump = false;
+
+        // Flag for when coyote time without gravity applied is active
+        m_coyoteTimeNoGravityActive = false;
 
         if ((m_grounded ||
              (m_airTime < m_coyoteTime && !m_ungroundedDueToJump && !m_applyGravityDuringCoyoteTime && !m_groundCloseCoyoteTime) ||
@@ -3717,6 +3723,10 @@ namespace FirstPersonController
             }
             else
             {
+                // When coyote time is active without gravity applied set the flag accordingly
+                if (!m_grounded && m_airTime < m_coyoteTime && !m_applyGravityDuringCoyoteTime)
+                    m_coyoteTimeNoGravityActive = true;
+
                 m_applyVelocityZ = 0.f;
                 m_applyVelocityZCurrentDelta = 0.f;
                 m_applyVelocityZPrevDelta = 0.f;
@@ -5764,6 +5774,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCoyoteTime(const float& new_coyoteTime)
     {
         m_coyoteTime = new_coyoteTime;
+    }
+    bool FirstPersonControllerComponent::GetCoyoteTimeNoGravityActive() const
+    {
+        return m_coyoteTimeNoGravityActive;
+    }
+    void FirstPersonControllerComponent::SetCoyoteTimeNoGravityActive(const bool& new_coyoteTimeNoGravityActive)
+    {
+        m_coyoteTimeNoGravityActive = new_coyoteTimeNoGravityActive;
     }
     // GetCoyoteTimeNotZero() is not exposed to the request bus, it's used for the visibility attribute in the editor
     bool FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZero() const
