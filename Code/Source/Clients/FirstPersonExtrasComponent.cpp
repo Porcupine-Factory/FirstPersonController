@@ -589,7 +589,7 @@ namespace FirstPersonController
             return;
 
         // Obtain whether the character is sprinting and the speed to determine the lerped FoV
-        const bool sprinting = GetSprinting();
+        const bool sprinting = m_sprinting;
 
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
             ? m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
@@ -725,7 +725,7 @@ namespace FirstPersonController
             : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
-        const float appliedSprintScaleForward = m_firstPersonControllerObject->m_sprintValue == 1.f ? sprintScaleForward : 1.f;
+        const float appliedSprintScaleForward = m_sprinting ? sprintScaleForward : 1.f;
 
         // Compute effective values
         float effectiveFrequency = AZStd::min(
@@ -807,6 +807,10 @@ namespace FirstPersonController
     {
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
+
+        // Determine the sprint state once per update, used by Sprint FoV and headbob
+        if (m_sprintFoVEnabled || m_headbobEnabled)
+            m_sprinting = m_firstPersonControllerObject != nullptr && GetSprinting();
 
         PerformSprintFoV(deltaTime);
 
