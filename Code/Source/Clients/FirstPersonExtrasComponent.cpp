@@ -725,17 +725,14 @@ namespace FirstPersonController
             : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
-        const float appliedSprintScaleForward = m_sprinting ? sprintScaleForward : 1.f;
-
-        // Compute effective values
-        float effectiveFrequency = AZStd::min(
-            m_headbobMaxFrequency * (currentSpeed * appliedSprintScaleForward) / (walkSpeed * sprintScaleForward), m_headbobMaxFrequency);
-        float effectiveHorizontalAmplitude = AZStd::min(
-            m_headbobMaxHorizontalAmplitude * (currentSpeed * appliedSprintScaleForward) / (walkSpeed * sprintScaleForward),
-            m_headbobMaxHorizontalAmplitude);
-        float effectiveVerticalAmplitude = AZStd::min(
-            m_headbobMaxVerticalAmplitude * (currentSpeed * appliedSprintScaleForward) / (walkSpeed * sprintScaleForward),
-            m_headbobMaxVerticalAmplitude);
+        
+        // Compute effective values from the ratio of the current speed to the top forward sprint speed
+        // (walkSpeed * sprintScaleForward) so accel/decel transitions stay continuous.
+        // Walking reaches max/sprintScaleForward and a full sprint reaches the max values
+        const float currentSpeedToTopSprintSpeedRatio = AZStd::min(currentSpeed / (walkSpeed * sprintScaleForward), 1.f);
+        float effectiveFrequency = m_headbobMaxFrequency * currentSpeedToTopSprintSpeedRatio;
+        float effectiveHorizontalAmplitude = m_headbobMaxHorizontalAmplitude * currentSpeedToTopSprintSpeedRatio;
+        float effectiveVerticalAmplitude = m_headbobMaxVerticalAmplitude * currentSpeedToTopSprintSpeedRatio;
 
         // When the frequency changes, adjust the input to the sine functions to retain continuity
         if (m_prevEffectiveFrequency != effectiveFrequency)
@@ -808,8 +805,8 @@ namespace FirstPersonController
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
 
-        // Determine the sprint state once per update, used by Sprint FoV and headbob
-        if (m_sprintFoVEnabled || m_headbobEnabled)
+        // Determine the sprint state once per update, used by Sprint FoV
+        if (m_sprintFoVEnabled)
             m_sprinting = m_firstPersonControllerObject != nullptr && GetSprinting();
 
         PerformSprintFoV(deltaTime);
