@@ -50,8 +50,11 @@ namespace FirstPersonController
                 ->Field("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
                 ->Field("Headbob Starting Direction", &FirstPersonExtrasComponent::m_headbobStartingDirection)
                 ->Field("Headbob Max Frequency When Sprinting", &FirstPersonExtrasComponent::m_headbobMaxFrequency)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " rad/s")
                 ->Field("Headbob Max Vertical Amplitude When Sprinting", &FirstPersonExtrasComponent::m_headbobMaxVerticalAmplitude)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
                 ->Field("Headbob Max Horizontal Amplitude When Sprinting", &FirstPersonExtrasComponent::m_headbobMaxHorizontalAmplitude)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
                 ->Version(1);
 
             if (AZ::EditContext* ec = sc->GetEditContext())
