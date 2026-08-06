@@ -194,8 +194,8 @@ namespace FirstPersonController
         bool m_cameraChildOfCharacter = true;
         bool m_needsHeadbobFallback = false;
         bool m_headbobStartingDirection = true;
-        float m_headbobMaxFrequency = 7.75f;
-        float m_prevEffectiveFrequency = 7.75f;
+        float m_headbobMaxFrequency = 1.23f;
+        float m_prevEffectiveRadialFrequency = 1.23f;
         float m_prevVerticalOffset = 0.f;
         bool m_stepTaken = false;
         float m_headbobMaxHorizontalAmplitude = 0.015f;

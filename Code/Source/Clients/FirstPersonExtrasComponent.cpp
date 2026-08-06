@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <AzCore/Component/TickBus.h>
 #include <Clients/FirstPersonExtrasComponent.h>
 #ifdef NETWORKFPC
 #include <Multiplayer/NetworkFPC.h>
@@ -10,6 +9,7 @@
 
 #include <AzCore/Component/ComponentApplicationBus.h>
 #include <AzCore/Component/Entity.h>
+#include <AzCore/Component/TickBus.h>
 #include <AzCore/Serialization/EditContext.h>
 #include <AzFramework/Components/CameraBus.h>
 #include <AzFramework/Physics/NameConstants.h>
@@ -50,7 +50,7 @@ namespace FirstPersonController
                 ->Field("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
                 ->Field("Headbob Starting Direction", &FirstPersonExtrasComponent::m_headbobStartingDirection)
                 ->Field("Headbob Max Frequency When Sprinting", &FirstPersonExtrasComponent::m_headbobMaxFrequency)
-                ->Attribute(AZ::Edit::Attributes::Suffix, " rad/s")
+                ->Attribute(AZ::Edit::Attributes::Suffix, " Hz")
                 ->Field("Headbob Max Vertical Amplitude When Sprinting", &FirstPersonExtrasComponent::m_headbobMaxVerticalAmplitude)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
                 ->Field("Headbob Max Horizontal Amplitude When Sprinting", &FirstPersonExtrasComponent::m_headbobMaxHorizontalAmplitude)
@@ -77,8 +77,6 @@ namespace FirstPersonController
                         "The duration prior to the character being grounded where pressing and releasing the jump key will be queued up "
                         "for a jump once the character becomes grounded; if the jump key is pressed and released outside of this timing "
                         "window then a jump will not be queued.")
-                    ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
 
                     // Jump Head Tilt group
                     ->GroupElementToggle("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
@@ -730,33 +728,33 @@ namespace FirstPersonController
             : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
-        
+
         // Compute effective values from the ratio of the current speed to the top forward sprint speed
         // (walkSpeed * sprintScaleForward) so accel/decel transitions stay continuous.
         // Walking reaches max/sprintScaleForward and a full sprint reaches the max values
         const float currentSpeedToTopSprintSpeedRatio = AZStd::min(currentSpeed / (walkSpeed * sprintScaleForward), 1.f);
-        float effectiveFrequency = m_headbobMaxFrequency * currentSpeedToTopSprintSpeedRatio;
+        float effectiveRadialFrequency = AZ::Constants::TwoPi * m_headbobMaxFrequency * currentSpeedToTopSprintSpeedRatio;
         float effectiveHorizontalAmplitude = m_headbobMaxHorizontalAmplitude * currentSpeedToTopSprintSpeedRatio;
         float effectiveVerticalAmplitude = m_headbobMaxVerticalAmplitude * currentSpeedToTopSprintSpeedRatio;
 
         // When the frequency changes, adjust the input to the sine functions to retain continuity, skipping a zero
         // frequency since m_movingUpInclineFactor can bring the speed to zero while still walking
-        if (effectiveFrequency > 0.f && m_prevEffectiveFrequency != effectiveFrequency)
-            m_walkingTime *= m_prevEffectiveFrequency / effectiveFrequency;
+        if (effectiveRadialFrequency > 0.f && m_prevEffectiveRadialFrequency != effectiveRadialFrequency)
+            m_walkingTime *= m_prevEffectiveRadialFrequency / effectiveRadialFrequency;
 
-        m_prevEffectiveFrequency = effectiveFrequency;
+        m_prevEffectiveRadialFrequency = effectiveRadialFrequency;
 
         // Increment m_walkingTime only when walking at a non-zero frequency, reset when not walking
-        if (m_isWalking && effectiveFrequency > 0.f)
+        if (m_isWalking && effectiveRadialFrequency > 0.f)
             m_walkingTime += deltaTime;
         else if (!m_isWalking)
             m_walkingTime = 0.f;
 
         // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce)
         const float horizontalOffset = m_headbobStartingDirection
-            ? effectiveHorizontalAmplitude * sinf(m_walkingTime * effectiveFrequency)
-            : -effectiveHorizontalAmplitude * sinf(m_walkingTime * effectiveFrequency);
-        float verticalOffset = -sinf(2.f * m_walkingTime * effectiveFrequency);
+            ? effectiveHorizontalAmplitude * sinf(effectiveRadialFrequency * m_walkingTime)
+            : -effectiveHorizontalAmplitude * sinf(effectiveRadialFrequency * m_walkingTime);
+        float verticalOffset = -sinf(2.f * effectiveRadialFrequency * m_walkingTime);
 
         // Broadcast a notification everytime a "step" is taken from the figure-8 headbobbing pattern
         if (m_isWalking && !m_stepTaken && verticalOffset > m_prevVerticalOffset)
@@ -798,8 +796,7 @@ namespace FirstPersonController
         // Get whether the First Person Controller overwrote the camera's translation, or just its local Z in CrouchManager,
         // since the previous bob offset is no longer in the transform wherever it did
         const bool cameraTranslationOverwritten = m_firstPersonControllerObject->m_cameraTranslationOverwritten;
-        const bool cameraLocalZOverwritten =
-            cameraTranslationOverwritten || m_firstPersonControllerObject->m_cameraLocalZOverwritten;
+        const bool cameraLocalZOverwritten = cameraTranslationOverwritten || m_firstPersonControllerObject->m_cameraLocalZOverwritten;
         m_firstPersonControllerObject->m_cameraTranslationOverwritten = false;
         m_firstPersonControllerObject->m_cameraLocalZOverwritten = false;
 
