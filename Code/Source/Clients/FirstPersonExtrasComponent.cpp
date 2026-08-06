@@ -734,16 +734,17 @@ namespace FirstPersonController
         float effectiveHorizontalAmplitude = m_headbobMaxHorizontalAmplitude * currentSpeedToTopSprintSpeedRatio;
         float effectiveVerticalAmplitude = m_headbobMaxVerticalAmplitude * currentSpeedToTopSprintSpeedRatio;
 
-        // When the frequency changes, adjust the input to the sine functions to retain continuity
-        if (m_prevEffectiveFrequency != effectiveFrequency)
+        // When the frequency changes, adjust the input to the sine functions to retain continuity, skipping a zero
+        // frequency since m_movingUpInclineFactor can bring the speed to zero while still walking
+        if (effectiveFrequency > 0.f && m_prevEffectiveFrequency != effectiveFrequency)
             m_walkingTime *= m_prevEffectiveFrequency / effectiveFrequency;
 
         m_prevEffectiveFrequency = effectiveFrequency;
 
-        // Increment m_walkingTime only when walking, reset otherwise
-        if (m_isWalking)
+        // Increment m_walkingTime only when walking at a non-zero frequency, reset when not walking
+        if (m_isWalking && effectiveFrequency > 0.f)
             m_walkingTime += deltaTime;
-        else
+        else if (!m_isWalking)
             m_walkingTime = 0.f;
 
         // Compute offsets using Lemniscate of Gerono (figure-8 pattern for natural sway/bounce)
@@ -787,9 +788,25 @@ namespace FirstPersonController
         m_headbobOffset = CalculateHeadbobOffset(deltaTime);
 
         auto* headbobEntityTransform = m_cameraEntityPtr->GetTransform();
+        const AZ::Vector3 currentCameraTranslation = headbobEntityTransform->GetLocalTM().GetTranslation();
 
-        // Get the "clean" local translation by removing the previous bob offset
-        m_cameraTranslationWithoutHeadbob = headbobEntityTransform->GetLocalTM().GetTranslation() - m_previousOffset;
+        // Get whether the First Person Controller overwrote the camera's translation, or just its local Z in CrouchManager,
+        // since the previous bob offset is no longer in the transform wherever it did
+        const bool cameraTranslationOverwritten = m_firstPersonControllerObject->m_cameraTranslationOverwritten;
+        const bool cameraLocalZOverwritten =
+            cameraTranslationOverwritten || m_firstPersonControllerObject->m_cameraLocalZOverwritten;
+        m_firstPersonControllerObject->m_cameraTranslationOverwritten = false;
+        m_firstPersonControllerObject->m_cameraLocalZOverwritten = false;
+
+        // Get the "clean" local translation by removing the previous bob offset from the axes which still contain it
+        m_cameraTranslationWithoutHeadbob = currentCameraTranslation;
+        if (!cameraTranslationOverwritten)
+        {
+            m_cameraTranslationWithoutHeadbob.SetX(currentCameraTranslation.GetX() - m_previousOffset.GetX());
+            m_cameraTranslationWithoutHeadbob.SetY(currentCameraTranslation.GetY() - m_previousOffset.GetY());
+        }
+        if (!cameraLocalZOverwritten)
+            m_cameraTranslationWithoutHeadbob.SetZ(currentCameraTranslation.GetZ() - m_previousOffset.GetZ());
         // Compute the target local translation by adding the new bob offset to the clean position
         const AZ::Vector3 targetLocalTranslation = m_cameraTranslationWithoutHeadbob + m_headbobOffset;
 

@@ -198,8 +198,8 @@ namespace FirstPersonController
         float m_prevEffectiveFrequency = 7.75f;
         float m_prevVerticalOffset = 0.f;
         bool m_stepTaken = false;
-        float m_headbobMaxHorizontalAmplitude = 0.23f;
-        float m_headbobMaxVerticalAmplitude = 0.27f;
+        float m_headbobMaxHorizontalAmplitude = 0.015f;
+        float m_headbobMaxVerticalAmplitude = 0.035f;
         AZ::Vector3 m_cameraTranslationWithoutHeadbob = AZ::Vector3::CreateZero();
         float m_walkingTime = 0.f;
         AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();

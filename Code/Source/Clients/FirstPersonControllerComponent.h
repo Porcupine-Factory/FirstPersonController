@@ -681,6 +681,8 @@ namespace FirstPersonController
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         bool m_addVelocityForTimestepVsTick = true;
         bool m_cameraSmoothFollow = true;
+        bool m_cameraTranslationOverwritten = false;
+        bool m_cameraLocalZOverwritten = false;
         float m_physicsTimestepScaleFactor = 1.f;
 
         // Camera interpolation variables

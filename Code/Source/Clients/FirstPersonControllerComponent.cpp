@@ -1844,7 +1844,10 @@ namespace FirstPersonController
 
         // Set initial world translation for smooth following
         if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
+        {
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
+            m_cameraTranslationOverwritten = true;
+        }
     }
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
@@ -1881,6 +1884,7 @@ namespace FirstPersonController
         // Interpolate translation
         const AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
         AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, interpolatedCameraTranslation);
+        m_cameraTranslationOverwritten = true;
     }
 
     // Helper function to check if camera is a child of the character
@@ -1905,7 +1909,10 @@ namespace FirstPersonController
             return;
         // Set the translation of the camera to where the character is on each physics timestep
         if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
+        {
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
+            m_cameraTranslationOverwritten = true;
+        }
     }
 
     void FirstPersonControllerComponent::CaptureCharacterEyeTranslation()
@@ -2782,7 +2789,10 @@ namespace FirstPersonController
             PhysX::CharacterControllerRequestBus::Event(
                 GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
             if (!m_networkFPCEnabled || !m_isServer)
+            {
                 cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
+                m_cameraLocalZOverwritten = true;
+            }
 
             // Post-update error for settle check
             const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
@@ -2956,7 +2966,10 @@ namespace FirstPersonController
                 PhysX::CharacterControllerRequestBus::Event(
                     GetEntityId(), &PhysX::CharacterControllerRequestBus::Events::Resize, m_capsuleCurrentHeight);
                 if (!m_networkFPCEnabled || !m_isServer)
+                {
                     cameraTransform->SetLocalZ(m_eyeHeight + m_cameraLocalZTravelDistance);
+                    m_cameraLocalZOverwritten = true;
+                }
 
                 // Early standing for speed
                 const float postZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
