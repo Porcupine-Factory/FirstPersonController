@@ -150,19 +150,25 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobMaxFrequency,
                         "Headbob Max Frequency When Sprinting",
-                        "The maximum frequency of the headbobbing when sprinting.")
+                        "The maximum angular frequency of the headbob figure-8 when sprinting, "
+                        "one cycle being a full left/right sway and two up/down bobs.")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobMaxVerticalAmplitude,
                         "Headbob Max Vertical Amplitude When Sprinting",
-                        "Up/down headbob distance when sprinting.")
+                        "The peak up/down displacement of the camera when sprinting, "
+                        "so the total travel is twice this value.")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
                         &FirstPersonExtrasComponent::m_headbobMaxHorizontalAmplitude,
                         "Headbob Max Horizontal Amplitude When Sprinting",
-                        "Left/right headbob distance when sprinting.")
+                        "The peak left/right displacement of the camera when sprinting, "
+                        "so the total travel is twice this value.")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled);
             }
         }
