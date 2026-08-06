@@ -253,7 +253,6 @@ namespace FirstPersonController
         // Headbob activation
         if (m_headbobEnabled)
         {
-            m_firstPersonControllerObject->m_cameraSmoothFollow = true;
             // Setup Headbob entity
             if (!m_cameraEntityId.IsValid())
             {
@@ -1084,8 +1083,6 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::SetHeadbobEnabled(const bool& new_headbobEnabled)
     {
         m_headbobEnabled = new_headbobEnabled;
-        if (m_headbobEnabled)
-            m_firstPersonControllerObject->m_cameraSmoothFollow = true;
     }
     bool FirstPersonExtrasComponent::GetHeadbobStartingDirection() const
     {
