@@ -11,6 +11,7 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityBus.h>
 #include <AzCore/Component/TickBus.h>
+#include <AzCore/Math/Quaternion.h>
 #include <AzCore/std/containers/map.h>
 
 #include <AzFramework/Components/CameraBus.h>
@@ -94,6 +95,39 @@ namespace FirstPersonController
         void SetHeadbobMaxVerticalAmplitude(const float& new_headbobMaxVerticalAmplitude) override;
         float GetHeadbobMaxHorizontalAmplitude() const override;
         void SetHeadbobMaxHorizontalAmplitude(const float& new_headbobMaxHorizontalAmplitude) override;
+        float GetHeadbobOverallIntensity() const override;
+        void SetHeadbobOverallIntensity(const float& new_headbobOverallIntensity) override;
+        float GetHeadbobSmoothTime() const override;
+        void SetHeadbobSmoothTime(const float& new_headbobSmoothTime) override;
+        float GetHeadbobRealism() const override;
+        void SetHeadbobRealism(const float& new_headbobRealism) override;
+        float GetHeadbobFootstepSharpness() const override;
+        void SetHeadbobFootstepSharpness(const float& new_headbobFootstepSharpness) override;
+        float GetHeadbobAlternatingStepDifference() const override;
+        void SetHeadbobAlternatingStepDifference(const float& new_headbobAlternatingStepDifference) override;
+        float GetHeadbobHorizontalSwayImbalance() const override;
+        void SetHeadbobHorizontalSwayImbalance(const float& new_headbobHorizontalSwayImbalance) override;
+        float GetHeadbobHorizontalSwayFlatness() const override;
+        void SetHeadbobHorizontalSwayFlatness(const float& new_headbobHorizontalSwayFlatness) override;
+        float GetHeadbobFootstepAcceleration() const override;
+        void SetHeadbobFootstepAcceleration(const float& new_headbobFootstepAcceleration) override;
+        float GetHeadbobMaxPitchAmplitude() const override;
+        void SetHeadbobMaxPitchAmplitude(const float& new_headbobMaxPitchAmplitude) override;
+        float GetHeadbobMaxRollAmplitude() const override;
+        void SetHeadbobMaxRollAmplitude(const float& new_headbobMaxRollAmplitude) override;
+        float GetHeadbobMaxYawAmplitude() const override;
+        void SetHeadbobMaxYawAmplitude(const float& new_headbobMaxYawAmplitude) override;
+        float GetHeadbobStepVariationOverTime() const override;
+        void SetHeadbobStepVariationOverTime(const float& new_headbobStepVariationOverTime) override;
+        float GetHeadbobVerticalSprintScale() const override;
+        void SetHeadbobVerticalSprintScale(const float& new_headbobVerticalSprintScale) override;
+        float GetHeadbobHorizontalSprintScale() const override;
+        void SetHeadbobHorizontalSprintScale(const float& new_headbobHorizontalSprintScale) override;
+        float GetHeadbobVerticalCrouchScale() const override;
+        void SetHeadbobVerticalCrouchScale(const float& new_headbobVerticalCrouchScale) override;
+        float GetHeadbobHorizontalCrouchScale() const override;
+        void SetHeadbobHorizontalCrouchScale(const float& new_headbobHorizontalCrouchScale) override;
+        float GetHeadbobLastStepStrength() const override;
         AZ::Vector3 GetCameraTranslationWithoutHeadbob() const override;
         AZ::Vector3 GetPreviousOffset() const override;
         void IgnoreInputs(const bool& ignoreInputs) override;
@@ -195,16 +229,47 @@ namespace FirstPersonController
         bool m_needsHeadbobFallback = false;
         bool m_headbobStartingDirection = true;
         float m_headbobMaxFrequency = 1.23f;
-        float m_prevEffectiveRadialFrequency = 1.23f;
-        float m_prevVerticalOffset = 0.f;
+        float m_headbobNormalizedVerticalShape = 0.f;
+        float m_headbobSmoothedVerticalShape = 0.f;
+        float m_prevHeadbobSmoothedVerticalShape = 0.f;
         bool m_stepTaken = false;
+        float m_headbobLastStepStrength = 1.f;
         float m_headbobMaxHorizontalAmplitude = 0.015f;
         float m_headbobMaxVerticalAmplitude = 0.035f;
+        float m_headbobOverallIntensity = 1.f;
+        float m_headbobSmoothTime = 0.05f;
+        float m_headbobRealism = 0.3f;
+        float m_headbobFootstepSharpness = 0.2f;
+        float m_headbobAlternatingStepDifference = 0.3f;
+        float m_headbobHorizontalSwayImbalance = 0.14f;
+        float m_headbobHorizontalSwayFlatness = 0.05f;
+        float m_headbobFootstepAcceleration = 0.6f;
+        float m_headbobMaxPitchAmplitude = 0.4f;
+        float m_headbobMaxRollAmplitude = 0.5f;
+        float m_headbobMaxYawAmplitude = 0.8f;
+        float m_headbobStepVariationOverTime = 0.03f;
+        float m_headbobVerticalSprintScale = 1.6f;
+        float m_headbobHorizontalSprintScale = 0.85f;
+        float m_headbobVerticalCrouchScale = 1.25f;
+        float m_headbobHorizontalCrouchScale = 1.5f;
+        float m_headbobVerticalShapePeak = 1.f;
+        float m_headbobHorizontalShapePeak = 1.f;
+        float m_headbobForwardShapePeak = 1.f;
+        float m_headbobPhase = 0.f;
+        float CalculateHeadbobVerticalShape(const float& phase) const;
+        float CalculateHeadbobHorizontalShape(const float& phase) const;
+        float CalculateHeadbobForwardShape(const float& phase) const;
+        void UpdateHeadbobShapePeaks();
+        AZ::u32 OnHeadbobRealismChanged();
+        bool GetHeadbobEnabledAndRealismGreaterThanZero() const;
         AZ::Vector3 m_cameraTranslationWithoutHeadbob = AZ::Vector3::CreateZero();
-        float m_walkingTime = 0.f;
         AZ::Vector3 m_originalCameraTranslation = AZ::Vector3::CreateZero();
         AZ::Vector3 m_headbobOffset = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_previousOffset = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevHeadbobOffset = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_smoothedHeadbobOffset = AZ::Vector3::CreateZero();
+        AZ::Quaternion m_headbobRotationOffset = AZ::Quaternion::CreateIdentity();
+        AZ::Quaternion m_prevHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
+        AZ::Quaternion m_smoothedHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
         AZ::EntityId m_cameraEntityId = AZ::EntityId();
         AZ::Entity* m_cameraEntityPtr = nullptr;
 
