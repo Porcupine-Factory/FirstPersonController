@@ -683,6 +683,7 @@ namespace FirstPersonController
         bool m_cameraSmoothFollow = true;
         bool m_cameraTranslationOverwritten = false;
         bool m_cameraLocalZOverwritten = false;
+        bool m_cameraRotationOverwritten = false;
         float m_physicsTimestepScaleFactor = 1.f;
 
         // Camera interpolation variables

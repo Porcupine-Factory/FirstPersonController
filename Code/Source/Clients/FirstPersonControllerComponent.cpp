@@ -2059,7 +2059,10 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
                 if (Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1) && !m_isNetBot && !m_isServer)
 #endif
+                {
                     m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
+                    m_cameraRotationOverwritten = true;
+                }
             }
             else
             {
@@ -2072,7 +2075,10 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
                 if (Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1) && !m_isNetBot && !m_isServer)
 #endif
+                {
                     m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
+                    m_cameraRotationOverwritten = true;
+                }
             }
         }
 
