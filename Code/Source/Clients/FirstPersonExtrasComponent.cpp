@@ -73,8 +73,10 @@ namespace FirstPersonController
                 ->Field("Headbob Step Variation Over Time", &FirstPersonExtrasComponent::m_headbobStepVariationOverTime)
                 ->Field("Headbob Vertical Sprint Scale", &FirstPersonExtrasComponent::m_headbobVerticalSprintScale)
                 ->Field("Headbob Horizontal Sprint Scale", &FirstPersonExtrasComponent::m_headbobHorizontalSprintScale)
+                ->Field("Headbob Rotation Sprint Scale", &FirstPersonExtrasComponent::m_headbobRotationSprintScale)
                 ->Field("Headbob Vertical Crouch Scale", &FirstPersonExtrasComponent::m_headbobVerticalCrouchScale)
                 ->Field("Headbob Horizontal Crouch Scale", &FirstPersonExtrasComponent::m_headbobHorizontalCrouchScale)
+                ->Field("Headbob Rotation Crouch Scale", &FirstPersonExtrasComponent::m_headbobRotationCrouchScale)
                 ->Version(2);
 
             if (AZ::EditContext* ec = sc->GetEditContext())
@@ -180,6 +182,7 @@ namespace FirstPersonController
                         "The maximum rate of the headbob figure-8, reached at top sprinting speed, "
                         "one cycle being a full left/right sway and two up/down bobs.")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 5.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabled)
                     ->DataElement(
                         nullptr,
@@ -319,6 +322,14 @@ namespace FirstPersonController
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabledAndRealismGreaterThanZero)
                     ->DataElement(
                         nullptr,
+                        &FirstPersonExtrasComponent::m_headbobRotationSprintScale,
+                        "Rotation Sprint Scale",
+                        "Head pitch, roll and yaw at top sprinting speed relative to walking (higher = more head sway when running).")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 20.f)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabledAndRealismGreaterThanZero)
+                    ->DataElement(
+                        nullptr,
                         &FirstPersonExtrasComponent::m_headbobVerticalCrouchScale,
                         "Vertical Crouch Scale",
                         "Vertical bob while fully crouched relative to walking upright (lower = more absorbed by the bent knees).")
@@ -330,6 +341,15 @@ namespace FirstPersonController
                         &FirstPersonExtrasComponent::m_headbobHorizontalCrouchScale,
                         "Horizontal Crouch Scale",
                         "Left/right sway while fully crouched relative to walking upright (higher = wider from the wider stance).")
+                    ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                    ->Attribute(AZ::Edit::Attributes::Max, 20.f)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabledAndRealismGreaterThanZero)
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_headbobRotationCrouchScale,
+                        "Rotation Crouch Scale",
+                        "Head pitch, roll and yaw while fully crouched relative to walking upright "
+                        "(higher = more head sway when crouched).")
                     ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(AZ::Edit::Attributes::Max, 20.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetHeadbobEnabledAndRealismGreaterThanZero);
@@ -413,6 +433,8 @@ namespace FirstPersonController
                 ->Event("Set Headbob Vertical Sprint Scale", &FirstPersonExtrasComponentRequests::SetHeadbobVerticalSprintScale)
                 ->Event("Get Headbob Horizontal Sprint Scale", &FirstPersonExtrasComponentRequests::GetHeadbobHorizontalSprintScale)
                 ->Event("Set Headbob Horizontal Sprint Scale", &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalSprintScale)
+                ->Event("Get Headbob Rotation Sprint Scale", &FirstPersonExtrasComponentRequests::GetHeadbobRotationSprintScale)
+                ->Event("Set Headbob Rotation Sprint Scale", &FirstPersonExtrasComponentRequests::SetHeadbobRotationSprintScale)
                 ->Event("Get Headbob Vertical Crouch Scale", &FirstPersonExtrasComponentRequests::GetHeadbobVerticalCrouchScale)
                 ->Event("Set Headbob Vertical Crouch Scale", &FirstPersonExtrasComponentRequests::SetHeadbobVerticalCrouchScale)
                 ->Event(
@@ -421,6 +443,8 @@ namespace FirstPersonController
                 ->Event(
                     "Set Headbob Horizontal Crouch Scale",
                     &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalCrouchScale)
+                ->Event("Get Headbob Rotation Crouch Scale", &FirstPersonExtrasComponentRequests::GetHeadbobRotationCrouchScale)
+                ->Event("Set Headbob Rotation Crouch Scale", &FirstPersonExtrasComponentRequests::SetHeadbobRotationCrouchScale)
                 ->Event("Get Headbob Last Step Strength", &FirstPersonExtrasComponentRequests::GetHeadbobLastStepStrength)
                 ->Event("Get Camera Translation Without Headbob", &FirstPersonExtrasComponentRequests::GetCameraTranslationWithoutHeadbob)
                 ->Event("Get Previous Camera Headbob Offset", &FirstPersonExtrasComponentRequests::GetPreviousOffset);
@@ -940,17 +964,20 @@ namespace FirstPersonController
         }
     }
 
-    // Sum the measured harmonics of the walk cycle phase, scaled by the realism factor
-    // The fourth harmonic is a cosine so it shapes the dip rather than moving it
+    // Sum the harmonics of the walk cycle phase, scaled by the realism factor. The bounce is the
+    // second harmonic. The first harmonic is offset 45 degrees so its peak lands on a dip, making
+    // one footfall deeper without changing footstep timing. The fourth harmonic runs at four times
+    // the phase as a cosine, so it sharpens each dip and rounds the rise between them
     float FirstPersonExtrasComponent::CalculateHeadbobVerticalShape(const float& phase) const
     {
         return -sinf(2.f * phase) +
             m_headbobRealism *
-            (m_headbobAlternatingStepDifference * sinf(phase + AZ::DegToRad(19.f)) +
+            (m_headbobAlternatingStepDifference * sinf(phase + AZ::DegToRad(45.f)) +
              m_headbobFootstepSharpness * cosf(4.f * phase));
     }
-    // Shape the horizontal sway with two harmonics. The even one can only deepen one side of the swing, and
-    // only the odd one can flatten the tops
+    // Shape the horizontal sway with two harmonics. The even one is offset -94 degrees to peak on the
+    // sway extremes, so it deepens one side without moving when the sway reaches it, and only the odd
+    // one can flatten the tops
     float FirstPersonExtrasComponent::CalculateHeadbobHorizontalShape(const float& phase) const
     {
         return sinf(phase) +
@@ -958,11 +985,14 @@ namespace FirstPersonController
             (m_headbobHorizontalSwayImbalance * sinf(2.f * phase + AZ::DegToRad(-94.f)) +
              m_headbobHorizontalSwayFlatness * sinf(3.f * phase));
     }
-    // Build the forward and back motion from the first three measured harmonics
+    // Build the forward and back motion as a Fourier series of a VR headset capture of walking data,
+    // keeping only the first three harmonics. The first is 122 degrees into the walk cycle, the
+    // second is 0.215 of its magnitude at 80 degrees, and the third is 0.093 at an angle which
+    // measured within a degree of zero, so it has no phase offset
     float FirstPersonExtrasComponent::CalculateHeadbobForwardShape(const float& phase) const
     {
         return sinf(phase + AZ::DegToRad(122.f)) + 0.215f * sinf(2.f * phase + AZ::DegToRad(80.f)) +
-            0.093f * sinf(3.f * phase + AZ::DegToRad(19.f));
+            0.093f * sinf(3.f * phase);
     }
 
     void FirstPersonExtrasComponent::UpdateHeadbobShapePeaks()
@@ -1028,20 +1058,30 @@ namespace FirstPersonController
             ? AZStd::min(currentSpeed / topSprintSpeed, 1.f)
             : 0.f;
         const float effectiveRadialFrequency = AZ::Constants::TwoPi * m_headbobMaxFrequency * currentSpeedToTopSprintSpeedRatio;
-        float effectiveHorizontalAmplitude = m_headbobMaxHorizontalAmplitude * currentSpeedToTopSprintSpeedRatio;
-        float effectiveVerticalAmplitude = m_headbobMaxVerticalAmplitude * currentSpeedToTopSprintSpeedRatio;
-
-        // Replace the uniform speed scaling with the per-axis sprint scales, blending from zero at the
-        // walk speed to one at the top sprint speed
+        // Replace the uniform speed scaling with the per-axis sprint scales, reaching the maximums at the
+        // top sprint speed so neither end depends on how Sprint Forward Scale is configured
+        float horizontalSpeedScale = currentSpeedToTopSprintSpeedRatio;
+        float verticalSpeedScale = currentSpeedToTopSprintSpeedRatio;
+        float rotationSpeedScale = currentSpeedToTopSprintSpeedRatio;
         if (sprintScaleForward > 1.f)
         {
             const float sprintBlend = AZ::GetClamp(
                 (currentSpeedToTopSprintSpeedRatio * sprintScaleForward - 1.f) / (sprintScaleForward - 1.f), 0.f, 1.f);
-            effectiveHorizontalAmplitude *=
-                AZ::Lerp(1.f, m_headbobHorizontalSprintScale / sprintScaleForward, m_headbobRealism * sprintBlend);
-            effectiveVerticalAmplitude *=
-                AZ::Lerp(1.f, m_headbobVerticalSprintScale / sprintScaleForward, m_headbobRealism * sprintBlend);
+            // Ramp to the walking value and then to one, so the scale never overshoots either end
+            const float walkFraction = AZStd::min(currentSpeedToTopSprintSpeedRatio * sprintScaleForward, 1.f);
+            const float horizontalTarget =
+                AZ::Lerp(walkFraction / AZ::GetMax(m_headbobHorizontalSprintScale, 0.01f), 1.f, sprintBlend);
+            const float verticalTarget =
+                AZ::Lerp(walkFraction / AZ::GetMax(m_headbobVerticalSprintScale, 0.01f), 1.f, sprintBlend);
+            const float rotationTarget =
+                AZ::Lerp(walkFraction / AZ::GetMax(m_headbobRotationSprintScale, 0.01f), 1.f, sprintBlend);
+            horizontalSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, horizontalTarget, m_headbobRealism);
+            verticalSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, verticalTarget, m_headbobRealism);
+            rotationSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, rotationTarget, m_headbobRealism);
         }
+
+        float effectiveHorizontalAmplitude = m_headbobMaxHorizontalAmplitude * horizontalSpeedScale;
+        float effectiveVerticalAmplitude = m_headbobMaxVerticalAmplitude * verticalSpeedScale;
 
         // Blend the crouch scales on the camera's crouch travel rather than the speed, so slow walking
         // is not mistaken for crouching
@@ -1055,10 +1095,14 @@ namespace FirstPersonController
                 AZ::Lerp(1.f, m_headbobHorizontalCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
             effectiveVerticalAmplitude *=
                 AZ::Lerp(1.f, m_headbobVerticalCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
+            rotationSpeedScale *=
+                AZ::Lerp(1.f, m_headbobRotationCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
         }
 
-        // Vary the speed and size slightly over eight walk cycles so no two steps are exactly alike
-        const float stepWander = 1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / 8.f);
+        // Vary the speed and size slightly over this many walk cycles so no two steps are exactly alike
+        const float stepVariationCycles = 8.f;
+        const float stepWander =
+            1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / stepVariationCycles);
         effectiveHorizontalAmplitude *= stepWander;
         effectiveVerticalAmplitude *= stepWander;
 
@@ -1068,13 +1112,14 @@ namespace FirstPersonController
         effectiveVerticalAmplitude *= m_headbobOverallIntensity;
 
         // Advance the phase only when walking, otherwise reset it. Accumulating the phase keeps the
-        // waveforms continuous when the frequency changes, and wrapping avoids any loss of precision
+        // waveforms continuous when the frequency changes
         if (m_isWalking)
             m_headbobPhase += deltaTime * effectiveRadialFrequency * stepWander;
         else
             m_headbobPhase = 0.f;
-        if (m_headbobPhase >= 8.f * AZ::Constants::TwoPi)
-            m_headbobPhase -= 8.f * AZ::Constants::TwoPi;
+        // Wrap on a whole number of variation cycles, which both the waveforms and the variation
+        // repeat on, so nothing changes value as it wraps
+        m_headbobPhase = fmodf(m_headbobPhase, stepVariationCycles * AZ::Constants::TwoPi);
 
         // Compute the offsets using a Lemniscate of Gerono (figure-8 pattern for natural sway and
         // bounce), shaped by the measured harmonics when Realism is non-zero
@@ -1098,15 +1143,15 @@ namespace FirstPersonController
             forwardOffset = m_headbobRealism * m_headbobFootstepAcceleration * effectiveHorizontalAmplitude *
                 CalculateHeadbobForwardShape(m_headbobPhase) / m_headbobForwardShapePeak;
 
-        // Compute the head rotation riding on top of the bob, where the pitch counter-rotates against
-        // the vertical bob and the roll lags the yaw
+        // Compute the head rotation riding on top of the bob, where the pitch counter-rotates against the
+        // vertical bob and the roll lags the yaw by a fixed 30 degrees. All three take the rotation scale
         const float directionSign = m_headbobStartingDirection ? 1.f : -1.f;
         const float pitchOffset = -m_headbobRealism * m_headbobOverallIntensity * AZ::DegToRad(m_headbobMaxPitchAmplitude) *
-            currentSpeedToTopSprintSpeedRatio * m_headbobNormalizedVerticalShape;
+            rotationSpeedScale * m_headbobNormalizedVerticalShape;
         const float rollOffset = directionSign * m_headbobRealism * m_headbobOverallIntensity * AZ::DegToRad(m_headbobMaxRollAmplitude) *
-            currentSpeedToTopSprintSpeedRatio * sinf(m_headbobPhase + AZ::DegToRad(-30.f));
+            rotationSpeedScale * sinf(m_headbobPhase + AZ::DegToRad(-30.f));
         const float yawOffset = directionSign * m_headbobRealism * m_headbobOverallIntensity * AZ::DegToRad(m_headbobMaxYawAmplitude) *
-            currentSpeedToTopSprintSpeedRatio * sinf(m_headbobPhase);
+            rotationSpeedScale * sinf(m_headbobPhase);
         // Pitch about X (right), roll about Y (forward), yaw about Z (up)
         m_headbobRotationOffset = AZ::Quaternion::CreateRotationX(pitchOffset) * AZ::Quaternion::CreateRotationY(rollOffset) *
             AZ::Quaternion::CreateRotationZ(yawOffset);
@@ -1631,6 +1676,22 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::SetHeadbobHorizontalSprintScale(const float& new_headbobHorizontalSprintScale)
     {
         m_headbobHorizontalSprintScale = new_headbobHorizontalSprintScale;
+    }
+    float FirstPersonExtrasComponent::GetHeadbobRotationCrouchScale() const
+    {
+        return m_headbobRotationCrouchScale;
+    }
+    void FirstPersonExtrasComponent::SetHeadbobRotationCrouchScale(const float& new_headbobRotationCrouchScale)
+    {
+        m_headbobRotationCrouchScale = new_headbobRotationCrouchScale;
+    }
+    float FirstPersonExtrasComponent::GetHeadbobRotationSprintScale() const
+    {
+        return m_headbobRotationSprintScale;
+    }
+    void FirstPersonExtrasComponent::SetHeadbobRotationSprintScale(const float& new_headbobRotationSprintScale)
+    {
+        m_headbobRotationSprintScale = new_headbobRotationSprintScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxFrequency() const
     {
