@@ -6903,7 +6903,7 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetIsNetworkingActive() const
     {
 #ifdef NETWORKFPC
-        return Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1);
+        return Multiplayer::NetEntityId() != Multiplayer::InvalidNetEntityId;
 #else
         return false;
 #endif
