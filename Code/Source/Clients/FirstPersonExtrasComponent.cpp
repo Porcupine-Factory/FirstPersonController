@@ -248,8 +248,8 @@ namespace FirstPersonController
         }
 
         // Convert Jump Head Tilt angles to radians
-        m_headAngleJump *= AZ::Constants::TwoPi / 360.f;
-        m_headAngleLand *= AZ::Constants::TwoPi / 360.f;
+        m_headAngleJump = AZ::DegToRad(m_headAngleJump);
+        m_headAngleLand = AZ::DegToRad(m_headAngleLand);
 
         // Assign the FirstPersonExtrasComponent specific inputs
         AssignConnectInputEvents();
@@ -1013,19 +1013,19 @@ namespace FirstPersonController
     }
     float FirstPersonExtrasComponent::GetHeadAngleJump() const
     {
-        return -m_headAngleJump * 360.f / AZ::Constants::TwoPi;
+        return -AZ::RadToDeg(m_headAngleJump);
     }
     void FirstPersonExtrasComponent::SetHeadAngleJump(const float& new_headAngleJump)
     {
-        m_headAngleJump = new_headAngleJump * AZ::Constants::TwoPi / 360.f;
+        m_headAngleJump = AZ::DegToRad(new_headAngleJump);
     }
     float FirstPersonExtrasComponent::GetHeadAngleLand() const
     {
-        return -m_headAngleLand * 360.f / AZ::Constants::TwoPi;
+        return -AZ::RadToDeg(m_headAngleLand);
     }
     void FirstPersonExtrasComponent::SetHeadAngleLand(const float& new_headAngleLand)
     {
-        m_headAngleLand = new_headAngleLand * AZ::Constants::TwoPi / 360.f;
+        m_headAngleLand = AZ::DegToRad(new_headAngleLand);
     }
     float FirstPersonExtrasComponent::GetDeltaAngleFactorJump() const
     {

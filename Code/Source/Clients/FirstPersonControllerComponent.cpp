@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <AzCore/Math/MathUtils.h>
 #include <Clients/FirstPersonControllerComponent.h>
 #ifdef NETWORKFPC
 #include <Multiplayer/NetworkFPC.h>
@@ -5206,9 +5207,9 @@ namespace FirstPersonController
         AZ::Vector3 angle = GetVectorAnglesBetweenVectorsRadians(v1, v2);
         if (angle.IsZero())
             return angle;
-        angle.SetX(angle.GetX() * 360.f / AZ::Constants::TwoPi);
-        angle.SetY(angle.GetY() * 360.f / AZ::Constants::TwoPi);
-        angle.SetZ(angle.GetZ() * 360.f / AZ::Constants::TwoPi);
+        angle.SetX(AZ::RadToDeg(angle.GetX()));
+        angle.SetY(AZ::RadToDeg(angle.GetY()));
+        angle.SetZ(AZ::RadToDeg(angle.GetZ()));
         return angle;
     }
     float FirstPersonControllerComponent::GetJumpHeldGravityFactor() const
@@ -6569,11 +6570,11 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetCameraPitchMaxAngleDegrees() const
     {
-        return (m_cameraPitchMaxAngle * 360.f / AZ::Constants::TwoPi);
+        return AZ::RadToDeg(m_cameraPitchMaxAngle);
     }
     void FirstPersonControllerComponent::SetCameraPitchMaxAngleDegrees(const float& new_cameraPitchMaxAngleDegrees)
     {
-        m_cameraPitchMaxAngle = (new_cameraPitchMaxAngleDegrees * AZ::Constants::TwoPi / 360.f);
+        m_cameraPitchMaxAngle = AZ::DegToRad(new_cameraPitchMaxAngleDegrees);
     }
     float FirstPersonControllerComponent::GetCameraPitchMinAngleRadians() const
     {
@@ -6585,11 +6586,11 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetCameraPitchMinAngleDegrees() const
     {
-        return (m_cameraPitchMinAngle * 360.f / AZ::Constants::TwoPi);
+        return AZ::RadToDeg(m_cameraPitchMinAngle);
     }
     void FirstPersonControllerComponent::SetCameraPitchMinAngleDegrees(const float& new_cameraPitchMinAngleDegrees)
     {
-        m_cameraPitchMinAngle = (new_cameraPitchMinAngleDegrees * AZ::Constants::TwoPi / 360.f);
+        m_cameraPitchMinAngle = AZ::DegToRad(new_cameraPitchMinAngleDegrees);
     }
     float FirstPersonControllerComponent::GetCameraRotationDampFactor() const
     {
