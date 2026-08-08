@@ -75,10 +75,14 @@ namespace FirstPersonController
         virtual void SetHeadbobVerticalSprintScale(const float&) = 0;
         virtual float GetHeadbobHorizontalSprintScale() const = 0;
         virtual void SetHeadbobHorizontalSprintScale(const float&) = 0;
+        virtual float GetHeadbobRotationSprintScale() const = 0;
+        virtual void SetHeadbobRotationSprintScale(const float&) = 0;
         virtual float GetHeadbobVerticalCrouchScale() const = 0;
         virtual void SetHeadbobVerticalCrouchScale(const float&) = 0;
         virtual float GetHeadbobHorizontalCrouchScale() const = 0;
         virtual void SetHeadbobHorizontalCrouchScale(const float&) = 0;
+        virtual float GetHeadbobRotationCrouchScale() const = 0;
+        virtual void SetHeadbobRotationCrouchScale(const float&) = 0;
         virtual float GetHeadbobLastStepStrength() const = 0;
         virtual AZ::Vector3 GetCameraTranslationWithoutHeadbob() const = 0;
         virtual AZ::Vector3 GetPreviousOffset() const = 0;
