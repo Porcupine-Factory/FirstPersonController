@@ -1779,47 +1779,49 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::OnCameraAdded(const AZ::EntityId& cameraId)
     {
         if (!m_cameraEntityId.IsValid())
-        {
             m_cameraEntityId = cameraId;
-            m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
-            if (m_activeCameraEntity)
-            {
-                // Calculate initial eye height based on the difference between the
-                // camera and character entities' translations, projected along the pose axis.
-                if (m_networkFPCObject == nullptr)
-                {
-                    AZ::Vector3 characterWorldTranslation;
-                    AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
-                    AZ::Vector3 cameraWorldTranslation;
-                    AZ::TransformBus::EventResult(cameraWorldTranslation, m_cameraEntityId, &AZ::TransformBus::Events::GetWorldTranslation);
-                    const AZ::Vector3 diff = cameraWorldTranslation - characterWorldTranslation;
-                    m_eyeHeight = diff.Dot(m_sphereCastsAxisDirectionPose.GetNormalized());
-                }
-                InitializeCameraTranslation();
-                Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
-                // AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
-                //     m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() :
-                //     m_activeCameraEntity->GetName().c_str());
-            }
 
-            if (m_activeCameraEntity)
+        m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
+        if (m_activeCameraEntity)
+        {
+            // Calculate initial eye height based on the difference between the
+            // camera and character entities' translations, projected along the pose axis.
+            if (m_networkFPCObject == nullptr)
             {
-                InitializeCameraTranslation();
-                Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
-                // AZ_Printf("First Person Controller Component", "Default camera %s assigned and set as active view.",
-                //     m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() :
-                //     m_activeCameraEntity->GetName().c_str());
+                AZ::Vector3 characterWorldTranslation;
+                AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+                AZ::Vector3 cameraWorldTranslation;
+                AZ::TransformBus::EventResult(cameraWorldTranslation, m_cameraEntityId, &AZ::TransformBus::Events::GetWorldTranslation);
+                const AZ::Vector3 diff = cameraWorldTranslation - characterWorldTranslation;
+                m_eyeHeight = diff.Dot(m_sphereCastsAxisDirectionPose.GetNormalized());
             }
-            else
+            InitializeCameraTranslation();
+            Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraRequestBus::Events::MakeActiveView);
+            // AZ_Printf("First Person Controller Component", "Camera entity %s activated and set as active view.",
+            //     m_activeCameraEntity->GetName().empty() ? m_cameraEntityId.ToString().c_str() :
+            //     m_activeCameraEntity->GetName().c_str());
+
+            if (!IsCameraChildOfCharacter())
             {
-                AZ_Warning(
-                    "FirstPersonControllerComponent",
-                    false,
-                    "Default camera ID %s from CameraNotificationBus is invalid.",
-                    cameraId.ToString().c_str());
-                m_cameraEntityId = AZ::EntityId();
+                AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
+                AZ::TransformInterface* cameraTransform = m_activeCameraEntity->GetTransform();
+                cameraTransform->SetWorldRotation(AZ::Vector3(
+                    cameraTransform->GetWorldRotation().GetX(),
+                    cameraTransform->GetWorldRotation().GetY(),
+                    characterTransform->GetWorldRotation().GetZ()));
+                m_cameraYaw = cameraTransform->GetWorldRotation().GetZ();
             }
         }
+        else
+        {
+            AZ_Warning(
+                "FirstPersonControllerComponent",
+                false,
+                "Default camera ID %s from CameraNotificationBus is invalid.",
+                cameraId.ToString().c_str());
+            m_cameraEntityId = AZ::EntityId();
+        }
+
         if (m_makeCameraChildOfCharacter && !IsCameraChildOfCharacter())
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetParent, GetEntityId());
     }
@@ -2016,7 +2018,6 @@ namespace FirstPersonController
 #endif
         }
 
-        m_activeCameraEntity = GetActiveCameraEntityPtr();
         if (m_activeCameraEntity)
         {
             m_cameraRotationTransform = m_activeCameraEntity->GetTransform();
@@ -4421,9 +4422,8 @@ namespace FirstPersonController
     AZ::Entity* FirstPersonControllerComponent::GetActiveCameraEntityPtr() const
     {
         if (m_activeCameraEntity)
-        {
             return m_activeCameraEntity;
-        }
+
         AZ::EntityId activeCameraId;
         Camera::CameraSystemRequestBus::BroadcastResult(activeCameraId, &Camera::CameraSystemRequestBus::Events::GetActiveCamera);
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
