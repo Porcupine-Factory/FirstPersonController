@@ -3748,8 +3748,8 @@ namespace FirstPersonController
                 if (m_jumpValue == 0.f && m_jumpHeld)
                     m_jumpHeld = false;
 
-                if (m_doubleJumpEnabled && m_finalJump)
-                    m_finalJump = false;
+                if (m_doubleJumpEnabled && m_onFinalJump)
+                    m_onFinalJump = false;
             }
         }
         else if ((m_jumpTimer + deltaTime / 2.f) < m_jumpMaxHoldTime && m_applyVelocityZ > 0.f && m_jumpHeld && !m_jumpReqRepress)
@@ -3808,7 +3808,7 @@ namespace FirstPersonController
             if (m_jumpHeld && m_jumpValue == 0.f)
                 m_jumpHeld = false;
 
-            if (m_doubleJumpEnabled && !m_finalJump && !m_jumpHeld && m_jumpValue != 0.f)
+            if (m_doubleJumpEnabled && !m_onFinalJump && !m_jumpHeld && m_jumpValue != 0.f)
             {
                 if (!m_standing)
                 {
@@ -3819,7 +3819,7 @@ namespace FirstPersonController
                 m_applyVelocityZ = m_jumpSecondInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
                 m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
                 m_applyVelocityZCurrentDelta = -m_gravity * deltaTime;
-                m_finalJump = true;
+                m_onFinalJump = true;
                 m_jumpHeld = true;
                 FirstPersonControllerComponentNotificationBus::Event(
                     GetEntityId(), &FirstPersonControllerComponentNotifications::OnFinalJump);
@@ -4161,7 +4161,7 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
             m_networkFPCControllerObject->SetIsStandingUpMove(m_standingUpMove);
             m_networkFPCControllerObject->SetIsCrouching(m_crouching);
-            m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump);
+            m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump || m_onFinalJump);
             m_networkFPCControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
@@ -4186,7 +4186,7 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
             m_networkFPCBotAnimationControllerObject->SetIsStandingUpMove(m_standingUpMove);
             m_networkFPCBotAnimationControllerObject->SetIsCrouching(m_crouching);
-            m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump);
+            m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump || m_onFinalJump);
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCBotAnimationControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
@@ -5661,11 +5661,11 @@ namespace FirstPersonController
     }
     bool FirstPersonControllerComponent::GetFinalJumpPerformed() const
     {
-        return m_doubleJumpEnabled;
+        return m_onFinalJump;
     }
-    void FirstPersonControllerComponent::SetFinalJumpPerformed(const bool& new_finalJump)
+    void FirstPersonControllerComponent::SetFinalJumpPerformed(const bool& new_onFinalJump)
     {
-        m_finalJump = new_finalJump;
+        m_onFinalJump = new_onFinalJump;
     }
     float FirstPersonControllerComponent::GetGroundedOffset() const
     {

@@ -291,7 +291,7 @@ namespace FirstPersonController
         bool GetDoubleJump() const override;
         void SetDoubleJump(const bool& new_doubleJumpEnabled) override;
         bool GetFinalJumpPerformed() const override;
-        void SetFinalJumpPerformed(const bool& new_finalJump) override;
+        void SetFinalJumpPerformed(const bool& new_onFinalJump) override;
         float GetGroundedOffset() const override;
         void SetGroundedOffset(const float& new_groundedSphereCastOffset) override;
         float GetGroundedExtraOffsetMultiplayerDynamic() const override;
@@ -873,7 +873,7 @@ namespace FirstPersonController
         float m_jumpTimer = 0.f;
         float m_jumpFallingGravityFactor = 0.9f;
         bool m_doubleJumpEnabled = false;
-        bool m_finalJump = false;
+        bool m_onFinalJump = false;
         float m_coyoteTime = 0.f;
         bool m_coyoteTimeNoGravityActive = false;
         bool m_coyoteTimeTracksLastNormal = true;

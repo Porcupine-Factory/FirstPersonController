@@ -963,6 +963,14 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnFinalJump()
     {
+        if (m_networkFPCEnabled &&
+            ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
+              !m_firstPersonControllerObject->m_isHost)))
+            return;
+        m_tiltJumped = true;
+        m_tiltLanded = false;
+        m_moveHeadDown = true;
+        m_totalHeadAngle = -m_headAngleJump;
     }
     void FirstPersonExtrasComponent::OnStaminaCapped()
     {
