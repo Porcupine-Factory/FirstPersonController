@@ -162,7 +162,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      Init="true" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="false"
                      IsPredictable="false" IsPublic="true"
-                     Container="Object" ExposeToEditor="true"
+                     Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines whether network animations are enabled."/>
     <NetworkProperty Type="bool" Name="IsSprinting"
