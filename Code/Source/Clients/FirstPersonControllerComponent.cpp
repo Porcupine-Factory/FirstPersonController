@@ -4874,8 +4874,8 @@ namespace FirstPersonController
             m_numTicksRecentGrounded = new_numTicksRecentGrounded;
         else
         {
-            AZ_Warning("First Person Controller Component", false, "Number of recently ticks recently grounded must be at least 1.")
-                m_numTicksRecentGrounded = 1;
+            AZ_Warning("First Person Controller Component", false, "Number of recently ticks recently grounded must be at least 1.");
+            m_numTicksRecentGrounded = 1;
         }
         m_prevNTicksGrounded.resize(m_numTicksRecentGrounded);
     }
