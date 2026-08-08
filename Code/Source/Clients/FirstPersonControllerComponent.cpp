@@ -1436,7 +1436,7 @@ namespace FirstPersonController
         // Determine if the NetworkFPC is enabled
         if (m_networkFPCObject != nullptr || m_networkFPCBotAnimationObject != nullptr
 #ifdef NETWORKFPC
-            || Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1)
+            || GetIsNetworkingActive()
 #endif
         )
         {
@@ -2057,7 +2057,7 @@ namespace FirstPersonController
                 const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
 
 #ifdef NETWORKFPC
-                if (Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1) && !m_isNetBot && !m_isServer)
+                if (GetIsNetworkingActive() && !m_isNetBot && !m_isServer)
 #endif
                     m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation * rollRotation);
             }
@@ -2070,7 +2070,7 @@ namespace FirstPersonController
                 const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
 
 #ifdef NETWORKFPC
-                if (Multiplayer::NetEntityId() != static_cast<Multiplayer::NetEntityId>(-1) && !m_isNetBot && !m_isServer)
+                if (GetIsNetworkingActive() && !m_isNetBot && !m_isServer)
 #endif
                     m_cameraRotationTransform->SetLocalRotationQuaternion(yawRotation * pitchRotation);
             }
