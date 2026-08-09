@@ -411,12 +411,8 @@ namespace FirstPersonController
                 ->Event("Set Headbob Footstep Sharpness", &FirstPersonExtrasComponentRequests::SetHeadbobFootstepSharpness)
                 ->Event("Get Headbob Alternating Step Difference", &FirstPersonExtrasComponentRequests::GetHeadbobAlternatingStepDifference)
                 ->Event("Set Headbob Alternating Step Difference", &FirstPersonExtrasComponentRequests::SetHeadbobAlternatingStepDifference)
-                ->Event(
-                    "Get Headbob Horizontal Sway Imbalance",
-                    &FirstPersonExtrasComponentRequests::GetHeadbobHorizontalSwayImbalance)
-                ->Event(
-                    "Set Headbob Horizontal Sway Imbalance",
-                    &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalSwayImbalance)
+                ->Event("Get Headbob Horizontal Sway Imbalance", &FirstPersonExtrasComponentRequests::GetHeadbobHorizontalSwayImbalance)
+                ->Event("Set Headbob Horizontal Sway Imbalance", &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalSwayImbalance)
                 ->Event("Get Headbob Horizontal Sway Flatness", &FirstPersonExtrasComponentRequests::GetHeadbobHorizontalSwayFlatness)
                 ->Event("Set Headbob Horizontal Sway Flatness", &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalSwayFlatness)
                 ->Event("Get Headbob Footstep Acceleration", &FirstPersonExtrasComponentRequests::GetHeadbobFootstepAcceleration)
@@ -437,12 +433,8 @@ namespace FirstPersonController
                 ->Event("Set Headbob Rotation Sprint Scale", &FirstPersonExtrasComponentRequests::SetHeadbobRotationSprintScale)
                 ->Event("Get Headbob Vertical Crouch Scale", &FirstPersonExtrasComponentRequests::GetHeadbobVerticalCrouchScale)
                 ->Event("Set Headbob Vertical Crouch Scale", &FirstPersonExtrasComponentRequests::SetHeadbobVerticalCrouchScale)
-                ->Event(
-                    "Get Headbob Horizontal Crouch Scale",
-                    &FirstPersonExtrasComponentRequests::GetHeadbobHorizontalCrouchScale)
-                ->Event(
-                    "Set Headbob Horizontal Crouch Scale",
-                    &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalCrouchScale)
+                ->Event("Get Headbob Horizontal Crouch Scale", &FirstPersonExtrasComponentRequests::GetHeadbobHorizontalCrouchScale)
+                ->Event("Set Headbob Horizontal Crouch Scale", &FirstPersonExtrasComponentRequests::SetHeadbobHorizontalCrouchScale)
                 ->Event("Get Headbob Rotation Crouch Scale", &FirstPersonExtrasComponentRequests::GetHeadbobRotationCrouchScale)
                 ->Event("Set Headbob Rotation Crouch Scale", &FirstPersonExtrasComponentRequests::SetHeadbobRotationCrouchScale)
                 ->Event("Get Headbob Last Step Strength", &FirstPersonExtrasComponentRequests::GetHeadbobLastStepStrength)
@@ -839,9 +831,6 @@ namespace FirstPersonController
         if (!m_sprintFoVEnabled)
             return;
 
-        // Obtain whether the character is sprinting and the speed to determine the lerped FoV
-        const bool sprinting = m_sprinting;
-
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
             ? m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
             : m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
@@ -861,7 +850,7 @@ namespace FirstPersonController
         if (m_firstPersonControllerObject != nullptr &&
             (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
              groundedRecently) &&
-            sprinting &&
+            GetSprinting() &&
             (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
         {
             m_sprintFoVTimeAccumulator += deltaTime;
@@ -972,8 +961,7 @@ namespace FirstPersonController
     {
         return -sinf(2.f * phase) +
             m_headbobRealism *
-            (m_headbobAlternatingStepDifference * sinf(phase + AZ::DegToRad(45.f)) +
-             m_headbobFootstepSharpness * cosf(4.f * phase));
+            (m_headbobAlternatingStepDifference * sinf(phase + AZ::DegToRad(45.f)) + m_headbobFootstepSharpness * cosf(4.f * phase));
     }
     // Shape the horizontal sway with two harmonics. The even one is offset -94 degrees to peak on the
     // sway extremes, so it deepens one side without moving when the sway reaches it, and only the odd
@@ -991,8 +979,7 @@ namespace FirstPersonController
     // measured within a degree of zero, so it has no phase offset
     float FirstPersonExtrasComponent::CalculateHeadbobForwardShape(const float& phase) const
     {
-        return sinf(phase + AZ::DegToRad(122.f)) + 0.215f * sinf(2.f * phase + AZ::DegToRad(80.f)) +
-            0.093f * sinf(3.f * phase);
+        return sinf(phase + AZ::DegToRad(122.f)) + 0.215f * sinf(2.f * phase + AZ::DegToRad(80.f)) + 0.093f * sinf(3.f * phase);
     }
 
     void FirstPersonExtrasComponent::UpdateHeadbobShapePeaks()
@@ -1054,9 +1041,8 @@ namespace FirstPersonController
         const float topSprintSpeed = walkSpeed * sprintScaleForward;
         // Zero when not walking, since the waveforms are not zero at the phase reset and the speed
         // stays high in the air
-        const float currentSpeedToTopSprintSpeedRatio = (m_isWalking && topSprintSpeed > 0.f)
-            ? AZStd::min(currentSpeed / topSprintSpeed, 1.f)
-            : 0.f;
+        const float currentSpeedToTopSprintSpeedRatio =
+            (m_isWalking && topSprintSpeed > 0.f) ? AZStd::min(currentSpeed / topSprintSpeed, 1.f) : 0.f;
         const float effectiveRadialFrequency = AZ::Constants::TwoPi * m_headbobMaxFrequency * currentSpeedToTopSprintSpeedRatio;
         // Replace the uniform speed scaling with the per-axis sprint scales, reaching the maximums at the
         // top sprint speed so neither end depends on how Sprint Forward Scale is configured
@@ -1065,16 +1051,13 @@ namespace FirstPersonController
         float rotationSpeedScale = currentSpeedToTopSprintSpeedRatio;
         if (sprintScaleForward > 1.f)
         {
-            const float sprintBlend = AZ::GetClamp(
-                (currentSpeedToTopSprintSpeedRatio * sprintScaleForward - 1.f) / (sprintScaleForward - 1.f), 0.f, 1.f);
+            const float sprintBlend =
+                AZ::GetClamp((currentSpeedToTopSprintSpeedRatio * sprintScaleForward - 1.f) / (sprintScaleForward - 1.f), 0.f, 1.f);
             // Ramp to the walking value and then to one, so the scale never overshoots either end
             const float walkFraction = AZStd::min(currentSpeedToTopSprintSpeedRatio * sprintScaleForward, 1.f);
-            const float horizontalTarget =
-                AZ::Lerp(walkFraction / AZ::GetMax(m_headbobHorizontalSprintScale, 0.01f), 1.f, sprintBlend);
-            const float verticalTarget =
-                AZ::Lerp(walkFraction / AZ::GetMax(m_headbobVerticalSprintScale, 0.01f), 1.f, sprintBlend);
-            const float rotationTarget =
-                AZ::Lerp(walkFraction / AZ::GetMax(m_headbobRotationSprintScale, 0.01f), 1.f, sprintBlend);
+            const float horizontalTarget = AZ::Lerp(walkFraction / AZ::GetMax(m_headbobHorizontalSprintScale, 0.01f), 1.f, sprintBlend);
+            const float verticalTarget = AZ::Lerp(walkFraction / AZ::GetMax(m_headbobVerticalSprintScale, 0.01f), 1.f, sprintBlend);
+            const float rotationTarget = AZ::Lerp(walkFraction / AZ::GetMax(m_headbobRotationSprintScale, 0.01f), 1.f, sprintBlend);
             horizontalSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, horizontalTarget, m_headbobRealism);
             verticalSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, verticalTarget, m_headbobRealism);
             rotationSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, rotationTarget, m_headbobRealism);
@@ -1089,20 +1072,16 @@ namespace FirstPersonController
         const float crouchScale = m_firstPersonControllerObject->m_crouchScale;
         if (crouchDistance > 0.f && crouchScale > 0.f)
         {
-            const float crouchBlend = AZ::GetClamp(
-                -1.f * m_firstPersonControllerObject->m_cameraLocalZTravelDistance / crouchDistance, 0.f, 1.f);
-            effectiveHorizontalAmplitude *=
-                AZ::Lerp(1.f, m_headbobHorizontalCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
-            effectiveVerticalAmplitude *=
-                AZ::Lerp(1.f, m_headbobVerticalCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
-            rotationSpeedScale *=
-                AZ::Lerp(1.f, m_headbobRotationCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
+            const float crouchBlend =
+                AZ::GetClamp(-1.f * m_firstPersonControllerObject->m_cameraLocalZTravelDistance / crouchDistance, 0.f, 1.f);
+            effectiveHorizontalAmplitude *= AZ::Lerp(1.f, m_headbobHorizontalCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
+            effectiveVerticalAmplitude *= AZ::Lerp(1.f, m_headbobVerticalCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
+            rotationSpeedScale *= AZ::Lerp(1.f, m_headbobRotationCrouchScale / crouchScale, m_headbobRealism * crouchBlend);
         }
 
         // Vary the speed and size slightly over this many walk cycles so no two steps are exactly alike
         const float stepVariationCycles = 8.f;
-        const float stepWander =
-            1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / stepVariationCycles);
+        const float stepWander = 1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / stepVariationCycles);
         effectiveHorizontalAmplitude *= stepWander;
         effectiveVerticalAmplitude *= stepWander;
 
@@ -1266,10 +1245,6 @@ namespace FirstPersonController
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
 
-        // Determine the sprint state once per update, used by Sprint FoV
-        if (m_sprintFoVEnabled)
-            m_sprinting = m_firstPersonControllerObject != nullptr && GetSprinting();
-
         PerformSprintFoV(deltaTime);
 
         if (tickTimestepNetwork == 0)
@@ -1294,6 +1269,9 @@ namespace FirstPersonController
     {
     }
     void FirstPersonExtrasComponent::OnHeadbobStepTaken()
+    {
+    }
+    void FirstPersonExtrasComponent::OnHeadbobOriginCross()
     {
     }
 

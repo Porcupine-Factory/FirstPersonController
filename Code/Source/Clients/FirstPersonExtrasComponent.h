@@ -215,7 +215,6 @@ namespace FirstPersonController
 
         // Sprint FoV
         bool m_sprintFoVEnabled = true;
-        bool m_sprinting = false;
         bool m_sprintingObstructedCheck[16] = {};
         AZ::u8 m_sprintingObstructedIndex = 0;
         float m_sprintFoVTimeAccumulator = 0.f;
