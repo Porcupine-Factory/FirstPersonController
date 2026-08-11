@@ -836,6 +836,7 @@ namespace FirstPersonController
             ? m_firstPersonControllerObject->m_applyVelocityXY.GetLength() * m_firstPersonControllerObject->m_movingUpInclineFactor
             : m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
+        const float forwardScale = m_firstPersonControllerObject->m_forwardScale;
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
 
         const bool notRecentlyGrounded = AZStd::all_of(
@@ -852,13 +853,14 @@ namespace FirstPersonController
             (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
              groundedRecently) &&
             GetSprinting() &&
-            (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) >= m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
+            (currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) >=
+                m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
         {
             m_sprintFoVTimeAccumulator += deltaTime;
-            if ((currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) <
+            if ((currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) <
                 m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
                 m_sprintFoVTimeAccumulator =
-                    (currentSpeed - walkSpeed) / (sprintScaleForward * walkSpeed - walkSpeed) * m_sprintFoVLerpTime;
+                    (currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) * m_sprintFoVLerpTime;
         }
         else
         {
