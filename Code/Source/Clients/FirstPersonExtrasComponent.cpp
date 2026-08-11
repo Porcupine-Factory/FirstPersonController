@@ -45,6 +45,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
                 ->Field("Sprint FoV Lerp Time", &FirstPersonExtrasComponent::m_sprintFoVLerpTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+                ->Attribute(AZ::Edit::Attributes::Min, 0.0166f)
 
                 // Headbob group
                 ->Field("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
@@ -1488,7 +1489,10 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float& new_sprintFoVLerpTime)
     {
-        m_sprintFoVLerpTime = new_sprintFoVLerpTime;
+        if (new_sprintFoVLerpTime < 0.0166f)
+            m_sprintFoVLerpTime = 0.0166f;
+        else
+            m_sprintFoVLerpTime = new_sprintFoVLerpTime;
     }
     float FirstPersonExtrasComponent::GetSprintingFoV() const
     {
