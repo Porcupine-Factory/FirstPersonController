@@ -789,19 +789,19 @@ namespace FirstPersonController
         float m_standUpSettleTimer = 0.f;
 
         // Crouch Down PID Parameters
-        float m_crouchDownProportionalGain = 200.0f;
-        float m_crouchDownIntegralGain = 0.0f;
-        float m_crouchDownDerivativeGain = 18.0f;
-        float m_crouchDownIntegralWindupLimit = 100.0f;
+        float m_crouchDownProportionalGain = 200.f;
+        float m_crouchDownIntegralGain = 0.f;
+        float m_crouchDownDerivativeGain = 18.f;
+        float m_crouchDownIntegralWindupLimit = 100.f;
         float m_crouchDownDerivativeFilterAlpha = 0.8f;
         PidController<float> m_crouchDownPidController;
         PidController<float>::DerivativeCalculationMode m_crouchDownDerivativeMode = PidController<float>::Velocity;
 
         // Stand Up PID Parameters
-        float m_standUpProportionalGain = 200.0f;
-        float m_standUpIntegralGain = 0.0f;
-        float m_standUpDerivativeGain = 18.0f;
-        float m_standUpIntegralWindupLimit = 100.0f;
+        float m_standUpProportionalGain = 200.f;
+        float m_standUpIntegralGain = 0.f;
+        float m_standUpDerivativeGain = 18.f;
+        float m_standUpIntegralWindupLimit = 100.f;
         float m_standUpDerivativeFilterAlpha = 0.8f;
         PidController<float> m_standUpPidController;
         PidController<float>::DerivativeCalculationMode m_standUpDerivativeMode = PidController<float>::Velocity;

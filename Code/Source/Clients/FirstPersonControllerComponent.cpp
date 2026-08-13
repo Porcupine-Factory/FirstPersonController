@@ -2730,7 +2730,7 @@ namespace FirstPersonController
             // Reset the PID controller for fresh crouch down computation
             m_crouchDownPidController.Reset();
             // Initialize velocity to zero as PID handles acceleration (initial velocity not used in PID logic)
-            m_currentCrouchVelocity = 0.0f;
+            m_currentCrouchVelocity = 0.f;
             m_crouchingDownMove = true;
             m_standingUpMove = false;
             m_standing = false;
@@ -2744,7 +2744,7 @@ namespace FirstPersonController
         if (m_crouchingDownMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            static constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
+            static constexpr float referenceSubDeltaTime = 1.f / 120.f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
             const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
@@ -2820,7 +2820,7 @@ namespace FirstPersonController
                     // Mark as fully crouched
                     m_crouched = true;
                     // Reset timer for next use
-                    m_crouchDownSettleTimer = 0.0f;
+                    m_crouchDownSettleTimer = 0.f;
                     FirstPersonControllerComponentNotificationBus::Event(
                         GetEntityId(), &FirstPersonControllerComponentNotifications::OnCrouched);
                 }
@@ -2828,7 +2828,7 @@ namespace FirstPersonController
             else
             {
                 // Reset settle timer if not within tolerance
-                m_crouchDownSettleTimer = 0.0f;
+                m_crouchDownSettleTimer = 0.f;
             }
         }
         // Determine if starting or switching to stand up movement. Initiates when not crouching, not already standing up,
@@ -2843,7 +2843,7 @@ namespace FirstPersonController
             // Reset the PID controller for fresh stand up computation
             m_standUpPidController.Reset();
             // Initialize velocity to zero as PID handles acceleration
-            m_currentCrouchVelocity = 0.0f;
+            m_currentCrouchVelocity = 0.f;
             m_standingUpMove = true;
             m_crouchingDownMove = false;
             m_crouched = false;
@@ -2855,7 +2855,7 @@ namespace FirstPersonController
         if (m_standingUpMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            static constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
+            static constexpr float referenceSubDeltaTime = 1.f / 120.f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
             const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
@@ -2948,7 +2948,7 @@ namespace FirstPersonController
                 m_standPrevented = false;
 
                 // Target Z offset for standing: Reset to zero
-                static constexpr float targetLocalZOffset = 0.0f;
+                static constexpr float targetLocalZOffset = 0.f;
 
                 // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
                 // and camera distance calculation for framerate/timestep-independence.
@@ -2995,7 +2995,7 @@ namespace FirstPersonController
                         m_cameraLocalZTravelDistance = targetLocalZOffset;
                         m_currentCrouchVelocity = 0.f;
                         m_standingUpMove = false;
-                        m_standUpSettleTimer = 0.0f;
+                        m_standUpSettleTimer = 0.f;
                         FirstPersonControllerComponentNotificationBus::Event(
                             GetEntityId(), &FirstPersonControllerComponentNotifications::OnStoodUp);
                     }
@@ -3003,7 +3003,7 @@ namespace FirstPersonController
                 else
                 {
                     // Reset if not settled
-                    m_standUpSettleTimer = 0.0f;
+                    m_standUpSettleTimer = 0.f;
                 }
             }
         }
