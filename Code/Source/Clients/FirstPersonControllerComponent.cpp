@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <AzCore/Math/MathUtils.h>
 #include <Clients/FirstPersonControllerComponent.h>
 #ifdef NETWORKFPC
 #include <Multiplayer/NetworkFPC.h>
@@ -2745,7 +2744,7 @@ namespace FirstPersonController
         if (m_crouchingDownMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
+            static constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
             const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
@@ -2760,10 +2759,10 @@ namespace FirstPersonController
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
             // Define velocity tolerance. A small threshold (0.1 m/s) to check if velocity has sufficiently damped near zero,
             // indicating the movement has stabilized and is not still accelerating or oscillating.
-            constexpr float crouchVelocityTolerance = 0.1f;
+            static constexpr float crouchVelocityTolerance = 0.1f;
             // Define settle duration. 200ms period after tolerances are met to allow any residual PID damping or minor adjustments
             // to occur, ensuring smooth stopping without abrupt snaps or state changes.
-            constexpr float crouchSettleDuration = 0.2f;
+            static constexpr float crouchSettleDuration = 0.2f;
 
             // Target Z offset for crouch: Negative distance to lower camera
             const float targetLocalZOffset = -m_crouchDistance;
@@ -2856,7 +2855,7 @@ namespace FirstPersonController
         if (m_standingUpMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
+            static constexpr float referenceSubDeltaTime = 1.0f / 120.0f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
             const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
@@ -2867,9 +2866,9 @@ namespace FirstPersonController
 
             // Define tolerances similar to crouch down for consistency
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
-            constexpr float crouchVelocityTolerance = 0.1f;
+            static constexpr float crouchVelocityTolerance = 0.1f;
             // 200ms standing settle time
-            constexpr float crouchSettleDuration = 0.2f;
+            static constexpr float crouchSettleDuration = 0.2f;
             // Early standing flag. Set if close enough to target for responsive feel
             const float earlyStandThreshold = 0.1f * fabs(m_crouchDistance);
 
@@ -2949,7 +2948,7 @@ namespace FirstPersonController
                 m_standPrevented = false;
 
                 // Target Z offset for standing: Reset to zero
-                constexpr float targetLocalZOffset = 0.0f;
+                static constexpr float targetLocalZOffset = 0.0f;
 
                 // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
                 // and camera distance calculation for framerate/timestep-independence.
@@ -3500,7 +3499,7 @@ namespace FirstPersonController
         if (m_coyoteTime > 0.f)
         {
             // When the radius percentage increase is set to less than or equal to -100% then use a raycast instead
-            constexpr float noRadiusUseRacast = -100.f;
+            static constexpr float noRadiusUseRacast = -100.f;
             if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > noRadiusUseRacast)
             {
                 request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
