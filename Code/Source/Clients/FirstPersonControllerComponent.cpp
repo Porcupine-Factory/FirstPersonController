@@ -1468,7 +1468,7 @@ namespace FirstPersonController
             }
 
             // If not running in the editor and the timestep is less than or equal to 1/(refresh rate) then disable camera smoothing
-            if (!applicationType.IsEditor())
+            if (!applicationType.IsEditor() && !GetIsNetworkingActive())
             {
                 AzFramework::NativeWindowHandle windowHandle = nullptr;
                 windowHandle = AZ::RPI::ViewportContextRequests::Get()->GetDefaultViewportContext()->GetWindowHandle();
