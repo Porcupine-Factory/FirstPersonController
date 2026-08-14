@@ -63,6 +63,12 @@ if(NOT MULTIPLAYER_GEM_ENABLED AND EXISTS "${CMAKE_SOURCE_DIR}/engine.json")
     endif()
 endif()
 
+# Define NETWORKFPC for the gem's targets when the Multiplayer gem is enabled,
+# so the guarded source code paths are compiled in
+if(MULTIPLAYER_GEM_ENABLED)
+    add_compile_definitions(NETWORKFPC)
+endif()
+
 # The ${gem_name}.Private.Object target is an internal target
 # It should not be used outside of this Gems CMakeLists.txt
 if(MULTIPLAYER_GEM_ENABLED)
