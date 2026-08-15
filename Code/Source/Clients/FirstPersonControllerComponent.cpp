@@ -2302,7 +2302,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ApplyMovingUpInclineXYSpeedFactor()
     {
-        if (!m_velocityXCrossYTracksNormal || !m_movingUpInclineSlowed || m_prevTargetVelocityXY.IsZero())
+        if (!m_velocityXCrossYTracksNormal || !m_movingUpInclineSlowed || m_prevTargetVelocity.IsZero())
             return;
 
         if (m_grounded)
