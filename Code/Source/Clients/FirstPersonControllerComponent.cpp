@@ -2335,8 +2335,9 @@ namespace FirstPersonController
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
-                m_movingUpInclineFactor =
-                    (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength());
+                m_movingUpInclineFactor = AZStd::min(
+                    (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength()),
+                    (1.f - steepness) * maxVelocityXYTowardsIncline.GetLength() / currentVelocityXYTowardsIncline.GetLength());
 
                 m_prevTargetVelocity *= m_movingUpInclineFactor;
             }
@@ -2385,8 +2386,9 @@ namespace FirstPersonController
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
-                m_movingUpInclineFactor =
-                    (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength());
+                m_movingUpInclineFactor = AZStd::min(
+                    (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength()),
+                    (1.f - steepness) * maxVelocityXYTowardsIncline.GetLength() / currentVelocityXYTowardsIncline.GetLength());
 
                 if (!(m_airTime < m_coyoteTime && !m_ungroundedDueToJump))
                 {
