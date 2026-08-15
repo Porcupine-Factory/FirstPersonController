@@ -2324,20 +2324,22 @@ namespace FirstPersonController
                 const float steepness = m_velocityZPosDirection.Angle(m_velocityXCrossYDirection) / AZ::Constants::HalfPi;
 
                 // Get the component of the velocity vector pointing towards the incline
+                const AZ::Vector2 normalizedVectorTowardsIncline = AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized();
                 const AZ::Vector2 currentVelocityXYTowardsIncline =
-                    AZ::Vector2(m_prevTargetVelocity).GetProjected(AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized());
+                    AZ::Vector2(m_prevTargetVelocity).GetProjected(normalizedVectorTowardsIncline);
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxVelocityXYTowardsIncline =
-                    m_prevTargetVelocity.GetLength() * AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized();
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_prevTargetVelocity.GetLength() * normalizedVectorTowardsIncline;
                 const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline =
                     TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_velocityXCrossYDirection);
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
+                const float currentSpeedTowardsIncline = currentVelocityXYTowardsIncline.GetLength();
+                const float maxSpeedTowardsIncline = maxVelocityXYTowardsIncline.GetLength();
                 m_movingUpInclineFactor = AZStd::min(
-                    (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength()),
-                    (1.f - steepness) * maxVelocityXYTowardsIncline.GetLength() / currentVelocityXYTowardsIncline.GetLength());
+                    (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
+                    (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
 
                 m_prevTargetVelocity *= m_movingUpInclineFactor;
             }
@@ -2375,20 +2377,22 @@ namespace FirstPersonController
                 const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_prevTargetVelocityXY, m_prevGroundCloseSumNormals));
 
                 // Get the component of the velocity vector pointing towards the incline
+                const AZ::Vector2 prevNormalizedVectorTowardsIncline = AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized();
                 const AZ::Vector2 currentVelocityXYTowardsIncline =
-                    AZ::Vector2(velocityXYTilted).GetProjected(AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized());
+                    AZ::Vector2(velocityXYTilted).GetProjected(prevNormalizedVectorTowardsIncline);
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxVelocityXYTowardsIncline =
-                    m_prevTargetVelocityXY.GetLength() * AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized();
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_prevTargetVelocityXY.GetLength() * prevNormalizedVectorTowardsIncline;
                 const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline =
                     TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_prevGroundCloseSumNormals);
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
+                const float currentSpeedTowardsIncline = currentVelocityXYTowardsIncline.GetLength();
+                const float maxSpeedTowardsIncline = maxVelocityXYTowardsIncline.GetLength();
                 m_movingUpInclineFactor = AZStd::min(
-                    (1.f - steepness * currentVelocityXYTowardsIncline.GetLength() / maxVelocityXYTowardsIncline.GetLength()),
-                    (1.f - steepness) * maxVelocityXYTowardsIncline.GetLength() / currentVelocityXYTowardsIncline.GetLength());
+                    (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
+                    (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
 
                 if (!(m_airTime < m_coyoteTime && !m_ungroundedDueToJump))
                 {
