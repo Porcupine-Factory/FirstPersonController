@@ -56,7 +56,7 @@ namespace FirstPersonController
 
         // EnableAnimationNetworkFPC Changed Event
         AZ::Event<bool>::Handler m_enableNetworkAnimationChangedEvent;
-        void OnEnableNetworkAnimationChanged(const bool& enable);
+        void OnEnableNetworkAnimationChanged(const bool enable);
 
         //! EMotionFX::Integration::ActorComponentNotificationBus::Handler
         //! @{
@@ -136,14 +136,14 @@ namespace FirstPersonController
         void ProcessInput(Multiplayer::NetworkInput& input, float deltaTime) override;
 
         // NetworkFPCControllerRequestBus
-        void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime) override;
+        void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float deltaTime) override;
         bool GetAllowAllMovementInputs() const override;
-        void SetAllowAllMovementInputs(const bool& new_allowAllMovementInputs) override;
+        void SetAllowAllMovementInputs(const bool new_allowAllMovementInputs) override;
         bool GetAllowRotationInputs() const override;
-        void SetAllowRotationInputs(const bool& new_allowRotationInputs) override;
+        void SetAllowRotationInputs(const bool new_allowRotationInputs) override;
         AZ::TimeMs GetHostTimeMs() const override;
         bool GetEnabled() const override;
-        void SetEnabled(const bool& new_enabled) override;
+        void SetEnabled(const bool new_enabled) override;
         bool GetIsNetEntityRoleAuthority() const override;
 
         // AZ::InputEventNotificationBus interface
@@ -162,8 +162,8 @@ namespace FirstPersonController
         void AssignConnectInputEvents();
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId);
-        void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entityId);
+        void OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId);
+        void OnNetworkTickFinish(const float deltaTime, const bool server, const AZ::EntityId& entityId);
         void OnAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnHostActivated(const AZ::EntityId& entityId);
         void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
@@ -192,7 +192,7 @@ namespace FirstPersonController
         AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
         AZ::Event<AZStd::vector<AZStd::string>>::Handler m_playerStringNetEntityIdsChangedEvent;
         AZ::Event<AZStd::vector<AZStd::string>>::Handler m_botStringNetEntityIdsChangedEvent;
-        void OnEnableNetworkFPCChanged(const bool& enable);
+        void OnEnableNetworkFPCChanged(const bool enable);
         void OnPlayerStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& playerStringNetEntityIds);
         void OnBotStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& botStringNetEntityIds);
         bool m_disabled = false;

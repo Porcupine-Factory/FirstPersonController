@@ -50,9 +50,9 @@ namespace FirstPersonController
 
         // CameraCoupledChildRequestBus
         bool GetEnableCameraCoupledChild() const override;
-        void SetEnableCameraCoupledChild(const bool& new_enable) override;
+        void SetEnableCameraCoupledChild(const bool new_enable) override;
         float GetInitialZOffset() const override;
-        void SetInitialZOffset(const float& new_initialZOffset) override;
+        void SetInitialZOffset(const float new_initialZOffset) override;
 
     private:
         // Input event assignment and notification bus connection
@@ -62,7 +62,7 @@ namespace FirstPersonController
         AZ::Entity* GetEntityPtr(AZ::EntityId pointer) const;
 
         // Called on each tick
-        void ProcessInput(const float& deltaTime);
+        void ProcessInput(const float deltaTime);
 
         // Function that does the coupling to the camera
         void CoupleChildToCamera();

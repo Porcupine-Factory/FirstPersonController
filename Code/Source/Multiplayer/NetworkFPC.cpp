@@ -95,7 +95,7 @@ namespace FirstPersonController
         m_enableNetworkAnimationChangedEvent.Disconnect();
     }
 
-    void NetworkFPC::OnEnableNetworkAnimationChanged(const bool& enable)
+    void NetworkFPC::OnEnableNetworkAnimationChanged(const bool enable)
     {
         if (enable)
         {
@@ -707,15 +707,15 @@ namespace FirstPersonController
 
     // Event Notification methods for use in scripts
     void NetworkFPCController::OnNetworkTickStart(
-        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float deltaTime, [[maybe_unused]] const bool server, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void NetworkFPCController::OnNetworkTickFinish(
-        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float deltaTime, [[maybe_unused]] const bool server, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
 
-    void NetworkFPCController::OnEnableNetworkFPCChanged(const bool& enable)
+    void NetworkFPCController::OnEnableNetworkFPCChanged(const bool enable)
     {
         m_disabled = !enable;
         m_firstPersonControllerObject->m_networkFPCEnabled = enable;
@@ -767,7 +767,7 @@ namespace FirstPersonController
     }
 
     // Request Bus getter and setter methods for use in scripts
-    void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float& deltaTime)
+    void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float deltaTime)
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
     }
@@ -775,7 +775,7 @@ namespace FirstPersonController
     {
         return m_allowAllMovementInputs;
     }
-    void NetworkFPCController::SetAllowAllMovementInputs(const bool& new_allowAllMovementInputs)
+    void NetworkFPCController::SetAllowAllMovementInputs(const bool new_allowAllMovementInputs)
     {
         m_allowAllMovementInputs = new_allowAllMovementInputs;
     }
@@ -783,7 +783,7 @@ namespace FirstPersonController
     {
         return m_allowRotationInputs;
     }
-    void NetworkFPCController::SetAllowRotationInputs(const bool& new_allowRotationInputs)
+    void NetworkFPCController::SetAllowRotationInputs(const bool new_allowRotationInputs)
     {
         m_allowRotationInputs = new_allowRotationInputs;
     }
@@ -800,7 +800,7 @@ namespace FirstPersonController
     {
         return IsNetEntityRoleAuthority();
     }
-    void NetworkFPCController::SetEnabled(const bool& new_enabled)
+    void NetworkFPCController::SetEnabled(const bool new_enabled)
     {
         m_disabled = !new_enabled;
         m_firstPersonControllerObject->m_networkFPCEnabled = new_enabled;

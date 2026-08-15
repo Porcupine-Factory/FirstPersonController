@@ -17,14 +17,14 @@ namespace FirstPersonController
     public:
         ~NetworkFPCControllerRequests() override = default;
 
-        virtual void TryAddVelocityForNetworkTick(const AZ::Vector3&, const float&) = 0;
+        virtual void TryAddVelocityForNetworkTick(const AZ::Vector3&, const float) = 0;
         virtual bool GetAllowAllMovementInputs() const = 0;
-        virtual void SetAllowAllMovementInputs(const bool&) = 0;
+        virtual void SetAllowAllMovementInputs(const bool) = 0;
         virtual bool GetAllowRotationInputs() const = 0;
-        virtual void SetAllowRotationInputs(const bool&) = 0;
+        virtual void SetAllowRotationInputs(const bool) = 0;
         virtual AZ::TimeMs GetHostTimeMs() const = 0;
         virtual bool GetEnabled() const = 0;
-        virtual void SetEnabled(const bool&) = 0;
+        virtual void SetEnabled(const bool) = 0;
         virtual bool GetIsNetEntityRoleAuthority() const = 0;
     };
 
@@ -33,8 +33,8 @@ namespace FirstPersonController
     class NetworkFPCControllerNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnNetworkTickStart(const float&, const bool&, const AZ::EntityId&) = 0;
-        virtual void OnNetworkTickFinish(const float&, const bool&, const AZ::EntityId&) = 0;
+        virtual void OnNetworkTickStart(const float, const bool, const AZ::EntityId&) = 0;
+        virtual void OnNetworkTickFinish(const float, const bool, const AZ::EntityId&) = 0;
         virtual void OnAutonomousClientActivated(const AZ::EntityId&) = 0;
         virtual void OnHostActivated(const AZ::EntityId&) = 0;
         virtual void OnNonAutonomousClientActivated(const AZ::EntityId&) = 0;
@@ -57,11 +57,11 @@ namespace FirstPersonController
             OnHostActivated,
             OnNonAutonomousClientActivated);
 
-        void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId) override
+        void OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId) override
         {
             Call(FN_OnNetworkTickStart, deltaTime, server, entityId);
         }
-        void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entityId) override
+        void OnNetworkTickFinish(const float deltaTime, const bool server, const AZ::EntityId& entityId) override
         {
             Call(FN_OnNetworkTickFinish, deltaTime, server, entityId);
         }

@@ -53,7 +53,7 @@ namespace FirstPersonController
 
         // EnableAnimationNetworkFPCBotAnimation Changed Event
         AZ::Event<bool>::Handler m_enableNetworkAnimationChangedEvent;
-        void OnEnableNetworkAnimationChanged(const bool& enable);
+        void OnEnableNetworkAnimationChanged(const bool enable);
 
         //! EMotionFX::Integration::ActorComponentNotificationBus::Handler
         //! @{

@@ -73,7 +73,7 @@ namespace FirstPersonController
         m_enableNetworkAnimationChangedEvent.Disconnect();
     }
 
-    void NetworkFPCBotAnimation::OnEnableNetworkAnimationChanged(const bool& enable)
+    void NetworkFPCBotAnimation::OnEnableNetworkAnimationChanged(const bool enable)
     {
         if (enable)
         {

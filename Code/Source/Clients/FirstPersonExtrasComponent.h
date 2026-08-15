@@ -64,77 +64,77 @@ namespace FirstPersonController
 
         // FirstPersonExtrasRequestBus
         float GetJumpPressedInAirQueueTimeThreshold() const override;
-        void SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold) override;
+        void SetJumpPressedInAirQueueTimeThreshold(const float new_jumpPressedInAirQueueTimeThreshold) override;
         bool GetJumpHeadTiltEnabled() const override;
-        void SetJumpHeadTiltEnabled(const bool& new_jumpHeadTiltEnabled) override;
+        void SetJumpHeadTiltEnabled(const bool new_jumpHeadTiltEnabled) override;
         float GetHeadAngleJump() const override;
-        void SetHeadAngleJump(const float& new_headAngleJump) override;
+        void SetHeadAngleJump(const float new_headAngleJump) override;
         float GetHeadAngleLand() const override;
-        void SetHeadAngleLand(const float& new_headAngleLand) override;
+        void SetHeadAngleLand(const float new_headAngleLand) override;
         float GetDeltaAngleFactorJump() const override;
-        void SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump) override;
+        void SetDeltaAngleFactorJump(const float new_deltaAngleFactorJump) override;
         float GetDeltaAngleFactorLand() const override;
-        void SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand) override;
+        void SetDeltaAngleFactorLand(const float new_deltaAngleFactorLand) override;
         float GetCompleteHeadLandVelocity() const override;
-        void SetCompleteHeadLandVelocity(const float& new_completeHeadLandVelocity) override;
+        void SetCompleteHeadLandVelocity(const float new_completeHeadLandVelocity) override;
         bool GetSprintFoVEnabled() const override;
-        void SetSprintFoVEnabled(const bool& new_sprintFoVEnabled) override;
+        void SetSprintFoVEnabled(const bool new_sprintFoVEnabled) override;
         float GetSprintFoVLerpTime() const override;
-        void SetSprintFoVLerpTime(const float& new_sprintFoVLerpTime) override;
+        void SetSprintFoVLerpTime(const float new_sprintFoVLerpTime) override;
         float GetSprintingFoV() const override;
-        void SetSprintingFoV(const float& new_sprintFoV) override;
+        void SetSprintingFoV(const float new_sprintFoV) override;
         float GetWalkingFoV() const override;
-        void SetWalkingFoV(const float& new_walkFoV) override;
+        void SetWalkingFoV(const float new_walkFoV) override;
         bool GetHeadbobEnabled() const override;
-        void SetHeadbobEnabled(const bool& new_headbobEnabled) override;
+        void SetHeadbobEnabled(const bool new_headbobEnabled) override;
         bool GetHeadbobStartingDirection() const override;
-        void SetHeadbobStartingDirection(const bool& new_headbobStartingDirection) override;
+        void SetHeadbobStartingDirection(const bool new_headbobStartingDirection) override;
         float GetHeadbobMaxFrequency() const override;
-        void SetHeadbobMaxFrequency(const float& new_headbobMaxFrequency) override;
+        void SetHeadbobMaxFrequency(const float new_headbobMaxFrequency) override;
         float GetHeadbobMaxVerticalAmplitude() const override;
-        void SetHeadbobMaxVerticalAmplitude(const float& new_headbobMaxVerticalAmplitude) override;
+        void SetHeadbobMaxVerticalAmplitude(const float new_headbobMaxVerticalAmplitude) override;
         float GetHeadbobMaxHorizontalAmplitude() const override;
-        void SetHeadbobMaxHorizontalAmplitude(const float& new_headbobMaxHorizontalAmplitude) override;
+        void SetHeadbobMaxHorizontalAmplitude(const float new_headbobMaxHorizontalAmplitude) override;
         float GetHeadbobOverallIntensity() const override;
-        void SetHeadbobOverallIntensity(const float& new_headbobOverallIntensity) override;
+        void SetHeadbobOverallIntensity(const float new_headbobOverallIntensity) override;
         float GetHeadbobSmoothTime() const override;
-        void SetHeadbobSmoothTime(const float& new_headbobSmoothTime) override;
+        void SetHeadbobSmoothTime(const float new_headbobSmoothTime) override;
         float GetHeadbobRealism() const override;
-        void SetHeadbobRealism(const float& new_headbobRealism) override;
+        void SetHeadbobRealism(const float new_headbobRealism) override;
         float GetHeadbobFootstepSharpness() const override;
-        void SetHeadbobFootstepSharpness(const float& new_headbobFootstepSharpness) override;
+        void SetHeadbobFootstepSharpness(const float new_headbobFootstepSharpness) override;
         float GetHeadbobAlternatingStepDifference() const override;
-        void SetHeadbobAlternatingStepDifference(const float& new_headbobAlternatingStepDifference) override;
+        void SetHeadbobAlternatingStepDifference(const float new_headbobAlternatingStepDifference) override;
         float GetHeadbobHorizontalSwayImbalance() const override;
-        void SetHeadbobHorizontalSwayImbalance(const float& new_headbobHorizontalSwayImbalance) override;
+        void SetHeadbobHorizontalSwayImbalance(const float new_headbobHorizontalSwayImbalance) override;
         float GetHeadbobHorizontalSwayFlatness() const override;
-        void SetHeadbobHorizontalSwayFlatness(const float& new_headbobHorizontalSwayFlatness) override;
+        void SetHeadbobHorizontalSwayFlatness(const float new_headbobHorizontalSwayFlatness) override;
         float GetHeadbobFootstepAcceleration() const override;
-        void SetHeadbobFootstepAcceleration(const float& new_headbobFootstepAcceleration) override;
+        void SetHeadbobFootstepAcceleration(const float new_headbobFootstepAcceleration) override;
         float GetHeadbobMaxPitchAmplitude() const override;
-        void SetHeadbobMaxPitchAmplitude(const float& new_headbobMaxPitchAmplitude) override;
+        void SetHeadbobMaxPitchAmplitude(const float new_headbobMaxPitchAmplitude) override;
         float GetHeadbobMaxRollAmplitude() const override;
-        void SetHeadbobMaxRollAmplitude(const float& new_headbobMaxRollAmplitude) override;
+        void SetHeadbobMaxRollAmplitude(const float new_headbobMaxRollAmplitude) override;
         float GetHeadbobMaxYawAmplitude() const override;
-        void SetHeadbobMaxYawAmplitude(const float& new_headbobMaxYawAmplitude) override;
+        void SetHeadbobMaxYawAmplitude(const float new_headbobMaxYawAmplitude) override;
         float GetHeadbobStepVariationOverTime() const override;
-        void SetHeadbobStepVariationOverTime(const float& new_headbobStepVariationOverTime) override;
+        void SetHeadbobStepVariationOverTime(const float new_headbobStepVariationOverTime) override;
         float GetHeadbobVerticalSprintScale() const override;
-        void SetHeadbobVerticalSprintScale(const float& new_headbobVerticalSprintScale) override;
+        void SetHeadbobVerticalSprintScale(const float new_headbobVerticalSprintScale) override;
         float GetHeadbobHorizontalSprintScale() const override;
-        void SetHeadbobHorizontalSprintScale(const float& new_headbobHorizontalSprintScale) override;
+        void SetHeadbobHorizontalSprintScale(const float new_headbobHorizontalSprintScale) override;
         float GetHeadbobRotationSprintScale() const override;
-        void SetHeadbobRotationSprintScale(const float& new_headbobRotationSprintScale) override;
+        void SetHeadbobRotationSprintScale(const float new_headbobRotationSprintScale) override;
         float GetHeadbobRotationCrouchScale() const override;
-        void SetHeadbobRotationCrouchScale(const float& new_headbobRotationCrouchScale) override;
+        void SetHeadbobRotationCrouchScale(const float new_headbobRotationCrouchScale) override;
         float GetHeadbobVerticalCrouchScale() const override;
-        void SetHeadbobVerticalCrouchScale(const float& new_headbobVerticalCrouchScale) override;
+        void SetHeadbobVerticalCrouchScale(const float new_headbobVerticalCrouchScale) override;
         float GetHeadbobHorizontalCrouchScale() const override;
-        void SetHeadbobHorizontalCrouchScale(const float& new_headbobHorizontalCrouchScale) override;
+        void SetHeadbobHorizontalCrouchScale(const float new_headbobHorizontalCrouchScale) override;
         float GetHeadbobLastStepStrength() const override;
         AZ::Vector3 GetCameraTranslationWithoutHeadbob() const override;
         AZ::Vector3 GetPreviousOffset() const override;
-        void IgnoreInputs(const bool& ignoreInputs) override;
+        void IgnoreInputs(const bool ignoreInputs) override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
 
@@ -152,14 +152,14 @@ namespace FirstPersonController
         int GetTickOrder() override;
 
         // NetworkFPCControllerNotificationBus
-        void OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId);
-        void OnNetworkTickFinish(const float& deltaTime, const bool& server, const AZ::EntityId& entityId);
+        void OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId);
+        void OnNetworkTickFinish(const float deltaTime, const bool server, const AZ::EntityId& entityId);
         void OnAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnHostActivated(const AZ::EntityId& entityId);
         void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
 
         // Called on each tick
-        void ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
+        void ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork);
 
         // FirstPersonExtrasComponentNotificationBus
         void OnJumpFromQueue();
@@ -167,11 +167,11 @@ namespace FirstPersonController
         void OnHeadbobOriginCross();
 
         // Change the camera field of view when sprinting
-        void PerformSprintFoV(const float& deltaTime);
+        void PerformSprintFoV(const float deltaTime);
         bool GetSprinting();
 
         // Jump Head Tilt
-        void PerformJumpHeadTilt(const float& deltaTime);
+        void PerformJumpHeadTilt(const float deltaTime);
 
         // FirstPersonControllerComponent and NetworkFPC objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
@@ -190,7 +190,7 @@ namespace FirstPersonController
         float m_prevNetworkFPCDeltaTime = 1.f / 60.f;
 
         // Jump queuing
-        void QueueJump(const float& deltaTime, const AZ::u8& tickTimestepNetwork);
+        void QueueJump(const float deltaTime, const AZ::u8& tickTimestepNetwork);
         bool m_queueJump = false;
         bool m_prevQueueJump = false;
         float m_jumpPressedInAirTimer = 0.f;
@@ -224,8 +224,8 @@ namespace FirstPersonController
         float m_walkFoV = 80.f;
 
         // Headbob
-        void UpdateHeadbob(const float& deltaTime);
-        AZ::Vector3 CalculateHeadbobOffset(const float& deltaTime);
+        void UpdateHeadbob(const float deltaTime);
+        AZ::Vector3 CalculateHeadbobOffset(const float deltaTime);
         bool m_headbobEnabled = true;
         bool m_isWalking = false;
         bool m_cameraChildOfCharacter = true;
@@ -261,9 +261,9 @@ namespace FirstPersonController
         float m_headbobHorizontalShapePeak = 1.f;
         float m_headbobForwardShapePeak = 1.f;
         float m_headbobPhase = 0.f;
-        float CalculateHeadbobVerticalShape(const float& phase) const;
-        float CalculateHeadbobHorizontalShape(const float& phase) const;
-        float CalculateHeadbobForwardShape(const float& phase) const;
+        float CalculateHeadbobVerticalShape(const float phase) const;
+        float CalculateHeadbobHorizontalShape(const float phase) const;
+        float CalculateHeadbobForwardShape(const float phase) const;
         void UpdateHeadbobShapePeaks();
         AZ::u32 OnHeadbobRealismChanged();
         bool GetHeadbobEnabledAndRealismGreaterThanZero() const;
@@ -297,16 +297,16 @@ namespace FirstPersonController
         AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = { { &m_interactEventId, &m_interactValue } };
 
         // FirstPersonControllerComponentNotificationBus
-        void OnPhysicsTimestepStart(const float& timeStep, const AZ::EntityId& entityId);
-        void OnPhysicsTimestepFinish(const float& timeStep, const AZ::EntityId& entityId);
-        void OnNetworkFPCTickStart(const float& deltaTime, const AZ::EntityId& entityId);
-        void OnNetworkFPCTickFinish(const float& deltaTime, const AZ::EntityId& entityId);
+        void OnPhysicsTimestepStart(const float timeStep, const AZ::EntityId& entityId);
+        void OnPhysicsTimestepFinish(const float timeStep, const AZ::EntityId& entityId);
+        void OnNetworkFPCTickStart(const float deltaTime, const AZ::EntityId& entityId);
+        void OnNetworkFPCTickFinish(const float deltaTime, const AZ::EntityId& entityId);
         void OnNetworkFPCAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnNetworkFPCHostActivated(const AZ::EntityId& entityId);
         void OnNetworkFPCNonAutonomousClientActivated(const AZ::EntityId& entityId);
         void OnFPCActivated(const AZ::EntityId& entityId);
-        void OnGroundHit(const float& fellVelocity);
-        void OnGroundSoonHit(const float& soonFellVelocity);
+        void OnGroundHit(const float fellVelocity);
+        void OnGroundSoonHit(const float soonFellVelocity);
         void OnUngrounded();
         void OnStartedFalling();
         void OnJumpApogeeReached();

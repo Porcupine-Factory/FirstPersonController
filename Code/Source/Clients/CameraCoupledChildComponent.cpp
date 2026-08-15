@@ -189,7 +189,7 @@ namespace FirstPersonController
             GetEntity()->GetTransform()->SetWorldTranslation(newChildTranslation);
     }
 
-    void CameraCoupledChildComponent::ProcessInput([[maybe_unused]] const float& deltaTime)
+    void CameraCoupledChildComponent::ProcessInput([[maybe_unused]] const float deltaTime)
     {
         bool networkFPCEnabled = true;
         FirstPersonControllerComponentRequestBus::BroadcastResult(
@@ -208,7 +208,7 @@ namespace FirstPersonController
     {
         return m_enable;
     }
-    void CameraCoupledChildComponent::SetEnableCameraCoupledChild(const bool& new_enable)
+    void CameraCoupledChildComponent::SetEnableCameraCoupledChild(const bool new_enable)
     {
         m_enable = new_enable;
     }
@@ -216,7 +216,7 @@ namespace FirstPersonController
     {
         return m_initialZOffset;
     }
-    void CameraCoupledChildComponent::SetInitialZOffset(const float& new_initialZOffset)
+    void CameraCoupledChildComponent::SetInitialZOffset(const float new_initialZOffset)
     {
         m_initialZOffset = new_initialZOffset;
     }

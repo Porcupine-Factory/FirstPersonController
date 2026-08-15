@@ -719,7 +719,7 @@ namespace FirstPersonController
         m_prevDeltaTime = deltaTime;
     }
 
-    void FirstPersonExtrasComponent::OnNetworkTickStart(const float& deltaTime, const bool& server, const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId)
     {
         if (!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
             !m_firstPersonControllerObject->m_isHost)
@@ -738,7 +738,7 @@ namespace FirstPersonController
     }
 
     void FirstPersonExtrasComponent::OnNetworkTickFinish(
-        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const bool& server, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float deltaTime, [[maybe_unused]] const bool server, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonExtrasComponent::OnAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
@@ -752,11 +752,11 @@ namespace FirstPersonController
     }
 
     void FirstPersonExtrasComponent::OnPhysicsTimestepStart(
-        [[maybe_unused]] const float& physicsTimestep, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float physicsTimestep, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
 
-    void FirstPersonExtrasComponent::OnPhysicsTimestepFinish(const float& physicsTimestep, [[maybe_unused]] const AZ::EntityId& entityId)
+    void FirstPersonExtrasComponent::OnPhysicsTimestepFinish(const float physicsTimestep, [[maybe_unused]] const AZ::EntityId& entityId)
     {
         if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
             !m_firstPersonControllerObject->m_isHost)
@@ -771,7 +771,7 @@ namespace FirstPersonController
         return ca->FindEntity(pointer);
     }
 
-    void FirstPersonExtrasComponent::QueueJump(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonExtrasComponent::QueueJump(const float deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Bail if the threshold is set to zero
         if (m_jumpPressedInAirQueueTimeThreshold == 0.f)
@@ -827,7 +827,7 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
-    void FirstPersonExtrasComponent::PerformSprintFoV(const float& deltaTime)
+    void FirstPersonExtrasComponent::PerformSprintFoV(const float deltaTime)
     {
         if (!m_sprintFoVEnabled)
             return;
@@ -917,7 +917,7 @@ namespace FirstPersonController
             return false;
     }
 
-    void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float& deltaTime)
+    void FirstPersonExtrasComponent::PerformJumpHeadTilt(const float deltaTime)
     {
         if (!m_jumpHeadTiltEnabled)
             return;
@@ -960,7 +960,7 @@ namespace FirstPersonController
     // second harmonic. The first harmonic is offset 45 degrees so its peak lands on a dip, making
     // one footfall deeper without changing footstep timing. The fourth harmonic runs at four times
     // the phase as a cosine, so it sharpens each dip and rounds the rise between them
-    float FirstPersonExtrasComponent::CalculateHeadbobVerticalShape(const float& phase) const
+    float FirstPersonExtrasComponent::CalculateHeadbobVerticalShape(const float phase) const
     {
         return -sinf(2.f * phase) +
             m_headbobRealism *
@@ -969,7 +969,7 @@ namespace FirstPersonController
     // Shape the horizontal sway with two harmonics. The even one is offset -94 degrees to peak on the
     // sway extremes, so it deepens one side without moving when the sway reaches it, and only the odd
     // one can flatten the tops
-    float FirstPersonExtrasComponent::CalculateHeadbobHorizontalShape(const float& phase) const
+    float FirstPersonExtrasComponent::CalculateHeadbobHorizontalShape(const float phase) const
     {
         return sinf(phase) +
             m_headbobRealism *
@@ -980,7 +980,7 @@ namespace FirstPersonController
     // keeping only the first three harmonics. The first is 122 degrees into the walk cycle, the
     // second is 0.215 of its magnitude at 80 degrees, and the third is 0.093 at an angle which
     // measured within a degree of zero, so it has no phase offset
-    float FirstPersonExtrasComponent::CalculateHeadbobForwardShape(const float& phase) const
+    float FirstPersonExtrasComponent::CalculateHeadbobForwardShape(const float phase) const
     {
         return sinf(phase + AZ::DegToRad(122.f)) + 0.215f * sinf(2.f * phase + AZ::DegToRad(80.f)) + 0.093f * sinf(3.f * phase);
     }
@@ -1027,7 +1027,7 @@ namespace FirstPersonController
         return m_headbobEnabled && m_headbobRealism > 0.f;
     }
 
-    AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float& deltaTime)
+    AZ::Vector3 FirstPersonExtrasComponent::CalculateHeadbobOffset(const float deltaTime)
     {
         // Walking if FirstPersonController XYs velocity non-zero and grounded
         m_isWalking = !m_firstPersonControllerObject->m_correctedVelocityXY.IsZero(0.1f) &&
@@ -1146,7 +1146,7 @@ namespace FirstPersonController
             return AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading).TransformVector(offsetVector);
     }
 
-    void FirstPersonExtrasComponent::UpdateHeadbob(const float& deltaTime)
+    void FirstPersonExtrasComponent::UpdateHeadbob(const float deltaTime)
     {
         if (!m_headbobEnabled || m_cameraEntityPtr == nullptr)
             return;
@@ -1243,7 +1243,7 @@ namespace FirstPersonController
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
-    void FirstPersonExtrasComponent::ProcessInput(const float& deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonExtrasComponent::ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork)
     {
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
@@ -1280,11 +1280,11 @@ namespace FirstPersonController
 
     // Notification Events from the First Person Controller component
     void FirstPersonExtrasComponent::OnNetworkFPCTickStart(
-        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float deltaTime, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonExtrasComponent::OnNetworkFPCTickFinish(
-        [[maybe_unused]] const float& deltaTime, [[maybe_unused]] const AZ::EntityId& entityId)
+        [[maybe_unused]] const float deltaTime, [[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
     void FirstPersonExtrasComponent::OnNetworkFPCAutonomousClientActivated([[maybe_unused]] const AZ::EntityId& entityId)
@@ -1299,10 +1299,10 @@ namespace FirstPersonController
     void FirstPersonExtrasComponent::OnFPCActivated([[maybe_unused]] const AZ::EntityId& entityId)
     {
     }
-    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float& fellVelocity)
+    void FirstPersonExtrasComponent::OnGroundHit([[maybe_unused]] const float fellVelocity)
     {
     }
-    void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float& soonFellVelocity)
+    void FirstPersonExtrasComponent::OnGroundSoonHit([[maybe_unused]] const float soonFellVelocity)
     {
         if (m_networkFPCEnabled &&
             ((!m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
@@ -1419,7 +1419,7 @@ namespace FirstPersonController
     {
         return m_jumpPressedInAirQueueTimeThreshold;
     }
-    void FirstPersonExtrasComponent::SetJumpPressedInAirQueueTimeThreshold(const float& new_jumpPressedInAirQueueTimeThreshold)
+    void FirstPersonExtrasComponent::SetJumpPressedInAirQueueTimeThreshold(const float new_jumpPressedInAirQueueTimeThreshold)
     {
         if (new_jumpPressedInAirQueueTimeThreshold < 0.f)
             m_jumpPressedInAirQueueTimeThreshold = 0.f;
@@ -1430,7 +1430,7 @@ namespace FirstPersonController
     {
         return m_jumpHeadTiltEnabled;
     }
-    void FirstPersonExtrasComponent::SetJumpHeadTiltEnabled(const bool& new_jumpHeadTiltEnabled)
+    void FirstPersonExtrasComponent::SetJumpHeadTiltEnabled(const bool new_jumpHeadTiltEnabled)
     {
         m_jumpHeadTiltEnabled = new_jumpHeadTiltEnabled;
     }
@@ -1438,7 +1438,7 @@ namespace FirstPersonController
     {
         return -AZ::RadToDeg(m_headAngleJump);
     }
-    void FirstPersonExtrasComponent::SetHeadAngleJump(const float& new_headAngleJump)
+    void FirstPersonExtrasComponent::SetHeadAngleJump(const float new_headAngleJump)
     {
         m_headAngleJump = AZ::DegToRad(new_headAngleJump);
     }
@@ -1446,7 +1446,7 @@ namespace FirstPersonController
     {
         return -AZ::RadToDeg(m_headAngleLand);
     }
-    void FirstPersonExtrasComponent::SetHeadAngleLand(const float& new_headAngleLand)
+    void FirstPersonExtrasComponent::SetHeadAngleLand(const float new_headAngleLand)
     {
         m_headAngleLand = AZ::DegToRad(new_headAngleLand);
     }
@@ -1454,7 +1454,7 @@ namespace FirstPersonController
     {
         return -m_deltaAngleFactorJump;
     }
-    void FirstPersonExtrasComponent::SetDeltaAngleFactorJump(const float& new_deltaAngleFactorJump)
+    void FirstPersonExtrasComponent::SetDeltaAngleFactorJump(const float new_deltaAngleFactorJump)
     {
         m_deltaAngleFactorJump = new_deltaAngleFactorJump;
     }
@@ -1462,7 +1462,7 @@ namespace FirstPersonController
     {
         return -m_deltaAngleFactorLand;
     }
-    void FirstPersonExtrasComponent::SetDeltaAngleFactorLand(const float& new_deltaAngleFactorLand)
+    void FirstPersonExtrasComponent::SetDeltaAngleFactorLand(const float new_deltaAngleFactorLand)
     {
         m_deltaAngleFactorLand = new_deltaAngleFactorLand;
     }
@@ -1470,7 +1470,7 @@ namespace FirstPersonController
     {
         return m_completeHeadLandVelocity;
     }
-    void FirstPersonExtrasComponent::SetCompleteHeadLandVelocity(const float& new_completeHeadLandVelocity)
+    void FirstPersonExtrasComponent::SetCompleteHeadLandVelocity(const float new_completeHeadLandVelocity)
     {
         if (new_completeHeadLandVelocity < 0.f)
             m_completeHeadLandVelocity = -new_completeHeadLandVelocity;
@@ -1481,7 +1481,7 @@ namespace FirstPersonController
     {
         return m_sprintFoVEnabled;
     }
-    void FirstPersonExtrasComponent::SetSprintFoVEnabled(const bool& new_sprintFoVEnabled)
+    void FirstPersonExtrasComponent::SetSprintFoVEnabled(const bool new_sprintFoVEnabled)
     {
         m_sprintFoVEnabled = new_sprintFoVEnabled;
     }
@@ -1489,7 +1489,7 @@ namespace FirstPersonController
     {
         return m_sprintFoVLerpTime;
     }
-    void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float& new_sprintFoVLerpTime)
+    void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float new_sprintFoVLerpTime)
     {
         if (new_sprintFoVLerpTime < 0.0166f)
             m_sprintFoVLerpTime = 0.0166f;
@@ -1500,7 +1500,7 @@ namespace FirstPersonController
     {
         return m_sprintFoV;
     }
-    void FirstPersonExtrasComponent::SetSprintingFoV(const float& new_sprintFoV)
+    void FirstPersonExtrasComponent::SetSprintingFoV(const float new_sprintFoV)
     {
         m_sprintFoV = new_sprintFoV;
         m_sprintFoVDelta = m_sprintFoV - m_walkFoV;
@@ -1509,7 +1509,7 @@ namespace FirstPersonController
     {
         return m_walkFoV;
     }
-    void FirstPersonExtrasComponent::SetWalkingFoV(const float& new_walkFoV)
+    void FirstPersonExtrasComponent::SetWalkingFoV(const float new_walkFoV)
     {
         m_walkFoV = new_walkFoV;
     }
@@ -1517,7 +1517,7 @@ namespace FirstPersonController
     {
         return m_headbobEnabled;
     }
-    void FirstPersonExtrasComponent::SetHeadbobEnabled(const bool& new_headbobEnabled)
+    void FirstPersonExtrasComponent::SetHeadbobEnabled(const bool new_headbobEnabled)
     {
         m_headbobEnabled = new_headbobEnabled;
     }
@@ -1525,7 +1525,7 @@ namespace FirstPersonController
     {
         return m_headbobStartingDirection;
     }
-    void FirstPersonExtrasComponent::SetHeadbobStartingDirection(const bool& new_headbobStartingDirection)
+    void FirstPersonExtrasComponent::SetHeadbobStartingDirection(const bool new_headbobStartingDirection)
     {
         m_headbobStartingDirection = new_headbobStartingDirection;
     }
@@ -1533,7 +1533,7 @@ namespace FirstPersonController
     {
         return m_headbobOverallIntensity;
     }
-    void FirstPersonExtrasComponent::SetHeadbobOverallIntensity(const float& new_headbobOverallIntensity)
+    void FirstPersonExtrasComponent::SetHeadbobOverallIntensity(const float new_headbobOverallIntensity)
     {
         if (new_headbobOverallIntensity < 0.f)
             m_headbobOverallIntensity = 0.f;
@@ -1544,7 +1544,7 @@ namespace FirstPersonController
     {
         return m_headbobSmoothTime;
     }
-    void FirstPersonExtrasComponent::SetHeadbobSmoothTime(const float& new_headbobSmoothTime)
+    void FirstPersonExtrasComponent::SetHeadbobSmoothTime(const float new_headbobSmoothTime)
     {
         if (new_headbobSmoothTime < 0.f)
             m_headbobSmoothTime = 0.f;
@@ -1555,7 +1555,7 @@ namespace FirstPersonController
     {
         return m_headbobRealism;
     }
-    void FirstPersonExtrasComponent::SetHeadbobRealism(const float& new_headbobRealism)
+    void FirstPersonExtrasComponent::SetHeadbobRealism(const float new_headbobRealism)
     {
         if (new_headbobRealism < 0.f)
             m_headbobRealism = 0.f;
@@ -1567,7 +1567,7 @@ namespace FirstPersonController
     {
         return m_headbobFootstepSharpness;
     }
-    void FirstPersonExtrasComponent::SetHeadbobFootstepSharpness(const float& new_headbobFootstepSharpness)
+    void FirstPersonExtrasComponent::SetHeadbobFootstepSharpness(const float new_headbobFootstepSharpness)
     {
         m_headbobFootstepSharpness = new_headbobFootstepSharpness;
         UpdateHeadbobShapePeaks();
@@ -1576,7 +1576,7 @@ namespace FirstPersonController
     {
         return m_headbobAlternatingStepDifference;
     }
-    void FirstPersonExtrasComponent::SetHeadbobAlternatingStepDifference(const float& new_headbobAlternatingStepDifference)
+    void FirstPersonExtrasComponent::SetHeadbobAlternatingStepDifference(const float new_headbobAlternatingStepDifference)
     {
         m_headbobAlternatingStepDifference = new_headbobAlternatingStepDifference;
         UpdateHeadbobShapePeaks();
@@ -1585,7 +1585,7 @@ namespace FirstPersonController
     {
         return m_headbobHorizontalSwayImbalance;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayImbalance(const float& new_headbobHorizontalSwayImbalance)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayImbalance(const float new_headbobHorizontalSwayImbalance)
     {
         m_headbobHorizontalSwayImbalance = new_headbobHorizontalSwayImbalance;
         UpdateHeadbobShapePeaks();
@@ -1594,7 +1594,7 @@ namespace FirstPersonController
     {
         return m_headbobHorizontalSwayFlatness;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayFlatness(const float& new_headbobHorizontalSwayFlatness)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayFlatness(const float new_headbobHorizontalSwayFlatness)
     {
         m_headbobHorizontalSwayFlatness = new_headbobHorizontalSwayFlatness;
         UpdateHeadbobShapePeaks();
@@ -1603,7 +1603,7 @@ namespace FirstPersonController
     {
         return m_headbobFootstepAcceleration;
     }
-    void FirstPersonExtrasComponent::SetHeadbobFootstepAcceleration(const float& new_headbobFootstepAcceleration)
+    void FirstPersonExtrasComponent::SetHeadbobFootstepAcceleration(const float new_headbobFootstepAcceleration)
     {
         m_headbobFootstepAcceleration = new_headbobFootstepAcceleration;
     }
@@ -1611,7 +1611,7 @@ namespace FirstPersonController
     {
         return m_headbobMaxPitchAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxPitchAmplitude(const float& new_headbobMaxPitchAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxPitchAmplitude(const float new_headbobMaxPitchAmplitude)
     {
         if (new_headbobMaxPitchAmplitude < 0.f)
             m_headbobMaxPitchAmplitude = 0.f;
@@ -1622,7 +1622,7 @@ namespace FirstPersonController
     {
         return m_headbobMaxRollAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxRollAmplitude(const float& new_headbobMaxRollAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxRollAmplitude(const float new_headbobMaxRollAmplitude)
     {
         m_headbobMaxRollAmplitude = new_headbobMaxRollAmplitude;
     }
@@ -1630,7 +1630,7 @@ namespace FirstPersonController
     {
         return m_headbobMaxYawAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxYawAmplitude(const float& new_headbobMaxYawAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxYawAmplitude(const float new_headbobMaxYawAmplitude)
     {
         m_headbobMaxYawAmplitude = new_headbobMaxYawAmplitude;
     }
@@ -1638,7 +1638,7 @@ namespace FirstPersonController
     {
         return m_headbobStepVariationOverTime;
     }
-    void FirstPersonExtrasComponent::SetHeadbobStepVariationOverTime(const float& new_headbobStepVariationOverTime)
+    void FirstPersonExtrasComponent::SetHeadbobStepVariationOverTime(const float new_headbobStepVariationOverTime)
     {
         if (new_headbobStepVariationOverTime < 0.f)
             m_headbobStepVariationOverTime = 0.f;
@@ -1649,7 +1649,7 @@ namespace FirstPersonController
     {
         return m_headbobVerticalSprintScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobVerticalSprintScale(const float& new_headbobVerticalSprintScale)
+    void FirstPersonExtrasComponent::SetHeadbobVerticalSprintScale(const float new_headbobVerticalSprintScale)
     {
         m_headbobVerticalSprintScale = new_headbobVerticalSprintScale;
     }
@@ -1657,7 +1657,7 @@ namespace FirstPersonController
     {
         return m_headbobHorizontalSprintScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalSprintScale(const float& new_headbobHorizontalSprintScale)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalSprintScale(const float new_headbobHorizontalSprintScale)
     {
         m_headbobHorizontalSprintScale = new_headbobHorizontalSprintScale;
     }
@@ -1665,7 +1665,7 @@ namespace FirstPersonController
     {
         return m_headbobRotationCrouchScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobRotationCrouchScale(const float& new_headbobRotationCrouchScale)
+    void FirstPersonExtrasComponent::SetHeadbobRotationCrouchScale(const float new_headbobRotationCrouchScale)
     {
         m_headbobRotationCrouchScale = new_headbobRotationCrouchScale;
     }
@@ -1673,7 +1673,7 @@ namespace FirstPersonController
     {
         return m_headbobRotationSprintScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobRotationSprintScale(const float& new_headbobRotationSprintScale)
+    void FirstPersonExtrasComponent::SetHeadbobRotationSprintScale(const float new_headbobRotationSprintScale)
     {
         m_headbobRotationSprintScale = new_headbobRotationSprintScale;
     }
@@ -1681,7 +1681,7 @@ namespace FirstPersonController
     {
         return m_headbobMaxFrequency;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxFrequency(const float& new_headbobMaxFrequency)
+    void FirstPersonExtrasComponent::SetHeadbobMaxFrequency(const float new_headbobMaxFrequency)
     {
         m_headbobMaxFrequency = new_headbobMaxFrequency;
     }
@@ -1689,7 +1689,7 @@ namespace FirstPersonController
     {
         return m_headbobMaxVerticalAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxVerticalAmplitude(const float& new_headbobMaxVerticalAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxVerticalAmplitude(const float new_headbobMaxVerticalAmplitude)
     {
         m_headbobMaxVerticalAmplitude = new_headbobMaxVerticalAmplitude;
     }
@@ -1697,7 +1697,7 @@ namespace FirstPersonController
     {
         return m_headbobMaxHorizontalAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxHorizontalAmplitude(const float& new_headbobMaxHorizontalAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxHorizontalAmplitude(const float new_headbobMaxHorizontalAmplitude)
     {
         m_headbobMaxHorizontalAmplitude = new_headbobMaxHorizontalAmplitude;
     }
@@ -1705,7 +1705,7 @@ namespace FirstPersonController
     {
         return m_headbobVerticalCrouchScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobVerticalCrouchScale(const float& new_headbobVerticalCrouchScale)
+    void FirstPersonExtrasComponent::SetHeadbobVerticalCrouchScale(const float new_headbobVerticalCrouchScale)
     {
         m_headbobVerticalCrouchScale = new_headbobVerticalCrouchScale;
     }
@@ -1713,7 +1713,7 @@ namespace FirstPersonController
     {
         return m_headbobHorizontalCrouchScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalCrouchScale(const float& new_headbobHorizontalCrouchScale)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalCrouchScale(const float new_headbobHorizontalCrouchScale)
     {
         m_headbobHorizontalCrouchScale = new_headbobHorizontalCrouchScale;
     }
@@ -1729,7 +1729,7 @@ namespace FirstPersonController
     {
         return m_prevHeadbobOffset;
     }
-    void FirstPersonExtrasComponent::IgnoreInputs(const bool& ignoreInputs)
+    void FirstPersonExtrasComponent::IgnoreInputs(const bool ignoreInputs)
     {
         if (ignoreInputs)
             InputEventNotificationBus::MultiHandler::BusDisconnect();

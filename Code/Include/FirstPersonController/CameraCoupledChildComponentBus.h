@@ -16,9 +16,9 @@ namespace FirstPersonController
         ~CameraCoupledChildComponentRequests() override = default;
 
         virtual bool GetEnableCameraCoupledChild() const = 0;
-        virtual void SetEnableCameraCoupledChild(const bool&) = 0;
+        virtual void SetEnableCameraCoupledChild(const bool) = 0;
         virtual float GetInitialZOffset() const = 0;
-        virtual void SetInitialZOffset(const float&) = 0;
+        virtual void SetInitialZOffset(const float) = 0;
     };
 
     using CameraCoupledChildComponentRequestBus = AZ::EBus<CameraCoupledChildComponentRequests>;
