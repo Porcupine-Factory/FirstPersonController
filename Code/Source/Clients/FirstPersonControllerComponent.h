@@ -630,44 +630,6 @@ namespace FirstPersonController
         bool GetCoyoteTimeGreaterThanZero() const;
         bool GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() const;
 
-        // FirstPersonControllerComponentNotificationBus
-        void OnPhysicsTimestepStart(const float timeStep, const AZ::EntityId& entityId);
-        void OnPhysicsTimestepFinish(const float timeStep, const AZ::EntityId& entityId);
-        void OnNetworkFPCTickStart(const float deltaTime, const AZ::EntityId& entityId);
-        void OnNetworkFPCTickFinish(const float deltaTime, const AZ::EntityId& entityId);
-        void OnNetworkFPCAutonomousClientActivated(const AZ::EntityId& entityId);
-        void OnNetworkFPCHostActivated(const AZ::EntityId& entityId);
-        void OnNetworkFPCNonAutonomousClientActivated(const AZ::EntityId& entityId);
-        void OnFPCActivated(const AZ::EntityId& entityId);
-        void OnGroundHit(const float fellVelocity);
-        void OnGroundSoonHit(const float soonFellVelocity);
-        void OnUngrounded();
-        void OnStartedFalling();
-        void OnJumpApogeeReached();
-        void OnStartedMoving();
-        void OnTargetVelocityReached();
-        void OnStopped();
-        void OnTopWalkSpeedReached();
-        void OnTopSprintSpeedReached();
-        void OnHeadHit();
-        void OnCharacterShapecastHitSomething(const AZStd::vector<AzPhysics::SceneQueryHit> characterHits);
-        void OnVelocityXYObstructed();
-        void OnCharacterGravityObstructed();
-        void OnCrouched();
-        void OnStoodUp();
-        void OnStoodUpFromJump();
-        void OnStandPrevented();
-        void OnStartedCrouching();
-        void OnStartedStanding();
-        void OnFirstJump();
-        void OnFinalJump();
-        void OnStaminaCapped();
-        void OnStaminaReachedZero();
-        void OnSprintStarted();
-        void OnSprintStopped();
-        void OnCooldownStarted();
-        void OnCooldownDone();
-
         // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
         float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;

@@ -161,11 +161,6 @@ namespace FirstPersonController
         // Called on each tick
         void ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork);
 
-        // FirstPersonExtrasComponentNotificationBus
-        void OnJumpFromQueue();
-        void OnHeadbobStepTaken();
-        void OnHeadbobOriginCross();
-
         // Change the camera field of view when sprinting
         void PerformSprintFoV(const float deltaTime);
         bool GetSprinting();

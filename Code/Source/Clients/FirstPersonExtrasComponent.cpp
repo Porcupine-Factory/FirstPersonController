@@ -1267,17 +1267,6 @@ namespace FirstPersonController
         }
     }
 
-    // Event Notification methods for use in scripts
-    void FirstPersonExtrasComponent::OnJumpFromQueue()
-    {
-    }
-    void FirstPersonExtrasComponent::OnHeadbobStepTaken()
-    {
-    }
-    void FirstPersonExtrasComponent::OnHeadbobOriginCross()
-    {
-    }
-
     // Notification Events from the First Person Controller component
     void FirstPersonExtrasComponent::OnNetworkFPCTickStart(
         [[maybe_unused]] const float deltaTime, [[maybe_unused]] const AZ::EntityId& entityId)
