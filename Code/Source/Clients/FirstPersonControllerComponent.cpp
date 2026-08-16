@@ -1825,7 +1825,7 @@ namespace FirstPersonController
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetParent, GetEntityId());
     }
 
-    AZ::Entity* FirstPersonControllerComponent::GetEntityPtr(AZ::EntityId entityId) const
+    AZ::Entity* FirstPersonControllerComponent::GetEntityPtr(const AZ::EntityId& entityId) const
     {
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
         return ca ? ca->FindEntity(entityId) : nullptr;
@@ -1851,7 +1851,7 @@ namespace FirstPersonController
         }
     }
 
-    void FirstPersonControllerComponent::LerpCameraToCharacter(float deltaTime)
+    void FirstPersonControllerComponent::LerpCameraToCharacter(const float deltaTime)
     {
         if (m_networkFPCEnabled && m_isServer || m_isNetBot)
             return;

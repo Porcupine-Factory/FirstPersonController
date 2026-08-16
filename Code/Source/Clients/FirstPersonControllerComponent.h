@@ -609,7 +609,7 @@ namespace FirstPersonController
         void UpdateRotation(const float deltaTime, const AZ::u8 tickTimestepNetwork);
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float deltaTime);
         void ApplyMovingUpInclineXYSpeedFactor();
-        void LerpCameraToCharacter(float deltaTime);
+        void LerpCameraToCharacter(const float deltaTime);
         void SmoothRotation();
         void ResetCameraToCharacter();
         void CaptureCharacterEyeTranslation();
@@ -622,7 +622,7 @@ namespace FirstPersonController
         void SetNetworkFPCProperties() const;
 
         // Method for getting a pointer to an entity
-        AZ::Entity* GetEntityPtr(AZ::EntityId entityId) const;
+        AZ::Entity* GetEntityPtr(const AZ::EntityId& entityId) const;
 
         // These getter methods are not exposed to the request bus, they're used for the visibility attribute in the editor
         bool GetCameraNotSmoothFollow() const;
