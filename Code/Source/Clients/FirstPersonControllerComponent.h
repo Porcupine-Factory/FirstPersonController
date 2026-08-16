@@ -631,7 +631,6 @@ namespace FirstPersonController
         bool GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() const;
 
         // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
-        float m_prevDeltaTime = 1.f / 60.f;
         float m_prevTimestep = 1.f / 60.f;
         float m_prevNetworkFPCDeltaTime = 0.033f;
 
@@ -806,7 +805,6 @@ namespace FirstPersonController
         bool m_jumpHeldKeepsJumping = false;
         float m_applyVelocityZ = 0.f;
         float m_applyVelocityZCurrentDelta = 0.f;
-        float m_applyVelocityZPrevDelta = 0.f;
         float m_correctedVelocityZ = 0.f;
         float m_capsuleRadius = 0.3f;
         float m_capsuleHeight = 1.8f;

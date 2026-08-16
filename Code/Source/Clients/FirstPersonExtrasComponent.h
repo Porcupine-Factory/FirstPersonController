@@ -179,11 +179,6 @@ namespace FirstPersonController
         // Networking related variables
         bool m_networkFPCEnabled = false;
 
-        // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
-        float m_prevDeltaTime = 1.f / 60.f;
-        float m_prevTimestep = 1.f / 60.f;
-        float m_prevNetworkFPCDeltaTime = 1.f / 60.f;
-
         // Jump queuing
         void QueueJump(const float deltaTime, const AZ::u8& tickTimestepNetwork);
         bool m_queueJump = false;

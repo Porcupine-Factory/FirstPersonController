@@ -658,9 +658,8 @@ namespace FirstPersonController
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");
 
-        const AZ::Vector3 newTranslation = GetNetworkCharacterComponentController()->TryMoveWithVelocity(
-            playerInput->m_desiredVelocity, (deltaTime + m_prevDeltaTime) / 2.f);
-        m_prevDeltaTime = deltaTime;
+        const AZ::Vector3 newTranslation =
+            GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, deltaTime);
         SetCurrentTransform(
             AZ::Transform::CreateFromQuaternionAndTranslation(GetEntity()->GetTransform()->GetWorldRotationQuaternion(), newTranslation));
 

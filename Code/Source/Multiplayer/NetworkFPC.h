@@ -185,9 +185,6 @@ namespace FirstPersonController
         // Used to initialize Network Properties from initial values in the First Person Controller component
         bool m_init = true;
 
-        // Keep track of the previous deltaTime for averagin
-        float m_prevDeltaTime = 1.f / 60.f;
-
         // EnableNetworkFPC Changed Event
         AZ::Event<bool>::Handler m_enableNetworkFPCChangedEvent;
         AZ::Event<AZStd::vector<AZStd::string>>::Handler m_playerStringNetEntityIdsChangedEvent;

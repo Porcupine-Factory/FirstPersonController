@@ -1692,8 +1692,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
-        m_prevDeltaTime = deltaTime;
+        ProcessInput(deltaTime, 0);
     }
 
     void FirstPersonControllerComponent::OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId)
@@ -1717,13 +1716,13 @@ namespace FirstPersonController
         {
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickStart,
-                (deltaTime * m_physicsTimestepScaleFactor + m_prevNetworkFPCDeltaTime) / 2.f,
+                (deltaTime * m_physicsTimestepScaleFactor),
                 GetEntityId());
 #ifdef NETWORKFPC
             if (!m_networkFPCEnabled)
                 NetworkFPCControllerRequestBus::BroadcastResult(m_networkFPCEnabled, &NetworkFPCControllerRequestBus::Events::GetEnabled);
 #endif
-            ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
+            ProcessInput(deltaTime, 2);
         }
     }
 
@@ -1736,7 +1735,7 @@ namespace FirstPersonController
         if (!((m_isHost && server) || (m_isServer && !server)))
             FirstPersonControllerComponentNotificationBus::Broadcast(
                 &FirstPersonControllerComponentNotificationBus::Events::OnNetworkFPCTickFinish,
-                (deltaTime * m_physicsTimestepScaleFactor + m_prevNetworkFPCDeltaTime) / 2.f,
+                (deltaTime * m_physicsTimestepScaleFactor),
                 GetEntityId());
         m_prevNetworkFPCDeltaTime = deltaTime * m_physicsTimestepScaleFactor;
     }
@@ -1760,9 +1759,9 @@ namespace FirstPersonController
     {
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepStart,
-            (physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f,
+            (physicsTimestep * m_physicsTimestepScaleFactor),
             GetEntityId());
-        ProcessInput(((physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
+        ProcessInput(physicsTimestep, 1);
     }
 
     void FirstPersonControllerComponent::OnSceneSimulationFinish(float physicsTimestep)
@@ -1771,7 +1770,7 @@ namespace FirstPersonController
             CaptureCharacterEyeTranslation();
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnPhysicsTimestepFinish,
-            (physicsTimestep * m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f,
+            (physicsTimestep * m_physicsTimestepScaleFactor),
             GetEntityId());
         m_prevTimestep = physicsTimestep * m_physicsTimestepScaleFactor;
     }
@@ -2120,16 +2119,13 @@ namespace FirstPersonController
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
 
-        m_lerpTime += lerpDeltaTime * 0.5f;
+        m_lerpTime += lerpDeltaTime;
 
         if (m_lerpTime >= m_totalLerpTime)
             m_lerpTime = m_totalLerpTime;
 
         // Lerp the velocity from the last applied velocity to the target velocity
         AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
-
-        if (m_lerpTime != m_totalLerpTime)
-            m_lerpTime += lerpDeltaTime * 0.5f;
 
         // Decelerate at a different rate than the acceleration
         if (newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
@@ -2176,7 +2172,7 @@ namespace FirstPersonController
             }
 
             // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
-            m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor * 0.5f;
+            m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
 
             if (m_lerpTime >= m_totalLerpTime)
                 m_lerpTime = m_totalLerpTime;
@@ -2184,9 +2180,6 @@ namespace FirstPersonController
             AZ::Vector2 newVelocityXYDecel = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
             if (newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
-
-            if (m_lerpTime != m_totalLerpTime)
-                m_lerpTime += lerpDeltaTime * m_decelerationFactor * 0.5f;
         }
         else
         {
@@ -3755,7 +3748,6 @@ namespace FirstPersonController
 
                 m_applyVelocityZ = 0.f;
                 m_applyVelocityZCurrentDelta = 0.f;
-                m_applyVelocityZPrevDelta = 0.f;
                 m_jumpTimer = 0.f;
 
                 if (m_jumpValue == 0.f && m_jumpHeld)
@@ -3842,13 +3834,9 @@ namespace FirstPersonController
                 m_jumpCoyoteGravityPending = true;
         }
 
-        // Perform an average of the current and previous Z velocity delta
-        // as described by Verlet integration, which should reduce accumulated error
+        // Accumulate the change in Z velocity
         if (!initialJump)
-        {
-            m_applyVelocityZ += (m_applyVelocityZCurrentDelta + m_applyVelocityZPrevDelta) / 2.f;
-            m_applyVelocityZPrevDelta = m_applyVelocityZCurrentDelta;
-        }
+            m_applyVelocityZ += m_applyVelocityZCurrentDelta;
         else
         {
             m_applyVelocityZ = m_jumpInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
@@ -3905,7 +3893,6 @@ namespace FirstPersonController
         // Debug print statements to observe the jump mechanic
         // AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
         // AZ_Printf("First Person Controller Component", "Z Translation = %.10f", pos.GetZ());
-        // AZ_Printf("First Person Controller Component", "m_applyVelocityZPrevDelta = %.10f", m_applyVelocityZPrevDelta);
         // AZ_Printf("First Person Controller Component", "m_applyVelocityZCurrentDelta = %.10f", m_applyVelocityZCurrentDelta);
         // AZ_Printf("First Person Controller Component", "m_applyVelocityZ = %.10f", m_applyVelocityZ);
         // AZ_Printf("First Person Controller Component", "m_grounded = %s", m_grounded ? "true" : "false");

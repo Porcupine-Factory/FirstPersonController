@@ -715,8 +715,7 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput(((deltaTime + m_prevDeltaTime) / 2.f), 0);
-        m_prevDeltaTime = deltaTime;
+        ProcessInput(deltaTime, 0);
     }
 
     void FirstPersonExtrasComponent::OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId)
@@ -732,8 +731,7 @@ namespace FirstPersonController
             return;
         if (!((m_firstPersonControllerObject->m_isHost && server) || (m_firstPersonControllerObject->m_isServer && !server)))
         {
-            ProcessInput(((deltaTime + m_prevNetworkFPCDeltaTime) / 2.f), 2);
-            m_prevNetworkFPCDeltaTime = deltaTime;
+            ProcessInput(deltaTime, 2);
         }
     }
 
@@ -761,8 +759,7 @@ namespace FirstPersonController
         if (m_networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isServer &&
             !m_firstPersonControllerObject->m_isHost)
             return;
-        ProcessInput(((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor + m_prevTimestep) / 2.f), 1);
-        m_prevTimestep = physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor;
+        ProcessInput((physicsTimestep * m_firstPersonControllerObject->m_physicsTimestepScaleFactor), 1);
     }
 
     AZ::Entity* FirstPersonExtrasComponent::GetEntityPtr(AZ::EntityId pointer) const

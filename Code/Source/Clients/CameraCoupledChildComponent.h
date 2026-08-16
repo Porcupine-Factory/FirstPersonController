@@ -77,9 +77,6 @@ namespace FirstPersonController
         // Enable/disable this component
         bool m_enable = true;
 
-        // Previous deltaTime
-        float m_prevDeltaTime = 1.f / 60.f;
-
         // The inital Z offset of the child entity with respect to the parent character entity
         float m_initialZOffset = 0.f;
 

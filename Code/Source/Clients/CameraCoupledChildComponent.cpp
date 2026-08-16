@@ -128,8 +128,7 @@ namespace FirstPersonController
 
     void CameraCoupledChildComponent::OnTick(float deltaTime, AZ::ScriptTimePoint)
     {
-        ProcessInput((deltaTime + m_prevDeltaTime) / 2.f);
-        m_prevDeltaTime = deltaTime;
+        ProcessInput(deltaTime);
     }
 
     void CameraCoupledChildComponent::CoupleChildToCamera()
