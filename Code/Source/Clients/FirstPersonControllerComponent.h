@@ -171,7 +171,7 @@ namespace FirstPersonController
         float GetSoonFellDistance() const override;
         void SetGroundedForTick(const bool grounded) override;
         AZ::u16 GetNumTicksRecentGrounded() const override;
-        void SetNumTicksRecentGrounded(const AZ::u16& numTicksRecentGrounded) override;
+        void SetNumTicksRecentGrounded(const AZ::u16 numTicksRecentGrounded) override;
         bool GetScriptJump() const override;
         void SetScriptJump(const bool scriptJump) override;
         AZStd::vector<AZ::EntityId> GetGroundHitEntityIds() const override;
@@ -598,7 +598,7 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick
-        void ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork);
+        void ProcessInput(const float deltaTime, const AZ::u8 tickTimestepNetwork);
 
         // Various methods used to implement the First Person Controller functionality
         void CheckGrounded(const float deltaTime);
@@ -606,7 +606,7 @@ namespace FirstPersonController
         void AcquireSumOfGroundNormals();
         void UpdateJumpMaxHoldTime();
         void UpdateVelocityZ(const float deltaTime);
-        void UpdateRotation(const float deltaTime, const AZ::u8& tickTimestepNetwork);
+        void UpdateRotation(const float deltaTime, const AZ::u8 tickTimestepNetwork);
         AZ::Vector2 LerpVelocityXY(const AZ::Vector2& targetVelocity, const float deltaTime);
         void ApplyMovingUpInclineXYSpeedFactor();
         void LerpCameraToCharacter(float deltaTime);

@@ -1955,7 +1955,7 @@ namespace FirstPersonController
             m_newLookRotationDelta = targetLookRotationDelta;
     }
 
-    void FirstPersonControllerComponent::UpdateRotation(const float deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonControllerComponent::UpdateRotation(const float deltaTime, const AZ::u8 tickTimestepNetwork)
     {
         if (!m_enableCameraCharacterRotation)
             return;
@@ -4191,7 +4191,7 @@ namespace FirstPersonController
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
-    void FirstPersonControllerComponent::ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonControllerComponent::ProcessInput(const float deltaTime, const AZ::u8 tickTimestepNetwork)
     {
         if (tickTimestepNetwork == 2)
         {
@@ -4757,7 +4757,7 @@ namespace FirstPersonController
     {
         return m_numTicksRecentGrounded;
     }
-    void FirstPersonControllerComponent::SetNumTicksRecentGrounded(const AZ::u16& numTicksRecentGrounded)
+    void FirstPersonControllerComponent::SetNumTicksRecentGrounded(const AZ::u16 numTicksRecentGrounded)
     {
         if (numTicksRecentGrounded >= 1)
             m_numTicksRecentGrounded = numTicksRecentGrounded;

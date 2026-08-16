@@ -159,7 +159,7 @@ namespace FirstPersonController
         void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
 
         // Called on each tick
-        void ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork);
+        void ProcessInput(const float deltaTime, const AZ::u8 tickTimestepNetwork);
 
         // Change the camera field of view when sprinting
         void PerformSprintFoV(const float deltaTime);
@@ -180,7 +180,7 @@ namespace FirstPersonController
         bool m_networkFPCEnabled = false;
 
         // Jump queuing
-        void QueueJump(const float deltaTime, const AZ::u8& tickTimestepNetwork);
+        void QueueJump(const float deltaTime, const AZ::u8 tickTimestepNetwork);
         bool m_queueJump = false;
         bool m_prevQueueJump = false;
         float m_jumpPressedInAirTimer = 0.f;

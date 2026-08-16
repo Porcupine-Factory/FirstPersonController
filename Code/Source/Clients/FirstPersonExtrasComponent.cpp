@@ -768,7 +768,7 @@ namespace FirstPersonController
         return ca->FindEntity(pointer);
     }
 
-    void FirstPersonExtrasComponent::QueueJump(const float deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonExtrasComponent::QueueJump(const float deltaTime, const AZ::u8 tickTimestepNetwork)
     {
         // Bail if the threshold is set to zero
         if (m_jumpPressedInAirQueueTimeThreshold == 0.f)
@@ -1240,7 +1240,7 @@ namespace FirstPersonController
     }
 
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
-    void FirstPersonExtrasComponent::ProcessInput(const float deltaTime, const AZ::u8& tickTimestepNetwork)
+    void FirstPersonExtrasComponent::ProcessInput(const float deltaTime, const AZ::u8 tickTimestepNetwork)
     {
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
