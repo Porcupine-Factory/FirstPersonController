@@ -986,14 +986,14 @@ namespace FirstPersonController
     {
         // Sample one walk cycle to find each shape's peak, since there is no closed form for the peak
         // of a harmonic sum
-        constexpr AZ::u32 samples = 256;
+        constexpr AZ::u32 Samples = 256;
         float verticalPeak = 0.f;
         float horizontalPeak = 0.f;
         float forwardPeak = 0.f;
 
-        for (AZ::u32 i = 0; i < samples; ++i)
+        for (AZ::u32 i = 0; i < Samples; ++i)
         {
-            const float phase = AZ::Constants::TwoPi * static_cast<float>(i) / static_cast<float>(samples);
+            const float phase = AZ::Constants::TwoPi * static_cast<float>(i) / static_cast<float>(Samples);
 
             const float verticalShape = CalculateHeadbobVerticalShape(phase);
             verticalPeak = AZ::GetMax(verticalPeak, AZ::GetMax(verticalShape, -verticalShape));

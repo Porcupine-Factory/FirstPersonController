@@ -2743,10 +2743,10 @@ namespace FirstPersonController
         if (m_crouchingDownMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            static constexpr float referenceSubDeltaTime = 1.f / 120.f;
+            static constexpr float ReferenceSubDeltaTime = 1.f / 120.f;
             // Calculate the number of substeps required to cover the full deltaTime.
-            // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
-            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
+            // Ceiling used to round up the ratio (deltaTime / ReferenceSubDeltaTime).
+            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / ReferenceSubDeltaTime));
             // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
             // across the calculated numSubSteps. This ensures the total simulated time across all
             // substeps exactly equals deltaTime.
@@ -2758,10 +2758,10 @@ namespace FirstPersonController
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
             // Define velocity tolerance. A small threshold (0.1 m/s) to check if velocity has sufficiently damped near zero,
             // indicating the movement has stabilized and is not still accelerating or oscillating.
-            static constexpr float crouchVelocityTolerance = 0.1f;
+            static constexpr float CrouchVelocityTolerance = 0.1f;
             // Define settle duration. 200ms period after tolerances are met to allow any residual PID damping or minor adjustments
             // to occur, ensuring smooth stopping without abrupt snaps or state changes.
-            static constexpr float crouchSettleDuration = 0.2f;
+            static constexpr float CrouchSettleDuration = 0.2f;
 
             // Target Z offset for crouch: Negative distance to lower camera
             const float targetLocalZOffset = -m_crouchDistance;
@@ -2803,12 +2803,12 @@ namespace FirstPersonController
             // Post-update error for settle check
             const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
             // Check if within tolerance for position and velocity to start settling
-            if (fabs(currentZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
+            if (fabs(currentZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < CrouchVelocityTolerance)
             {
                 // Accumulate settle time
                 m_crouchDownSettleTimer += deltaTime;
                 // Complete settle if duration met. Reset velocity, end movement, set crouched state, and notify
-                if (m_crouchDownSettleTimer >= crouchSettleDuration)
+                if (m_crouchDownSettleTimer >= CrouchSettleDuration)
                 {
                     // Snap camera to target position
                     m_cameraLocalZTravelDistance = targetLocalZOffset;
@@ -2854,10 +2854,10 @@ namespace FirstPersonController
         if (m_standingUpMove)
         {
             // Define fixed reference substep size for timestep independence (hardcoded for 120Hz)
-            static constexpr float referenceSubDeltaTime = 1.f / 120.f;
+            static constexpr float ReferenceSubDeltaTime = 1.f / 120.f;
             // Calculate the number of substeps required to cover the full deltaTime.
-            // Ceiling used to round up the ratio (deltaTime / referenceSubDeltaTime).
-            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / referenceSubDeltaTime));
+            // Ceiling used to round up the ratio (deltaTime / ReferenceSubDeltaTime).
+            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / ReferenceSubDeltaTime));
             // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
             // across the calculated numSubSteps. This ensures the total simulated time across all
             // substeps exactly equals deltaTime.
@@ -2865,9 +2865,9 @@ namespace FirstPersonController
 
             // Define tolerances similar to crouch down for consistency
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
-            static constexpr float crouchVelocityTolerance = 0.1f;
+            static constexpr float CrouchVelocityTolerance = 0.1f;
             // 200ms standing settle time
-            static constexpr float crouchSettleDuration = 0.2f;
+            static constexpr float CrouchSettleDuration = 0.2f;
             // Early standing flag. Set if close enough to target for responsive feel
             const float earlyStandThreshold = 0.1f * fabs(m_crouchDistance);
 
@@ -2947,14 +2947,14 @@ namespace FirstPersonController
                 m_standPrevented = false;
 
                 // Target Z offset for standing: Reset to zero
-                static constexpr float targetLocalZOffset = 0.f;
+                static constexpr float TargetLocalZOffset = 0.f;
 
                 // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
                 // and camera distance calculation for framerate/timestep-independence.
                 for (int i = 0; i < numSubsteps; ++i)
                 {
                     // Current PID error along Z: Difference between target and current Z travel
-                    const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                    const float currentZError = TargetLocalZOffset - m_cameraLocalZTravelDistance;
                     // Get acceleration from PID controller based on error, time step, and current position
                     const float zAcceleration = m_standUpPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
                     // Update velocity with acceleration over time
@@ -2978,20 +2978,20 @@ namespace FirstPersonController
                 }
 
                 // Early standing for speed
-                const float postZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
+                const float postZError = TargetLocalZOffset - m_cameraLocalZTravelDistance;
                 if (!m_standing && fabs(postZError) < earlyStandThreshold)
                 {
                     m_standing = true;
                 }
                 // Settle check. If within tolerance, accumulate time
-                if (fabs(postZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < crouchVelocityTolerance)
+                if (fabs(postZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < CrouchVelocityTolerance)
                 {
                     // Accumulate settle time. Allows final damping before state change.
                     m_standUpSettleTimer += deltaTime;
                     // Complete if settled. Reset velocity, end movement, set standing
-                    if (m_standUpSettleTimer >= crouchSettleDuration)
+                    if (m_standUpSettleTimer >= CrouchSettleDuration)
                     {
-                        m_cameraLocalZTravelDistance = targetLocalZOffset;
+                        m_cameraLocalZTravelDistance = TargetLocalZOffset;
                         m_currentCrouchVelocity = 0.f;
                         m_standingUpMove = false;
                         m_standUpSettleTimer = 0.f;
@@ -3498,8 +3498,8 @@ namespace FirstPersonController
         if (m_coyoteTime > 0.f)
         {
             // When the radius percentage increase is set to less than or equal to -100% then use a raycast instead
-            static constexpr float noRadiusUseRacast = -100.f;
-            if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > noRadiusUseRacast)
+            static constexpr float NoRadiusUseRacast = -100.f;
+            if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > NoRadiusUseRacast)
             {
                 request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
                     m_capsuleRadius * (1.f + m_groundCloseCoyoteTimeRadiusPercentageIncrease / 100.f),
