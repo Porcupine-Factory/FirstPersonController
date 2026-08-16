@@ -53,6 +53,8 @@ namespace FirstPersonController
         void SetEnableCameraCoupledChild(const bool new_enable) override;
         float GetInitialZOffset() const override;
         void SetInitialZOffset(const float new_initialZOffset) override;
+        AZ::Vector2 GetOffset() const override;
+        void SetOffset(const AZ::Vector2 new_offset) override;
 
     private:
         // Input event assignment and notification bus connection
@@ -79,6 +81,9 @@ namespace FirstPersonController
 
         // The inital Z offset of the child entity with respect to the parent character entity
         float m_initialZOffset = 0.f;
+
+        // Persistent X&Y offset between the camera and the child entity
+        AZ::Vector2 m_offset = AZ::Vector2::CreateZero();
 
         // The active camera entity, used when FirstPersonExtrasComponent isn't present
         AZ::Entity* m_activeCameraEntity = nullptr;

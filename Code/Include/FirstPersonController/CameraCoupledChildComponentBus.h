@@ -19,6 +19,8 @@ namespace FirstPersonController
         virtual void SetEnableCameraCoupledChild(const bool) = 0;
         virtual float GetInitialZOffset() const = 0;
         virtual void SetInitialZOffset(const float) = 0;
+        virtual AZ::Vector2 GetOffset() const = 0;
+        virtual void SetOffset(const AZ::Vector2) = 0;
     };
 
     using CameraCoupledChildComponentRequestBus = AZ::EBus<CameraCoupledChildComponentRequests>;

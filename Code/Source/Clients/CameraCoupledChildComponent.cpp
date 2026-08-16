@@ -17,7 +17,8 @@ namespace FirstPersonController
         if (auto sc = azrtti_cast<AZ::SerializeContext*>(rc))
         {
             sc->Class<CameraCoupledChildComponent, AZ::Component>()
-                // Enable Camera Coupled Child
+                ->Field("Offset", &CameraCoupledChildComponent::m_offset)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
                 ->Version(1);
 
             if (AZ::EditContext* ec = sc->GetEditContext())
@@ -28,7 +29,14 @@ namespace FirstPersonController
                     ->ClassElement(AZ::Edit::ClassElements::EditorData, "")
                     ->Attribute(AppearsInAddComponentMenu, AZ_CRC_CE("Game"))
                     ->Attribute(Category, "First Person Controller")
-                    ->Attribute(AZ::Edit::Attributes::HelpPageURL, "https://www.youtube.com/watch?v=O7rtXNlCNQQ");
+                    ->Attribute(AZ::Edit::Attributes::HelpPageURL, "https://www.youtube.com/watch?v=O7rtXNlCNQQ")
+
+                    ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
+                    ->DataElement(
+                        nullptr,
+                        &CameraCoupledChildComponent::m_offset,
+                        "Offset",
+                        "The persistent X & Y offset between the camera and the child entity.");
             }
         }
 
@@ -44,7 +52,9 @@ namespace FirstPersonController
                 ->Event("Get Enable Camera Coupled Child", &CameraCoupledChildComponentRequests::GetEnableCameraCoupledChild)
                 ->Event("Set Enable Camera Coupled Child", &CameraCoupledChildComponentRequests::SetEnableCameraCoupledChild)
                 ->Event("Get Initial Z Offset", &CameraCoupledChildComponentRequests::GetInitialZOffset)
-                ->Event("Set Initial Z Offset", &CameraCoupledChildComponentRequests::SetInitialZOffset);
+                ->Event("Set Initial Z Offset", &CameraCoupledChildComponentRequests::SetInitialZOffset)
+                ->Event("Get X Y Offset", &CameraCoupledChildComponentRequests::GetOffset)
+                ->Event("Set X Y Offset", &CameraCoupledChildComponentRequests::SetOffset);
 
             bc->Class<CameraCoupledChildComponent>()->RequestBus("CameraCoupledChildComponentRequestBus");
         }
@@ -144,13 +154,15 @@ namespace FirstPersonController
             if (m_activeCameraEntity != nullptr)
             {
                 if (isCameraChildOfCharacter)
-                    cameraTranslation = m_activeCameraEntity->GetTransform()->GetLocalTranslation();
+                    cameraTranslation = m_activeCameraEntity->GetTransform()->GetLocalTranslation() + AZ::Vector3(m_offset);
                 else
-                    cameraTranslation = m_activeCameraEntity->GetTransform()->GetWorldTranslation();
+                    cameraTranslation = m_activeCameraEntity->GetTransform()->GetWorldTranslation() +
+                        AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_cameraYaw).TransformVector(AZ::Vector3(-m_offset));
             }
         }
         else
-            cameraTranslation = m_firstPersonExtrasObject->m_cameraTranslationWithoutHeadbob;
+            cameraTranslation = m_firstPersonExtrasObject->m_cameraTranslationWithoutHeadbob +
+                AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_cameraYaw).TransformVector(AZ::Vector3(-m_offset));
 
         // Get the Z offset
         const float childZOffset = m_firstPersonControllerObject->m_eyeHeight - m_initialZOffset;
@@ -218,5 +230,13 @@ namespace FirstPersonController
     void CameraCoupledChildComponent::SetInitialZOffset(const float new_initialZOffset)
     {
         m_initialZOffset = new_initialZOffset;
+    }
+    AZ::Vector2 CameraCoupledChildComponent::GetOffset() const
+    {
+        return m_offset;
+    }
+    void CameraCoupledChildComponent::SetOffset(const AZ::Vector2 new_offset)
+    {
+        m_offset = new_offset;
     }
 } // namespace FirstPersonController
