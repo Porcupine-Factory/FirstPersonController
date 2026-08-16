@@ -138,12 +138,12 @@ namespace FirstPersonController
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float deltaTime) override;
         bool GetAllowAllMovementInputs() const override;
-        void SetAllowAllMovementInputs(const bool new_allowAllMovementInputs) override;
+        void SetAllowAllMovementInputs(const bool allowAllMovementInputs) override;
         bool GetAllowRotationInputs() const override;
-        void SetAllowRotationInputs(const bool new_allowRotationInputs) override;
+        void SetAllowRotationInputs(const bool allowRotationInputs) override;
         AZ::TimeMs GetHostTimeMs() const override;
         bool GetEnabled() const override;
-        void SetEnabled(const bool new_enabled) override;
+        void SetEnabled(const bool enabled) override;
         bool GetIsNetEntityRoleAuthority() const override;
 
         // AZ::InputEventNotificationBus interface

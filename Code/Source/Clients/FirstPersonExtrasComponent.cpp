@@ -1405,303 +1405,303 @@ namespace FirstPersonController
     {
         return m_jumpPressedInAirQueueTimeThreshold;
     }
-    void FirstPersonExtrasComponent::SetJumpPressedInAirQueueTimeThreshold(const float new_jumpPressedInAirQueueTimeThreshold)
+    void FirstPersonExtrasComponent::SetJumpPressedInAirQueueTimeThreshold(const float jumpPressedInAirQueueTimeThreshold)
     {
-        if (new_jumpPressedInAirQueueTimeThreshold < 0.f)
+        if (jumpPressedInAirQueueTimeThreshold < 0.f)
             m_jumpPressedInAirQueueTimeThreshold = 0.f;
         else
-            m_jumpPressedInAirQueueTimeThreshold = new_jumpPressedInAirQueueTimeThreshold;
+            m_jumpPressedInAirQueueTimeThreshold = jumpPressedInAirQueueTimeThreshold;
     }
     bool FirstPersonExtrasComponent::GetJumpHeadTiltEnabled() const
     {
         return m_jumpHeadTiltEnabled;
     }
-    void FirstPersonExtrasComponent::SetJumpHeadTiltEnabled(const bool new_jumpHeadTiltEnabled)
+    void FirstPersonExtrasComponent::SetJumpHeadTiltEnabled(const bool jumpHeadTiltEnabled)
     {
-        m_jumpHeadTiltEnabled = new_jumpHeadTiltEnabled;
+        m_jumpHeadTiltEnabled = jumpHeadTiltEnabled;
     }
     float FirstPersonExtrasComponent::GetHeadAngleJump() const
     {
         return -AZ::RadToDeg(m_headAngleJump);
     }
-    void FirstPersonExtrasComponent::SetHeadAngleJump(const float new_headAngleJump)
+    void FirstPersonExtrasComponent::SetHeadAngleJump(const float headAngleJump)
     {
-        m_headAngleJump = AZ::DegToRad(new_headAngleJump);
+        m_headAngleJump = AZ::DegToRad(headAngleJump);
     }
     float FirstPersonExtrasComponent::GetHeadAngleLand() const
     {
         return -AZ::RadToDeg(m_headAngleLand);
     }
-    void FirstPersonExtrasComponent::SetHeadAngleLand(const float new_headAngleLand)
+    void FirstPersonExtrasComponent::SetHeadAngleLand(const float headAngleLand)
     {
-        m_headAngleLand = AZ::DegToRad(new_headAngleLand);
+        m_headAngleLand = AZ::DegToRad(headAngleLand);
     }
     float FirstPersonExtrasComponent::GetDeltaAngleFactorJump() const
     {
         return -m_deltaAngleFactorJump;
     }
-    void FirstPersonExtrasComponent::SetDeltaAngleFactorJump(const float new_deltaAngleFactorJump)
+    void FirstPersonExtrasComponent::SetDeltaAngleFactorJump(const float deltaAngleFactorJump)
     {
-        m_deltaAngleFactorJump = new_deltaAngleFactorJump;
+        m_deltaAngleFactorJump = deltaAngleFactorJump;
     }
     float FirstPersonExtrasComponent::GetDeltaAngleFactorLand() const
     {
         return -m_deltaAngleFactorLand;
     }
-    void FirstPersonExtrasComponent::SetDeltaAngleFactorLand(const float new_deltaAngleFactorLand)
+    void FirstPersonExtrasComponent::SetDeltaAngleFactorLand(const float deltaAngleFactorLand)
     {
-        m_deltaAngleFactorLand = new_deltaAngleFactorLand;
+        m_deltaAngleFactorLand = deltaAngleFactorLand;
     }
     float FirstPersonExtrasComponent::GetCompleteHeadLandVelocity() const
     {
         return m_completeHeadLandVelocity;
     }
-    void FirstPersonExtrasComponent::SetCompleteHeadLandVelocity(const float new_completeHeadLandVelocity)
+    void FirstPersonExtrasComponent::SetCompleteHeadLandVelocity(const float completeHeadLandVelocity)
     {
-        if (new_completeHeadLandVelocity < 0.f)
-            m_completeHeadLandVelocity = -new_completeHeadLandVelocity;
+        if (completeHeadLandVelocity < 0.f)
+            m_completeHeadLandVelocity = -completeHeadLandVelocity;
         else
-            m_completeHeadLandVelocity = new_completeHeadLandVelocity;
+            m_completeHeadLandVelocity = completeHeadLandVelocity;
     }
     bool FirstPersonExtrasComponent::GetSprintFoVEnabled() const
     {
         return m_sprintFoVEnabled;
     }
-    void FirstPersonExtrasComponent::SetSprintFoVEnabled(const bool new_sprintFoVEnabled)
+    void FirstPersonExtrasComponent::SetSprintFoVEnabled(const bool sprintFoVEnabled)
     {
-        m_sprintFoVEnabled = new_sprintFoVEnabled;
+        m_sprintFoVEnabled = sprintFoVEnabled;
     }
     float FirstPersonExtrasComponent::GetSprintFoVLerpTime() const
     {
         return m_sprintFoVLerpTime;
     }
-    void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float new_sprintFoVLerpTime)
+    void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float sprintFoVLerpTime)
     {
-        if (new_sprintFoVLerpTime < 0.0166f)
+        if (sprintFoVLerpTime < 0.0166f)
             m_sprintFoVLerpTime = 0.0166f;
         else
-            m_sprintFoVLerpTime = new_sprintFoVLerpTime;
+            m_sprintFoVLerpTime = sprintFoVLerpTime;
     }
     float FirstPersonExtrasComponent::GetSprintingFoV() const
     {
         return m_sprintFoV;
     }
-    void FirstPersonExtrasComponent::SetSprintingFoV(const float new_sprintFoV)
+    void FirstPersonExtrasComponent::SetSprintingFoV(const float sprintFoV)
     {
-        m_sprintFoV = new_sprintFoV;
+        m_sprintFoV = sprintFoV;
         m_sprintFoVDelta = m_sprintFoV - m_walkFoV;
     }
     float FirstPersonExtrasComponent::GetWalkingFoV() const
     {
         return m_walkFoV;
     }
-    void FirstPersonExtrasComponent::SetWalkingFoV(const float new_walkFoV)
+    void FirstPersonExtrasComponent::SetWalkingFoV(const float walkFoV)
     {
-        m_walkFoV = new_walkFoV;
+        m_walkFoV = walkFoV;
     }
     bool FirstPersonExtrasComponent::GetHeadbobEnabled() const
     {
         return m_headbobEnabled;
     }
-    void FirstPersonExtrasComponent::SetHeadbobEnabled(const bool new_headbobEnabled)
+    void FirstPersonExtrasComponent::SetHeadbobEnabled(const bool headbobEnabled)
     {
-        m_headbobEnabled = new_headbobEnabled;
+        m_headbobEnabled = headbobEnabled;
     }
     bool FirstPersonExtrasComponent::GetHeadbobStartingDirection() const
     {
         return m_headbobStartingDirection;
     }
-    void FirstPersonExtrasComponent::SetHeadbobStartingDirection(const bool new_headbobStartingDirection)
+    void FirstPersonExtrasComponent::SetHeadbobStartingDirection(const bool headbobStartingDirection)
     {
-        m_headbobStartingDirection = new_headbobStartingDirection;
+        m_headbobStartingDirection = headbobStartingDirection;
     }
     float FirstPersonExtrasComponent::GetHeadbobOverallIntensity() const
     {
         return m_headbobOverallIntensity;
     }
-    void FirstPersonExtrasComponent::SetHeadbobOverallIntensity(const float new_headbobOverallIntensity)
+    void FirstPersonExtrasComponent::SetHeadbobOverallIntensity(const float headbobOverallIntensity)
     {
-        if (new_headbobOverallIntensity < 0.f)
+        if (headbobOverallIntensity < 0.f)
             m_headbobOverallIntensity = 0.f;
         else
-            m_headbobOverallIntensity = new_headbobOverallIntensity;
+            m_headbobOverallIntensity = headbobOverallIntensity;
     }
     float FirstPersonExtrasComponent::GetHeadbobSmoothTime() const
     {
         return m_headbobSmoothTime;
     }
-    void FirstPersonExtrasComponent::SetHeadbobSmoothTime(const float new_headbobSmoothTime)
+    void FirstPersonExtrasComponent::SetHeadbobSmoothTime(const float headbobSmoothTime)
     {
-        if (new_headbobSmoothTime < 0.f)
+        if (headbobSmoothTime < 0.f)
             m_headbobSmoothTime = 0.f;
         else
-            m_headbobSmoothTime = new_headbobSmoothTime;
+            m_headbobSmoothTime = headbobSmoothTime;
     }
     float FirstPersonExtrasComponent::GetHeadbobRealism() const
     {
         return m_headbobRealism;
     }
-    void FirstPersonExtrasComponent::SetHeadbobRealism(const float new_headbobRealism)
+    void FirstPersonExtrasComponent::SetHeadbobRealism(const float headbobRealism)
     {
-        if (new_headbobRealism < 0.f)
+        if (headbobRealism < 0.f)
             m_headbobRealism = 0.f;
         else
-            m_headbobRealism = new_headbobRealism;
+            m_headbobRealism = headbobRealism;
         UpdateHeadbobShapePeaks();
     }
     float FirstPersonExtrasComponent::GetHeadbobFootstepSharpness() const
     {
         return m_headbobFootstepSharpness;
     }
-    void FirstPersonExtrasComponent::SetHeadbobFootstepSharpness(const float new_headbobFootstepSharpness)
+    void FirstPersonExtrasComponent::SetHeadbobFootstepSharpness(const float headbobFootstepSharpness)
     {
-        m_headbobFootstepSharpness = new_headbobFootstepSharpness;
+        m_headbobFootstepSharpness = headbobFootstepSharpness;
         UpdateHeadbobShapePeaks();
     }
     float FirstPersonExtrasComponent::GetHeadbobAlternatingStepDifference() const
     {
         return m_headbobAlternatingStepDifference;
     }
-    void FirstPersonExtrasComponent::SetHeadbobAlternatingStepDifference(const float new_headbobAlternatingStepDifference)
+    void FirstPersonExtrasComponent::SetHeadbobAlternatingStepDifference(const float headbobAlternatingStepDifference)
     {
-        m_headbobAlternatingStepDifference = new_headbobAlternatingStepDifference;
+        m_headbobAlternatingStepDifference = headbobAlternatingStepDifference;
         UpdateHeadbobShapePeaks();
     }
     float FirstPersonExtrasComponent::GetHeadbobHorizontalSwayImbalance() const
     {
         return m_headbobHorizontalSwayImbalance;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayImbalance(const float new_headbobHorizontalSwayImbalance)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayImbalance(const float headbobHorizontalSwayImbalance)
     {
-        m_headbobHorizontalSwayImbalance = new_headbobHorizontalSwayImbalance;
+        m_headbobHorizontalSwayImbalance = headbobHorizontalSwayImbalance;
         UpdateHeadbobShapePeaks();
     }
     float FirstPersonExtrasComponent::GetHeadbobHorizontalSwayFlatness() const
     {
         return m_headbobHorizontalSwayFlatness;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayFlatness(const float new_headbobHorizontalSwayFlatness)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalSwayFlatness(const float headbobHorizontalSwayFlatness)
     {
-        m_headbobHorizontalSwayFlatness = new_headbobHorizontalSwayFlatness;
+        m_headbobHorizontalSwayFlatness = headbobHorizontalSwayFlatness;
         UpdateHeadbobShapePeaks();
     }
     float FirstPersonExtrasComponent::GetHeadbobFootstepAcceleration() const
     {
         return m_headbobFootstepAcceleration;
     }
-    void FirstPersonExtrasComponent::SetHeadbobFootstepAcceleration(const float new_headbobFootstepAcceleration)
+    void FirstPersonExtrasComponent::SetHeadbobFootstepAcceleration(const float headbobFootstepAcceleration)
     {
-        m_headbobFootstepAcceleration = new_headbobFootstepAcceleration;
+        m_headbobFootstepAcceleration = headbobFootstepAcceleration;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxPitchAmplitude() const
     {
         return m_headbobMaxPitchAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxPitchAmplitude(const float new_headbobMaxPitchAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxPitchAmplitude(const float headbobMaxPitchAmplitude)
     {
-        if (new_headbobMaxPitchAmplitude < 0.f)
+        if (headbobMaxPitchAmplitude < 0.f)
             m_headbobMaxPitchAmplitude = 0.f;
         else
-            m_headbobMaxPitchAmplitude = new_headbobMaxPitchAmplitude;
+            m_headbobMaxPitchAmplitude = headbobMaxPitchAmplitude;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxRollAmplitude() const
     {
         return m_headbobMaxRollAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxRollAmplitude(const float new_headbobMaxRollAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxRollAmplitude(const float headbobMaxRollAmplitude)
     {
-        m_headbobMaxRollAmplitude = new_headbobMaxRollAmplitude;
+        m_headbobMaxRollAmplitude = headbobMaxRollAmplitude;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxYawAmplitude() const
     {
         return m_headbobMaxYawAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxYawAmplitude(const float new_headbobMaxYawAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxYawAmplitude(const float headbobMaxYawAmplitude)
     {
-        m_headbobMaxYawAmplitude = new_headbobMaxYawAmplitude;
+        m_headbobMaxYawAmplitude = headbobMaxYawAmplitude;
     }
     float FirstPersonExtrasComponent::GetHeadbobStepVariationOverTime() const
     {
         return m_headbobStepVariationOverTime;
     }
-    void FirstPersonExtrasComponent::SetHeadbobStepVariationOverTime(const float new_headbobStepVariationOverTime)
+    void FirstPersonExtrasComponent::SetHeadbobStepVariationOverTime(const float headbobStepVariationOverTime)
     {
-        if (new_headbobStepVariationOverTime < 0.f)
+        if (headbobStepVariationOverTime < 0.f)
             m_headbobStepVariationOverTime = 0.f;
         else
-            m_headbobStepVariationOverTime = new_headbobStepVariationOverTime;
+            m_headbobStepVariationOverTime = headbobStepVariationOverTime;
     }
     float FirstPersonExtrasComponent::GetHeadbobVerticalSprintScale() const
     {
         return m_headbobVerticalSprintScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobVerticalSprintScale(const float new_headbobVerticalSprintScale)
+    void FirstPersonExtrasComponent::SetHeadbobVerticalSprintScale(const float headbobVerticalSprintScale)
     {
-        m_headbobVerticalSprintScale = new_headbobVerticalSprintScale;
+        m_headbobVerticalSprintScale = headbobVerticalSprintScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobHorizontalSprintScale() const
     {
         return m_headbobHorizontalSprintScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalSprintScale(const float new_headbobHorizontalSprintScale)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalSprintScale(const float headbobHorizontalSprintScale)
     {
-        m_headbobHorizontalSprintScale = new_headbobHorizontalSprintScale;
+        m_headbobHorizontalSprintScale = headbobHorizontalSprintScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobRotationCrouchScale() const
     {
         return m_headbobRotationCrouchScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobRotationCrouchScale(const float new_headbobRotationCrouchScale)
+    void FirstPersonExtrasComponent::SetHeadbobRotationCrouchScale(const float headbobRotationCrouchScale)
     {
-        m_headbobRotationCrouchScale = new_headbobRotationCrouchScale;
+        m_headbobRotationCrouchScale = headbobRotationCrouchScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobRotationSprintScale() const
     {
         return m_headbobRotationSprintScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobRotationSprintScale(const float new_headbobRotationSprintScale)
+    void FirstPersonExtrasComponent::SetHeadbobRotationSprintScale(const float headbobRotationSprintScale)
     {
-        m_headbobRotationSprintScale = new_headbobRotationSprintScale;
+        m_headbobRotationSprintScale = headbobRotationSprintScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxFrequency() const
     {
         return m_headbobMaxFrequency;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxFrequency(const float new_headbobMaxFrequency)
+    void FirstPersonExtrasComponent::SetHeadbobMaxFrequency(const float headbobMaxFrequency)
     {
-        m_headbobMaxFrequency = new_headbobMaxFrequency;
+        m_headbobMaxFrequency = headbobMaxFrequency;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxVerticalAmplitude() const
     {
         return m_headbobMaxVerticalAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxVerticalAmplitude(const float new_headbobMaxVerticalAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxVerticalAmplitude(const float headbobMaxVerticalAmplitude)
     {
-        m_headbobMaxVerticalAmplitude = new_headbobMaxVerticalAmplitude;
+        m_headbobMaxVerticalAmplitude = headbobMaxVerticalAmplitude;
     }
     float FirstPersonExtrasComponent::GetHeadbobMaxHorizontalAmplitude() const
     {
         return m_headbobMaxHorizontalAmplitude;
     }
-    void FirstPersonExtrasComponent::SetHeadbobMaxHorizontalAmplitude(const float new_headbobMaxHorizontalAmplitude)
+    void FirstPersonExtrasComponent::SetHeadbobMaxHorizontalAmplitude(const float headbobMaxHorizontalAmplitude)
     {
-        m_headbobMaxHorizontalAmplitude = new_headbobMaxHorizontalAmplitude;
+        m_headbobMaxHorizontalAmplitude = headbobMaxHorizontalAmplitude;
     }
     float FirstPersonExtrasComponent::GetHeadbobVerticalCrouchScale() const
     {
         return m_headbobVerticalCrouchScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobVerticalCrouchScale(const float new_headbobVerticalCrouchScale)
+    void FirstPersonExtrasComponent::SetHeadbobVerticalCrouchScale(const float headbobVerticalCrouchScale)
     {
-        m_headbobVerticalCrouchScale = new_headbobVerticalCrouchScale;
+        m_headbobVerticalCrouchScale = headbobVerticalCrouchScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobHorizontalCrouchScale() const
     {
         return m_headbobHorizontalCrouchScale;
     }
-    void FirstPersonExtrasComponent::SetHeadbobHorizontalCrouchScale(const float new_headbobHorizontalCrouchScale)
+    void FirstPersonExtrasComponent::SetHeadbobHorizontalCrouchScale(const float headbobHorizontalCrouchScale)
     {
-        m_headbobHorizontalCrouchScale = new_headbobHorizontalCrouchScale;
+        m_headbobHorizontalCrouchScale = headbobHorizontalCrouchScale;
     }
     float FirstPersonExtrasComponent::GetHeadbobLastStepStrength() const
     {

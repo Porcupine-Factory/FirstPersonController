@@ -774,17 +774,17 @@ namespace FirstPersonController
     {
         return m_allowAllMovementInputs;
     }
-    void NetworkFPCController::SetAllowAllMovementInputs(const bool new_allowAllMovementInputs)
+    void NetworkFPCController::SetAllowAllMovementInputs(const bool allowAllMovementInputs)
     {
-        m_allowAllMovementInputs = new_allowAllMovementInputs;
+        m_allowAllMovementInputs = allowAllMovementInputs;
     }
     bool NetworkFPCController::GetAllowRotationInputs() const
     {
         return m_allowRotationInputs;
     }
-    void NetworkFPCController::SetAllowRotationInputs(const bool new_allowRotationInputs)
+    void NetworkFPCController::SetAllowRotationInputs(const bool allowRotationInputs)
     {
-        m_allowRotationInputs = new_allowRotationInputs;
+        m_allowRotationInputs = allowRotationInputs;
     }
     AZ::TimeMs NetworkFPCController::GetHostTimeMs() const
     {
@@ -799,12 +799,12 @@ namespace FirstPersonController
     {
         return IsNetEntityRoleAuthority();
     }
-    void NetworkFPCController::SetEnabled(const bool new_enabled)
+    void NetworkFPCController::SetEnabled(const bool enabled)
     {
-        m_disabled = !new_enabled;
-        m_firstPersonControllerObject->m_networkFPCEnabled = new_enabled;
+        m_disabled = !enabled;
+        m_firstPersonControllerObject->m_networkFPCEnabled = enabled;
         if (m_firstPersonExtrasObject != nullptr)
-            m_firstPersonExtrasObject->m_networkFPCEnabled = new_enabled;
+            m_firstPersonExtrasObject->m_networkFPCEnabled = enabled;
         if (!m_disabled)
         {
             m_firstPersonControllerObject->IgnoreInputs(true);

@@ -4318,12 +4318,12 @@ namespace FirstPersonController
         auto ca = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
         return ca->FindEntity(activeCameraId);
     }
-    void FirstPersonControllerComponent::SetCameraEntity(const AZ::EntityId new_cameraEntityId)
+    void FirstPersonControllerComponent::SetCameraEntity(const AZ::EntityId cameraEntityId)
     {
-        if (new_cameraEntityId != m_cameraEntityId)
+        if (cameraEntityId != m_cameraEntityId)
         {
             AZ::EntityBus::Handler::BusDisconnect();
-            m_cameraEntityId = new_cameraEntityId;
+            m_cameraEntityId = cameraEntityId;
             m_activeCameraEntity = nullptr;
             m_obtainedChildIds = false;
 
@@ -4355,9 +4355,9 @@ namespace FirstPersonController
     {
         return m_makeCameraChildOfCharacter;
     }
-    void FirstPersonControllerComponent::SetMakeCameraChildOfCharacter(const bool new_makeCameraChildOfCharacter)
+    void FirstPersonControllerComponent::SetMakeCameraChildOfCharacter(const bool makeCameraChildOfCharacter)
     {
-        m_makeCameraChildOfCharacter = new_makeCameraChildOfCharacter;
+        m_makeCameraChildOfCharacter = makeCameraChildOfCharacter;
         if (m_makeCameraChildOfCharacter && !IsCameraChildOfCharacter())
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetParent, GetEntityId());
     }
@@ -4365,11 +4365,11 @@ namespace FirstPersonController
     {
         return m_cameraSmoothFollow;
     }
-    void FirstPersonControllerComponent::SetCameraSmoothFollow(const bool new_cameraSmoothFollow)
+    void FirstPersonControllerComponent::SetCameraSmoothFollow(const bool cameraSmoothFollow)
     {
-        if (m_cameraSmoothFollow != new_cameraSmoothFollow)
+        if (m_cameraSmoothFollow != cameraSmoothFollow)
         {
-            m_cameraSmoothFollow = new_cameraSmoothFollow;
+            m_cameraSmoothFollow = cameraSmoothFollow;
 
             if (m_activeCameraEntity)
             {
@@ -4386,9 +4386,9 @@ namespace FirstPersonController
     {
         return m_networkFPCKeepCameraAtCharacter;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCKeepCameraAtCharacter(const bool new_networkFPCKeepCameraAtCharacter)
+    void FirstPersonControllerComponent::SetNetworkFPCKeepCameraAtCharacter(const bool networkFPCKeepCameraAtCharacter)
     {
-        m_networkFPCKeepCameraAtCharacter = new_networkFPCKeepCameraAtCharacter;
+        m_networkFPCKeepCameraAtCharacter = networkFPCKeepCameraAtCharacter;
     }
     void FirstPersonControllerComponent::SetParentChangeDoNotUpdate(const AZ::EntityId& entityId)
     {
@@ -4455,9 +4455,9 @@ namespace FirstPersonController
     {
         return m_eyeHeight;
     }
-    void FirstPersonControllerComponent::SetEyeHeight(const float new_eyeHeight)
+    void FirstPersonControllerComponent::SetEyeHeight(const float eyeHeight)
     {
-        m_eyeHeight = new_eyeHeight;
+        m_eyeHeight = eyeHeight;
     }
     float FirstPersonControllerComponent::GetCameraLocalZTravelDistance() const
     {
@@ -4503,9 +4503,9 @@ namespace FirstPersonController
     {
         return m_strForward;
     }
-    void FirstPersonControllerComponent::SetForwardEventName(const AZStd::string& new_strForward)
+    void FirstPersonControllerComponent::SetForwardEventName(const AZStd::string& strForward)
     {
-        m_strForward = new_strForward;
+        m_strForward = strForward;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4516,25 +4516,25 @@ namespace FirstPersonController
     {
         return m_forwardScale;
     }
-    void FirstPersonControllerComponent::SetForwardScale(const float new_forwardScale)
+    void FirstPersonControllerComponent::SetForwardScale(const float forwardScale)
     {
-        m_forwardScale = new_forwardScale;
+        m_forwardScale = forwardScale;
     }
     float FirstPersonControllerComponent::GetForwardInputValue() const
     {
         return m_forwardValue;
     }
-    void FirstPersonControllerComponent::SetForwardInputValue(const float new_forwardValue)
+    void FirstPersonControllerComponent::SetForwardInputValue(const float forwardValue)
     {
-        m_forwardValue = new_forwardValue;
+        m_forwardValue = forwardValue;
     }
     AZStd::string FirstPersonControllerComponent::GetBackEventName() const
     {
         return m_strBack;
     }
-    void FirstPersonControllerComponent::SetBackEventName(const AZStd::string& new_strBack)
+    void FirstPersonControllerComponent::SetBackEventName(const AZStd::string& strBack)
     {
-        m_strBack = new_strBack;
+        m_strBack = strBack;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4545,25 +4545,25 @@ namespace FirstPersonController
     {
         return m_backScale;
     }
-    void FirstPersonControllerComponent::SetBackScale(const float new_backScale)
+    void FirstPersonControllerComponent::SetBackScale(const float backScale)
     {
-        m_backScale = new_backScale;
+        m_backScale = backScale;
     }
     float FirstPersonControllerComponent::GetBackInputValue() const
     {
         return m_backValue;
     }
-    void FirstPersonControllerComponent::SetBackInputValue(const float new_backValue)
+    void FirstPersonControllerComponent::SetBackInputValue(const float backValue)
     {
-        m_backValue = new_backValue;
+        m_backValue = backValue;
     }
     AZStd::string FirstPersonControllerComponent::GetLeftEventName() const
     {
         return m_strLeft;
     }
-    void FirstPersonControllerComponent::SetLeftEventName(const AZStd::string& new_strLeft)
+    void FirstPersonControllerComponent::SetLeftEventName(const AZStd::string& strLeft)
     {
-        m_strLeft = new_strLeft;
+        m_strLeft = strLeft;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4574,25 +4574,25 @@ namespace FirstPersonController
     {
         return m_leftScale;
     }
-    void FirstPersonControllerComponent::SetLeftScale(const float new_leftScale)
+    void FirstPersonControllerComponent::SetLeftScale(const float leftScale)
     {
-        m_leftScale = new_leftScale;
+        m_leftScale = leftScale;
     }
     float FirstPersonControllerComponent::GetLeftInputValue() const
     {
         return m_leftValue;
     }
-    void FirstPersonControllerComponent::SetLeftInputValue(const float new_leftValue)
+    void FirstPersonControllerComponent::SetLeftInputValue(const float leftValue)
     {
-        m_leftValue = new_leftValue;
+        m_leftValue = leftValue;
     }
     AZStd::string FirstPersonControllerComponent::GetRightEventName() const
     {
         return m_strRight;
     }
-    void FirstPersonControllerComponent::SetRightEventName(const AZStd::string& new_strRight)
+    void FirstPersonControllerComponent::SetRightEventName(const AZStd::string& strRight)
     {
-        m_strRight = new_strRight;
+        m_strRight = strRight;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4603,25 +4603,25 @@ namespace FirstPersonController
     {
         return m_rightScale;
     }
-    void FirstPersonControllerComponent::SetRightScale(const float new_rightScale)
+    void FirstPersonControllerComponent::SetRightScale(const float rightScale)
     {
-        m_rightScale = new_rightScale;
+        m_rightScale = rightScale;
     }
     float FirstPersonControllerComponent::GetRightInputValue() const
     {
         return m_rightValue;
     }
-    void FirstPersonControllerComponent::SetRightInputValue(const float new_rightValue)
+    void FirstPersonControllerComponent::SetRightInputValue(const float rightValue)
     {
-        m_rightValue = new_rightValue;
+        m_rightValue = rightValue;
     }
     AZStd::string FirstPersonControllerComponent::GetYawEventName() const
     {
         return m_strYaw;
     }
-    void FirstPersonControllerComponent::SetYawEventName(const AZStd::string& new_strYaw)
+    void FirstPersonControllerComponent::SetYawEventName(const AZStd::string& strYaw)
     {
-        m_strYaw = new_strYaw;
+        m_strYaw = strYaw;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4632,17 +4632,17 @@ namespace FirstPersonController
     {
         return m_yawValue;
     }
-    void FirstPersonControllerComponent::SetYawInputValue(const float new_yawValue)
+    void FirstPersonControllerComponent::SetYawInputValue(const float yawValue)
     {
-        m_yawValue = new_yawValue;
+        m_yawValue = yawValue;
     }
     AZStd::string FirstPersonControllerComponent::GetPitchEventName() const
     {
         return m_strPitch;
     }
-    void FirstPersonControllerComponent::SetPitchEventName(const AZStd::string& new_strPitch)
+    void FirstPersonControllerComponent::SetPitchEventName(const AZStd::string& strPitch)
     {
-        m_strPitch = new_strPitch;
+        m_strPitch = strPitch;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4653,17 +4653,17 @@ namespace FirstPersonController
     {
         return m_pitchValue;
     }
-    void FirstPersonControllerComponent::SetPitchInputValue(const float new_pitchValue)
+    void FirstPersonControllerComponent::SetPitchInputValue(const float pitchValue)
     {
-        m_pitchValue = new_pitchValue;
+        m_pitchValue = pitchValue;
     }
     AZStd::string FirstPersonControllerComponent::GetSprintEventName() const
     {
         return m_strSprint;
     }
-    void FirstPersonControllerComponent::SetSprintEventName(const AZStd::string& new_strSprint)
+    void FirstPersonControllerComponent::SetSprintEventName(const AZStd::string& strSprint)
     {
-        m_strSprint = new_strSprint;
+        m_strSprint = strSprint;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4674,33 +4674,33 @@ namespace FirstPersonController
     {
         return m_sprintValue;
     }
-    void FirstPersonControllerComponent::SetSprintInputValue(const float new_sprintValue)
+    void FirstPersonControllerComponent::SetSprintInputValue(const float sprintValue)
     {
-        m_sprintValue = new_sprintValue;
+        m_sprintValue = sprintValue;
     }
     float FirstPersonControllerComponent::GetSprintEffectiveValue() const
     {
         return m_sprintEffectiveValue;
     }
-    void FirstPersonControllerComponent::SetSprintEffectiveValue(const float new_sprintEffectiveValue)
+    void FirstPersonControllerComponent::SetSprintEffectiveValue(const float sprintEffectiveValue)
     {
-        m_sprintEffectiveValue = new_sprintEffectiveValue;
+        m_sprintEffectiveValue = sprintEffectiveValue;
     }
     bool FirstPersonControllerComponent::GetSprintInputEngaged() const
     {
         return m_sprintInputEngaged;
     }
-    void FirstPersonControllerComponent::SetSprintInputEngaged(const bool new_sprintInputEngaged)
+    void FirstPersonControllerComponent::SetSprintInputEngaged(const bool sprintInputEngaged)
     {
-        m_sprintInputEngaged = new_sprintInputEngaged;
+        m_sprintInputEngaged = sprintInputEngaged;
     }
     AZStd::string FirstPersonControllerComponent::GetCrouchEventName() const
     {
         return m_strCrouch;
     }
-    void FirstPersonControllerComponent::SetCrouchEventName(const AZStd::string& new_strCrouch)
+    void FirstPersonControllerComponent::SetCrouchEventName(const AZStd::string& strCrouch)
     {
-        m_strCrouch = new_strCrouch;
+        m_strCrouch = strCrouch;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4711,17 +4711,17 @@ namespace FirstPersonController
     {
         return m_crouchValue;
     }
-    void FirstPersonControllerComponent::SetCrouchInputValue(const float new_crouchValue)
+    void FirstPersonControllerComponent::SetCrouchInputValue(const float crouchValue)
     {
-        m_crouchValue = new_crouchValue;
+        m_crouchValue = crouchValue;
     }
     AZStd::string FirstPersonControllerComponent::GetJumpEventName() const
     {
         return m_strJump;
     }
-    void FirstPersonControllerComponent::SetJumpEventName(const AZStd::string& new_strJump)
+    void FirstPersonControllerComponent::SetJumpEventName(const AZStd::string& strJump)
     {
-        m_strJump = new_strJump;
+        m_strJump = strJump;
         AssignConnectInputEvents();
 #ifdef NETWORKFPC
         if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
@@ -4732,9 +4732,9 @@ namespace FirstPersonController
     {
         return m_jumpValue;
     }
-    void FirstPersonControllerComponent::SetJumpInputValue(const float new_jumpValue)
+    void FirstPersonControllerComponent::SetJumpInputValue(const float jumpValue)
     {
-        m_jumpValue = new_jumpValue;
+        m_jumpValue = jumpValue;
     }
     bool FirstPersonControllerComponent::GetGrounded() const
     {
@@ -4748,19 +4748,19 @@ namespace FirstPersonController
     {
         return m_soonFellDistance;
     }
-    void FirstPersonControllerComponent::SetGroundedForTick(const bool new_grounded)
+    void FirstPersonControllerComponent::SetGroundedForTick(const bool grounded)
     {
-        m_scriptGrounded = new_grounded;
+        m_scriptGrounded = grounded;
         m_scriptSetGroundTick = true;
     }
     AZ::u16 FirstPersonControllerComponent::GetNumTicksRecentGrounded() const
     {
         return m_numTicksRecentGrounded;
     }
-    void FirstPersonControllerComponent::SetNumTicksRecentGrounded(const AZ::u16& new_numTicksRecentGrounded)
+    void FirstPersonControllerComponent::SetNumTicksRecentGrounded(const AZ::u16& numTicksRecentGrounded)
     {
-        if (new_numTicksRecentGrounded >= 1)
-            m_numTicksRecentGrounded = new_numTicksRecentGrounded;
+        if (numTicksRecentGrounded >= 1)
+            m_numTicksRecentGrounded = numTicksRecentGrounded;
         else
         {
             AZ_Warning("First Person Controller Component", false, "Number of recently ticks recently grounded must be at least 1.");
@@ -4772,9 +4772,9 @@ namespace FirstPersonController
     {
         return m_scriptJump;
     }
-    void FirstPersonControllerComponent::SetScriptJump(const bool new_scriptJump)
+    void FirstPersonControllerComponent::SetScriptJump(const bool scriptJump)
     {
-        m_scriptJump = new_scriptJump;
+        m_scriptJump = scriptJump;
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetGroundHitEntityIds() const
     {
@@ -4972,9 +4972,9 @@ namespace FirstPersonController
     {
         return m_groundClose;
     }
-    void FirstPersonControllerComponent::SetGroundCloseForTick(const bool new_groundClose)
+    void FirstPersonControllerComponent::SetGroundCloseForTick(const bool groundClose)
     {
-        m_scriptGroundClose = new_groundClose;
+        m_scriptGroundClose = groundClose;
         m_scriptSetGroundCloseTick = true;
     }
     AZStd::string FirstPersonControllerComponent::GetGroundedCollisionGroupName() const
@@ -4984,18 +4984,18 @@ namespace FirstPersonController
             groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_groundedCollisionGroup);
         return groupName;
     }
-    void FirstPersonControllerComponent::SetGroundedCollisionGroup(const AZStd::string& new_groundedCollisionGroupName)
+    void FirstPersonControllerComponent::SetGroundedCollisionGroup(const AZStd::string& groundedCollisionGroupName)
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
         Physics::CollisionRequestBus::BroadcastResult(
-            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_groundedCollisionGroupName, collisionGroup);
+            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, groundedCollisionGroupName, collisionGroup);
         if (success)
         {
             m_groundedCollisionGroup = collisionGroup;
             const AzPhysics::CollisionConfiguration& configuration =
                 AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
-            m_groundedCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_groundedCollisionGroupName);
+            m_groundedCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(groundedCollisionGroupName);
         }
     }
     float FirstPersonControllerComponent::GetAirTime() const
@@ -5006,9 +5006,9 @@ namespace FirstPersonController
     {
         return m_gravity;
     }
-    void FirstPersonControllerComponent::SetGravity(const float new_gravity)
+    void FirstPersonControllerComponent::SetGravity(const float gravity)
     {
-        m_gravity = new_gravity;
+        m_gravity = gravity;
         UpdateJumpMaxHoldTime();
     }
     AZ::Vector3 FirstPersonControllerComponent::GetPrevTargetVelocityWorld() const
@@ -5023,17 +5023,17 @@ namespace FirstPersonController
     {
         return m_velocityCloseTolerance;
     }
-    void FirstPersonControllerComponent::SetVelocityCloseTolerance(const float new_velocityCloseTolerance)
+    void FirstPersonControllerComponent::SetVelocityCloseTolerance(const float velocityCloseTolerance)
     {
-        m_velocityCloseTolerance = new_velocityCloseTolerance;
+        m_velocityCloseTolerance = velocityCloseTolerance;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVelocityXCrossYDirection() const
     {
         return m_velocityXCrossYDirection;
     }
-    void FirstPersonControllerComponent::SetVelocityXCrossYDirection(const AZ::Vector3& new_velocityXCrossYDirection)
+    void FirstPersonControllerComponent::SetVelocityXCrossYDirection(const AZ::Vector3& velocityXCrossYDirection)
     {
-        m_velocityXCrossYDirection = new_velocityXCrossYDirection.GetNormalized();
+        m_velocityXCrossYDirection = velocityXCrossYDirection.GetNormalized();
         if (m_velocityXCrossYDirection.IsZero())
             m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
     }
@@ -5041,9 +5041,9 @@ namespace FirstPersonController
     {
         return m_velocityZPosDirection;
     }
-    void FirstPersonControllerComponent::SetVelocityZPosDirection(const AZ::Vector3& new_velocityZPosDirection)
+    void FirstPersonControllerComponent::SetVelocityZPosDirection(const AZ::Vector3& velocityZPosDirection)
     {
-        m_velocityZPosDirection = new_velocityZPosDirection.GetNormalized();
+        m_velocityZPosDirection = velocityZPosDirection.GetNormalized();
         if (m_velocityZPosDirection.IsZero())
             m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
     }
@@ -5051,9 +5051,9 @@ namespace FirstPersonController
     {
         return m_sphereCastsAxisDirectionPose;
     }
-    void FirstPersonControllerComponent::SetSphereCastsAxisDirectionPose(const AZ::Vector3& new_sphereCastsAxisDirectionPose)
+    void FirstPersonControllerComponent::SetSphereCastsAxisDirectionPose(const AZ::Vector3& sphereCastsAxisDirectionPose)
     {
-        m_sphereCastsAxisDirectionPose = new_sphereCastsAxisDirectionPose;
+        m_sphereCastsAxisDirectionPose = sphereCastsAxisDirectionPose;
         if (m_sphereCastsAxisDirectionPose.IsZero())
             m_sphereCastsAxisDirectionPose = AZ::Vector3::CreateAxisZ();
 
@@ -5065,17 +5065,17 @@ namespace FirstPersonController
     {
         return m_velocityXCrossYTracksNormal;
     }
-    void FirstPersonControllerComponent::SetVelocityXCrossYTracksNormal(const bool new_velocityXCrossYTracksNormal)
+    void FirstPersonControllerComponent::SetVelocityXCrossYTracksNormal(const bool velocityXCrossYTracksNormal)
     {
-        m_velocityXCrossYTracksNormal = new_velocityXCrossYTracksNormal;
+        m_velocityXCrossYTracksNormal = velocityXCrossYTracksNormal;
     }
     bool FirstPersonControllerComponent::GetSpeedReducedWhenMovingUpInclines() const
     {
         return m_movingUpInclineSlowed;
     }
-    void FirstPersonControllerComponent::SetSpeedReducedWhenMovingUpInclines(const bool new_movingUpInclineSlowed)
+    void FirstPersonControllerComponent::SetSpeedReducedWhenMovingUpInclines(const bool movingUpInclineSlowed)
     {
-        m_movingUpInclineSlowed = new_movingUpInclineSlowed;
+        m_movingUpInclineSlowed = movingUpInclineSlowed;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2)
     {
@@ -5104,58 +5104,58 @@ namespace FirstPersonController
     {
         return m_jumpHeldGravityFactor;
     }
-    void FirstPersonControllerComponent::SetJumpHeldGravityFactor(const float new_jumpHeldGravityFactor)
+    void FirstPersonControllerComponent::SetJumpHeldGravityFactor(const float jumpHeldGravityFactor)
     {
-        m_jumpHeldGravityFactor = new_jumpHeldGravityFactor;
+        m_jumpHeldGravityFactor = jumpHeldGravityFactor;
         UpdateJumpMaxHoldTime();
     }
     float FirstPersonControllerComponent::GetJumpFallingGravityFactor() const
     {
         return m_jumpFallingGravityFactor;
     }
-    void FirstPersonControllerComponent::SetJumpFallingGravityFactor(const float new_jumpFallingGravityFactor)
+    void FirstPersonControllerComponent::SetJumpFallingGravityFactor(const float jumpFallingGravityFactor)
     {
-        m_jumpFallingGravityFactor = new_jumpFallingGravityFactor;
+        m_jumpFallingGravityFactor = jumpFallingGravityFactor;
     }
     float FirstPersonControllerComponent::GetJumpAccelFactor() const
     {
         return m_jumpAccelFactor;
     }
-    void FirstPersonControllerComponent::SetJumpAccelFactor(const float new_jumpAccelFactor)
+    void FirstPersonControllerComponent::SetJumpAccelFactor(const float jumpAccelFactor)
     {
-        m_jumpAccelFactor = new_jumpAccelFactor;
+        m_jumpAccelFactor = jumpAccelFactor;
     }
     bool FirstPersonControllerComponent::GetUpdateXYAscending() const
     {
         return m_updateXYAscending;
     }
-    void FirstPersonControllerComponent::SetUpdateXYAscending(const bool new_updateXYAscending)
+    void FirstPersonControllerComponent::SetUpdateXYAscending(const bool updateXYAscending)
     {
-        m_updateXYAscending = new_updateXYAscending;
+        m_updateXYAscending = updateXYAscending;
     }
     bool FirstPersonControllerComponent::GetUpdateXYDescending() const
     {
         return m_updateXYDescending;
     }
-    void FirstPersonControllerComponent::SetUpdateXYDescending(const bool new_updateXYDescending)
+    void FirstPersonControllerComponent::SetUpdateXYDescending(const bool updateXYDescending)
     {
-        m_updateXYDescending = new_updateXYDescending;
+        m_updateXYDescending = updateXYDescending;
     }
     bool FirstPersonControllerComponent::GetUpdateXYOnlyNearGround() const
     {
         return m_updateXYOnlyNearGround;
     }
-    void FirstPersonControllerComponent::SetUpdateXYOnlyNearGround(const bool new_updateXYOnlyNearGround)
+    void FirstPersonControllerComponent::SetUpdateXYOnlyNearGround(const bool updateXYOnlyNearGround)
     {
-        m_updateXYOnlyNearGround = new_updateXYOnlyNearGround;
+        m_updateXYOnlyNearGround = updateXYOnlyNearGround;
     }
     bool FirstPersonControllerComponent::GetAddVelocityForTimestepVsTick() const
     {
         return m_addVelocityForTimestepVsTick;
     }
-    void FirstPersonControllerComponent::SetAddVelocityForTimestepVsTick(const bool new_addVelocityForTimestepVsTick)
+    void FirstPersonControllerComponent::SetAddVelocityForTimestepVsTick(const bool addVelocityForTimestepVsTick)
     {
-        m_addVelocityForTimestepVsTick = new_addVelocityForTimestepVsTick;
+        m_addVelocityForTimestepVsTick = addVelocityForTimestepVsTick;
 
         if (m_addVelocityForTimestepVsTick && !m_sceneSimulationStartHandler.IsConnected())
         {
@@ -5199,34 +5199,34 @@ namespace FirstPersonController
     {
         return m_physicsTimestepScaleFactor;
     }
-    void FirstPersonControllerComponent::SetPhysicsTimestepScaleFactor(const float new_physicsTimestepScaleFactor)
+    void FirstPersonControllerComponent::SetPhysicsTimestepScaleFactor(const float physicsTimestepScaleFactor)
     {
-        m_physicsTimestepScaleFactor = new_physicsTimestepScaleFactor;
+        m_physicsTimestepScaleFactor = physicsTimestepScaleFactor;
     }
     bool FirstPersonControllerComponent::GetScriptSetsTargetVelocityXY() const
     {
         return m_scriptSetsTargetVelocityXY;
     }
-    void FirstPersonControllerComponent::SetScriptSetsTargetVelocityXY(const bool new_scriptSetsTargetVelocityXY)
+    void FirstPersonControllerComponent::SetScriptSetsTargetVelocityXY(const bool scriptSetsTargetVelocityXY)
     {
-        m_scriptSetsTargetVelocityXY = new_scriptSetsTargetVelocityXY;
+        m_scriptSetsTargetVelocityXY = scriptSetsTargetVelocityXY;
     }
     AZ::Vector2 FirstPersonControllerComponent::GetScriptTargetVelocityXY() const
     {
         return m_scriptTargetVelocityXY;
     }
-    void FirstPersonControllerComponent::SetScriptTargetVelocityXY(const AZ::Vector2& new_scriptTargetVelocityXY)
+    void FirstPersonControllerComponent::SetScriptTargetVelocityXY(const AZ::Vector2& scriptTargetVelocityXY)
     {
-        m_scriptTargetVelocityXY = new_scriptTargetVelocityXY;
+        m_scriptTargetVelocityXY = scriptTargetVelocityXY;
     }
     AZ::Vector2 FirstPersonControllerComponent::GetScriptTargetVelocityXYWorld() const
     {
         return AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(m_scriptTargetVelocityXY)));
     }
-    void FirstPersonControllerComponent::SetScriptTargetVelocityXYWorld(const AZ::Vector2& new_scriptTargetVelocityXYWorld)
+    void FirstPersonControllerComponent::SetScriptTargetVelocityXYWorld(const AZ::Vector2& scriptTargetVelocityXYWorld)
     {
         m_scriptTargetVelocityXY =
-            AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(new_scriptTargetVelocityXYWorld)));
+            AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(scriptTargetVelocityXYWorld)));
     }
     float FirstPersonControllerComponent::SlerpHeadings(const float a, const float b, const float t)
     {
@@ -5259,27 +5259,27 @@ namespace FirstPersonController
     {
         return m_correctedVelocityXY;
     }
-    void FirstPersonControllerComponent::SetCorrectedVelocityXY(const AZ::Vector2& new_correctedVelocityXY)
+    void FirstPersonControllerComponent::SetCorrectedVelocityXY(const AZ::Vector2& correctedVelocityXY)
     {
         m_velocityXYObstructed = true;
-        m_correctedVelocityXY = new_correctedVelocityXY;
+        m_correctedVelocityXY = correctedVelocityXY;
     }
     float FirstPersonControllerComponent::GetCorrectedVelocityZ() const
     {
         return m_correctedVelocityZ;
     }
-    void FirstPersonControllerComponent::SetCorrectedVelocityZ(const float new_correctedVelocityZ)
+    void FirstPersonControllerComponent::SetCorrectedVelocityZ(const float correctedVelocityZ)
     {
         m_velocityXYObstructed = true;
-        m_correctedVelocityZ = new_correctedVelocityZ;
+        m_correctedVelocityZ = correctedVelocityZ;
     }
     AZ::Vector2 FirstPersonControllerComponent::GetApplyVelocityXY() const
     {
         return m_applyVelocityXY;
     }
-    void FirstPersonControllerComponent::SetApplyVelocityXY(const AZ::Vector2& new_applyVelocityXY)
+    void FirstPersonControllerComponent::SetApplyVelocityXY(const AZ::Vector2& applyVelocityXY)
     {
-        m_applyVelocityXY = new_applyVelocityXY;
+        m_applyVelocityXY = applyVelocityXY;
         if (m_instantVelocityRotation)
             m_prevApplyVelocityXY =
                 AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(m_applyVelocityXY)));
@@ -5294,62 +5294,62 @@ namespace FirstPersonController
     {
         return m_addVelocityWorld;
     }
-    void FirstPersonControllerComponent::SetAddVelocityWorld(const AZ::Vector3& new_addVelocityWorld)
+    void FirstPersonControllerComponent::SetAddVelocityWorld(const AZ::Vector3& addVelocityWorld)
     {
-        m_addVelocityWorld = new_addVelocityWorld;
+        m_addVelocityWorld = addVelocityWorld;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetAddVelocityHeading() const
     {
         return m_addVelocityHeading;
     }
-    void FirstPersonControllerComponent::SetAddVelocityHeading(const AZ::Vector3& new_addVelocityHeading)
+    void FirstPersonControllerComponent::SetAddVelocityHeading(const AZ::Vector3& addVelocityHeading)
     {
-        m_addVelocityHeading = new_addVelocityHeading;
+        m_addVelocityHeading = addVelocityHeading;
     }
     float FirstPersonControllerComponent::GetApplyVelocityZ() const
     {
         return m_applyVelocityZ;
     }
-    void FirstPersonControllerComponent::SetApplyVelocityZ(const float new_applyVelocityZ)
+    void FirstPersonControllerComponent::SetApplyVelocityZ(const float applyVelocityZ)
     {
         SetGroundedForTick(false);
-        m_applyVelocityZ = new_applyVelocityZ;
+        m_applyVelocityZ = applyVelocityZ;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetLinearImpulse() const
     {
         return m_linearImpulse;
     }
-    void FirstPersonControllerComponent::SetLinearImpulse(const AZ::Vector3& new_linearImpulse)
+    void FirstPersonControllerComponent::SetLinearImpulse(const AZ::Vector3& linearImpulse)
     {
-        m_linearImpulse = new_linearImpulse;
+        m_linearImpulse = linearImpulse;
     }
-    void FirstPersonControllerComponent::ApplyLinearImpulse(const AZ::Vector3& new_addLinearImpulse)
+    void FirstPersonControllerComponent::ApplyLinearImpulse(const AZ::Vector3& addLinearImpulse)
     {
-        m_linearImpulse += new_addLinearImpulse;
+        m_linearImpulse += addLinearImpulse;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetInitVelocityFromImpulse() const
     {
         return m_initVelocityFromImpulse;
     }
-    void FirstPersonControllerComponent::SetInitVelocityFromImpulse(const AZ::Vector3& new_initVelocityFromImpulse)
+    void FirstPersonControllerComponent::SetInitVelocityFromImpulse(const AZ::Vector3& initVelocityFromImpulse)
     {
-        m_initVelocityFromImpulse = new_initVelocityFromImpulse;
+        m_initVelocityFromImpulse = initVelocityFromImpulse;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetVelocityFromImpulse() const
     {
         return m_velocityFromImpulse;
     }
-    void FirstPersonControllerComponent::SetVelocityFromImpulse(const AZ::Vector3& new_velocityFromImpulse)
+    void FirstPersonControllerComponent::SetVelocityFromImpulse(const AZ::Vector3& velocityFromImpulse)
     {
-        m_velocityFromImpulse = new_velocityFromImpulse;
+        m_velocityFromImpulse = velocityFromImpulse;
     }
     bool FirstPersonControllerComponent::GetEnableImpulses() const
     {
         return m_enableImpulses;
     }
-    void FirstPersonControllerComponent::SetEnableImpulses(const bool new_enableImpulses)
+    void FirstPersonControllerComponent::SetEnableImpulses(const bool enableImpulses)
     {
-        m_enableImpulses = new_enableImpulses;
+        m_enableImpulses = enableImpulses;
         if (!m_enableImpulses)
             m_linearImpulse = AZ::Vector3::CreateZero();
     }
@@ -5362,57 +5362,57 @@ namespace FirstPersonController
     {
         return m_impulseDecelUsesFriction;
     }
-    void FirstPersonControllerComponent::SetImpulseDecelUsesFriction(const bool new_impulseDecelUsesFriction)
+    void FirstPersonControllerComponent::SetImpulseDecelUsesFriction(const bool impulseDecelUsesFriction)
     {
-        m_impulseDecelUsesFriction = new_impulseDecelUsesFriction;
+        m_impulseDecelUsesFriction = impulseDecelUsesFriction;
     }
     float FirstPersonControllerComponent::GetImpulseLinearDamp() const
     {
         return m_impulseLinearDamp;
     }
-    void FirstPersonControllerComponent::SetImpulseLinearDamp(const float new_impulseLinearDamp)
+    void FirstPersonControllerComponent::SetImpulseLinearDamp(const float impulseLinearDamp)
     {
-        m_impulseLinearDamp = AZ::GetMax(new_impulseLinearDamp, 0.f);
+        m_impulseLinearDamp = AZ::GetMax(impulseLinearDamp, 0.f);
     }
     float FirstPersonControllerComponent::GetImpulseConstantDecel() const
     {
         return m_impulseConstantDecel;
     }
-    void FirstPersonControllerComponent::SetImpulseConstantDecel(const float new_impulseConstantDecel)
+    void FirstPersonControllerComponent::SetImpulseConstantDecel(const float impulseConstantDecel)
     {
-        m_impulseConstantDecel = AZ::GetMax(new_impulseConstantDecel, 0.f);
+        m_impulseConstantDecel = AZ::GetMax(impulseConstantDecel, 0.f);
     }
     float FirstPersonControllerComponent::GetImpulseTotalLerpTime() const
     {
         return m_impulseTotalLerpTime;
     }
-    void FirstPersonControllerComponent::SetImpulseTotalLerpTime(const float new_impulseTotalLerpTime)
+    void FirstPersonControllerComponent::SetImpulseTotalLerpTime(const float impulseTotalLerpTime)
     {
-        m_impulseTotalLerpTime = AZ::GetMax(new_impulseTotalLerpTime, 0.f);
+        m_impulseTotalLerpTime = AZ::GetMax(impulseTotalLerpTime, 0.f);
     }
     float FirstPersonControllerComponent::GetImpulseLerpTime() const
     {
         return m_impulseLerpTime;
     }
-    void FirstPersonControllerComponent::SetImpulseLerpTime(const float new_impulseLerpTime)
+    void FirstPersonControllerComponent::SetImpulseLerpTime(const float impulseLerpTime)
     {
-        m_impulseLerpTime = AZ::GetMax(new_impulseLerpTime, 0.f);
+        m_impulseLerpTime = AZ::GetMax(impulseLerpTime, 0.f);
     }
     float FirstPersonControllerComponent::GetCharacterMass() const
     {
         return m_characterMass;
     }
-    void FirstPersonControllerComponent::SetCharacterMass(const float new_characterMass)
+    void FirstPersonControllerComponent::SetCharacterMass(const float characterMass)
     {
-        m_characterMass = AZ::GetMax(new_characterMass, 0.f);
+        m_characterMass = AZ::GetMax(characterMass, 0.f);
     }
     bool FirstPersonControllerComponent::GetEnableCharacterHits() const
     {
         return m_enableCharacterHits;
     }
-    void FirstPersonControllerComponent::SetEnableCharacterHits(const bool new_enableCharacterHits)
+    void FirstPersonControllerComponent::SetEnableCharacterHits(const bool enableCharacterHits)
     {
-        m_enableCharacterHits = new_enableCharacterHits;
+        m_enableCharacterHits = enableCharacterHits;
         if (!m_enableCharacterHits)
             m_characterHits.clear();
     }
@@ -5420,33 +5420,33 @@ namespace FirstPersonController
     {
         return m_hitRadiusPercentageIncrease;
     }
-    void FirstPersonControllerComponent::SetHitRadiusPercentageIncrease(const float new_hitRadiusPercentageIncrease)
+    void FirstPersonControllerComponent::SetHitRadiusPercentageIncrease(const float hitRadiusPercentageIncrease)
     {
-        m_hitRadiusPercentageIncrease = new_hitRadiusPercentageIncrease;
+        m_hitRadiusPercentageIncrease = hitRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetHitRadiusPercentageIncreaseWhileIdle() const
     {
         return m_hitRadiusPercentageIncreaseWhileIdle;
     }
-    void FirstPersonControllerComponent::SetHitRadiusPercentageIncreaseWhileIdle(const float new_hitRadiusPercentageIncreaseWhileIdle)
+    void FirstPersonControllerComponent::SetHitRadiusPercentageIncreaseWhileIdle(const float hitRadiusPercentageIncreaseWhileIdle)
     {
-        m_hitRadiusPercentageIncreaseWhileIdle = new_hitRadiusPercentageIncreaseWhileIdle;
+        m_hitRadiusPercentageIncreaseWhileIdle = hitRadiusPercentageIncreaseWhileIdle;
     }
     float FirstPersonControllerComponent::GetHitHeightPercentageIncrease() const
     {
         return m_hitHeightPercentageIncrease;
     }
-    void FirstPersonControllerComponent::SetHitHeightPercentageIncrease(const float new_hitHeightPercentageIncrease)
+    void FirstPersonControllerComponent::SetHitHeightPercentageIncrease(const float hitHeightPercentageIncrease)
     {
-        m_hitHeightPercentageIncrease = new_hitHeightPercentageIncrease;
+        m_hitHeightPercentageIncrease = hitHeightPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetHitExtraProjectionPercentage() const
     {
         return m_hitExtraProjectionPercentage;
     }
-    void FirstPersonControllerComponent::SetHitExtraProjectionPercentage(const float new_hitExtraProjectionPercentage)
+    void FirstPersonControllerComponent::SetHitExtraProjectionPercentage(const float hitExtraProjectionPercentage)
     {
-        m_hitExtraProjectionPercentage = new_hitExtraProjectionPercentage;
+        m_hitExtraProjectionPercentage = hitExtraProjectionPercentage;
     }
     AZStd::string FirstPersonControllerComponent::GetCharacterHitCollisionGroupName() const
     {
@@ -5455,18 +5455,18 @@ namespace FirstPersonController
             groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_characterHitCollisionGroup);
         return groupName;
     }
-    void FirstPersonControllerComponent::SetCharacterHitCollisionGroupByName(const AZStd::string& new_characterHitCollisionGroupName)
+    void FirstPersonControllerComponent::SetCharacterHitCollisionGroupByName(const AZStd::string& characterHitCollisionGroupName)
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
         Physics::CollisionRequestBus::BroadcastResult(
-            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_characterHitCollisionGroupName, collisionGroup);
+            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, characterHitCollisionGroupName, collisionGroup);
         if (success)
         {
             m_characterHitCollisionGroup = collisionGroup;
             const AzPhysics::CollisionConfiguration& configuration =
                 AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
-            m_characterHitCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_characterHitCollisionGroupName);
+            m_characterHitCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(characterHitCollisionGroupName);
         }
     }
     AzPhysics::SceneQuery::QueryType FirstPersonControllerComponent::GetCharacterHitBy() const
@@ -5476,12 +5476,12 @@ namespace FirstPersonController
         // 2 = StaticAndDynamic
         return m_characterHitBy;
     }
-    void FirstPersonControllerComponent::SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& new_characterHitBy)
+    void FirstPersonControllerComponent::SetCharacterHitBy(const AzPhysics::SceneQuery::QueryType& characterHitBy)
     {
         // 0 = Static
         // 1 = Dynamic
         // 2 = StaticAndDynamic
-        m_characterHitBy = new_characterHitBy;
+        m_characterHitBy = characterHitBy;
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetCharacterHitEntityIds() const
     {
@@ -5495,147 +5495,147 @@ namespace FirstPersonController
     {
         return m_jumpInitialVelocity;
     }
-    void FirstPersonControllerComponent::SetJumpInitialVelocity(const float new_jumpInitialVelocity)
+    void FirstPersonControllerComponent::SetJumpInitialVelocity(const float jumpInitialVelocity)
     {
-        m_jumpInitialVelocity = new_jumpInitialVelocity;
+        m_jumpInitialVelocity = jumpInitialVelocity;
         UpdateJumpMaxHoldTime();
     }
     float FirstPersonControllerComponent::GetJumpSecondInitialVelocity() const
     {
         return m_jumpSecondInitialVelocity;
     }
-    void FirstPersonControllerComponent::SetJumpSecondInitialVelocity(const float new_jumpSecondInitialVelocity)
+    void FirstPersonControllerComponent::SetJumpSecondInitialVelocity(const float jumpSecondInitialVelocity)
     {
-        m_jumpSecondInitialVelocity = new_jumpSecondInitialVelocity;
+        m_jumpSecondInitialVelocity = jumpSecondInitialVelocity;
     }
     bool FirstPersonControllerComponent::GetJumpReqRepress() const
     {
         return m_jumpReqRepress;
     }
-    void FirstPersonControllerComponent::SetJumpReqRepress(const bool new_jumpReqRepress)
+    void FirstPersonControllerComponent::SetJumpReqRepress(const bool jumpReqRepress)
     {
-        m_jumpReqRepress = new_jumpReqRepress;
+        m_jumpReqRepress = jumpReqRepress;
     }
     bool FirstPersonControllerComponent::GetJumpRepressHoldCausesJump() const
     {
         return m_jumpRepressHoldCausesJump;
     }
-    void FirstPersonControllerComponent::SetJumpRepressHoldCausesJump(const bool new_jumpRepressHoldCausesJump)
+    void FirstPersonControllerComponent::SetJumpRepressHoldCausesJump(const bool jumpRepressHoldCausesJump)
     {
-        m_jumpRepressHoldCausesJump = new_jumpRepressHoldCausesJump;
+        m_jumpRepressHoldCausesJump = jumpRepressHoldCausesJump;
     }
     bool FirstPersonControllerComponent::GetJumpHeldKeepsJumping() const
     {
         return m_jumpHeldKeepsJumping;
     }
-    void FirstPersonControllerComponent::SetJumpHeldKeepsJumping(const bool new_jumpHeldKeepsJumping)
+    void FirstPersonControllerComponent::SetJumpHeldKeepsJumping(const bool jumpHeldKeepsJumping)
     {
-        m_jumpHeldKeepsJumping = new_jumpHeldKeepsJumping;
+        m_jumpHeldKeepsJumping = jumpHeldKeepsJumping;
     }
     bool FirstPersonControllerComponent::GetJumpHeld() const
     {
         return m_jumpHeld;
     }
-    void FirstPersonControllerComponent::SetJumpHeld(const bool new_jumpHeld)
+    void FirstPersonControllerComponent::SetJumpHeld(const bool jumpHeld)
     {
-        m_jumpHeld = new_jumpHeld;
+        m_jumpHeld = jumpHeld;
     }
     bool FirstPersonControllerComponent::GetDoubleJump() const
     {
         return m_doubleJumpEnabled;
     }
-    void FirstPersonControllerComponent::SetDoubleJump(const bool new_doubleJumpEnabled)
+    void FirstPersonControllerComponent::SetDoubleJump(const bool doubleJumpEnabled)
     {
-        m_doubleJumpEnabled = new_doubleJumpEnabled;
+        m_doubleJumpEnabled = doubleJumpEnabled;
     }
     bool FirstPersonControllerComponent::GetFinalJumpPerformed() const
     {
         return m_onFinalJump;
     }
-    void FirstPersonControllerComponent::SetFinalJumpPerformed(const bool new_onFinalJump)
+    void FirstPersonControllerComponent::SetFinalJumpPerformed(const bool onFinalJump)
     {
-        m_onFinalJump = new_onFinalJump;
+        m_onFinalJump = onFinalJump;
     }
     float FirstPersonControllerComponent::GetGroundedOffset() const
     {
         return m_groundedSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetGroundedOffset(const float new_groundedSphereCastOffset)
+    void FirstPersonControllerComponent::SetGroundedOffset(const float groundedSphereCastOffset)
     {
-        m_groundedSphereCastOffset = new_groundedSphereCastOffset;
+        m_groundedSphereCastOffset = groundedSphereCastOffset;
     }
     float FirstPersonControllerComponent::GetGroundedExtraOffsetMultiplayerDynamic() const
     {
         return m_groundedExtraOffsetMultiplayerDynamic;
     }
-    void FirstPersonControllerComponent::SetGroundedExtraOffsetMultiplayerDynamic(const float new_groundedExtraOffsetMultiplayerDynamic)
+    void FirstPersonControllerComponent::SetGroundedExtraOffsetMultiplayerDynamic(const float groundedExtraOffsetMultiplayerDynamic)
     {
-        m_groundedExtraOffsetMultiplayerDynamic = new_groundedExtraOffsetMultiplayerDynamic;
+        m_groundedExtraOffsetMultiplayerDynamic = groundedExtraOffsetMultiplayerDynamic;
     }
     float FirstPersonControllerComponent::GetGroundCloseOffset() const
     {
         return m_groundCloseSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetGroundCloseOffset(const float new_groundCloseSphereCastOffset)
+    void FirstPersonControllerComponent::SetGroundCloseOffset(const float groundCloseSphereCastOffset)
     {
-        m_groundCloseSphereCastOffset = new_groundCloseSphereCastOffset;
+        m_groundCloseSphereCastOffset = groundCloseSphereCastOffset;
     }
     float FirstPersonControllerComponent::GetGroundCloseCoyoteTimeOffset() const
     {
         return m_groundCloseCoyoteTimeOffset;
     }
-    void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeOffset(const float new_groundCloseCoyoteTimeOffset)
+    void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeOffset(const float groundCloseCoyoteTimeOffset)
     {
-        m_groundCloseCoyoteTimeOffset = new_groundCloseCoyoteTimeOffset;
+        m_groundCloseCoyoteTimeOffset = groundCloseCoyoteTimeOffset;
     }
     float FirstPersonControllerComponent::GetJumpHoldDistance() const
     {
         return m_jumpHoldDistance;
     }
-    void FirstPersonControllerComponent::SetJumpHoldDistance(const float new_jumpHoldDistance)
+    void FirstPersonControllerComponent::SetJumpHoldDistance(const float jumpHoldDistance)
     {
-        m_jumpHoldDistance = new_jumpHoldDistance;
+        m_jumpHoldDistance = jumpHoldDistance;
         UpdateJumpMaxHoldTime();
     }
     float FirstPersonControllerComponent::GetJumpHeadSphereCastOffset() const
     {
         return m_jumpHeadSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetJumpHeadSphereCastOffset(const float new_jumpHeadSphereCastOffset)
+    void FirstPersonControllerComponent::SetJumpHeadSphereCastOffset(const float jumpHeadSphereCastOffset)
     {
-        m_jumpHeadSphereCastOffset = new_jumpHeadSphereCastOffset;
+        m_jumpHeadSphereCastOffset = jumpHeadSphereCastOffset;
     }
     bool FirstPersonControllerComponent::GetHeadHitSetsApogee() const
     {
         return m_headHitSetsApogee;
     }
-    void FirstPersonControllerComponent::SetHeadHitSetsApogee(const bool new_headHitSetsApogee)
+    void FirstPersonControllerComponent::SetHeadHitSetsApogee(const bool headHitSetsApogee)
     {
-        m_headHitSetsApogee = new_headHitSetsApogee;
+        m_headHitSetsApogee = headHitSetsApogee;
     }
     float FirstPersonControllerComponent::GetFellFromHeight() const
     {
         return m_fellFromHeight;
     }
-    void FirstPersonControllerComponent::SetFellFromHeight(const float new_fellFromHeight)
+    void FirstPersonControllerComponent::SetFellFromHeight(const float fellFromHeight)
     {
-        m_fellFromHeight = new_fellFromHeight;
+        m_fellFromHeight = fellFromHeight;
     }
     bool FirstPersonControllerComponent::GetHeadHit() const
     {
         return m_headHit;
     }
-    void FirstPersonControllerComponent::SetHeadHit(const bool new_headHit)
+    void FirstPersonControllerComponent::SetHeadHit(const bool headHit)
     {
-        m_headHit = new_headHit;
+        m_headHit = headHit;
     }
     bool FirstPersonControllerComponent::GetJumpHeadIgnoreDynamicRigidBodies() const
     {
         return m_jumpHeadIgnoreDynamicRigidBodies;
     }
-    void FirstPersonControllerComponent::SetJumpHeadIgnoreDynamicRigidBodies(const bool new_jumpHeadIgnoreDynamicRigidBodies)
+    void FirstPersonControllerComponent::SetJumpHeadIgnoreDynamicRigidBodies(const bool jumpHeadIgnoreDynamicRigidBodies)
     {
-        m_jumpHeadIgnoreDynamicRigidBodies = new_jumpHeadIgnoreDynamicRigidBodies;
+        m_jumpHeadIgnoreDynamicRigidBodies = jumpHeadIgnoreDynamicRigidBodies;
     }
     AZStd::string FirstPersonControllerComponent::GetHeadCollisionGroupName() const
     {
@@ -5643,18 +5643,18 @@ namespace FirstPersonController
         Physics::CollisionRequestBus::BroadcastResult(groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_headCollisionGroup);
         return groupName;
     }
-    void FirstPersonControllerComponent::SetHeadCollisionGroupByName(const AZStd::string& new_headCollisionGroupName)
+    void FirstPersonControllerComponent::SetHeadCollisionGroupByName(const AZStd::string& headCollisionGroupName)
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
         Physics::CollisionRequestBus::BroadcastResult(
-            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_headCollisionGroupName, collisionGroup);
+            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, headCollisionGroupName, collisionGroup);
         if (success)
         {
             m_headCollisionGroup = collisionGroup;
             const AzPhysics::CollisionConfiguration& configuration =
                 AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
-            m_headCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_headCollisionGroupName);
+            m_headCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(headCollisionGroupName);
         }
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetHeadHitEntityIds() const
@@ -5665,25 +5665,25 @@ namespace FirstPersonController
     {
         return m_jumpWhileCrouched;
     }
-    void FirstPersonControllerComponent::SetJumpWhileCrouched(const bool new_jumpWhileCrouched)
+    void FirstPersonControllerComponent::SetJumpWhileCrouched(const bool jumpWhileCrouched)
     {
-        m_jumpWhileCrouched = new_jumpWhileCrouched;
+        m_jumpWhileCrouched = jumpWhileCrouched;
     }
     float FirstPersonControllerComponent::GetCoyoteTime() const
     {
         return m_coyoteTime;
     }
-    void FirstPersonControllerComponent::SetCoyoteTime(const float new_coyoteTime)
+    void FirstPersonControllerComponent::SetCoyoteTime(const float coyoteTime)
     {
-        m_coyoteTime = new_coyoteTime;
+        m_coyoteTime = coyoteTime;
     }
     bool FirstPersonControllerComponent::GetCoyoteTimeNoGravityActive() const
     {
         return m_coyoteTimeNoGravityActive;
     }
-    void FirstPersonControllerComponent::SetCoyoteTimeNoGravityActive(const bool new_coyoteTimeNoGravityActive)
+    void FirstPersonControllerComponent::SetCoyoteTimeNoGravityActive(const bool coyoteTimeNoGravityActive)
     {
-        m_coyoteTimeNoGravityActive = new_coyoteTimeNoGravityActive;
+        m_coyoteTimeNoGravityActive = coyoteTimeNoGravityActive;
     }
     // GetCoyoteTimeNotZero() is not exposed to the request bus, it's used for the visibility attribute in the editor
     bool FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZero() const
@@ -5694,17 +5694,17 @@ namespace FirstPersonController
     {
         return m_ungroundedDueToJump;
     }
-    void FirstPersonControllerComponent::SetUngroundedDueToJump(const bool new_ungroundedDueToJump)
+    void FirstPersonControllerComponent::SetUngroundedDueToJump(const bool ungroundedDueToJump)
     {
-        m_ungroundedDueToJump = new_ungroundedDueToJump;
+        m_ungroundedDueToJump = ungroundedDueToJump;
     }
     bool FirstPersonControllerComponent::GetApplyGravityDuringCoyoteTime() const
     {
         return m_applyGravityDuringCoyoteTime;
     }
-    void FirstPersonControllerComponent::SetApplyGravityDuringCoyoteTime(const bool new_applyGravityDuringCoyoteTime)
+    void FirstPersonControllerComponent::SetApplyGravityDuringCoyoteTime(const bool applyGravityDuringCoyoteTime)
     {
-        m_applyGravityDuringCoyoteTime = new_applyGravityDuringCoyoteTime;
+        m_applyGravityDuringCoyoteTime = applyGravityDuringCoyoteTime;
     }
     bool FirstPersonControllerComponent::GetCoyoteTimeTracksLastNormal() const
     {
@@ -5716,17 +5716,17 @@ namespace FirstPersonController
     {
         return !m_applyGravityDuringCoyoteTime && GetCoyoteTimeGreaterThanZero();
     }
-    void FirstPersonControllerComponent::SetCoyoteTimeTracksLastNormal(const bool new_coyoteTimeTracksLastNormal)
+    void FirstPersonControllerComponent::SetCoyoteTimeTracksLastNormal(const bool coyoteTimeTracksLastNormal)
     {
-        m_coyoteTimeTracksLastNormal = new_coyoteTimeTracksLastNormal;
+        m_coyoteTimeTracksLastNormal = coyoteTimeTracksLastNormal;
     }
     bool FirstPersonControllerComponent::GetStandPrevented() const
     {
         return m_standPrevented;
     }
-    void FirstPersonControllerComponent::SetStandPrevented(const bool new_standPrevented)
+    void FirstPersonControllerComponent::SetStandPrevented(const bool standPrevented)
     {
-        m_standPrevented = new_standPrevented;
+        m_standPrevented = standPrevented;
         if (m_standPrevented)
             m_standPreventedViaScript = true;
         else
@@ -5736,9 +5736,9 @@ namespace FirstPersonController
     {
         return m_standIgnoreDynamicRigidBodies;
     }
-    void FirstPersonControllerComponent::SetStandIgnoreDynamicRigidBodies(const bool new_standIgnoreDynamicRigidBodies)
+    void FirstPersonControllerComponent::SetStandIgnoreDynamicRigidBodies(const bool standIgnoreDynamicRigidBodies)
     {
-        m_standIgnoreDynamicRigidBodies = new_standIgnoreDynamicRigidBodies;
+        m_standIgnoreDynamicRigidBodies = standIgnoreDynamicRigidBodies;
     }
     AZStd::string FirstPersonControllerComponent::GetStandCollisionGroupName() const
     {
@@ -5746,18 +5746,18 @@ namespace FirstPersonController
         Physics::CollisionRequestBus::BroadcastResult(groupName, &Physics::CollisionRequests::GetCollisionGroupName, m_standCollisionGroup);
         return groupName;
     }
-    void FirstPersonControllerComponent::SetStandCollisionGroupByName(const AZStd::string& new_standCollisionGroupName)
+    void FirstPersonControllerComponent::SetStandCollisionGroupByName(const AZStd::string& standCollisionGroupName)
     {
         bool success = false;
         AzPhysics::CollisionGroup collisionGroup;
         Physics::CollisionRequestBus::BroadcastResult(
-            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, new_standCollisionGroupName, collisionGroup);
+            success, &Physics::CollisionRequests::TryGetCollisionGroupByName, standCollisionGroupName, collisionGroup);
         if (success)
         {
             m_standCollisionGroup = collisionGroup;
             const AzPhysics::CollisionConfiguration& configuration =
                 AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration()->m_collisionConfig;
-            m_standCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(new_standCollisionGroupName);
+            m_standCollisionGroupId = configuration.m_collisionGroups.FindGroupIdByName(standCollisionGroupName);
         }
     }
     AZStd::string FirstPersonControllerComponent::GetCollisionGroupName(AzPhysics::CollisionGroup& collisionGroup) const
@@ -5774,75 +5774,74 @@ namespace FirstPersonController
     {
         return m_groundSphereCastsRadiusPercentageIncrease;
     }
-    void FirstPersonControllerComponent::SetGroundSphereCastsRadiusPercentageIncrease(
-        const float new_groundSphereCastsRadiusPercentageIncrease)
+    void FirstPersonControllerComponent::SetGroundSphereCastsRadiusPercentageIncrease(const float groundSphereCastsRadiusPercentageIncrease)
     {
-        m_groundSphereCastsRadiusPercentageIncrease = new_groundSphereCastsRadiusPercentageIncrease;
+        m_groundSphereCastsRadiusPercentageIncrease = groundSphereCastsRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetGroundCloseCoyoteTimeRadiusPercentageIncrease() const
     {
         return m_groundCloseCoyoteTimeRadiusPercentageIncrease;
     }
     void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeRadiusPercentageIncrease(
-        const float new_groundCloseCoyoteTimeRadiusPercentageIncrease)
+        const float groundCloseCoyoteTimeRadiusPercentageIncrease)
     {
-        m_groundCloseCoyoteTimeRadiusPercentageIncrease = new_groundCloseCoyoteTimeRadiusPercentageIncrease;
+        m_groundCloseCoyoteTimeRadiusPercentageIncrease = groundCloseCoyoteTimeRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {
         return m_maxGroundedAngleDegrees;
     }
-    void FirstPersonControllerComponent::SetMaxGroundedAngleDegrees(const float new_maxGroundedAngleDegrees)
+    void FirstPersonControllerComponent::SetMaxGroundedAngleDegrees(const float maxGroundedAngleDegrees)
     {
-        m_maxGroundedAngleDegrees = new_maxGroundedAngleDegrees;
+        m_maxGroundedAngleDegrees = maxGroundedAngleDegrees;
     }
     float FirstPersonControllerComponent::GetTopWalkSpeed() const
     {
         return m_speed;
     }
-    void FirstPersonControllerComponent::SetTopWalkSpeed(const float new_speed)
+    void FirstPersonControllerComponent::SetTopWalkSpeed(const float speed)
     {
-        m_speed = new_speed;
+        m_speed = speed;
     }
     float FirstPersonControllerComponent::GetWalkAcceleration() const
     {
         return m_accel;
     }
-    void FirstPersonControllerComponent::SetWalkAcceleration(const float new_accel)
+    void FirstPersonControllerComponent::SetWalkAcceleration(const float accel)
     {
-        m_accel = new_accel;
+        m_accel = accel;
     }
     float FirstPersonControllerComponent::GetTotalLerpTime() const
     {
         return m_totalLerpTime;
     }
-    void FirstPersonControllerComponent::SetTotalLerpTime(const float new_totalLerpTime)
+    void FirstPersonControllerComponent::SetTotalLerpTime(const float totalLerpTime)
     {
-        m_totalLerpTime = new_totalLerpTime;
+        m_totalLerpTime = totalLerpTime;
     }
     float FirstPersonControllerComponent::GetLerpTime() const
     {
         return m_lerpTime;
     }
-    void FirstPersonControllerComponent::SetLerpTime(const float new_lerpTime)
+    void FirstPersonControllerComponent::SetLerpTime(const float lerpTime)
     {
-        m_lerpTime = new_lerpTime;
+        m_lerpTime = lerpTime;
     }
     float FirstPersonControllerComponent::GetDecelerationFactor() const
     {
         return m_decel;
     }
-    void FirstPersonControllerComponent::SetDecelerationFactor(const float new_decel)
+    void FirstPersonControllerComponent::SetDecelerationFactor(const float decel)
     {
-        m_decel = new_decel;
+        m_decel = decel;
     }
     float FirstPersonControllerComponent::GetOpposingDecel() const
     {
         return m_opposingDecel;
     }
-    void FirstPersonControllerComponent::SetOpposingDecel(const float new_opposingDecel)
+    void FirstPersonControllerComponent::SetOpposingDecel(const float opposingDecel)
     {
-        m_opposingDecel = new_opposingDecel;
+        m_opposingDecel = opposingDecel;
     }
     bool FirstPersonControllerComponent::GetAccelerating() const
     {
@@ -5860,113 +5859,113 @@ namespace FirstPersonController
     {
         return m_instantVelocityRotation;
     }
-    void FirstPersonControllerComponent::SetInstantVelocityRotation(const bool new_instantVelocityRotation)
+    void FirstPersonControllerComponent::SetInstantVelocityRotation(const bool instantVelocityRotation)
     {
-        m_instantVelocityRotation = new_instantVelocityRotation;
+        m_instantVelocityRotation = instantVelocityRotation;
     }
     bool FirstPersonControllerComponent::GetVelocityXYIgnoresObstacles() const
     {
         return m_velocityXYIgnoresObstacles;
     }
-    void FirstPersonControllerComponent::SetVelocityXYIgnoresObstacles(const bool new_velocityXYIgnoresObstacles)
+    void FirstPersonControllerComponent::SetVelocityXYIgnoresObstacles(const bool velocityXYIgnoresObstacles)
     {
-        m_velocityXYIgnoresObstacles = new_velocityXYIgnoresObstacles;
+        m_velocityXYIgnoresObstacles = velocityXYIgnoresObstacles;
     }
     bool FirstPersonControllerComponent::GetGravityIgnoresObstacles() const
     {
         return m_gravityIgnoresObstacles;
     }
-    void FirstPersonControllerComponent::SetGravityIgnoresObstacles(const bool new_gravityIgnoresObstacles)
+    void FirstPersonControllerComponent::SetGravityIgnoresObstacles(const bool gravityIgnoresObstacles)
     {
-        m_gravityIgnoresObstacles = new_gravityIgnoresObstacles;
+        m_gravityIgnoresObstacles = gravityIgnoresObstacles;
     }
     bool FirstPersonControllerComponent::GetPosZIgnoresObstacles() const
     {
         return m_posZIgnoresObstacles;
     }
-    void FirstPersonControllerComponent::SetPosZIgnoresObstacles(const bool new_posZIgnoresObstacles)
+    void FirstPersonControllerComponent::SetPosZIgnoresObstacles(const bool posZIgnoresObstacles)
     {
-        m_posZIgnoresObstacles = new_posZIgnoresObstacles;
+        m_posZIgnoresObstacles = posZIgnoresObstacles;
     }
     bool FirstPersonControllerComponent::GetJumpAllowedWhenGravityPrevented() const
     {
         return m_jumpAllowedWhenGravityPrevented;
     }
-    void FirstPersonControllerComponent::SetJumpAllowedWhenGravityPrevented(const bool new_jumpAllowedWhenGravityPrevented)
+    void FirstPersonControllerComponent::SetJumpAllowedWhenGravityPrevented(const bool jumpAllowedWhenGravityPrevented)
     {
-        m_jumpAllowedWhenGravityPrevented = new_jumpAllowedWhenGravityPrevented;
+        m_jumpAllowedWhenGravityPrevented = jumpAllowedWhenGravityPrevented;
     }
     bool FirstPersonControllerComponent::GetVelocityXYObstructed() const
     {
         return m_velocityXYObstructed;
     }
-    void FirstPersonControllerComponent::SetVelocityXYObstructed(const bool new_velocityXYObstructed)
+    void FirstPersonControllerComponent::SetVelocityXYObstructed(const bool velocityXYObstructed)
     {
-        m_velocityXYObstructed = new_velocityXYObstructed;
+        m_velocityXYObstructed = velocityXYObstructed;
     }
     bool FirstPersonControllerComponent::GetGravityPrevented() const
     {
         return m_gravityPrevented[1];
     }
-    void FirstPersonControllerComponent::SetGravityPrevented(const bool new_gravityPrevented)
+    void FirstPersonControllerComponent::SetGravityPrevented(const bool gravityPrevented)
     {
-        m_gravityPrevented[0] = m_gravityPrevented[1] = new_gravityPrevented;
+        m_gravityPrevented[0] = m_gravityPrevented[1] = gravityPrevented;
     }
     float FirstPersonControllerComponent::GetSprintScaleForward() const
     {
         return m_sprintScaleForward;
     }
-    void FirstPersonControllerComponent::SetSprintScaleForward(const float new_sprintScaleForward)
+    void FirstPersonControllerComponent::SetSprintScaleForward(const float sprintScaleForward)
     {
-        m_sprintScaleForward = new_sprintScaleForward;
+        m_sprintScaleForward = sprintScaleForward;
     }
     float FirstPersonControllerComponent::GetSprintScaleBack() const
     {
         return m_sprintScaleBack;
     }
-    void FirstPersonControllerComponent::SetSprintScaleBack(const float new_sprintScaleBack)
+    void FirstPersonControllerComponent::SetSprintScaleBack(const float sprintScaleBack)
     {
-        m_sprintScaleBack = new_sprintScaleBack;
+        m_sprintScaleBack = sprintScaleBack;
     }
     float FirstPersonControllerComponent::GetSprintScaleLeft() const
     {
         return m_sprintScaleLeft;
     }
-    void FirstPersonControllerComponent::SetSprintScaleLeft(const float new_sprintScaleLeft)
+    void FirstPersonControllerComponent::SetSprintScaleLeft(const float sprintScaleLeft)
     {
-        m_sprintScaleLeft = new_sprintScaleLeft;
+        m_sprintScaleLeft = sprintScaleLeft;
     }
     float FirstPersonControllerComponent::GetSprintScaleRight() const
     {
         return m_sprintScaleRight;
     }
-    void FirstPersonControllerComponent::SetSprintScaleRight(const float new_sprintScaleRight)
+    void FirstPersonControllerComponent::SetSprintScaleRight(const float sprintScaleRight)
     {
-        m_sprintScaleRight = new_sprintScaleRight;
+        m_sprintScaleRight = sprintScaleRight;
     }
     float FirstPersonControllerComponent::GetSprintAccelScale() const
     {
         return m_sprintAccelScale;
     }
-    void FirstPersonControllerComponent::SetSprintAccelScale(const float new_sprintAccelScale)
+    void FirstPersonControllerComponent::SetSprintAccelScale(const float sprintAccelScale)
     {
-        m_sprintAccelScale = new_sprintAccelScale;
+        m_sprintAccelScale = sprintAccelScale;
     }
     float FirstPersonControllerComponent::GetSprintAccumulatedAccel() const
     {
         return m_sprintAccumulatedAccel;
     }
-    void FirstPersonControllerComponent::SetSprintAccumulatedAccel(const float new_sprintAccumulatedAccel)
+    void FirstPersonControllerComponent::SetSprintAccumulatedAccel(const float sprintAccumulatedAccel)
     {
-        m_sprintAccumulatedAccel = new_sprintAccumulatedAccel;
+        m_sprintAccumulatedAccel = sprintAccumulatedAccel;
     }
     float FirstPersonControllerComponent::GetSprintMaxTime() const
     {
         return m_sprintMaxTime;
     }
-    void FirstPersonControllerComponent::SetSprintMaxTime(const float new_sprintMaxTime)
+    void FirstPersonControllerComponent::SetSprintMaxTime(const float sprintMaxTime)
     {
-        m_sprintMaxTime = new_sprintMaxTime;
+        m_sprintMaxTime = sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
@@ -5977,11 +5976,11 @@ namespace FirstPersonController
     {
         return m_sprintHeldDuration;
     }
-    void FirstPersonControllerComponent::SetSprintHeldTime(const float new_sprintHeldDuration)
+    void FirstPersonControllerComponent::SetSprintHeldTime(const float sprintHeldDuration)
     {
         const float prevSprintHeldDuration = m_sprintHeldDuration;
-        if (new_sprintHeldDuration <= m_sprintMaxTime)
-            m_sprintHeldDuration = new_sprintHeldDuration;
+        if (sprintHeldDuration <= m_sprintMaxTime)
+            m_sprintHeldDuration = sprintHeldDuration;
         else
             m_sprintHeldDuration = m_sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
@@ -6004,20 +6003,20 @@ namespace FirstPersonController
     {
         return m_sprintRegenRate;
     }
-    void FirstPersonControllerComponent::SetSprintRegenRate(const float new_sprintRegenRate)
+    void FirstPersonControllerComponent::SetSprintRegenRate(const float sprintRegenRate)
     {
-        m_sprintRegenRate = new_sprintRegenRate;
+        m_sprintRegenRate = sprintRegenRate;
     }
     float FirstPersonControllerComponent::GetStaminaPercentage() const
     {
         return m_staminaPercentage;
     }
-    void FirstPersonControllerComponent::SetStaminaPercentage(const float new_staminaPercentage)
+    void FirstPersonControllerComponent::SetStaminaPercentage(const float staminaPercentage)
     {
         const float prevStaminaPercentage = m_staminaPercentage;
-        if (new_staminaPercentage >= 0.f && new_staminaPercentage <= 100.f)
-            m_staminaPercentage = new_staminaPercentage;
-        else if (new_staminaPercentage < 0.f)
+        if (staminaPercentage >= 0.f && staminaPercentage <= 100.f)
+            m_staminaPercentage = staminaPercentage;
+        else if (staminaPercentage < 0.f)
             m_staminaPercentage = 0.f;
         else
             m_staminaPercentage = 100.f;
@@ -6049,17 +6048,17 @@ namespace FirstPersonController
     {
         return m_sprintUsesStamina;
     }
-    void FirstPersonControllerComponent::SetSprintUsesStamina(const bool new_sprintUsesStamina)
+    void FirstPersonControllerComponent::SetSprintUsesStamina(const bool sprintUsesStamina)
     {
-        m_sprintUsesStamina = new_sprintUsesStamina;
+        m_sprintUsesStamina = sprintUsesStamina;
     }
     bool FirstPersonControllerComponent::GetRegenerateStaminaAutomatically() const
     {
         return m_regenerateStaminaAutomatically;
     }
-    void FirstPersonControllerComponent::SetRegenerateStaminaAutomatically(const bool new_regenerateStaminaAutomatically)
+    void FirstPersonControllerComponent::SetRegenerateStaminaAutomatically(const bool regenerateStaminaAutomatically)
     {
-        m_regenerateStaminaAutomatically = new_regenerateStaminaAutomatically;
+        m_regenerateStaminaAutomatically = regenerateStaminaAutomatically;
     }
     bool FirstPersonControllerComponent::GetSprinting() const
     {
@@ -6085,9 +6084,9 @@ namespace FirstPersonController
     {
         return m_sprintTotalCooldownTime;
     }
-    void FirstPersonControllerComponent::SetSprintTotalCooldownTime(const float new_sprintTotalCooldownTime)
+    void FirstPersonControllerComponent::SetSprintTotalCooldownTime(const float sprintTotalCooldownTime)
     {
-        m_sprintTotalCooldownTime = new_sprintTotalCooldownTime;
+        m_sprintTotalCooldownTime = sprintTotalCooldownTime;
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
@@ -6098,97 +6097,97 @@ namespace FirstPersonController
     {
         return m_sprintCooldownTimer;
     }
-    void FirstPersonControllerComponent::SetSprintCooldownTimer(const float new_sprintCooldownTimer)
+    void FirstPersonControllerComponent::SetSprintCooldownTimer(const float sprintCooldownTimer)
     {
-        m_sprintCooldownTimer = new_sprintCooldownTimer;
+        m_sprintCooldownTimer = sprintCooldownTimer;
     }
     float FirstPersonControllerComponent::GetSprintPauseTime() const
     {
         return m_sprintPauseTime;
     }
-    void FirstPersonControllerComponent::SetSprintPauseTime(const float new_sprintPauseTime)
+    void FirstPersonControllerComponent::SetSprintPauseTime(const float sprintPauseTime)
     {
-        m_sprintPauseTime = new_sprintPauseTime;
+        m_sprintPauseTime = sprintPauseTime;
     }
     float FirstPersonControllerComponent::GetSprintPause() const
     {
         return m_sprintPause;
     }
-    void FirstPersonControllerComponent::SetSprintPause(const float new_sprintPause)
+    void FirstPersonControllerComponent::SetSprintPause(const float sprintPause)
     {
-        m_sprintPause = new_sprintPause;
+        m_sprintPause = sprintPause;
     }
     bool FirstPersonControllerComponent::GetSprintBackwards() const
     {
         return m_sprintBackwards;
     }
-    void FirstPersonControllerComponent::SetSprintBackwards(const bool new_sprintBackwards)
+    void FirstPersonControllerComponent::SetSprintBackwards(const bool sprintBackwards)
     {
-        m_sprintBackwards = new_sprintBackwards;
+        m_sprintBackwards = sprintBackwards;
     }
     bool FirstPersonControllerComponent::GetSprintWhileCrouched() const
     {
         return m_sprintWhileCrouched;
     }
-    void FirstPersonControllerComponent::SetSprintWhileCrouched(const bool new_sprintWhileCrouched)
+    void FirstPersonControllerComponent::SetSprintWhileCrouched(const bool sprintWhileCrouched)
     {
-        m_sprintWhileCrouched = new_sprintWhileCrouched;
+        m_sprintWhileCrouched = sprintWhileCrouched;
     }
     bool FirstPersonControllerComponent::GetSprintInAir() const
     {
         return m_sprintInAir;
     }
-    void FirstPersonControllerComponent::SetSprintInAir(const bool new_sprintInAir)
+    void FirstPersonControllerComponent::SetSprintInAir(const bool sprintInAir)
     {
-        m_sprintInAir = new_sprintInAir;
+        m_sprintInAir = sprintInAir;
     }
     bool FirstPersonControllerComponent::GetSprintEnableToggle() const
     {
         return m_sprintEnableToggle;
     }
-    void FirstPersonControllerComponent::SetSprintEnableToggle(const bool new_sprintEnableToggle)
+    void FirstPersonControllerComponent::SetSprintEnableToggle(const bool sprintEnableToggle)
     {
-        m_sprintEnableToggle = new_sprintEnableToggle;
+        m_sprintEnableToggle = sprintEnableToggle;
     }
     bool FirstPersonControllerComponent::GetSprintToggleAutomatically() const
     {
         return m_sprintToggleAutomatically;
     }
-    void FirstPersonControllerComponent::SetSprintToggleAutomatically(const bool new_sprintToggleAutomatically)
+    void FirstPersonControllerComponent::SetSprintToggleAutomatically(const bool sprintToggleAutomatically)
     {
-        m_sprintToggleAutomatically = new_sprintToggleAutomatically;
+        m_sprintToggleAutomatically = sprintToggleAutomatically;
     }
     bool FirstPersonControllerComponent::GetSprintAutoToggleOutOfCrouch() const
     {
         return m_sprintAutoToggleOutOfCrouch;
     }
-    void FirstPersonControllerComponent::SetSprintAutoToggleOutOfCrouch(const bool new_sprintAutoToggleOutOfCrouch)
+    void FirstPersonControllerComponent::SetSprintAutoToggleOutOfCrouch(const bool sprintAutoToggleOutOfCrouch)
     {
-        m_sprintAutoToggleOutOfCrouch = new_sprintAutoToggleOutOfCrouch;
+        m_sprintAutoToggleOutOfCrouch = sprintAutoToggleOutOfCrouch;
     }
     bool FirstPersonControllerComponent::GetSprintViaScript() const
     {
         return m_sprintViaScript;
     }
-    void FirstPersonControllerComponent::SetSprintViaScript(const bool new_sprintViaScript)
+    void FirstPersonControllerComponent::SetSprintViaScript(const bool sprintViaScript)
     {
-        m_sprintViaScript = new_sprintViaScript;
+        m_sprintViaScript = sprintViaScript;
     }
     bool FirstPersonControllerComponent::GetSprintEnableDisable() const
     {
         return m_sprintEnableDisable;
     }
-    void FirstPersonControllerComponent::SetSprintEnableDisable(const bool new_sprintEnableDisable)
+    void FirstPersonControllerComponent::SetSprintEnableDisable(const bool sprintEnableDisable)
     {
-        m_sprintEnableDisable = new_sprintEnableDisable;
+        m_sprintEnableDisable = sprintEnableDisable;
     }
     bool FirstPersonControllerComponent::GetCrouching() const
     {
         return m_crouching;
     }
-    void FirstPersonControllerComponent::SetCrouching(const bool new_crouching)
+    void FirstPersonControllerComponent::SetCrouching(const bool crouching)
     {
-        m_crouching = new_crouching;
+        m_crouching = crouching;
     }
     bool FirstPersonControllerComponent::GetCrouched() const
     {
@@ -6206,23 +6205,23 @@ namespace FirstPersonController
     {
         return m_crouchScriptLocked;
     }
-    void FirstPersonControllerComponent::SetCrouchScriptLocked(const bool new_crouchScriptLocked)
+    void FirstPersonControllerComponent::SetCrouchScriptLocked(const bool crouchScriptLocked)
     {
-        m_crouchScriptLocked = new_crouchScriptLocked;
+        m_crouchScriptLocked = crouchScriptLocked;
     }
     float FirstPersonControllerComponent::GetCrouchScale() const
     {
         return m_crouchScale;
     }
-    void FirstPersonControllerComponent::SetCrouchScale(const float new_crouchScale)
+    void FirstPersonControllerComponent::SetCrouchScale(const float crouchScale)
     {
-        m_crouchScale = new_crouchScale;
+        m_crouchScale = crouchScale;
     }
     float FirstPersonControllerComponent::GetCrouchDistance() const
     {
         return m_crouchDistance;
     }
-    void FirstPersonControllerComponent::SetCrouchDistance(const float new_crouchDistance)
+    void FirstPersonControllerComponent::SetCrouchDistance(const float crouchDistance)
     {
         // Calculate the maximum allowable crouch distance based on the capsule dimensions.
         // The crouch distance cannot exceed the capsule height minus twice the radius to ensure
@@ -6231,14 +6230,14 @@ namespace FirstPersonController
 
         // Issue a warning if the provided distance was adjusted to fit within capsule limits.
         // This helps users understand why their input was modified and avoid unexpected behavior.
-        if (new_crouchDistance > maxCrouchDistance)
+        if (crouchDistance > maxCrouchDistance)
         {
             AZ_Warning(
                 "First Person Controller Component",
                 false,
                 "Requested crouch distance (%.3f) exceeds maximum allowable based on capsule dimensions (height: %.3f, radius: %.3f). "
                 "Clamping to maximum value of %.3f to maintain valid collider.",
-                new_crouchDistance,
+                crouchDistance,
                 m_capsuleHeight,
                 m_capsuleRadius,
                 maxCrouchDistance);
@@ -6246,7 +6245,7 @@ namespace FirstPersonController
 
         // Set the crouch distance, clamping it to the maximum allowable value if necessary.
         // This prevents invalid collider states where the crouched height would be too small.
-        m_crouchDistance = AZ::GetMin(new_crouchDistance, maxCrouchDistance);
+        m_crouchDistance = AZ::GetMin(crouchDistance, maxCrouchDistance);
     }
     bool FirstPersonControllerComponent::GetCrouchingDownMove() const
     {
@@ -6260,233 +6259,233 @@ namespace FirstPersonController
     {
         return m_uncrouchHeadSphereCastOffset;
     }
-    void FirstPersonControllerComponent::SetUncrouchHeadSphereCastOffset(const float new_uncrouchHeadSphereCastOffset)
+    void FirstPersonControllerComponent::SetUncrouchHeadSphereCastOffset(const float uncrouchHeadSphereCastOffset)
     {
-        m_uncrouchHeadSphereCastOffset = new_uncrouchHeadSphereCastOffset;
+        m_uncrouchHeadSphereCastOffset = uncrouchHeadSphereCastOffset;
     }
     bool FirstPersonControllerComponent::GetCrouchEnableToggle() const
     {
         return m_crouchEnableToggle;
     }
-    void FirstPersonControllerComponent::SetCrouchEnableToggle(const bool new_crouchEnableToggle)
+    void FirstPersonControllerComponent::SetCrouchEnableToggle(const bool crouchEnableToggle)
     {
-        m_crouchEnableToggle = new_crouchEnableToggle;
+        m_crouchEnableToggle = crouchEnableToggle;
     }
     bool FirstPersonControllerComponent::GetCrouchJumpCausesStanding() const
     {
         return m_crouchJumpCausesStanding;
     }
-    void FirstPersonControllerComponent::SetCrouchJumpCausesStanding(const bool new_crouchJumpCausesStanding)
+    void FirstPersonControllerComponent::SetCrouchJumpCausesStanding(const bool crouchJumpCausesStanding)
     {
-        m_crouchJumpCausesStanding = new_crouchJumpCausesStanding;
+        m_crouchJumpCausesStanding = crouchJumpCausesStanding;
     }
     bool FirstPersonControllerComponent::GetCrouchPendJumps() const
     {
         return m_crouchPendJumps;
     }
-    void FirstPersonControllerComponent::SetCrouchPendJumps(const bool new_crouchPendJumps)
+    void FirstPersonControllerComponent::SetCrouchPendJumps(const bool crouchPendJumps)
     {
-        m_crouchPendJumps = new_crouchPendJumps;
+        m_crouchPendJumps = crouchPendJumps;
     }
     bool FirstPersonControllerComponent::GetCrouchSprintCausesStanding() const
     {
         return m_crouchSprintCausesStanding;
     }
-    void FirstPersonControllerComponent::SetCrouchSprintCausesStanding(const bool new_crouchSprintCausesStanding)
+    void FirstPersonControllerComponent::SetCrouchSprintCausesStanding(const bool crouchSprintCausesStanding)
     {
-        m_crouchSprintCausesStanding = new_crouchSprintCausesStanding;
+        m_crouchSprintCausesStanding = crouchSprintCausesStanding;
     }
     bool FirstPersonControllerComponent::GetCrouchPriorityWhenSprintPressed() const
     {
         return m_crouchPriorityWhenSprintPressed;
     }
-    void FirstPersonControllerComponent::SetCrouchPriorityWhenSprintPressed(const bool new_crouchPriorityWhenSprintPressed)
+    void FirstPersonControllerComponent::SetCrouchPriorityWhenSprintPressed(const bool crouchPriorityWhenSprintPressed)
     {
-        m_crouchPriorityWhenSprintPressed = new_crouchPriorityWhenSprintPressed;
+        m_crouchPriorityWhenSprintPressed = crouchPriorityWhenSprintPressed;
     }
     bool FirstPersonControllerComponent::GetCrouchWhenNotGrounded() const
     {
         return m_crouchWhenNotGrounded;
     }
-    void FirstPersonControllerComponent::SetCrouchWhenNotGrounded(const bool new_crouchWhenNotGrounded)
+    void FirstPersonControllerComponent::SetCrouchWhenNotGrounded(const bool crouchWhenNotGrounded)
     {
-        m_crouchWhenNotGrounded = new_crouchWhenNotGrounded;
+        m_crouchWhenNotGrounded = crouchWhenNotGrounded;
     }
     float FirstPersonControllerComponent::GetCrouchDownProportionalGain() const
     {
         return m_crouchDownProportionalGain;
     }
-    void FirstPersonControllerComponent::SetCrouchDownProportionalGain(const float new_crouchDownProportionalGain)
+    void FirstPersonControllerComponent::SetCrouchDownProportionalGain(const float crouchDownProportionalGain)
     {
-        m_crouchDownProportionalGain = new_crouchDownProportionalGain;
-        m_crouchDownPidController.SetProportionalGain(new_crouchDownProportionalGain);
+        m_crouchDownProportionalGain = crouchDownProportionalGain;
+        m_crouchDownPidController.SetProportionalGain(crouchDownProportionalGain);
     }
     float FirstPersonControllerComponent::GetCrouchDownIntegralGain() const
     {
         return m_crouchDownIntegralGain;
     }
-    void FirstPersonControllerComponent::SetCrouchDownIntegralGain(const float new_crouchDownIntegralGain)
+    void FirstPersonControllerComponent::SetCrouchDownIntegralGain(const float crouchDownIntegralGain)
     {
-        m_crouchDownIntegralGain = new_crouchDownIntegralGain;
-        m_crouchDownPidController.SetIntegralGain(new_crouchDownIntegralGain);
+        m_crouchDownIntegralGain = crouchDownIntegralGain;
+        m_crouchDownPidController.SetIntegralGain(crouchDownIntegralGain);
     }
     float FirstPersonControllerComponent::GetCrouchDownDerivativeGain() const
     {
         return m_crouchDownDerivativeGain;
     }
-    void FirstPersonControllerComponent::SetCrouchDownDerivativeGain(const float new_crouchDownDerivativeGain)
+    void FirstPersonControllerComponent::SetCrouchDownDerivativeGain(const float crouchDownDerivativeGain)
     {
-        m_crouchDownDerivativeGain = new_crouchDownDerivativeGain;
-        m_crouchDownPidController.SetDerivativeGain(new_crouchDownDerivativeGain);
+        m_crouchDownDerivativeGain = crouchDownDerivativeGain;
+        m_crouchDownPidController.SetDerivativeGain(crouchDownDerivativeGain);
     }
     float FirstPersonControllerComponent::GetCrouchDownIntegralWindupLimit() const
     {
         return m_crouchDownIntegralWindupLimit;
     }
-    void FirstPersonControllerComponent::SetCrouchDownIntegralWindupLimit(const float new_crouchDownIntegralWindupLimit)
+    void FirstPersonControllerComponent::SetCrouchDownIntegralWindupLimit(const float crouchDownIntegralWindupLimit)
     {
-        m_crouchDownIntegralWindupLimit = new_crouchDownIntegralWindupLimit;
-        m_crouchDownPidController.SetIntegralWindupLimit(new_crouchDownIntegralWindupLimit);
+        m_crouchDownIntegralWindupLimit = crouchDownIntegralWindupLimit;
+        m_crouchDownPidController.SetIntegralWindupLimit(crouchDownIntegralWindupLimit);
     }
     float FirstPersonControllerComponent::GetCrouchDownDerivativeFilterAlpha() const
     {
         return m_crouchDownDerivativeFilterAlpha;
     }
-    void FirstPersonControllerComponent::SetCrouchDownDerivativeFilterAlpha(const float new_crouchDownDerivativeFilterAlpha)
+    void FirstPersonControllerComponent::SetCrouchDownDerivativeFilterAlpha(const float crouchDownDerivativeFilterAlpha)
     {
-        m_crouchDownDerivativeFilterAlpha = new_crouchDownDerivativeFilterAlpha;
-        m_crouchDownPidController.SetDerivativeFilterAlpha(new_crouchDownDerivativeFilterAlpha);
+        m_crouchDownDerivativeFilterAlpha = crouchDownDerivativeFilterAlpha;
+        m_crouchDownPidController.SetDerivativeFilterAlpha(crouchDownDerivativeFilterAlpha);
     }
     PidController<float>::DerivativeCalculationMode FirstPersonControllerComponent::GetCrouchDownDerivativeMode() const
     {
         return m_crouchDownDerivativeMode;
     }
     void FirstPersonControllerComponent::SetCrouchDownDerivativeMode(
-        const PidController<float>::DerivativeCalculationMode& new_crouchDownDerivativeMode)
+        const PidController<float>::DerivativeCalculationMode& crouchDownDerivativeMode)
     {
-        m_crouchDownDerivativeMode = new_crouchDownDerivativeMode;
-        m_crouchDownPidController.SetDerivativeMode(new_crouchDownDerivativeMode);
+        m_crouchDownDerivativeMode = crouchDownDerivativeMode;
+        m_crouchDownPidController.SetDerivativeMode(crouchDownDerivativeMode);
         m_crouchDownPidController.Reset();
     }
     float FirstPersonControllerComponent::GetStandUpProportionalGain() const
     {
         return m_standUpProportionalGain;
     }
-    void FirstPersonControllerComponent::SetStandUpProportionalGain(const float new_standUpProportionalGain)
+    void FirstPersonControllerComponent::SetStandUpProportionalGain(const float standUpProportionalGain)
     {
-        m_standUpProportionalGain = new_standUpProportionalGain;
-        m_standUpPidController.SetProportionalGain(new_standUpProportionalGain);
+        m_standUpProportionalGain = standUpProportionalGain;
+        m_standUpPidController.SetProportionalGain(standUpProportionalGain);
     }
     float FirstPersonControllerComponent::GetStandUpIntegralGain() const
     {
         return m_standUpIntegralGain;
     }
-    void FirstPersonControllerComponent::SetStandUpIntegralGain(const float new_standUpIntegralGain)
+    void FirstPersonControllerComponent::SetStandUpIntegralGain(const float standUpIntegralGain)
     {
-        m_standUpIntegralGain = new_standUpIntegralGain;
-        m_standUpPidController.SetIntegralGain(new_standUpIntegralGain);
+        m_standUpIntegralGain = standUpIntegralGain;
+        m_standUpPidController.SetIntegralGain(standUpIntegralGain);
     }
     float FirstPersonControllerComponent::GetStandUpDerivativeGain() const
     {
         return m_standUpDerivativeGain;
     }
-    void FirstPersonControllerComponent::SetStandUpDerivativeGain(const float new_standUpDerivativeGain)
+    void FirstPersonControllerComponent::SetStandUpDerivativeGain(const float standUpDerivativeGain)
     {
-        m_standUpDerivativeGain = new_standUpDerivativeGain;
-        m_standUpPidController.SetDerivativeGain(new_standUpDerivativeGain);
+        m_standUpDerivativeGain = standUpDerivativeGain;
+        m_standUpPidController.SetDerivativeGain(standUpDerivativeGain);
     }
     float FirstPersonControllerComponent::GetStandUpIntegralWindupLimit() const
     {
         return m_standUpIntegralWindupLimit;
     }
-    void FirstPersonControllerComponent::SetStandUpIntegralWindupLimit(const float new_standUpIntegralWindupLimit)
+    void FirstPersonControllerComponent::SetStandUpIntegralWindupLimit(const float standUpIntegralWindupLimit)
     {
-        m_standUpIntegralWindupLimit = new_standUpIntegralWindupLimit;
-        m_standUpPidController.SetIntegralWindupLimit(new_standUpIntegralWindupLimit);
+        m_standUpIntegralWindupLimit = standUpIntegralWindupLimit;
+        m_standUpPidController.SetIntegralWindupLimit(standUpIntegralWindupLimit);
     }
     float FirstPersonControllerComponent::GetStandUpDerivativeFilterAlpha() const
     {
         return m_standUpDerivativeFilterAlpha;
     }
-    void FirstPersonControllerComponent::SetStandUpDerivativeFilterAlpha(const float new_standUpDerivativeFilterAlpha)
+    void FirstPersonControllerComponent::SetStandUpDerivativeFilterAlpha(const float standUpDerivativeFilterAlpha)
     {
-        m_standUpDerivativeFilterAlpha = new_standUpDerivativeFilterAlpha;
-        m_standUpPidController.SetDerivativeFilterAlpha(new_standUpDerivativeFilterAlpha);
+        m_standUpDerivativeFilterAlpha = standUpDerivativeFilterAlpha;
+        m_standUpPidController.SetDerivativeFilterAlpha(standUpDerivativeFilterAlpha);
     }
     PidController<float>::DerivativeCalculationMode FirstPersonControllerComponent::GetStandUpDerivativeMode() const
     {
         return m_standUpDerivativeMode;
     }
     void FirstPersonControllerComponent::SetStandUpDerivativeMode(
-        const PidController<float>::DerivativeCalculationMode& new_standUpDerivativeMode)
+        const PidController<float>::DerivativeCalculationMode& standUpDerivativeMode)
     {
-        m_standUpDerivativeMode = new_standUpDerivativeMode;
-        m_standUpPidController.SetDerivativeMode(new_standUpDerivativeMode);
+        m_standUpDerivativeMode = standUpDerivativeMode;
+        m_standUpPidController.SetDerivativeMode(standUpDerivativeMode);
         m_standUpPidController.Reset();
     }
     bool FirstPersonControllerComponent::GetEnableCameraCharacterRotation() const
     {
         return m_enableCameraCharacterRotation;
     }
-    void FirstPersonControllerComponent::SetEnableCameraCharacterRotation(const bool new_enableCameraCharacterRotation)
+    void FirstPersonControllerComponent::SetEnableCameraCharacterRotation(const bool enableCameraCharacterRotation)
     {
-        m_enableCameraCharacterRotation = new_enableCameraCharacterRotation;
+        m_enableCameraCharacterRotation = enableCameraCharacterRotation;
     }
     float FirstPersonControllerComponent::GetCharacterAndCameraYawSensitivity() const
     {
         return m_yawSensitivity;
     }
-    void FirstPersonControllerComponent::SetCharacterAndCameraYawSensitivity(const float new_yawSensitivity)
+    void FirstPersonControllerComponent::SetCharacterAndCameraYawSensitivity(const float yawSensitivity)
     {
-        m_yawSensitivity = new_yawSensitivity;
+        m_yawSensitivity = yawSensitivity;
     }
     float FirstPersonControllerComponent::GetCameraPitchSensitivity() const
     {
         return m_pitchSensitivity;
     }
-    void FirstPersonControllerComponent::SetCameraPitchSensitivity(const float new_pitchSensitivity)
+    void FirstPersonControllerComponent::SetCameraPitchSensitivity(const float pitchSensitivity)
     {
-        m_pitchSensitivity = new_pitchSensitivity;
+        m_pitchSensitivity = pitchSensitivity;
     }
     float FirstPersonControllerComponent::GetCameraPitchMaxAngleRadians() const
     {
         return m_cameraPitchMaxAngle;
     }
-    void FirstPersonControllerComponent::SetCameraPitchMaxAngleRadians(const float new_cameraPitchMaxAngleRadians)
+    void FirstPersonControllerComponent::SetCameraPitchMaxAngleRadians(const float cameraPitchMaxAngleRadians)
     {
-        m_cameraPitchMaxAngle = new_cameraPitchMaxAngleRadians;
+        m_cameraPitchMaxAngle = cameraPitchMaxAngleRadians;
     }
     float FirstPersonControllerComponent::GetCameraPitchMaxAngleDegrees() const
     {
         return AZ::RadToDeg(m_cameraPitchMaxAngle);
     }
-    void FirstPersonControllerComponent::SetCameraPitchMaxAngleDegrees(const float new_cameraPitchMaxAngleDegrees)
+    void FirstPersonControllerComponent::SetCameraPitchMaxAngleDegrees(const float cameraPitchMaxAngleDegrees)
     {
-        m_cameraPitchMaxAngle = AZ::DegToRad(new_cameraPitchMaxAngleDegrees);
+        m_cameraPitchMaxAngle = AZ::DegToRad(cameraPitchMaxAngleDegrees);
     }
     float FirstPersonControllerComponent::GetCameraPitchMinAngleRadians() const
     {
         return m_cameraPitchMinAngle;
     }
-    void FirstPersonControllerComponent::SetCameraPitchMinAngleRadians(const float new_cameraPitchMinAngleRadians)
+    void FirstPersonControllerComponent::SetCameraPitchMinAngleRadians(const float cameraPitchMinAngleRadians)
     {
-        m_cameraPitchMinAngle = new_cameraPitchMinAngleRadians;
+        m_cameraPitchMinAngle = cameraPitchMinAngleRadians;
     }
     float FirstPersonControllerComponent::GetCameraPitchMinAngleDegrees() const
     {
         return AZ::RadToDeg(m_cameraPitchMinAngle);
     }
-    void FirstPersonControllerComponent::SetCameraPitchMinAngleDegrees(const float new_cameraPitchMinAngleDegrees)
+    void FirstPersonControllerComponent::SetCameraPitchMinAngleDegrees(const float cameraPitchMinAngleDegrees)
     {
-        m_cameraPitchMinAngle = AZ::DegToRad(new_cameraPitchMinAngleDegrees);
+        m_cameraPitchMinAngle = AZ::DegToRad(cameraPitchMinAngleDegrees);
     }
     float FirstPersonControllerComponent::GetCameraRotationDampFactor() const
     {
         return m_rotationDamp;
     }
-    void FirstPersonControllerComponent::SetCameraRotationDampFactor(const float new_rotationDamp)
+    void FirstPersonControllerComponent::SetCameraRotationDampFactor(const float rotationDamp)
     {
-        m_rotationDamp = new_rotationDamp;
+        m_rotationDamp = rotationDamp;
     }
     AZ::TransformInterface* FirstPersonControllerComponent::GetCharacterTransformInterfacePtr() const
     {
@@ -6496,43 +6495,43 @@ namespace FirstPersonController
     {
         return GetEntity()->GetTransform()->GetWorldTM();
     }
-    void FirstPersonControllerComponent::SetCharacterTransform(const AZ::Transform& new_characterTransform)
+    void FirstPersonControllerComponent::SetCharacterTransform(const AZ::Transform& characterTransform)
     {
-        GetEntity()->GetTransform()->SetWorldTM(new_characterTransform);
+        GetEntity()->GetTransform()->SetWorldTM(characterTransform);
     }
     AZ::Vector3 FirstPersonControllerComponent::GetCharacterWorldTranslation() const
     {
         return GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
     }
-    void FirstPersonControllerComponent::SetCharacterWorldTranslation(const AZ::Vector3& new_characterWorldTranslation)
+    void FirstPersonControllerComponent::SetCharacterWorldTranslation(const AZ::Vector3& characterWorldTranslation)
     {
-        GetEntity()->GetTransform()->SetWorldTranslation(new_characterWorldTranslation);
+        GetEntity()->GetTransform()->SetWorldTranslation(characterWorldTranslation);
     }
     void FirstPersonControllerComponent::UpdateCharacterAndCameraYaw(
-        const float new_characterAndCameraYawAngle, const bool updateCharacterAndCameraYawConsidersInput)
+        const float characterAndCameraYawAngle, const bool updateCharacterAndCameraYawConsidersInput)
     {
         if (updateCharacterAndCameraYawConsidersInput)
             m_cameraRotationAnglesDelta.SetZ(
-                m_cameraRotationAnglesDelta.GetZ() + new_characterAndCameraYawAngle - m_yawValue * m_yawSensitivity);
+                m_cameraRotationAnglesDelta.GetZ() + characterAndCameraYawAngle - m_yawValue * m_yawSensitivity);
         else
-            m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() + new_characterAndCameraYawAngle);
+            m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() + characterAndCameraYawAngle);
         m_rotatingYawViaScriptGamepad = true;
     }
-    void FirstPersonControllerComponent::UpdateCameraPitch(const float new_cameraPitchAngle, const bool updateCameraPitchConsidersInput)
+    void FirstPersonControllerComponent::UpdateCameraPitch(const float cameraPitchAngle, const bool updateCameraPitchConsidersInput)
     {
         if (updateCameraPitchConsidersInput)
-            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + new_cameraPitchAngle - m_pitchValue * m_pitchSensitivity);
+            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngle - m_pitchValue * m_pitchSensitivity);
         else
-            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + new_cameraPitchAngle);
+            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngle);
         m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const
     {
         return m_currentHeading;
     }
-    void FirstPersonControllerComponent::SetHeadingForTick(const float new_currentHeading)
+    void FirstPersonControllerComponent::SetHeadingForTick(const float currentHeading)
     {
-        m_currentHeading = new_currentHeading;
+        m_currentHeading = currentHeading;
         m_scriptSetCurrentHeadingTick = true;
     }
     float FirstPersonControllerComponent::GetPitch() const
@@ -6559,9 +6558,9 @@ namespace FirstPersonController
     {
         return m_isNetBot;
     }
-    void FirstPersonControllerComponent::SetIsNetBot(const bool new_isNetBot)
+    void FirstPersonControllerComponent::SetIsNetBot(const bool isNetBot)
     {
-        m_isNetBot = new_isNetBot;
+        m_isNetBot = isNetBot;
     }
 #ifdef NETWORKFPC
     AZStd::string FirstPersonControllerComponent::GetStringNetEntityIdById(const AZ::EntityId& entityId) const
@@ -6746,11 +6745,11 @@ namespace FirstPersonController
 #endif
             return true;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs([[maybe_unused]] const bool new_allowAllMovementInputs)
+    void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs([[maybe_unused]] const bool allowAllMovementInputs)
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            m_networkFPCControllerObject->m_allowAllMovementInputs = new_allowAllMovementInputs;
+            m_networkFPCControllerObject->m_allowAllMovementInputs = allowAllMovementInputs;
 #endif
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowRotationInputs() const
@@ -6762,11 +6761,11 @@ namespace FirstPersonController
 #endif
             return true;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCAllowRotationInputs([[maybe_unused]] const bool new_allowRotationInputs)
+    void FirstPersonControllerComponent::SetNetworkFPCAllowRotationInputs([[maybe_unused]] const bool allowRotationInputs)
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            m_networkFPCControllerObject->m_allowRotationInputs = new_allowRotationInputs;
+            m_networkFPCControllerObject->m_allowRotationInputs = allowRotationInputs;
 #endif
     }
     AZ::TimeMs FirstPersonControllerComponent::GetNetworkFPCHostTimeMs() const
@@ -6781,9 +6780,9 @@ namespace FirstPersonController
     {
         return m_networkFPCEnabled;
     }
-    void FirstPersonControllerComponent::SetLocallyEnableNetworkFPC(const bool new_networkFPCEnabled)
+    void FirstPersonControllerComponent::SetLocallyEnableNetworkFPC(const bool networkFPCEnabled)
     {
-        m_networkFPCEnabled = new_networkFPCEnabled;
+        m_networkFPCEnabled = networkFPCEnabled;
 #ifdef NETWORKFPC
         NetworkFPCControllerRequestBus::Event(GetEntityId(), &NetworkFPCControllerRequestBus::Events::SetEnabled, m_networkFPCEnabled);
 #endif

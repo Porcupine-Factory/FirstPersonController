@@ -50,11 +50,11 @@ namespace FirstPersonController
 
         // CameraCoupledChildRequestBus
         bool GetEnableCameraCoupledChild() const override;
-        void SetEnableCameraCoupledChild(const bool new_enable) override;
+        void SetEnableCameraCoupledChild(const bool enable) override;
         float GetInitialZOffset() const override;
-        void SetInitialZOffset(const float new_initialZOffset) override;
+        void SetInitialZOffset(const float initialZOffset) override;
         AZ::Vector2 GetOffset() const override;
-        void SetOffset(const AZ::Vector2 new_offset) override;
+        void SetOffset(const AZ::Vector2 offset) override;
 
     private:
         // Input event assignment and notification bus connection

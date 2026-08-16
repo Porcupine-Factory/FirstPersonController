@@ -219,24 +219,24 @@ namespace FirstPersonController
     {
         return m_enable;
     }
-    void CameraCoupledChildComponent::SetEnableCameraCoupledChild(const bool new_enable)
+    void CameraCoupledChildComponent::SetEnableCameraCoupledChild(const bool enable)
     {
-        m_enable = new_enable;
+        m_enable = enable;
     }
     float CameraCoupledChildComponent::GetInitialZOffset() const
     {
         return m_initialZOffset;
     }
-    void CameraCoupledChildComponent::SetInitialZOffset(const float new_initialZOffset)
+    void CameraCoupledChildComponent::SetInitialZOffset(const float initialZOffset)
     {
-        m_initialZOffset = new_initialZOffset;
+        m_initialZOffset = initialZOffset;
     }
     AZ::Vector2 CameraCoupledChildComponent::GetOffset() const
     {
         return m_offset;
     }
-    void CameraCoupledChildComponent::SetOffset(const AZ::Vector2 new_offset)
+    void CameraCoupledChildComponent::SetOffset(const AZ::Vector2 offset)
     {
-        m_offset = new_offset;
+        m_offset = offset;
     }
 } // namespace FirstPersonController
