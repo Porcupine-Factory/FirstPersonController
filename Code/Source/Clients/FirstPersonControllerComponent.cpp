@@ -3950,8 +3950,8 @@ namespace FirstPersonController
         m_applyVelocityXYFromImpulse = AZ::Vector2(m_velocityFromImpulse);
         m_applyVelocityZ += m_velocityFromImpulse.GetZ();
 
-        // Accumulate half of the deltaTime
-        m_impulseLerpTime += deltaTime * 0.5f;
+        // Accumulate the deltaTime
+        m_impulseLerpTime += deltaTime;
 
         // Decelerate at a constant rate
         // If the total lerp time is zero or the lerp time has reached the total lerp time then do not continue adding velocity
@@ -3979,10 +3979,6 @@ namespace FirstPersonController
 
         // Zero the impulse vector since it's been applied for this update
         m_linearImpulse = AZ::Vector3::CreateZero();
-
-        // Accumulate half of the deltaTime if the total lerp time hasn't been reached
-        if (m_impulseLerpTime != m_impulseTotalLerpTime)
-            m_impulseLerpTime += deltaTime * 0.5f;
     }
 
     void FirstPersonControllerComponent::ProcessCharacterHits(const float deltaTime)
