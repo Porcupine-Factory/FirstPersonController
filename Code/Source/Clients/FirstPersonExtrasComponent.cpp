@@ -959,19 +959,27 @@ namespace FirstPersonController
     // the phase as a cosine, so it sharpens each dip and rounds the rise between them
     float FirstPersonExtrasComponent::CalculateHeadbobVerticalShape(const float phase) const
     {
-        return -sinf(2.f * phase) +
+        static constexpr float VerticalBounceHarmonicFreq = 2.f;
+        static constexpr float VerticalFirstHarmonicPhaseOffsetDeg = 45.f;
+        static constexpr float VerticalFourthHarmonicFreq = 4.f;
+        return -sinf(VerticalBounceHarmonicFreq * phase) +
             m_headbobRealism *
-            (m_headbobAlternatingStepDifference * sinf(phase + AZ::DegToRad(45.f)) + m_headbobFootstepSharpness * cosf(4.f * phase));
+            (m_headbobAlternatingStepDifference * sinf(phase + AZ::DegToRad(VerticalFirstHarmonicPhaseOffsetDeg)) +
+             m_headbobFootstepSharpness * cosf(VerticalFourthHarmonicFreq * phase));
     }
     // Shape the horizontal sway with two harmonics. The even one is offset -94 degrees to peak on the
     // sway extremes, so it deepens one side without moving when the sway reaches it, and only the odd
     // one can flatten the tops
     float FirstPersonExtrasComponent::CalculateHeadbobHorizontalShape(const float phase) const
     {
+        static constexpr float HorizontalEvenHarmonicFreq = 2.0f;
+        static constexpr float HorizontalEvenHarmonicPhaseOffsetDeg = -94.0f;
+        static constexpr float HorizontalOddHarmonicFreq = 3.0f;
         return sinf(phase) +
             m_headbobRealism *
-            (m_headbobHorizontalSwayImbalance * sinf(2.f * phase + AZ::DegToRad(-94.f)) +
-             m_headbobHorizontalSwayFlatness * sinf(3.f * phase));
+            (m_headbobHorizontalSwayImbalance *
+                 sinf(HorizontalEvenHarmonicFreq * phase + AZ::DegToRad(HorizontalEvenHarmonicPhaseOffsetDeg)) +
+             m_headbobHorizontalSwayFlatness * sinf(HorizontalOddHarmonicFreq * phase));
     }
     // Build the forward and back motion as a Fourier series of a VR headset capture of walking data,
     // keeping only the first three harmonics. The first is 122 degrees into the walk cycle, the
@@ -979,30 +987,38 @@ namespace FirstPersonController
     // measured within a degree of zero, so it has no phase offset
     float FirstPersonExtrasComponent::CalculateHeadbobForwardShape(const float phase) const
     {
-        return sinf(phase + AZ::DegToRad(122.f)) + 0.215f * sinf(2.f * phase + AZ::DegToRad(80.f)) + 0.093f * sinf(3.f * phase);
+        static constexpr float ForwardFirstHarmonicPhaseOffsetDeg = 122.0f;
+        static constexpr float ForwardSecondHarmonicFreq = 2.0f;
+        static constexpr float ForwardSecondHarmonicPhaseOffsetDeg = 80.0f;
+        static constexpr float ForwardSecondHarmonicMagnitude = 0.215f;
+        static constexpr float ForwardThirdHarmonicFreq = 3.0f;
+        static constexpr float ForwardThirdHarmonicMagnitude = 0.093f;
+        return sinf(phase + AZ::DegToRad(ForwardFirstHarmonicPhaseOffsetDeg)) +
+            ForwardSecondHarmonicMagnitude * sinf(ForwardSecondHarmonicFreq * phase + AZ::DegToRad(ForwardSecondHarmonicPhaseOffsetDeg)) +
+            ForwardThirdHarmonicMagnitude * sinf(ForwardThirdHarmonicFreq * phase);
     }
 
     void FirstPersonExtrasComponent::UpdateHeadbobShapePeaks()
     {
         // Sample one walk cycle to find each shape's peak, since there is no closed form for the peak
         // of a harmonic sum
-        constexpr AZ::u32 Samples = 256;
+        static constexpr AZ::u8 Samples = 255;
         float verticalPeak = 0.f;
         float horizontalPeak = 0.f;
         float forwardPeak = 0.f;
 
-        for (AZ::u32 i = 0; i < Samples; ++i)
+        for (AZ::u8 sample = 0; sample < Samples; ++sample)
         {
-            const float phase = AZ::Constants::TwoPi * static_cast<float>(i) / static_cast<float>(Samples);
+            const float phase = AZ::Constants::TwoPi * static_cast<float>(sample) / static_cast<float>(Samples);
 
             const float verticalShape = CalculateHeadbobVerticalShape(phase);
-            verticalPeak = AZ::GetMax(verticalPeak, AZ::GetMax(verticalShape, -verticalShape));
+            verticalPeak = AZ::GetMax(verticalPeak, AZ::Abs(verticalShape));
 
             const float horizontalShape = CalculateHeadbobHorizontalShape(phase);
-            horizontalPeak = AZ::GetMax(horizontalPeak, AZ::GetMax(horizontalShape, -horizontalShape));
+            horizontalPeak = AZ::GetMax(horizontalPeak, AZ::Abs(horizontalShape));
 
             const float forwardShape = CalculateHeadbobForwardShape(phase);
-            forwardPeak = AZ::GetMax(forwardPeak, AZ::GetMax(forwardShape, -forwardShape));
+            forwardPeak = AZ::GetMax(forwardPeak, AZ::Abs(forwardShape));
         }
 
         // Guard against a shape that is flat zero, which would otherwise divide by zero
@@ -1080,7 +1096,7 @@ namespace FirstPersonController
         }
 
         // Vary the speed and size slightly over this many walk cycles so no two steps are exactly alike
-        const float stepVariationCycles = 8.f;
+        static constexpr float stepVariationCycles = 8.f;
         const float stepWander = 1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / stepVariationCycles);
         effectiveHorizontalAmplitude *= stepWander;
         effectiveVerticalAmplitude *= stepWander;
@@ -1127,8 +1143,9 @@ namespace FirstPersonController
         const float directionSign = m_headbobStartingDirection ? 1.f : -1.f;
         const float pitchOffset = -m_headbobRealism * m_headbobOverallIntensity * AZ::DegToRad(m_headbobMaxPitchAmplitude) *
             rotationSpeedScale * m_headbobNormalizedVerticalShape;
+        static constexpr float RollYawPhaseOffsetDeg = -30.f;
         const float rollOffset = directionSign * m_headbobRealism * m_headbobOverallIntensity * AZ::DegToRad(m_headbobMaxRollAmplitude) *
-            rotationSpeedScale * sinf(m_headbobPhase + AZ::DegToRad(-30.f));
+            rotationSpeedScale * sinf(m_headbobPhase + AZ::DegToRad(RollYawPhaseOffsetDeg));
         const float yawOffset = directionSign * m_headbobRealism * m_headbobOverallIntensity * AZ::DegToRad(m_headbobMaxYawAmplitude) *
             rotationSpeedScale * sinf(m_headbobPhase);
         // Pitch about X (right), roll about Y (forward), yaw about Z (up)

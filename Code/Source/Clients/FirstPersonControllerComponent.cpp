@@ -2749,7 +2749,7 @@ namespace FirstPersonController
             static constexpr float ReferenceSubDeltaTime = 1.f / 120.f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / ReferenceSubDeltaTime).
-            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / ReferenceSubDeltaTime));
+            const AZ::u32 numSubsteps = aznumeric_cast<AZ::u32>(std::ceil(deltaTime / ReferenceSubDeltaTime));
             // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
             // across the calculated numSubSteps. This ensures the total simulated time across all
             // substeps exactly equals deltaTime.
@@ -2860,7 +2860,7 @@ namespace FirstPersonController
             static constexpr float ReferenceSubDeltaTime = 1.f / 120.f;
             // Calculate the number of substeps required to cover the full deltaTime.
             // Ceiling used to round up the ratio (deltaTime / ReferenceSubDeltaTime).
-            const int numSubsteps = static_cast<int>(std::ceil(deltaTime / ReferenceSubDeltaTime));
+            const AZ::u32 numSubsteps = aznumeric_cast<AZ::u32>(std::ceil(deltaTime / ReferenceSubDeltaTime));
             // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
             // across the calculated numSubSteps. This ensures the total simulated time across all
             // substeps exactly equals deltaTime.
