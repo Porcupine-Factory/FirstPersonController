@@ -1183,8 +1183,11 @@ namespace FirstPersonController
                 ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
                 ->Event("Get Camera Yaw", &FirstPersonControllerComponentRequests::GetYaw)
                 ->Event("Get Is Autonomous Client", &FirstPersonControllerComponentRequests::GetIsAutonomousClient)
+                ->Event("Set Is Autonomous Client", &FirstPersonControllerComponentRequests::SetIsAutonomousClient)
                 ->Event("Get Is Server", &FirstPersonControllerComponentRequests::GetIsServer)
+                ->Event("Set Is Server", &FirstPersonControllerComponentRequests::SetIsServer)
                 ->Event("Get Is Host", &FirstPersonControllerComponentRequests::GetIsHost)
+                ->Event("Set Is Host", &FirstPersonControllerComponentRequests::SetIsHost)
                 ->Event("Get Is Net Bot", &FirstPersonControllerComponentRequests::GetIsNetBot)
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
                 ->Event("Get Other Player EntityIds", &FirstPersonControllerComponentRequests::GetOtherPlayerEntityIds)
@@ -6549,13 +6552,25 @@ namespace FirstPersonController
     {
         return m_isAutonomousClient;
     }
+    void FirstPersonControllerComponent::SetIsAutonomousClient(const bool isAutonomousClient)
+    {
+        m_isAutonomousClient = isAutonomousClient;
+    }
     bool FirstPersonControllerComponent::GetIsServer() const
     {
         return m_isServer;
     }
+    void FirstPersonControllerComponent::SetIsServer(const bool isServer)
+    {
+        m_isServer = isServer;
+    }
     bool FirstPersonControllerComponent::GetIsHost() const
     {
         return m_isHost;
+    }
+    void FirstPersonControllerComponent::SetIsHost(const bool isHost)
+    {
+        m_isHost = isHost;
     }
     bool FirstPersonControllerComponent::GetIsNetBot() const
     {

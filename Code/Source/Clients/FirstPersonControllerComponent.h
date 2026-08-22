@@ -501,8 +501,11 @@ namespace FirstPersonController
         float GetPitch() const override;
         float GetYaw() const override;
         bool GetIsAutonomousClient() const override;
+        void SetIsAutonomousClient(const bool isAutonomousClient) override;
         bool GetIsServer() const override;
+        void SetIsServer(const bool isServer) override;
         bool GetIsHost() const override;
+        void SetIsHost(const bool isHost) override;
         bool GetIsNetBot() const override;
         void SetIsNetBot(const bool isNetBot) override;
         AZStd::vector<AZ::EntityId> GetOtherPlayerEntityIds() const override;

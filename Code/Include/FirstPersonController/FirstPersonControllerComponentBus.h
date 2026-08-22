@@ -431,8 +431,11 @@ namespace FirstPersonController
         virtual float GetPitch() const = 0;
         virtual float GetYaw() const = 0;
         virtual bool GetIsAutonomousClient() const = 0;
+        virtual void SetIsAutonomousClient(const bool) = 0;
         virtual bool GetIsServer() const = 0;
+        virtual void SetIsServer(const bool) = 0;
         virtual bool GetIsHost() const = 0;
+        virtual void SetIsHost(const bool) = 0;
         virtual bool GetIsNetBot() const = 0;
         virtual void SetIsNetBot(const bool) = 0;
         virtual AZStd::vector<AZ::EntityId> GetOtherPlayerEntityIds() const = 0;
