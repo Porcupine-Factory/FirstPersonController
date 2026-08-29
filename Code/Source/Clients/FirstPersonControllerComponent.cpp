@@ -2102,11 +2102,11 @@ namespace FirstPersonController
             m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotation().GetX();
     }
 
-    // Here target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
+    // Here input target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
     // and it's with respect to the world when m_instantVelocityRotation == false
-    AZ::Vector2 FirstPersonControllerComponent::LerpVelocityXY(const AZ::Vector2& targetVelocityXY, const float deltaTime)
+    AZ::Vector2 FirstPersonControllerComponent::LerpVelocityXY(const AZ::Vector2& inputTargetVelocityXY, const float deltaTime)
     {
-        m_totalLerpTime = m_prevApplyVelocityXY.GetDistance(targetVelocityXY) / m_accel;
+        m_totalLerpTime = m_prevApplyVelocityXY.GetDistance(inputTargetVelocityXY) / m_accel;
 
         if (m_totalLerpTime == 0.f)
         {
@@ -2131,8 +2131,8 @@ namespace FirstPersonController
         if (m_lerpTime >= m_totalLerpTime)
             m_lerpTime = m_totalLerpTime;
 
-        // Lerp the velocity from the last applied velocity to the target velocity
-        AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
+        // Lerp the velocity from the last applied velocity to the input target velocity
+        AZ::Vector2 newVelocityXY = m_prevApplyVelocityXY.Lerp(inputTargetVelocityXY, m_lerpTime / m_totalLerpTime);
 
         // Decelerate at a different rate than the acceleration
         if (newVelocityXY.GetLength() < m_applyVelocityXY.GetLength())
@@ -2145,32 +2145,32 @@ namespace FirstPersonController
 
             // Compare the direction of the current velocity vector against the desired direction
             // and if it's greater than 90 degrees then decelerate even more
-            if (targetVelocityXY.GetLength() != 0.f && m_instantVelocityRotation
-                    ? (abs(applyVelocityHeading.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi)
-                    : (abs(m_applyVelocityXY.AngleSafe(targetVelocityXY)) > AZ::Constants::HalfPi))
+            if (inputTargetVelocityXY.GetLength() != 0.f && m_instantVelocityRotation
+                    ? (abs(applyVelocityHeading.AngleSafe(inputTargetVelocityXY)) > AZ::Constants::HalfPi)
+                    : (abs(m_applyVelocityXY.AngleSafe(inputTargetVelocityXY)) > AZ::Constants::HalfPi))
             {
                 m_opposingDecelFactorApplied = true;
                 m_decelerationFactorApplied = false;
-                // Compute the deceleration factor based on the magnitude of the target velocity
+                // Compute the deceleration factor based on the magnitude of the input target velocity
                 float greatestScale = m_forwardScale;
                 for (float scale : { m_forwardScale, m_backScale, m_leftScale, m_rightScale })
                     if (greatestScale < abs(scale))
                         greatestScale = abs(scale);
 
-                AZ::Vector2 targetVelocityXYLocal = targetVelocityXY;
+                AZ::Vector2 inputTargetVelocityXYLocal = inputTargetVelocityXY;
                 if (!m_instantVelocityRotation)
-                    targetVelocityXYLocal =
-                        AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
+                    inputTargetVelocityXYLocal =
+                        AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(AZ::Vector3(inputTargetVelocityXY)));
 
                 if (m_standing || m_sprintWhileCrouched)
                     m_decelerationFactor =
                         (m_decel +
-                         (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() /
+                         (m_opposingDecel - m_decel) * inputTargetVelocityXYLocal.GetLength() /
                              (m_speed * (1.f + (m_sprintVelocityAdjust - 1.f)) * greatestScale));
                 else
                     m_decelerationFactor =
                         (m_decel +
-                         (m_opposingDecel - m_decel) * targetVelocityXYLocal.GetLength() / (m_speed * m_crouchScale * greatestScale));
+                         (m_opposingDecel - m_decel) * inputTargetVelocityXYLocal.GetLength() / (m_speed * m_crouchScale * greatestScale));
             }
             else
             {
@@ -2184,7 +2184,7 @@ namespace FirstPersonController
             if (m_lerpTime >= m_totalLerpTime)
                 m_lerpTime = m_totalLerpTime;
 
-            AZ::Vector2 newVelocityXYDecel = m_prevApplyVelocityXY.Lerp(targetVelocityXY, m_lerpTime / m_totalLerpTime);
+            AZ::Vector2 newVelocityXYDecel = m_prevApplyVelocityXY.Lerp(inputTargetVelocityXY, m_lerpTime / m_totalLerpTime);
             if (newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
         }
@@ -2212,7 +2212,7 @@ namespace FirstPersonController
             FirstPersonControllerComponentNotificationBus::Event(
                 GetEntityId(), &FirstPersonControllerComponentNotifications::OnStartedMoving);
 
-        if (newVelocityXY == targetVelocityXY)
+        if (newVelocityXY == inputTargetVelocityXY)
         {
             FirstPersonControllerComponentNotificationBus::Event(
                 GetEntityId(), &FirstPersonControllerComponentNotifications::OnTargetVelocityReached);
@@ -2377,7 +2377,7 @@ namespace FirstPersonController
                 const float steepness = m_velocityZPosDirection.Angle(m_groundCloseSumNormals) / AZ::Constants::HalfPi;
 
                 // Get the velocity that would be tilted if the character were grounded
-                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_targetVelocityXY, m_groundCloseSumNormals));
+                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_inputTargetVelocityXY, m_groundCloseSumNormals));
 
                 // Get the component of the velocity vector pointing towards the incline
                 const AZ::Vector2 prevNormalizedVectorTowardsIncline = AZ::Vector2(-m_groundCloseSumNormals).GetNormalized();
@@ -2385,7 +2385,7 @@ namespace FirstPersonController
                     AZ::Vector2(velocityXYTilted).GetProjected(prevNormalizedVectorTowardsIncline);
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxVelocityXYTowardsIncline = m_targetVelocityXY.GetLength() * prevNormalizedVectorTowardsIncline;
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_inputTargetVelocityXY.GetLength() * prevNormalizedVectorTowardsIncline;
                 const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline =
                     TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_groundCloseSumNormals);
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
@@ -2413,8 +2413,8 @@ namespace FirstPersonController
         }
     }
 
-    // Here target velocity is with respect to the character's frame of reference
-    void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& targetVelocityXY, const float deltaTime)
+    // Here input target velocity is with respect to the character's frame of reference
+    void FirstPersonControllerComponent::SprintManager(const AZ::Vector2& inputTargetVelocityXY, const float deltaTime)
     {
         // Handle toggling the sprint key when it's enabled
         if (!m_sprintEnableToggle)
@@ -2434,10 +2434,10 @@ namespace FirstPersonController
         // and it shouldn't be applied if you're crouching (depending on various settings)
         if ((!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
             (!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX()) || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue) ||
-            (targetVelocityXY.IsZero()) ||
+            (inputTargetVelocityXY.IsZero()) ||
             (m_sprintInputEngaged && !m_sprintBackwards &&
              ((!m_forwardValue && !m_leftValue && !m_rightValue) || (!m_forwardValue && -m_leftValue == m_rightValue) ||
-              (targetVelocityXY.GetY() < 0.f))))
+              (inputTargetVelocityXY.GetY() < 0.f))))
         {
             if (m_sprintEnableToggle && m_sprintToggleAutomatically && m_sprintInputEngaged)
                 m_sprintAutoToggleQueued = true;
@@ -2456,7 +2456,8 @@ namespace FirstPersonController
             m_sprintAccelValue = 0.f;
 
         if ((m_sprintViaScript && m_sprintEnableDisable) &&
-            (targetVelocityXY.GetY() > 0.f || (targetVelocityXY.GetY() == 0.f && targetVelocityXY.GetX() != 0.f) || m_sprintBackwards))
+            (inputTargetVelocityXY.GetY() > 0.f || (inputTargetVelocityXY.GetY() == 0.f && inputTargetVelocityXY.GetX() != 0.f) ||
+             m_sprintBackwards))
         {
             m_sprintInputEngaged = true;
             m_sprintAccelValue = m_sprintAccelScale;
@@ -2473,15 +2474,21 @@ namespace FirstPersonController
         else
         {
             if (m_velocityXCrossYDirection.GetZ() >= 0.f)
-                m_sprintVelocityAdjust =
-                    CreateEllipseScaledVector(
-                        targetVelocityXY.GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight)
-                        .GetLength();
+                m_sprintVelocityAdjust = CreateEllipseScaledVector(
+                                             inputTargetVelocityXY.GetNormalized(),
+                                             m_sprintScaleForward,
+                                             m_sprintScaleBack,
+                                             m_sprintScaleLeft,
+                                             m_sprintScaleRight)
+                                             .GetLength();
             else
-                m_sprintVelocityAdjust =
-                    CreateEllipseScaledVector(
-                        (-targetVelocityXY).GetNormalized(), m_sprintScaleForward, m_sprintScaleBack, m_sprintScaleLeft, m_sprintScaleRight)
-                        .GetLength();
+                m_sprintVelocityAdjust = CreateEllipseScaledVector(
+                                             (-inputTargetVelocityXY).GetNormalized(),
+                                             m_sprintScaleForward,
+                                             m_sprintScaleBack,
+                                             m_sprintScaleLeft,
+                                             m_sprintScaleRight)
+                                             .GetLength();
         }
 
         if (m_sprintPrevValue == 0.f && !AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime &&
@@ -2548,7 +2555,7 @@ namespace FirstPersonController
                 m_sprintInputEngaged = false;
 
             // Set the sprint acceleration adjust according to the local direction the character is moving
-            if (!m_sprintStopAccelAdjustCaptured && targetVelocityXY.IsZero())
+            if (!m_sprintStopAccelAdjustCaptured && inputTargetVelocityXY.IsZero())
             {
                 // Figure out which of the scaled sprint velocity directions is the greatest
                 float greatestSprintScale = 0.f;
@@ -2561,7 +2568,7 @@ namespace FirstPersonController
                 {
                     if (m_velocityXCrossYDirection.GetZ() >= 0.f)
                         lastAdjustScale = CreateEllipseScaledVector(
-                                              m_targetVelocityXY.GetNormalized(),
+                                              m_inputTargetVelocityXY.GetNormalized(),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
                                               m_sprintScaleLeft,
@@ -2569,7 +2576,7 @@ namespace FirstPersonController
                                               .GetLength();
                     else
                         lastAdjustScale = CreateEllipseScaledVector(
-                                              (-m_targetVelocityXY).GetNormalized(),
+                                              (-m_inputTargetVelocityXY).GetNormalized(),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
                                               m_sprintScaleLeft,
@@ -2581,7 +2588,7 @@ namespace FirstPersonController
                     if (m_velocityXCrossYDirection.GetZ() >= 0.f)
                         lastAdjustScale = CreateEllipseScaledVector(
                                               AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading)
-                                                              .TransformVector(AZ::Vector3(m_targetVelocityXY))
+                                                              .TransformVector(AZ::Vector3(m_inputTargetVelocityXY))
                                                               .GetNormalized()),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
@@ -2591,7 +2598,7 @@ namespace FirstPersonController
                     else
                         lastAdjustScale = CreateEllipseScaledVector(
                                               AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading)
-                                                              .TransformVector(AZ::Vector3(-m_targetVelocityXY))
+                                                              .TransformVector(AZ::Vector3(-m_inputTargetVelocityXY))
                                                               .GetNormalized()),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
@@ -3057,50 +3064,53 @@ namespace FirstPersonController
         else if (leftRight < 0.f && m_forwardScale != 0.f)
             leftRight /= m_leftScale;
 
-        AZ::Vector2 targetVelocityXY = AZ::Vector2(leftRight, forwardBack);
+        AZ::Vector2 inputTargetVelocityXY = AZ::Vector2(leftRight, forwardBack);
 
         // Normalize the vector if its magnitude is greater than 1 and then scale it
         if ((forwardBack || leftRight) && (forwardBack * forwardBack + leftRight * leftRight) > 1.f)
-            targetVelocityXY.Normalize();
+            inputTargetVelocityXY.Normalize();
 
         if (m_velocityXCrossYDirection.GetZ() >= 0.f)
-            targetVelocityXY = CreateEllipseScaledVector(targetVelocityXY, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
+            inputTargetVelocityXY =
+                CreateEllipseScaledVector(inputTargetVelocityXY, m_forwardScale, m_backScale, m_leftScale, m_rightScale);
         else
-            targetVelocityXY = -CreateEllipseScaledVector((-targetVelocityXY), m_forwardScale, m_backScale, m_leftScale, m_rightScale);
+            inputTargetVelocityXY =
+                -CreateEllipseScaledVector((-inputTargetVelocityXY), m_forwardScale, m_backScale, m_leftScale, m_rightScale);
 
         // Call the sprint manager
         if (!m_scriptSetsTargetVelocityXY)
-            SprintManager(targetVelocityXY, deltaTime);
+            SprintManager(inputTargetVelocityXY, deltaTime);
 
         // Apply the speed, sprint factor, and crouch factor
         if (m_standing)
-            targetVelocityXY *= m_speed * m_sprintVelocityAdjust;
+            inputTargetVelocityXY *= m_speed * m_sprintVelocityAdjust;
         else if (m_sprintWhileCrouched && !m_standing)
-            targetVelocityXY *= m_speed * m_sprintVelocityAdjust * m_crouchScale;
+            inputTargetVelocityXY *= m_speed * m_sprintVelocityAdjust * m_crouchScale;
         else
-            targetVelocityXY *= m_speed * m_crouchScale;
+            inputTargetVelocityXY *= m_speed * m_crouchScale;
 
         if (m_scriptSetsTargetVelocityXY)
         {
-            targetVelocityXY = m_scriptTargetVelocityXY;
-            SprintManager(targetVelocityXY, deltaTime);
+            inputTargetVelocityXY = m_scriptTargetVelocityXY;
+            SprintManager(inputTargetVelocityXY, deltaTime);
         }
         else
-            m_scriptTargetVelocityXY = targetVelocityXY;
+            m_scriptTargetVelocityXY = inputTargetVelocityXY;
 
-        // Rotate the target velocity vector so that it can be compared against the applied velocity
-        const AZ::Vector2 targetVelocityXYWorld =
-            AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
+        // Rotate the input target velocity vector so that it can be compared against the applied velocity
+        const AZ::Vector2 inputTargetVelocityXYWorld =
+            AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(inputTargetVelocityXY)));
 
-        // Obtain the last applied velocity if the target velocity changed
-        if ((m_instantVelocityRotation ? (m_targetVelocityXY != targetVelocityXY) : (m_targetVelocityXY != targetVelocityXYWorld)) ||
+        // Obtain the last applied velocity if the input target velocity changed
+        if ((m_instantVelocityRotation ? (m_inputTargetVelocityXY != inputTargetVelocityXY)
+                                       : (m_inputTargetVelocityXY != inputTargetVelocityXYWorld)) ||
             (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed) ||
             (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
         {
             if (m_instantVelocityRotation)
             {
-                // Set the target velocity to the new one
-                m_targetVelocityXY = targetVelocityXY;
+                // Set the input target velocity to the new one
+                m_inputTargetVelocityXY = inputTargetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
                 if (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed)
                 {
@@ -3112,8 +3122,8 @@ namespace FirstPersonController
             }
             else
             {
-                // Set the target velocity to the new one
-                m_targetVelocityXY = targetVelocityXYWorld;
+                // Set the input target velocity to the new one
+                m_inputTargetVelocityXY = inputTargetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
                 if (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed)
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
@@ -3127,7 +3137,7 @@ namespace FirstPersonController
                 !AZ::IsClose(m_velocityXCrossYDirection.GetY(), 0.f))
                 m_prevApplyVelocityXY *= -1.f;
 
-            // Reset the lerp time since the target velocity changed
+            // Reset the lerp time since the input target velocity changed
             m_lerpTime = 0.f;
         }
 
@@ -3156,19 +3166,20 @@ namespace FirstPersonController
             m_jumpInclineVelocityXYCaptured = false;
 
         // Lerp to the velocity if we're not already there
-        if (m_applyVelocityXY != targetVelocityXYWorld)
+        if (m_applyVelocityXY != inputTargetVelocityXYWorld)
         {
             if (m_instantVelocityRotation)
             {
                 m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
-                                                    .TransformVector(AZ::Vector3(LerpVelocityXY(targetVelocityXY, deltaTime))));
-                m_nextLikelyApplyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
-                                                              .TransformVector(AZ::Vector3(LerpVelocityXY(targetVelocityXY, deltaTime))));
+                                                    .TransformVector(AZ::Vector3(LerpVelocityXY(inputTargetVelocityXY, deltaTime))));
+                m_nextLikelyApplyVelocityXY =
+                    AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
+                                    .TransformVector(AZ::Vector3(LerpVelocityXY(inputTargetVelocityXY, deltaTime))));
             }
             else
             {
-                m_applyVelocityXY = LerpVelocityXY(targetVelocityXYWorld, deltaTime);
-                m_nextLikelyApplyVelocityXY = LerpVelocityXY(targetVelocityXYWorld, deltaTime);
+                m_applyVelocityXY = LerpVelocityXY(inputTargetVelocityXYWorld, deltaTime);
+                m_nextLikelyApplyVelocityXY = LerpVelocityXY(inputTargetVelocityXYWorld, deltaTime);
             }
         }
         else
