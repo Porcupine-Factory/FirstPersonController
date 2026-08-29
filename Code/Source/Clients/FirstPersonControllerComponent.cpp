@@ -3216,31 +3216,33 @@ namespace FirstPersonController
     {
         // Get the current velocity to determine if something was hit
         if (!m_networkFPCEnabled)
-            Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
+            Physics::CharacterRequestBus::EventResult(
+                m_currentPhysicsVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
         else
         {
-            m_currentVelocity = m_sampledVelocity;
+            m_currentPhysicsVelocity = m_sampledVelocity;
             m_sampledVelocity = AZ::Vector3::CreateZero();
         }
 
-        if (!m_targetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
+        if (!m_targetVelocity.IsClose(m_currentPhysicsVelocity, m_velocityCloseTolerance))
         {
             m_velocityXYObstructed = true;
 
             if (m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
-                m_correctedVelocityXY = AZ::Vector2(m_currentVelocity);
+                m_correctedVelocityXY = AZ::Vector2(m_currentPhysicsVelocity);
             else
                 m_correctedVelocityXY = AZ::Vector2(
-                    m_currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)),
-                    m_currentVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
+                    m_currentPhysicsVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)),
+                    m_currentPhysicsVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
 
             if (m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
-                m_correctedVelocityZ = m_currentVelocity.GetZ();
+                m_correctedVelocityZ = m_currentPhysicsVelocity.GetZ();
             else
-                m_correctedVelocityZ = m_currentVelocity.Dot(m_velocityZPosDirection);
+                m_correctedVelocityZ = m_currentPhysicsVelocity.Dot(m_velocityZPosDirection);
 
-            if (!m_gravityIgnoresObstacles && !m_targetVelocity.IsClose(m_currentVelocity, m_velocityCloseToleranceGravity) &&
-                m_targetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(m_currentVelocity.Dot(m_velocityZPosDirection), 0.f))
+            if (!m_gravityIgnoresObstacles && !m_targetVelocity.IsClose(m_currentPhysicsVelocity, m_velocityCloseToleranceGravity) &&
+                m_targetVelocity.Dot(m_velocityZPosDirection) < 0.f &&
+                AZ::IsClose(m_currentPhysicsVelocity.Dot(m_velocityZPosDirection), 0.f))
             {
                 // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
                 if (m_gravityPrevented[0])
@@ -4004,13 +4006,14 @@ namespace FirstPersonController
         capsulePose.SetTranslation(
             GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
-        AzPhysics::ShapeCastRequest request = !m_applyVelocityXY.IsZero() || m_applyVelocityZ != 0.f || !m_currentVelocity.IsZero()
+        AzPhysics::ShapeCastRequest request = !m_applyVelocityXY.IsZero() || m_applyVelocityZ != 0.f || !m_currentPhysicsVelocity.IsZero()
             ? AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
                   m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
                   m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
                   capsulePose,
-                  AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_currentVelocity,
-                  ((AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_currentVelocity) * deltaTime)
+                  AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_currentPhysicsVelocity,
+                  ((AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_currentPhysicsVelocity) *
+                   deltaTime)
                           .GetLength() +
                       m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
                   m_characterHitBy,
@@ -4221,9 +4224,10 @@ namespace FirstPersonController
         // This is done because GetVelocity will return zero during network ticks.
         if (m_networkFPCEnabled && tickTimestepNetwork == 1)
         {
-            Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
-            if (!m_currentVelocity.IsZero())
-                m_sampledVelocity = m_currentVelocity;
+            Physics::CharacterRequestBus::EventResult(
+                m_currentPhysicsVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
+            if (!m_currentPhysicsVelocity.IsZero())
+                m_sampledVelocity = m_currentPhysicsVelocity;
         }
 
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,

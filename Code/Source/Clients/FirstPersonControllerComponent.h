@@ -662,7 +662,7 @@ namespace FirstPersonController
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_nextLikelyApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_targetVelocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_currentVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_currentPhysicsVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_sampledVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
