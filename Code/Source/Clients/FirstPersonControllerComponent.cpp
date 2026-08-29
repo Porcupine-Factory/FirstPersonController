@@ -2501,6 +2501,10 @@ namespace FirstPersonController
 
         m_sprintPrevValue = m_sprintEffectiveValue;
 
+        // When sprinting is obstructed allow the stamina to regenerate
+        bool sprintingObstructed = false;
+        bool reachedMaxSprintTimeThisCycle = false;
+
         // If sprint is to be applied then increment the sprint counter
         if (!AZ::IsClose(m_sprintVelocityAdjust, 1.f) && m_sprintHeldDuration < m_sprintMaxTime && m_sprintCooldownTimer == 0.f)
         {
@@ -2544,21 +2548,29 @@ namespace FirstPersonController
                     if (correctedSprintVelocityAdjust > 1.f)
                         m_sprintHeldDuration += deltaTime * (correctedSprintVelocityAdjust - 1.f) / (greatestSprintScale - 1.f);
                     else
+                    {
+                        sprintingObstructed = true;
+                        m_sprintVelocityAdjust = 1.f;
+                        m_sprintAccelAdjust = 1.f;
                         m_staminaDecreasing = false;
+                    }
                 }
             }
 
             if (m_sprintHeldDuration >= m_sprintMaxTime)
             {
+                reachedMaxSprintTimeThisCycle = true;
                 m_sprintHeldDuration = m_sprintMaxTime;
                 FirstPersonControllerComponentNotificationBus::Event(
                     GetEntityId(), &FirstPersonControllerComponentNotifications::OnStaminaReachedZero);
             }
 
-            m_sprintPause = m_sprintPauseTime;
+            if (!sprintingObstructed)
+                m_sprintPause = m_sprintPauseTime;
         }
-        // Otherwise if the sprint velocity isn't applied then decrement the sprint counter
-        else
+        // If the sprint velocity isn't applied then decrement the sprint counter
+        if (AZ::IsClose(m_sprintVelocityAdjust, 1.f) || (m_sprintHeldDuration == m_sprintMaxTime && !reachedMaxSprintTimeThisCycle) ||
+            m_sprintCooldownTimer != 0.f)
         {
             m_staminaDecreasing = false;
 
