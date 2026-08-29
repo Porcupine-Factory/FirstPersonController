@@ -820,10 +820,8 @@ namespace FirstPersonController
                 ->Event("Get Air Time", &FirstPersonControllerComponentRequests::GetAirTime)
                 ->Event("Get Gravity", &FirstPersonControllerComponentRequests::GetGravity)
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
-                ->Event("Get Previous Target Velocity Using World", &FirstPersonControllerComponentRequests::GetPrevTargetVelocityWorld)
-                ->Event(
-                    "Get Previous Target Velocity Using Character Heading",
-                    &FirstPersonControllerComponentRequests::GetPrevTargetVelocityHeading)
+                ->Event("Get Target Velocity Using World", &FirstPersonControllerComponentRequests::GetTargetVelocityWorld)
+                ->Event("Get Target Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetTargetVelocityHeading)
                 ->Event("Get Velocity Close Tolerance", &FirstPersonControllerComponentRequests::GetVelocityCloseTolerance)
                 ->Event("Set Velocity Close Tolerance", &FirstPersonControllerComponentRequests::SetVelocityCloseTolerance)
                 ->Event("Get Velocity XcrossY Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
@@ -1622,8 +1620,7 @@ namespace FirstPersonController
                 });
             const bool groundedRecently = !notRecentlyGrounded;
 
-            if (m_grounded || m_coyoteTimeNoGravityActive || groundedRecently || m_prevPrevGrounded || m_sprintPrevValue == 0.f ||
-                m_sprintInAir)
+            if (m_grounded || m_coyoteTimeNoGravityActive || groundedRecently || m_sprintPrevValue == 0.f || m_sprintInAir)
             {
                 m_sprintEffectiveValue = value;
                 m_sprintAccelValue = value * m_sprintAccelScale;
@@ -2298,7 +2295,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ApplyMovingUpInclineXYSpeedFactor()
     {
-        if (!m_velocityXCrossYTracksNormal || !m_movingUpInclineSlowed || m_prevTargetVelocity.IsZero())
+        if (!m_velocityXCrossYTracksNormal || !m_movingUpInclineSlowed || m_targetVelocity.IsZero())
             return;
 
         if (m_grounded)
@@ -2313,7 +2310,7 @@ namespace FirstPersonController
             // In case the character is moving down an incline, set m_movingUpInclineFactor to 1
             m_movingUpInclineFactor = 1.f;
 
-            if (AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(m_velocityXCrossYDirection) >
+            if (AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(m_velocityXCrossYDirection) >
                 AZ::Constants::HalfPi)
             {
                 m_prevGroundCloseSumNormals = m_velocityXCrossYDirection;
@@ -2324,10 +2321,10 @@ namespace FirstPersonController
                 // Get the component of the velocity vector pointing towards the incline
                 const AZ::Vector2 normalizedVectorTowardsIncline = AZ::Vector2(-m_velocityXCrossYDirection).GetNormalized();
                 const AZ::Vector2 currentVelocityXYTowardsIncline =
-                    AZ::Vector2(m_prevTargetVelocity).GetProjected(normalizedVectorTowardsIncline);
+                    AZ::Vector2(m_targetVelocity).GetProjected(normalizedVectorTowardsIncline);
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxVelocityXYTowardsIncline = m_prevTargetVelocity.GetLength() * normalizedVectorTowardsIncline;
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_targetVelocity.GetLength() * normalizedVectorTowardsIncline;
                 const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline =
                     TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_velocityXCrossYDirection);
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
@@ -2339,7 +2336,7 @@ namespace FirstPersonController
                     (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
                     (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
 
-                m_prevTargetVelocity *= m_movingUpInclineFactor;
+                m_targetVelocity *= m_movingUpInclineFactor;
             }
             // else here would be explicitly moving down an incline
         }
@@ -2366,14 +2363,14 @@ namespace FirstPersonController
                 m_prevGroundCloseSumNormals = m_velocityZPosDirection;
             }
 
-            if (AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(m_prevGroundCloseSumNormals) >
+            if (AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(m_prevGroundCloseSumNormals) >
                 AZ::Constants::HalfPi)
             {
                 // Calculate the steepness of the incline
                 const float steepness = m_velocityZPosDirection.Angle(m_prevGroundCloseSumNormals) / AZ::Constants::HalfPi;
 
                 // Get the velocity that would be tilted if the character were grounded
-                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_prevTargetVelocityXY, m_prevGroundCloseSumNormals));
+                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_targetVelocityXY, m_prevGroundCloseSumNormals));
 
                 // Get the component of the velocity vector pointing towards the incline
                 const AZ::Vector2 prevNormalizedVectorTowardsIncline = AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized();
@@ -2381,7 +2378,7 @@ namespace FirstPersonController
                     AZ::Vector2(velocityXYTilted).GetProjected(prevNormalizedVectorTowardsIncline);
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
-                AZ::Vector2 maxVelocityXYTowardsIncline = m_prevTargetVelocityXY.GetLength() * prevNormalizedVectorTowardsIncline;
+                AZ::Vector2 maxVelocityXYTowardsIncline = m_targetVelocityXY.GetLength() * prevNormalizedVectorTowardsIncline;
                 const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline =
                     TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_prevGroundCloseSumNormals);
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
@@ -2395,11 +2392,11 @@ namespace FirstPersonController
 
                 if (!(m_airTime < m_coyoteTime && !m_ungroundedDueToJump))
                 {
-                    m_prevTargetVelocity.SetX(velocityXYTilted.GetX() * m_movingUpInclineFactor);
-                    m_prevTargetVelocity.SetY(velocityXYTilted.GetY() * m_movingUpInclineFactor);
+                    m_targetVelocity.SetX(velocityXYTilted.GetX() * m_movingUpInclineFactor);
+                    m_targetVelocity.SetY(velocityXYTilted.GetY() * m_movingUpInclineFactor);
                 }
                 else
-                    m_prevTargetVelocity *= m_movingUpInclineFactor;
+                    m_targetVelocity *= m_movingUpInclineFactor;
             }
         }
     }
@@ -2552,7 +2549,7 @@ namespace FirstPersonController
                 {
                     if (m_velocityXCrossYDirection.GetZ() >= 0.f)
                         lastAdjustScale = CreateEllipseScaledVector(
-                                              m_prevTargetVelocityXY.GetNormalized(),
+                                              m_targetVelocityXY.GetNormalized(),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
                                               m_sprintScaleLeft,
@@ -2560,7 +2557,7 @@ namespace FirstPersonController
                                               .GetLength();
                     else
                         lastAdjustScale = CreateEllipseScaledVector(
-                                              (-m_prevTargetVelocityXY).GetNormalized(),
+                                              (-m_targetVelocityXY).GetNormalized(),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
                                               m_sprintScaleLeft,
@@ -2572,7 +2569,7 @@ namespace FirstPersonController
                     if (m_velocityXCrossYDirection.GetZ() >= 0.f)
                         lastAdjustScale = CreateEllipseScaledVector(
                                               AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading)
-                                                              .TransformVector(AZ::Vector3(m_prevTargetVelocityXY))
+                                                              .TransformVector(AZ::Vector3(m_targetVelocityXY))
                                                               .GetNormalized()),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
@@ -2582,7 +2579,7 @@ namespace FirstPersonController
                     else
                         lastAdjustScale = CreateEllipseScaledVector(
                                               AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading)
-                                                              .TransformVector(AZ::Vector3(-m_prevTargetVelocityXY))
+                                                              .TransformVector(AZ::Vector3(-m_targetVelocityXY))
                                                               .GetNormalized()),
                                               m_sprintScaleForward,
                                               m_sprintScaleBack,
@@ -3081,15 +3078,14 @@ namespace FirstPersonController
             AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(targetVelocityXY)));
 
         // Obtain the last applied velocity if the target velocity changed
-        if ((m_instantVelocityRotation ? (m_prevTargetVelocityXY != targetVelocityXY)
-                                       : (m_prevTargetVelocityXY != targetVelocityXYWorld)) ||
+        if ((m_instantVelocityRotation ? (m_targetVelocityXY != targetVelocityXY) : (m_targetVelocityXY != targetVelocityXYWorld)) ||
             (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed) ||
             (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
         {
             if (m_instantVelocityRotation)
             {
-                // Set the previous target velocity to the new one
-                m_prevTargetVelocityXY = targetVelocityXY;
+                // Set the target velocity to the new one
+                m_targetVelocityXY = targetVelocityXY;
                 // Store the last applied velocity to be used for the lerping
                 if (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed)
                 {
@@ -3101,8 +3097,8 @@ namespace FirstPersonController
             }
             else
             {
-                // Set the previous target velocity to the new one
-                m_prevTargetVelocityXY = targetVelocityXYWorld;
+                // Set the target velocity to the new one
+                m_targetVelocityXY = targetVelocityXYWorld;
                 // Store the last applied velocity to be used for the lerping
                 if (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed)
                     m_applyVelocityXY = AZ::Vector2(m_correctedVelocityXY);
@@ -3130,11 +3126,10 @@ namespace FirstPersonController
             if ((groundCloseSumNormals != m_velocityZPosDirection && !groundCloseSumNormals.IsZero()) &&
                 ((!m_movingUpInclineSlowed) ||
                  (m_movingUpInclineSlowed &&
-                  AZ::Vector3(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY(), 0.f).Angle(groundCloseSumNormals) <
-                      AZ::Constants::HalfPi)))
+                  AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(groundCloseSumNormals) < AZ::Constants::HalfPi)))
             {
                 // Capture the X&Y components of the velocity vector when jumping on an inclined surface
-                m_prevApplyVelocityXY = AZ::Vector2(m_prevTargetVelocity.GetX(), m_prevTargetVelocity.GetY());
+                m_prevApplyVelocityXY = AZ::Vector2(m_targetVelocity.GetX(), m_targetVelocity.GetY());
                 m_applyVelocityXY = m_prevApplyVelocityXY;
                 // Set the flag which says that the lateral velocity has been captured
                 m_jumpInclineVelocityXYCaptured = true;
@@ -3226,7 +3221,7 @@ namespace FirstPersonController
             m_prevSampledVelocity = AZ::Vector3::CreateZero();
         }
 
-        if (!m_prevPrevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
+        if (!m_prevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
         {
             // If enabled, cause the character's applied velocity to match the current velocity from Physics
             m_velocityXYObstructed = true;
@@ -3243,8 +3238,8 @@ namespace FirstPersonController
             else
                 m_correctedVelocityZ = m_currentVelocity.Dot(m_velocityZPosDirection);
 
-            if (!m_gravityIgnoresObstacles && !m_prevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseToleranceGravity) &&
-                m_prevTargetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(m_currentVelocity.Dot(m_velocityZPosDirection), 0.f))
+            if (!m_gravityIgnoresObstacles && !m_targetVelocity.IsClose(m_currentVelocity, m_velocityCloseToleranceGravity) &&
+                m_targetVelocity.Dot(m_velocityZPosDirection) < 0.f && AZ::IsClose(m_currentVelocity.Dot(m_velocityZPosDirection), 0.f))
             {
                 // Gravity needs to be prevented for two ticks in a row to prevent exploitable behavior
                 if (m_gravityPrevented[0])
@@ -3557,7 +3552,7 @@ namespace FirstPersonController
                 m_fellDistance =
                     GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() -
                     m_fellFromHeight;
-            const float fellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_prevTargetVelocity);
+            const float fellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_targetVelocity);
             FirstPersonControllerComponentNotificationBus::Event(
                 GetEntityId(), &FirstPersonControllerComponentNotifications::OnGroundHit, fellVelocity);
         }
@@ -3572,7 +3567,7 @@ namespace FirstPersonController
                 m_soonFellDistance =
                     GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() -
                     m_fellFromHeight;
-            const float soonFellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_prevTargetVelocity);
+            const float soonFellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_targetVelocity);
             m_onGroundSoonHit = true;
             FirstPersonControllerComponentNotificationBus::Event(
                 GetEntityId(), &FirstPersonControllerComponentNotifications::OnGroundSoonHit, soonFellVelocity);
@@ -4221,7 +4216,7 @@ namespace FirstPersonController
         }
 
         // Keep track of the last two target velocity values for the obstruction check logic
-        m_prevPrevTargetVelocity = m_prevTargetVelocity;
+        m_prevTargetVelocity = m_targetVelocity;
 
         // Sample the current velocity during physics timesteps when NetworkFPC is enabled
         // and retain this value for use in CheckCharacterMovementObstructed(...).
@@ -4271,7 +4266,7 @@ namespace FirstPersonController
                 addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
 
             // Tilt the XY velocity plane based on m_velocityXCrossYDirection
-            m_prevTargetVelocity = TiltVectorXCrossY(
+            m_targetVelocity = TiltVectorXCrossY(
                 (m_applyVelocityXY + m_applyVelocityXYFromImpulse + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)),
                 m_velocityXCrossYDirection);
 
@@ -4282,7 +4277,7 @@ namespace FirstPersonController
             ProcessCharacterHits(deltaTime);
 
             // Change the +Z direction based on m_velocityZPosDirection
-            m_prevTargetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+            m_targetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
             // Add velocity on either the network tick, the physics timstep, or the frame tick
             if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
@@ -4290,18 +4285,18 @@ namespace FirstPersonController
                 // Set the NetworkFPC properties, informing the server of the client's latest simulation
                 SetNetworkFPCProperties();
 #ifdef NETWORKFPC
-                m_networkFPCControllerObject->SetDesiredVelocity(m_prevTargetVelocity);
+                m_networkFPCControllerObject->SetDesiredVelocity(m_targetVelocity);
 #endif
             }
             else if (m_addVelocityForTimestepVsTick)
             {
                 SetNetworkFPCProperties();
                 Physics::CharacterRequestBus::Event(
-                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_prevTargetVelocity);
+                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForPhysicsTimestep, m_targetVelocity);
             }
             else
                 Physics::CharacterRequestBus::Event(
-                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_prevTargetVelocity);
+                    GetEntityId(), &Physics::CharacterRequestBus::Events::AddVelocityForTick, m_targetVelocity);
         }
     }
 
@@ -5017,13 +5012,13 @@ namespace FirstPersonController
         m_gravity = gravity;
         UpdateJumpMaxHoldTime();
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetPrevTargetVelocityWorld() const
+    AZ::Vector3 FirstPersonControllerComponent::GetTargetVelocityWorld() const
     {
-        return m_prevTargetVelocity;
+        return m_targetVelocity;
     }
-    AZ::Vector3 FirstPersonControllerComponent::GetPrevTargetVelocityHeading() const
+    AZ::Vector3 FirstPersonControllerComponent::GetTargetVelocityHeading() const
     {
-        return AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_prevTargetVelocity);
+        return AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_targetVelocity);
     }
     float FirstPersonControllerComponent::GetVelocityCloseTolerance() const
     {

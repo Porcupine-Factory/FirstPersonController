@@ -189,8 +189,8 @@ namespace FirstPersonController
         float GetAirTime() const override;
         float GetGravity() const override;
         void SetGravity(const float gravity) override;
-        AZ::Vector3 GetPrevTargetVelocityWorld() const override;
-        AZ::Vector3 GetPrevTargetVelocityHeading() const override;
+        AZ::Vector3 GetTargetVelocityWorld() const override;
+        AZ::Vector3 GetTargetVelocityHeading() const override;
         float GetVelocityCloseTolerance() const override;
         void SetVelocityCloseTolerance(const float velocityCloseTolerance) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
@@ -659,14 +659,14 @@ namespace FirstPersonController
         // Velocity application variables
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_nextLikelyApplyVelocityXY = AZ::Vector2::CreateZero();
-        AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_targetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_prevSampledVelocity = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_prevPrevTargetVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_prevTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_addVelocityWorld = AZ::Vector3::CreateZero();
         AZ::Vector3 m_addVelocityHeading = AZ::Vector3::CreateZero();
-        AZ::Vector2 m_prevTargetVelocityXY = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_targetVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_prevApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_correctedVelocityXY = AZ::Vector2::CreateZero();
         float m_velocityCloseTolerance = 1.f;
@@ -775,7 +775,6 @@ namespace FirstPersonController
         bool m_grounded = true;
         AZ::u16 m_numTicksRecentGrounded = 3;
         AZStd::vector<bool> m_prevNTicksGrounded = { true };
-        bool m_prevPrevGrounded = true;
         AZ::Vector3 m_velocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_prevVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_coyoteVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
