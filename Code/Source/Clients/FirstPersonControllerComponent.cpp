@@ -1860,7 +1860,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::LerpCameraToCharacter(const float deltaTime)
     {
-        if (m_networkFPCEnabled && m_isServer || m_isNetBot)
+        if (m_isServer || m_isNetBot)
             return;
 
         const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
@@ -1913,7 +1913,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::ResetCameraToCharacter()
     {
-        if (m_networkFPCEnabled && m_isServer || m_isNetBot)
+        if (m_isServer || m_isNetBot)
             return;
         // Set the translation of the camera to where the character is on each physics timestep
         if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
@@ -2541,7 +2541,10 @@ namespace FirstPersonController
                     // Respond to the character's movement being obstructed by not rapidly reducing their stamina
                     const float correctedSprintVelocityAdjust =
                         m_sprintVelocityAdjust * m_correctedVelocityXY.GetLength() / m_applyVelocityXY.GetLength();
-                    m_sprintHeldDuration += deltaTime * (correctedSprintVelocityAdjust - 1.f) / (greatestSprintScale - 1.f);
+                    if (correctedSprintVelocityAdjust > 1.f)
+                        m_sprintHeldDuration += deltaTime * (correctedSprintVelocityAdjust - 1.f) / (greatestSprintScale - 1.f);
+                    else
+                        m_staminaDecreasing = false;
                 }
             }
 
@@ -3252,8 +3255,12 @@ namespace FirstPersonController
                 m_physicsReportedVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
         else
         {
+            if (!m_performedPhysicsVelocitySample)
+                m_sampledPhysicsVelocity = m_physicsReportedVelocity;
+
             m_physicsReportedVelocity = m_sampledPhysicsVelocity;
             m_sampledPhysicsVelocity = AZ::Vector3::CreateZero();
+            m_performedPhysicsVelocitySample = false;
         }
 
         if (!m_targetVelocity.IsClose(m_physicsReportedVelocity, m_velocityCloseTolerance))
@@ -4166,6 +4173,7 @@ namespace FirstPersonController
             m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
+            m_correctedVelocityXY = m_networkFPCControllerObject->GetCorrectedVelocityXY();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
             m_applyVelocityZ = m_networkFPCControllerObject->GetApplyVelocityZ();
 #endif
@@ -4177,19 +4185,8 @@ namespace FirstPersonController
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
         {
-            if (!m_isServer)
-            {
-                m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
-                m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
-                m_networkFPCControllerObject->SetIsSprintingRelay(GetSprinting());
-                m_networkFPCControllerObject->SetCorrectedVelocityXYRelay(m_correctedVelocityXY);
-            }
-            else
-            {
-                m_networkFPCControllerObject->SetIsSprintingRelay(m_networkFPCControllerObject->GetIsSprinting());
-                m_networkFPCControllerObject->SetCorrectedVelocityXYRelay(m_networkFPCControllerObject->GetCorrectedVelocityXY());
-            }
             m_networkFPCControllerObject->SetTopWalkSpeed(m_speed);
+            m_networkFPCControllerObject->SetIsSprinting(GetSprinting());
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
             m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
             m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
@@ -4204,6 +4201,7 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
+            m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
             m_networkFPCControllerObject->SetApplyVelocityZ(m_applyVelocityZ);
             if (m_isServer || m_isHost)
@@ -4261,6 +4259,7 @@ namespace FirstPersonController
         // This is done because GetVelocity will return zero during network ticks.
         if (m_networkFPCEnabled && tickTimestepNetwork == 1)
         {
+            m_performedPhysicsVelocitySample = true;
             Physics::CharacterRequestBus::EventResult(
                 m_physicsReportedVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
             if (!m_physicsReportedVelocity.IsZero())
@@ -4270,7 +4269,7 @@ namespace FirstPersonController
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,
         // depending on which is selected and which is currently executing
         if (tickTimestepNetwork == 2 ||
-            (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && (!m_networkFPCEnabled || m_isServer)) ||
+            (tickTimestepNetwork == 1 && m_addVelocityForTimestepVsTick && (!m_networkFPCEnabled || m_isNetBot)) ||
             (tickTimestepNetwork == 0 && !m_addVelocityForTimestepVsTick && !m_networkFPCEnabled))
         {
             // Perform the check to see if the character's movement is obstructed
@@ -6903,8 +6902,11 @@ namespace FirstPersonController
         AZ::TickBus::Handler::BusDisconnect();
         InputChannelEventListener::Disconnect();
         Camera::CameraNotificationBus::Handler::BusDisconnect();
-        m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
-        m_sceneSimulationStartHandler.Disconnect();
-        m_sceneSimulationFinishHandler.Disconnect();
+        if (!m_isServer)
+        {
+            m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
+            m_sceneSimulationStartHandler.Disconnect();
+            m_sceneSimulationFinishHandler.Disconnect();
+        }
     }
 } // namespace FirstPersonController

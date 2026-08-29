@@ -209,21 +209,8 @@ namespace FirstPersonController
         // Set the animation graph values
         if (m_paramIdsSet)
         {
-            if (m_firstPersonControllerObject->m_isAutonomousClient)
-            {
-                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, m_firstPersonControllerObject->m_correctedVelocityXY.GetLength());
-                m_animationGraph->SetParameterBool(m_sprintParamId, m_firstPersonControllerObject->GetSprinting());
-            }
-            else if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
-            {
-                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
-                m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
-            }
-            else
-            {
-                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXYRelay().GetLength());
-                m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprintingRelay());
-            }
+            m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
+            m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             m_animationGraph->SetParameterBool(m_standToCrouchParamId, GetIsCrouchingDownMove());
             m_animationGraph->SetParameterBool(m_crouchToStandParamId, GetIsStandingUpMove());
             m_animationGraph->SetParameterBool(m_crouchParamId, GetIsCrouching());
@@ -234,28 +221,10 @@ namespace FirstPersonController
         }
         else
         {
-            if (m_firstPersonControllerObject->m_isAutonomousClient)
-            {
-                if (m_walkSpeedParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterFloat(
-                        m_walkSpeedParamId, m_firstPersonControllerObject->m_correctedVelocityXY.GetLength());
-                if (m_sprintParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterBool(m_sprintParamId, m_firstPersonControllerObject->GetSprinting());
-            }
-            else if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
-            {
-                if (m_walkSpeedParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
-                if (m_sprintParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
-            }
-            else
-            {
-                if (m_walkSpeedParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXYRelay().GetLength());
-                if (m_sprintParamId != InvalidParamIndex)
-                    m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprintingRelay());
-            }
+            if (m_walkSpeedParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterFloat(m_walkSpeedParamId, GetCorrectedVelocityXY().GetLength());
+            if (m_sprintParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_sprintParamId, GetIsSprinting());
             if (m_standToCrouchParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_standToCrouchParamId, GetIsCrouchingDownMove());
             if (m_crouchToStandParamId != InvalidParamIndex)
@@ -576,15 +545,6 @@ namespace FirstPersonController
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
         {
-            if (!GetIsNetBot())
-            {
-                m_firstPersonControllerObject->m_isNetBot = false;
-                m_firstPersonControllerObject->NotAutonomousSoDisconnect();
-                if (m_firstPersonExtrasObject != nullptr)
-                    m_firstPersonExtrasObject->NotAutonomousSoDisconnect();
-            }
-            else
-                m_firstPersonControllerObject->m_isNetBot = true;
             if (IsNetEntityRoleAuthority())
             {
                 m_firstPersonControllerObject->m_isServer = true;
@@ -594,8 +554,20 @@ namespace FirstPersonController
                 SetPlayerStringNetEntityIds(FirstPersonControllerComponent::m_playerStringNetEntityIds);
                 FirstPersonControllerComponent::m_reacquirePlayerBotStringNetEntityIds = true;
             }
+
+            if (!GetIsNetBot())
+            {
+                m_firstPersonControllerObject->m_isNetBot = false;
+                m_firstPersonControllerObject->NotAutonomousSoDisconnect();
+                if (m_firstPersonExtrasObject != nullptr)
+                    m_firstPersonExtrasObject->NotAutonomousSoDisconnect();
+            }
+            else
+                m_firstPersonControllerObject->m_isNetBot = true;
+
             if (!m_firstPersonControllerObject->m_isServer && !m_firstPersonControllerObject->m_isNetBot)
                 m_disabled = true;
+
             m_autonomousNotDetermined = false;
         }
 

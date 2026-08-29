@@ -63,17 +63,11 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The desired velocity of the character entity."/>
     <NetworkProperty Type="AZ::Vector2" Name="CorrectedVelocityXY"
-                     Init="AZ::Vector2::CreateZero()" ReplicateFrom="Autonomous"
-                     ReplicateTo="Authority" IsRewindable="true" IsPredictable="true"
-                     IsPublic="true" Container="Object" ExposeToEditor="false"
-                     ExposeToScript="true" GenerateEventBindings="true"
-                     Description="The local XY velocity that was actually performed, including PhysX inhibited movement."/>
-    <NetworkProperty Type="AZ::Vector2" Name="CorrectedVelocityXYRelay"
                      Init="AZ::Vector2::CreateZero()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
-                     Description="The local XY velocity that was actually performed, including PhysX inhibited movement, relayed to all clients."/>
+                     Description="The local XY velocity that was actually performed, including PhysX inhibited movement."/>
     <NetworkProperty Type="AZ::Vector2" Name="ApplyVelocityXY"
                      Init="AZ::Vector2::CreateZero()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
@@ -166,17 +160,11 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Determines whether network animations are enabled."/>
     <NetworkProperty Type="bool" Name="IsSprinting"
-                     Init="false" ReplicateFrom="Autonomous"
-                     ReplicateTo="Authority" IsRewindable="true" IsPredictable="true"
-                     IsPublic="true" Container="Object" ExposeToEditor="false"
-                     ExposeToScript="true" GenerateEventBindings="true"
-                     Description="Whether the character is currently sprinting."/>
-    <NetworkProperty Type="bool" Name="IsSprintingRelay"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
-                     Description="Whether the character is currently sprinting, relayed to all clients."/>
+                     Description="Whether the character is currently sprinting."/>
     <NetworkProperty Type="bool" Name="IsCrouchingDownMove"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
