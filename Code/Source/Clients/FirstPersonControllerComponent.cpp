@@ -824,6 +824,12 @@ namespace FirstPersonController
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
                 ->Event("Get Target Velocity Using World", &FirstPersonControllerComponentRequests::GetTargetVelocityWorld)
                 ->Event("Get Target Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetTargetVelocityHeading)
+                ->Event(
+                    "Get Next Likely Target Velocity Using World",
+                    &FirstPersonControllerComponentRequests::GetNextLikelyTargetVelocityWorld)
+                ->Event(
+                    "Get Next Likely Target Velocity Using Character Heading",
+                    &FirstPersonControllerComponentRequests::GetNextLikelyTargetVelocityHeading)
                 ->Event("Get Velocity Close Tolerance", &FirstPersonControllerComponentRequests::GetVelocityCloseTolerance)
                 ->Event("Set Velocity Close Tolerance", &FirstPersonControllerComponentRequests::SetVelocityCloseTolerance)
                 ->Event("Get Velocity XcrossY Direction", &FirstPersonControllerComponentRequests::GetVelocityXCrossYDirection)
@@ -2338,6 +2344,7 @@ namespace FirstPersonController
                     (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
 
                 m_targetVelocity *= m_movingUpInclineFactor;
+                m_nextLikelyTargetVelocity *= m_movingUpInclineFactor;
             }
             // else here would be explicitly moving down an incline
         }
@@ -2394,9 +2401,14 @@ namespace FirstPersonController
                 {
                     m_targetVelocity.SetX(velocityXYTilted.GetX() * m_movingUpInclineFactor);
                     m_targetVelocity.SetY(velocityXYTilted.GetY() * m_movingUpInclineFactor);
+                    m_nextLikelyTargetVelocity.SetX(velocityXYTilted.GetX() * m_movingUpInclineFactor);
+                    m_nextLikelyTargetVelocity.SetY(velocityXYTilted.GetY() * m_movingUpInclineFactor);
                 }
                 else
+                {
                     m_targetVelocity *= m_movingUpInclineFactor;
+                    m_nextLikelyTargetVelocity *= m_movingUpInclineFactor;
+                }
             }
         }
     }
@@ -4278,6 +4290,12 @@ namespace FirstPersonController
                 (m_applyVelocityXY + m_applyVelocityXYFromImpulse + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading)),
                 m_velocityXCrossYDirection);
 
+            // Start computing the next likely target velocity
+            m_nextLikelyTargetVelocity = TiltVectorXCrossY(
+                (m_nextLikelyApplyVelocityXY + m_applyVelocityXYFromImpulse + AZ::Vector2(m_addVelocityWorld) +
+                 AZ::Vector2(addVelocityHeading)),
+                m_velocityXCrossYDirection);
+
             // Calculate the walking up incline factor
             ApplyMovingUpInclineXYSpeedFactor();
 
@@ -4286,6 +4304,10 @@ namespace FirstPersonController
 
             // Change the +Z direction based on m_velocityZPosDirection
             m_targetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+
+            // Add the next likely Z velocity onto the next likely target velocity
+            m_nextLikelyTargetVelocity +=
+                (m_nextLikelyApplyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
 
             // Add velocity on either the network tick, the physics timstep, or the frame tick
             if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
@@ -5035,6 +5057,14 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonControllerComponent::GetTargetVelocityHeading() const
     {
         return AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_targetVelocity);
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetNextLikelyTargetVelocityWorld() const
+    {
+        return m_nextLikelyTargetVelocity;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetNextLikelyTargetVelocityHeading() const
+    {
+        return AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_nextLikelyTargetVelocity);
     }
     float FirstPersonControllerComponent::GetVelocityCloseTolerance() const
     {

@@ -193,6 +193,8 @@ namespace FirstPersonController
         void SetGravity(const float gravity) override;
         AZ::Vector3 GetTargetVelocityWorld() const override;
         AZ::Vector3 GetTargetVelocityHeading() const override;
+        AZ::Vector3 GetNextLikelyTargetVelocityWorld() const override;
+        AZ::Vector3 GetNextLikelyTargetVelocityHeading() const override;
         float GetVelocityCloseTolerance() const override;
         void SetVelocityCloseTolerance(const float velocityCloseTolerance) override;
         AZ::Vector3 GetVelocityXCrossYDirection() const override;
@@ -663,6 +665,7 @@ namespace FirstPersonController
         AZ::Vector2 m_applyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector2 m_nextLikelyApplyVelocityXY = AZ::Vector2::CreateZero();
         AZ::Vector3 m_targetVelocity = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_nextLikelyTargetVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_physicsReportedVelocity = AZ::Vector3::CreateZero();
         AZ::Vector3 m_sampledPhysicsVelocity = AZ::Vector3::CreateZero();
         AZ::Vector2 m_scriptTargetVelocityXY = AZ::Vector2::CreateZero();

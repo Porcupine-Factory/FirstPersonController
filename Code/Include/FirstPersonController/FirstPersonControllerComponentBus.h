@@ -124,6 +124,8 @@ namespace FirstPersonController
         virtual void SetGravity(const float) = 0;
         virtual AZ::Vector3 GetTargetVelocityWorld() const = 0;
         virtual AZ::Vector3 GetTargetVelocityHeading() const = 0;
+        virtual AZ::Vector3 GetNextLikelyTargetVelocityWorld() const = 0;
+        virtual AZ::Vector3 GetNextLikelyTargetVelocityHeading() const = 0;
         virtual float GetVelocityCloseTolerance() const = 0;
         virtual void SetVelocityCloseTolerance(const float) = 0;
         virtual AZ::Vector3 GetVelocityXCrossYDirection() const = 0;
