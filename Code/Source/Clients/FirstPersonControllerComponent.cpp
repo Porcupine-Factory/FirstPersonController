@@ -792,6 +792,8 @@ namespace FirstPersonController
                 ->Event("Set Jump Event Name", &FirstPersonControllerComponentRequests::SetJumpEventName)
                 ->Event("Get Jump Input Value", &FirstPersonControllerComponentRequests::GetJumpInputValue)
                 ->Event("Set Jump Input Value", &FirstPersonControllerComponentRequests::SetJumpInputValue)
+                ->Event("Get Forward Back Cancel Out", &FirstPersonControllerComponentRequests::GetForwardBackCancelOut)
+                ->Event("Set Forward Back Cancel Out", &FirstPersonControllerComponentRequests::SetForwardBackCancelOut)
                 ->Event("Get Grounded", &FirstPersonControllerComponentRequests::GetGrounded)
                 ->Event("Get Fell Distance", &FirstPersonControllerComponentRequests::GetFellDistance)
                 ->Event("Get Soon Fell Distance", &FirstPersonControllerComponentRequests::GetSoonFellDistance)
@@ -3024,10 +3026,13 @@ namespace FirstPersonController
         float forwardBack = m_forwardValue * m_forwardScale + -1.f * m_backValue * m_backScale;
         float leftRight = -1.f * m_leftValue * m_leftScale + m_rightValue * m_rightScale;
 
+        if (m_forwardBackCancelOut && m_forwardValue != 0.f && m_backValue != 0.f)
+            forwardBack = 0.f;
+
         // Remove the scale factor since it's going to be applied after the normalization
-        if (forwardBack >= 0.f)
+        if (forwardBack > 0.f && m_forwardScale != 0.f)
             forwardBack /= m_forwardScale;
-        else
+        else if (forwardBack < 0.f && m_forwardScale != 0.f)
             forwardBack /= m_backScale;
 
         // If the character is being flipped upside-down then flip the X&Y movement
@@ -3037,9 +3042,9 @@ namespace FirstPersonController
             leftRight *= -1.f;
         }
 
-        if (leftRight >= 0.f)
+        if (leftRight > 0.f && m_forwardScale != 0.f)
             leftRight /= m_rightScale;
-        else
+        else if (leftRight < 0.f && m_forwardScale != 0.f)
             leftRight /= m_leftScale;
 
         AZ::Vector2 targetVelocityXY = AZ::Vector2(leftRight, forwardBack);
@@ -4736,6 +4741,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetJumpInputValue(const float jumpValue)
     {
         m_jumpValue = jumpValue;
+    }
+    bool FirstPersonControllerComponent::GetForwardBackCancelOut() const
+    {
+        return m_forwardBackCancelOut;
+    }
+    void FirstPersonControllerComponent::SetForwardBackCancelOut(const bool forwardBackCancelOut)
+    {
+        m_forwardBackCancelOut = forwardBackCancelOut;
     }
     bool FirstPersonControllerComponent::GetGrounded() const
     {

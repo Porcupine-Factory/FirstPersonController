@@ -97,6 +97,8 @@ namespace FirstPersonController
         virtual void SetJumpEventName(const AZStd::string&) = 0;
         virtual float GetJumpInputValue() const = 0;
         virtual void SetJumpInputValue(const float) = 0;
+        virtual bool GetForwardBackCancelOut() const = 0;
+        virtual void SetForwardBackCancelOut(const bool) = 0;
         virtual bool GetGrounded() const = 0;
         virtual float GetFellDistance() const = 0;
         virtual float GetSoonFellDistance() const = 0;

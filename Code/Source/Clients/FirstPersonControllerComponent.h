@@ -166,6 +166,8 @@ namespace FirstPersonController
         void SetJumpEventName(const AZStd::string& strJump) override;
         float GetJumpInputValue() const override;
         void SetJumpInputValue(const float jumpValue) override;
+        bool GetForwardBackCancelOut() const override;
+        void SetForwardBackCancelOut(const bool forwardBackCancelOut) override;
         bool GetGrounded() const override;
         float GetFellDistance() const override;
         float GetSoonFellDistance() const override;
@@ -952,6 +954,7 @@ namespace FirstPersonController
         float m_rightScale = 1.f;
         float m_sprintAccelScale = 1.5f;
         float m_crouchScale = 0.5f;
+        bool m_forwardBackCancelOut = false;
         // This sphere cast determines how far above the charcter's head that an obstruction is detected
         // for allowing them to uncrouch
         float m_uncrouchHeadSphereCastOffset = 0.1f;
