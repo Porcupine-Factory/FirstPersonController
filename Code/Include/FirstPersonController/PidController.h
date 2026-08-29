@@ -20,7 +20,7 @@ namespace FirstPersonController
 
         // Default constructor with zero gains and defaults
         PidController()
-            : PidController(0.0f, 0.0f, 0.0f, 100.0f, 0.8f, ErrorRate)
+            : PidController(0.f, 0.f, 0.f, 100.f, 0.8f, ErrorRate)
         {
         }
 
@@ -29,7 +29,7 @@ namespace FirstPersonController
             float proportionalGain,
             float integralGain,
             float derivativeGain,
-            float integralWindupLimit = 100.0f,
+            float integralWindupLimit = 100.f,
             float derivativeFilterAlpha = 0.8f,
             DerivativeCalculationMode mode = ErrorRate)
             : m_proportionalGain(proportionalGain)
@@ -167,7 +167,7 @@ namespace FirstPersonController
         // Helper: Returns zero-initialized T (specialized for types)
         static T GetZeroValue()
         {
-            return T(0.0f);
+            return T(0.f);
         }
 
         // Helper: Clamps value between min/max (vector/scalar via operators)
@@ -207,7 +207,7 @@ namespace FirstPersonController
     template<>
     inline float PidController<float>::GetZeroValue()
     {
-        return 0.0f;
+        return 0.f;
     }
 
     template<>

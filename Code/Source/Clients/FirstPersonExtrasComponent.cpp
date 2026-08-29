@@ -972,9 +972,9 @@ namespace FirstPersonController
     // one can flatten the tops
     float FirstPersonExtrasComponent::CalculateHeadbobHorizontalShape(const float phase) const
     {
-        static constexpr float HorizontalEvenHarmonicFreq = 2.0f;
-        static constexpr float HorizontalEvenHarmonicPhaseOffsetDeg = -94.0f;
-        static constexpr float HorizontalOddHarmonicFreq = 3.0f;
+        static constexpr float HorizontalEvenHarmonicFreq = 2.f;
+        static constexpr float HorizontalEvenHarmonicPhaseOffsetDeg = -94.f;
+        static constexpr float HorizontalOddHarmonicFreq = 3.f;
         return sinf(phase) +
             m_headbobRealism *
             (m_headbobHorizontalSwayImbalance *
@@ -987,11 +987,11 @@ namespace FirstPersonController
     // measured within a degree of zero, so it has no phase offset
     float FirstPersonExtrasComponent::CalculateHeadbobForwardShape(const float phase) const
     {
-        static constexpr float ForwardFirstHarmonicPhaseOffsetDeg = 122.0f;
-        static constexpr float ForwardSecondHarmonicFreq = 2.0f;
-        static constexpr float ForwardSecondHarmonicPhaseOffsetDeg = 80.0f;
+        static constexpr float ForwardFirstHarmonicPhaseOffsetDeg = 122.f;
+        static constexpr float ForwardSecondHarmonicFreq = 2.f;
+        static constexpr float ForwardSecondHarmonicPhaseOffsetDeg = 80.f;
         static constexpr float ForwardSecondHarmonicMagnitude = 0.215f;
-        static constexpr float ForwardThirdHarmonicFreq = 3.0f;
+        static constexpr float ForwardThirdHarmonicFreq = 3.f;
         static constexpr float ForwardThirdHarmonicMagnitude = 0.093f;
         return sinf(phase + AZ::DegToRad(ForwardFirstHarmonicPhaseOffsetDeg)) +
             ForwardSecondHarmonicMagnitude * sinf(ForwardSecondHarmonicFreq * phase + AZ::DegToRad(ForwardSecondHarmonicPhaseOffsetDeg)) +

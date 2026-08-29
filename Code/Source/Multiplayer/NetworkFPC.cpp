@@ -21,7 +21,7 @@ namespace FirstPersonController
     AZ_CVAR(
         float,
         cl_VelocityTolerance,
-        2.0f,
+        2.f,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
         "The tolerance used for XY obstruction checks, set this to a large number to avoid false-positive checks");
@@ -29,7 +29,7 @@ namespace FirstPersonController
     AZ_CVAR(
         float,
         cl_VelocityToleranceGravity,
-        50.0f,
+        50.f,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
         "The tolerance used for ground obstruction checks, set this to a large number to avoid false-positive checks");
@@ -514,8 +514,8 @@ namespace FirstPersonController
         playerInput->m_overrideRotationForTick = GetOverrideRotationForTick();
         playerInput->m_overrideTransform = GetOverrideTransform();
 
-        m_yawValue = 0.0f;
-        m_pitchValue = 0.0f;
+        m_yawValue = 0.f;
+        m_pitchValue = 0.f;
 
         // ResetCount is a predictable network property, it gets set on the client through correction packets
         playerInput->m_resetCount = GetNetworkTransformComponentController()->GetResetCount();
