@@ -3219,8 +3219,8 @@ namespace FirstPersonController
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
         else
         {
-            m_currentVelocity = m_prevSampledVelocity;
-            m_prevSampledVelocity = AZ::Vector3::CreateZero();
+            m_currentVelocity = m_sampledVelocity;
+            m_sampledVelocity = AZ::Vector3::CreateZero();
         }
 
         if (!m_targetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
@@ -4223,7 +4223,7 @@ namespace FirstPersonController
         {
             Physics::CharacterRequestBus::EventResult(m_currentVelocity, GetEntityId(), &Physics::CharacterRequestBus::Events::GetVelocity);
             if (!m_currentVelocity.IsZero())
-                m_prevSampledVelocity = m_currentVelocity;
+                m_sampledVelocity = m_currentVelocity;
         }
 
         // Handle motion on either the physics the frame tick, physics fixed timestep, or the network tick,
