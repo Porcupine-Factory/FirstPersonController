@@ -3226,9 +3226,8 @@ namespace FirstPersonController
             m_prevSampledVelocity = AZ::Vector3::CreateZero();
         }
 
-        if (!m_prevTargetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
+        if (!m_targetVelocity.IsClose(m_currentVelocity, m_velocityCloseTolerance))
         {
-            // If enabled, cause the character's applied velocity to match the current velocity from Physics
             m_velocityXYObstructed = true;
 
             if (m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
@@ -3283,6 +3282,7 @@ namespace FirstPersonController
                 // there would need to be an inverse TiltVectorXCrossY(...) method
                 m_correctedVelocityXY = m_applyVelocityXY;
                 m_correctedVelocityZ = m_applyVelocityZ;
+                m_velocityXYObstructed = false;
             }
         }
     }
@@ -4219,9 +4219,6 @@ namespace FirstPersonController
             // Update the camera and character rotation
             UpdateRotation(deltaTime, tickTimestepNetwork);
         }
-
-        // Keep track of the last two target velocity values for the obstruction check logic
-        m_prevTargetVelocity = m_targetVelocity;
 
         // Sample the current velocity during physics timesteps when NetworkFPC is enabled
         // and retain this value for use in CheckCharacterMovementObstructed(...).
