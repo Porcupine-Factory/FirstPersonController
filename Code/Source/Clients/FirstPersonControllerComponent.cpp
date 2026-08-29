@@ -884,6 +884,7 @@ namespace FirstPersonController
                 ->Event("Set Add Velocity Using Character Heading", &FirstPersonControllerComponentRequests::SetAddVelocityHeading)
                 ->Event("Get Apply Velocity Z", &FirstPersonControllerComponentRequests::GetApplyVelocityZ)
                 ->Event("Set Apply Velocity Z", &FirstPersonControllerComponentRequests::SetApplyVelocityZ)
+                ->Event("Get Next Likely Apply Velocity Z", &FirstPersonControllerComponentRequests::GetNextLikelyApplyVelocityZ)
                 ->Event("Get Enable Impulses", &FirstPersonControllerComponentRequests::GetEnableImpulses)
                 ->Event("Set Enable Impulses", &FirstPersonControllerComponentRequests::SetEnableImpulses)
                 ->Event("Get Use Friction For Deceleration", &FirstPersonControllerComponentRequests::GetImpulseDecelUsesFriction)
@@ -3739,6 +3740,7 @@ namespace FirstPersonController
                 if (m_jumpCoyoteGravityPending)
                 {
                     m_applyVelocityZ = 0.f;
+                    m_nextLikelyApplyVelocityZ = 0.f;
                     m_jumpCoyoteGravityPending = false;
                 }
                 m_onFirstJump = true;
@@ -3752,6 +3754,7 @@ namespace FirstPersonController
                     m_coyoteTimeNoGravityActive = true;
 
                 m_applyVelocityZ = 0.f;
+                m_nextLikelyApplyVelocityZ = 0.f;
                 m_applyVelocityZCurrentDelta = 0.f;
                 m_jumpTimer = 0.f;
 
@@ -3827,7 +3830,6 @@ namespace FirstPersonController
                     return;
                 }
                 m_applyVelocityZ = m_jumpSecondInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
-                m_applyVelocityZCurrentDelta = m_gravity * deltaTime;
                 m_applyVelocityZCurrentDelta = -m_gravity * deltaTime;
                 m_onFinalJump = true;
                 m_jumpHeld = true;
@@ -3841,15 +3843,19 @@ namespace FirstPersonController
 
         // Accumulate the change in Z velocity
         if (!initialJump)
+        {
             m_applyVelocityZ += m_applyVelocityZCurrentDelta;
+            m_nextLikelyApplyVelocityZ = m_applyVelocityZ + m_applyVelocityZCurrentDelta;
+        }
         else
         {
             m_applyVelocityZ = m_jumpInitialVelocity + m_gravity * m_jumpHeldGravityFactor * deltaTime;
             m_applyVelocityZCurrentDelta = m_gravity * m_jumpHeldGravityFactor * deltaTime;
+            m_nextLikelyApplyVelocityZ = m_applyVelocityZ + m_applyVelocityZCurrentDelta;
         }
 
         if (m_headHit && m_applyVelocityZ > 0.f && m_headHitSetsApogee)
-            m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
+            m_applyVelocityZ = m_nextLikelyApplyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
 
         // Account for the case where the PhysX Character Gameplay component's gravity is used instead
         if (m_gravity == 0.f && m_grounded)
@@ -3869,7 +3875,7 @@ namespace FirstPersonController
             }
 
             if (currentVelocity.GetZ() < 0.f)
-                m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
+                m_applyVelocityZ = m_nextLikelyApplyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
         }
 
         if (prevApplyVelocityZ > 0.f && m_applyVelocityZ <= 0.f)
@@ -5325,6 +5331,10 @@ namespace FirstPersonController
     {
         SetGroundedForTick(false);
         m_applyVelocityZ = applyVelocityZ;
+    }
+    float FirstPersonControllerComponent::GetNextLikelyApplyVelocityZ() const
+    {
+        return m_nextLikelyApplyVelocityZ;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetLinearImpulse() const
     {

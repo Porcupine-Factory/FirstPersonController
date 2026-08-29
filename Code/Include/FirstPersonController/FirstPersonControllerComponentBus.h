@@ -172,6 +172,7 @@ namespace FirstPersonController
         virtual void SetAddVelocityHeading(const AZ::Vector3&) = 0;
         virtual float GetApplyVelocityZ() const = 0;
         virtual void SetApplyVelocityZ(const float) = 0;
+        virtual float GetNextLikelyApplyVelocityZ() const = 0;
         virtual bool GetEnableImpulses() const = 0;
         virtual void SetEnableImpulses(const bool) = 0;
         virtual bool GetImpulseDecelUsesFriction() const = 0;

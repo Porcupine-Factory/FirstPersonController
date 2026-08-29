@@ -241,6 +241,7 @@ namespace FirstPersonController
         void SetAddVelocityHeading(const AZ::Vector3& addVelocityHeading) override;
         float GetApplyVelocityZ() const override;
         void SetApplyVelocityZ(const float applyVelocityZ) override;
+        float GetNextLikelyApplyVelocityZ() const override;
         bool GetEnableImpulses() const override;
         void SetEnableImpulses(const bool enableImpulses) override;
         bool GetImpulseDecelUsesFriction() const override;
@@ -807,6 +808,7 @@ namespace FirstPersonController
         bool m_jumpRepressHoldCausesJump = true;
         bool m_jumpHeldKeepsJumping = false;
         float m_applyVelocityZ = 0.f;
+        float m_nextLikelyApplyVelocityZ = 0.f;
         float m_applyVelocityZCurrentDelta = 0.f;
         float m_correctedVelocityZ = 0.f;
         float m_capsuleRadius = 0.3f;
