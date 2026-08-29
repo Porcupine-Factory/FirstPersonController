@@ -2534,7 +2534,15 @@ namespace FirstPersonController
             if (m_sprintUsesStamina)
             {
                 m_staminaDecreasing = true;
-                m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust - 1.f) / (greatestSprintScale - 1.f);
+                if (m_correctedVelocityXY.IsClose(m_applyVelocityXY) || m_correctedVelocityXY.GetLength() > m_applyVelocityXY.GetLength())
+                    m_sprintHeldDuration += deltaTime * (m_sprintVelocityAdjust - 1.f) / (greatestSprintScale - 1.f);
+                else
+                {
+                    // Respond to the character's movement being obstructed by not rapidly reducing their stamina
+                    const float correctedSprintVelocityAdjust =
+                        m_sprintVelocityAdjust * m_correctedVelocityXY.GetLength() / m_applyVelocityXY.GetLength();
+                    m_sprintHeldDuration += deltaTime * (correctedSprintVelocityAdjust - 1.f) / (greatestSprintScale - 1.f);
+                }
             }
 
             if (m_sprintHeldDuration >= m_sprintMaxTime)
