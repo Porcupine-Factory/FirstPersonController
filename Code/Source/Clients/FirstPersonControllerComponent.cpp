@@ -1367,8 +1367,6 @@ namespace FirstPersonController
                 m_ungroundedDueToJump = true;
         }
 
-        m_prevTranslation = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-
         // Set the sprint pause time based on whether the cooldown time or the max consecutive sprint time is longer
         // This number can be altered using the RequestBus
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
@@ -2305,7 +2303,7 @@ namespace FirstPersonController
             // The character is not on an incline, so don't apply an incline factor
             if (m_velocityXCrossYDirection.IsClose(m_velocityZPosDirection))
             {
-                m_prevGroundCloseSumNormals = m_velocityZPosDirection;
+                m_groundCloseSumNormals = m_velocityZPosDirection;
                 return;
             }
 
@@ -2315,7 +2313,7 @@ namespace FirstPersonController
             if (AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(m_velocityXCrossYDirection) >
                 AZ::Constants::HalfPi)
             {
-                m_prevGroundCloseSumNormals = m_velocityXCrossYDirection;
+                m_groundCloseSumNormals = m_velocityXCrossYDirection;
 
                 // Calculate the steepness of the incline
                 const float steepness = m_velocityZPosDirection.Angle(m_velocityXCrossYDirection) / AZ::Constants::HalfPi;
@@ -2353,36 +2351,35 @@ namespace FirstPersonController
             }
             else if (!groundCloseSumNormals.IsZero())
             {
-                m_prevGroundCloseSumNormals = groundCloseSumNormals;
+                m_groundCloseSumNormals = groundCloseSumNormals;
             }
             // Use captured grace normal during coyote time if walking off ledge
             else if (m_airTime < m_coyoteTime && !m_ungroundedDueToJump && m_coyoteTimeTracksLastNormal)
             {
-                m_prevGroundCloseSumNormals = m_coyoteVelocityXCrossYDirection;
+                m_groundCloseSumNormals = m_coyoteVelocityXCrossYDirection;
             }
             else if (!m_ungroundedDueToJump && !m_coyoteTimeTracksLastNormal)
             {
-                m_prevGroundCloseSumNormals = m_velocityZPosDirection;
+                m_groundCloseSumNormals = m_velocityZPosDirection;
             }
 
-            if (AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(m_prevGroundCloseSumNormals) >
-                AZ::Constants::HalfPi)
+            if (AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(m_groundCloseSumNormals) > AZ::Constants::HalfPi)
             {
                 // Calculate the steepness of the incline
-                const float steepness = m_velocityZPosDirection.Angle(m_prevGroundCloseSumNormals) / AZ::Constants::HalfPi;
+                const float steepness = m_velocityZPosDirection.Angle(m_groundCloseSumNormals) / AZ::Constants::HalfPi;
 
                 // Get the velocity that would be tilted if the character were grounded
-                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_targetVelocityXY, m_prevGroundCloseSumNormals));
+                const AZ::Vector2 velocityXYTilted = AZ::Vector2(TiltVectorXCrossY(m_targetVelocityXY, m_groundCloseSumNormals));
 
                 // Get the component of the velocity vector pointing towards the incline
-                const AZ::Vector2 prevNormalizedVectorTowardsIncline = AZ::Vector2(-m_prevGroundCloseSumNormals).GetNormalized();
+                const AZ::Vector2 prevNormalizedVectorTowardsIncline = AZ::Vector2(-m_groundCloseSumNormals).GetNormalized();
                 const AZ::Vector2 currentVelocityXYTowardsIncline =
                     AZ::Vector2(velocityXYTilted).GetProjected(prevNormalizedVectorTowardsIncline);
 
                 // Calculate the maximum expected velocity when moving directly towards the incline
                 AZ::Vector2 maxVelocityXYTowardsIncline = m_targetVelocityXY.GetLength() * prevNormalizedVectorTowardsIncline;
                 const AZ::Vector3 tiltedMaxVelocityXYTowardsIncline =
-                    TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_prevGroundCloseSumNormals);
+                    TiltVectorXCrossY(maxVelocityXYTowardsIncline, m_groundCloseSumNormals);
                 maxVelocityXYTowardsIncline = AZ::Vector2(tiltedMaxVelocityXYTowardsIncline);
 
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
@@ -4004,9 +4001,8 @@ namespace FirstPersonController
             GetVectorAnglesBetweenVectorsRadians(AZ::Vector3::CreateAxisX(), m_sphereCastsAxisDirectionPose)));
 
         // Set the translation and shift the capsule based on the character's capsule height
-        capsulePose.SetTranslation(m_prevTranslation + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
-
-        m_prevTranslation = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
+        capsulePose.SetTranslation(
+            GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
         AzPhysics::ShapeCastRequest request = !m_applyVelocityXY.IsZero() || m_applyVelocityZ != 0.f || !m_currentVelocity.IsZero()
             ? AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(

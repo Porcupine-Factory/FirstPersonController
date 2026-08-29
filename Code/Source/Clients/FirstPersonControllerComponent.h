@@ -781,7 +781,7 @@ namespace FirstPersonController
         AZ::Vector3 m_coyoteVelocityXCrossYDirection = AZ::Vector3::CreateAxisZ();
         float m_movingUpInclineFactor = 1.f;
         bool m_jumpInclineVelocityXYCaptured = false;
-        AZ::Vector3 m_prevGroundCloseSumNormals = AZ::Vector3::CreateAxisZ();
+        AZ::Vector3 m_groundCloseSumNormals = AZ::Vector3::CreateAxisZ();
         AZ::Vector3 m_velocityZPosDirection = AZ::Vector3::CreateAxisZ();
         bool m_velocityXCrossYTracksNormal = true;
         bool m_movingUpInclineSlowed = true;
@@ -866,7 +866,6 @@ namespace FirstPersonController
         AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
-        AZ::Vector3 m_prevTranslation = AZ::Vector3::CreateZero();
         AZ::Vector2 m_applyVelocityXYFromImpulse = AZ::Vector2::CreateZero();
         float m_impulseConstantDecel = 10.f;
         float m_impulsePrevConstantDecel = 10.f;
