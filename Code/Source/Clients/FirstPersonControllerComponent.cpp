@@ -6065,6 +6065,9 @@ namespace FirstPersonController
         else
             m_sprintHeldDuration = m_sprintMaxTime;
         m_staminaPercentage = (m_sprintCooldownTimer == 0.f) ? 100.f * (m_sprintMaxTime - m_sprintHeldDuration) / m_sprintMaxTime : 0.f;
+        if (m_staminaPercentage == 0.f)
+            FirstPersonControllerComponentNotificationBus::Event(
+                GetEntityId(), &FirstPersonControllerComponentNotifications::OnStaminaReachedZero);
         if (m_sprintHeldDuration > prevSprintHeldDuration)
         {
             m_staminaDecreasing = true;

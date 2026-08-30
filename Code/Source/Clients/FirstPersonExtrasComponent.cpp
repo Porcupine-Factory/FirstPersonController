@@ -27,6 +27,9 @@ namespace FirstPersonController
                 ->Field("Jump Pressed In Air Queue Time Threshold", &FirstPersonExtrasComponent::m_jumpPressedInAirQueueTimeThreshold)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                ->Field("Jump Stamina Equivalent Sprint Time", &FirstPersonExtrasComponent::m_jumpStaminaEquivalentSprintTime)
+                ->Attribute(AZ::Edit::Attributes::Suffix, " s")
+                ->Attribute(AZ::Edit::Attributes::Min, 0.f)
 
                 // Jump Head Tilt group
                 ->Field("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
@@ -100,6 +103,11 @@ namespace FirstPersonController
                         "The duration prior to the character being grounded where pressing and releasing the jump key will be queued up "
                         "for a jump once the character becomes grounded; if the jump key is pressed and released outside of this timing "
                         "window then a jump will not be queued.")
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_jumpStaminaEquivalentSprintTime,
+                        "Jump Stamina Equivalent Sprint Time",
+                        "The equivalent amount of sprinting time that each jump counts as when reducing the stamina.")
 
                     // Jump Head Tilt group
                     ->GroupElementToggle("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
@@ -372,6 +380,8 @@ namespace FirstPersonController
                 ->Event(
                     "Set Jump Pressed In Air Queue Time Threshold",
                     &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold)
+                ->Event("Get Jump Stamina Equivalent Sprint Time", &FirstPersonExtrasComponentRequests::GetJumpStaminaEquivalentSprintTime)
+                ->Event("Set Jump Stamina Equivalent Sprint Time", &FirstPersonExtrasComponentRequests::SetJumpStaminaEquivalentSprintTime)
                 ->Event("Get Jump Head Tilt Enabled", &FirstPersonExtrasComponentRequests::GetJumpHeadTiltEnabled)
                 ->Event("Set Jump Head Tilt Enabled", &FirstPersonExtrasComponentRequests::SetJumpHeadTiltEnabled)
                 ->Event("Get Head Angle Jump", &FirstPersonExtrasComponentRequests::GetHeadAngleJump)
@@ -479,6 +489,10 @@ namespace FirstPersonController
 
         // Assign the FirstPersonExtrasComponent specific inputs
         AssignConnectInputEvents();
+
+        // Cap jump stamina equivalent sprint time to the maximum sprint time
+        if (m_jumpStaminaEquivalentSprintTime > m_firstPersonControllerObject->m_sprintMaxTime)
+            m_jumpStaminaEquivalentSprintTime = m_firstPersonControllerObject->m_sprintMaxTime;
 
         // Headbob activation
         if (m_headbobEnabled)
@@ -1386,6 +1400,13 @@ namespace FirstPersonController
         m_tiltLanded = false;
         m_moveHeadDown = true;
         m_totalHeadAngle = -m_headAngleJump;
+
+        if (m_jumpStaminaEquivalentSprintTime > 0.f && m_firstPersonControllerObject->m_sprintCooldownTimer == 0.f)
+        {
+            m_firstPersonControllerObject->SetSprintHeldTime(
+                m_firstPersonControllerObject->m_sprintHeldDuration += m_jumpStaminaEquivalentSprintTime);
+            m_firstPersonControllerObject->m_sprintPause = m_firstPersonControllerObject->m_sprintPauseTime;
+        }
     }
     void FirstPersonExtrasComponent::OnFinalJump()
     {
@@ -1397,6 +1418,13 @@ namespace FirstPersonController
         m_tiltLanded = false;
         m_moveHeadDown = true;
         m_totalHeadAngle = -m_headAngleJump;
+
+        if (m_jumpStaminaEquivalentSprintTime > 0.f && m_firstPersonControllerObject->m_sprintCooldownTimer == 0.f)
+        {
+            m_firstPersonControllerObject->SetSprintHeldTime(
+                m_firstPersonControllerObject->m_sprintHeldDuration += m_jumpStaminaEquivalentSprintTime);
+            m_firstPersonControllerObject->m_sprintPause = m_firstPersonControllerObject->m_sprintPauseTime;
+        }
     }
     void FirstPersonExtrasComponent::OnStaminaCapped()
     {
@@ -1428,6 +1456,17 @@ namespace FirstPersonController
             m_jumpPressedInAirQueueTimeThreshold = 0.f;
         else
             m_jumpPressedInAirQueueTimeThreshold = jumpPressedInAirQueueTimeThreshold;
+    }
+    float FirstPersonExtrasComponent::GetJumpStaminaEquivalentSprintTime() const
+    {
+        return m_jumpStaminaEquivalentSprintTime;
+    }
+    void FirstPersonExtrasComponent::SetJumpStaminaEquivalentSprintTime(const float jumpStaminaEquivalentSprintTime)
+    {
+        if (jumpStaminaEquivalentSprintTime < 0.f)
+            m_jumpStaminaEquivalentSprintTime = 0.f;
+        else
+            m_jumpStaminaEquivalentSprintTime = jumpStaminaEquivalentSprintTime;
     }
     bool FirstPersonExtrasComponent::GetJumpHeadTiltEnabled() const
     {

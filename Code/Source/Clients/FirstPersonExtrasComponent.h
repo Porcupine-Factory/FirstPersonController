@@ -65,6 +65,8 @@ namespace FirstPersonController
         // FirstPersonExtrasRequestBus
         float GetJumpPressedInAirQueueTimeThreshold() const override;
         void SetJumpPressedInAirQueueTimeThreshold(const float jumpPressedInAirQueueTimeThreshold) override;
+        float GetJumpStaminaEquivalentSprintTime() const override;
+        void SetJumpStaminaEquivalentSprintTime(const float jumpStaminaEquivalentSprintTime) override;
         bool GetJumpHeadTiltEnabled() const override;
         void SetJumpHeadTiltEnabled(const bool jumpHeadTiltEnabled) override;
         float GetHeadAngleJump() const override;
@@ -185,6 +187,9 @@ namespace FirstPersonController
         bool m_prevQueueJump = false;
         float m_jumpPressedInAirTimer = 0.f;
         float m_jumpPressedInAirQueueTimeThreshold = 0.35f;
+
+        // Jump Uses Stamina
+        float m_jumpStaminaEquivalentSprintTime = 1.9f;
 
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;
