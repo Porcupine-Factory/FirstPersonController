@@ -21,6 +21,12 @@ namespace FirstPersonController
         virtual void SetJumpHeadTiltEnabled(const bool) = 0;
         virtual float GetJumpStaminaEquivalentSprintTime() const = 0;
         virtual void SetJumpStaminaEquivalentSprintTime(const float) = 0;
+        virtual float GetJumpExhaustionFactor() const = 0;
+        virtual void SetJumpExhaustionFactor(const float) = 0;
+        virtual float GetJumpDefaultHoldDistance() const = 0;
+        virtual void SetJumpDefaultHoldDistance(const float) = 0;
+        virtual float GetJumpDefaultInitialVelocity() const = 0;
+        virtual void SetJumpDefaultInitialVelocity(const float) = 0;
         virtual float GetHeadAngleJump() const = 0;
         virtual void SetHeadAngleJump(const float) = 0;
         virtual float GetHeadAngleLand() const = 0;

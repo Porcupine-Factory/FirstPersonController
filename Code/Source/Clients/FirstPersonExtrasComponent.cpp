@@ -30,6 +30,8 @@ namespace FirstPersonController
                 ->Field("Jump Stamina Equivalent Sprint Time", &FirstPersonExtrasComponent::m_jumpStaminaEquivalentSprintTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                ->Field("Jump Exhaustion Factor", &FirstPersonExtrasComponent::m_jumpExhaustionFactor)
+                ->Attribute(AZ::Edit::Attributes::Min, 0.f)
 
                 // Jump Head Tilt group
                 ->Field("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
@@ -108,6 +110,11 @@ namespace FirstPersonController
                         &FirstPersonExtrasComponent::m_jumpStaminaEquivalentSprintTime,
                         "Jump Stamina Equivalent Sprint Time",
                         "The equivalent amount of sprinting time that each jump counts as when reducing the stamina.")
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonExtrasComponent::m_jumpExhaustionFactor,
+                        "Jump Exhaustion Factor",
+                        "The factor by which the jump initial velocity and hold distance are reduced when the stamina is depleted.")
 
                     // Jump Head Tilt group
                     ->GroupElementToggle("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
@@ -382,6 +389,14 @@ namespace FirstPersonController
                     &FirstPersonExtrasComponentRequests::SetJumpPressedInAirQueueTimeThreshold)
                 ->Event("Get Jump Stamina Equivalent Sprint Time", &FirstPersonExtrasComponentRequests::GetJumpStaminaEquivalentSprintTime)
                 ->Event("Set Jump Stamina Equivalent Sprint Time", &FirstPersonExtrasComponentRequests::SetJumpStaminaEquivalentSprintTime)
+                ->Event("Get Jump Exhaustion Factor", &FirstPersonExtrasComponentRequests::GetJumpExhaustionFactor)
+                ->Event("Set Jump Exhaustion Factor", &FirstPersonExtrasComponentRequests::SetJumpExhaustionFactor)
+                ->Event("Get Jump Not Exhausted Default Hold Distance", &FirstPersonExtrasComponentRequests::GetJumpDefaultHoldDistance)
+                ->Event("Set Jump Not Exhausted Default Hold Distance", &FirstPersonExtrasComponentRequests::SetJumpDefaultHoldDistance)
+                ->Event(
+                    "Get Jump Not Exhausted Default Initial Velocity", &FirstPersonExtrasComponentRequests::GetJumpDefaultInitialVelocity)
+                ->Event(
+                    "Set Jump Not Exhausted Default Initial Velocity", &FirstPersonExtrasComponentRequests::SetJumpDefaultInitialVelocity)
                 ->Event("Get Jump Head Tilt Enabled", &FirstPersonExtrasComponentRequests::GetJumpHeadTiltEnabled)
                 ->Event("Set Jump Head Tilt Enabled", &FirstPersonExtrasComponentRequests::SetJumpHeadTiltEnabled)
                 ->Event("Get Head Angle Jump", &FirstPersonExtrasComponentRequests::GetHeadAngleJump)
@@ -1428,9 +1443,21 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnStaminaCapped()
     {
+        if (m_jumpExhaustionFactor > 0.f)
+        {
+            m_firstPersonControllerObject->SetJumpHoldDistance(m_jumpDefaultHoldDistance);
+            m_firstPersonControllerObject->SetJumpInitialVelocity(m_jumpDefaultInitialVelocity);
+        }
     }
     void FirstPersonExtrasComponent::OnStaminaReachedZero()
     {
+        if (m_jumpExhaustionFactor > 0.f)
+        {
+            m_jumpDefaultInitialVelocity = m_firstPersonControllerObject->m_jumpInitialVelocity;
+            m_jumpDefaultHoldDistance = m_firstPersonControllerObject->m_jumpHoldDistance;
+            m_firstPersonControllerObject->SetJumpHoldDistance(m_jumpExhaustionFactor * m_jumpDefaultHoldDistance);
+            m_firstPersonControllerObject->SetJumpInitialVelocity(m_jumpExhaustionFactor * m_jumpDefaultInitialVelocity);
+        }
     }
     void FirstPersonExtrasComponent::OnSprintStarted()
     {
@@ -1467,6 +1494,39 @@ namespace FirstPersonController
             m_jumpStaminaEquivalentSprintTime = 0.f;
         else
             m_jumpStaminaEquivalentSprintTime = jumpStaminaEquivalentSprintTime;
+    }
+    float FirstPersonExtrasComponent::GetJumpExhaustionFactor() const
+    {
+        return m_jumpExhaustionFactor;
+    }
+    void FirstPersonExtrasComponent::SetJumpExhaustionFactor(const float jumpExhaustionFactor)
+    {
+        if (jumpExhaustionFactor < 0.f)
+            m_jumpExhaustionFactor = 0.f;
+        else
+            m_jumpExhaustionFactor = jumpExhaustionFactor;
+    }
+    float FirstPersonExtrasComponent::GetJumpDefaultHoldDistance() const
+    {
+        return m_jumpDefaultHoldDistance;
+    }
+    void FirstPersonExtrasComponent::SetJumpDefaultHoldDistance(const float jumpDefaultHoldDistance)
+    {
+        if (jumpDefaultHoldDistance < 0.f)
+            m_jumpDefaultHoldDistance = 0.f;
+        else
+            m_jumpDefaultHoldDistance = jumpDefaultHoldDistance;
+    }
+    float FirstPersonExtrasComponent::GetJumpDefaultInitialVelocity() const
+    {
+        return m_jumpDefaultInitialVelocity;
+    }
+    void FirstPersonExtrasComponent::SetJumpDefaultInitialVelocity(const float jumpDefaultInitialVelocity)
+    {
+        if (jumpDefaultInitialVelocity < 0.f)
+            m_jumpDefaultInitialVelocity = 0.f;
+        else
+            m_jumpDefaultInitialVelocity = jumpDefaultInitialVelocity;
     }
     bool FirstPersonExtrasComponent::GetJumpHeadTiltEnabled() const
     {

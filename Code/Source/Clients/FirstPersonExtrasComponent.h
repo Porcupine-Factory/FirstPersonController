@@ -67,6 +67,12 @@ namespace FirstPersonController
         void SetJumpPressedInAirQueueTimeThreshold(const float jumpPressedInAirQueueTimeThreshold) override;
         float GetJumpStaminaEquivalentSprintTime() const override;
         void SetJumpStaminaEquivalentSprintTime(const float jumpStaminaEquivalentSprintTime) override;
+        float GetJumpExhaustionFactor() const override;
+        void SetJumpExhaustionFactor(const float jumpExhaustionFactor) override;
+        float GetJumpDefaultHoldDistance() const override;
+        void SetJumpDefaultHoldDistance(const float jumpDefaultHoldDistance) override;
+        float GetJumpDefaultInitialVelocity() const override;
+        void SetJumpDefaultInitialVelocity(const float jumpDefaultInitialVelocity) override;
         bool GetJumpHeadTiltEnabled() const override;
         void SetJumpHeadTiltEnabled(const bool jumpHeadTiltEnabled) override;
         float GetHeadAngleJump() const override;
@@ -190,6 +196,11 @@ namespace FirstPersonController
 
         // Jump Uses Stamina
         float m_jumpStaminaEquivalentSprintTime = 1.9f;
+
+        // Exhausted jumping
+        float m_jumpExhaustionFactor = 0.4f;
+        float m_jumpDefaultHoldDistance = 0.8f;
+        float m_jumpDefaultInitialVelocity = 6.f;
 
         // Jumping and gravity FirstPersonController attributes
         bool* m_grounded;
