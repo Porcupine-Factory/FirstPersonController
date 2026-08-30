@@ -864,7 +864,6 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> m_headHitEntityIds;
         float m_jumpHeadSphereCastOffset = 0.2f;
         bool m_onFirstJump = false;
-        bool m_onGroundSoonHit = false;
 
         // Variables used for impulses and hit detection
         bool m_enableImpulses = true;

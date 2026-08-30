@@ -3593,9 +3593,6 @@ namespace FirstPersonController
             // AZ_Printf("First Person Controller Component", "m_groundCloseCoyoteTime = %s", m_groundCloseCoyoteTime ? "true" : "false");
         }
 
-        // Used in First Person Extras
-        m_onGroundSoonHit = false;
-
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
         // or just left the ground (via jumping or otherwise)
         if (!m_prevNTicksGrounded.front() && m_grounded)
@@ -3623,7 +3620,6 @@ namespace FirstPersonController
                     GetEntity()->GetTransform()->GetWorldTM().GetTranslation().GetProjected(m_velocityZPosDirection).GetLength() -
                     m_fellFromHeight;
             const float soonFellVelocity = m_sphereCastsAxisDirectionPose.Dot(m_targetVelocity);
-            m_onGroundSoonHit = true;
             FirstPersonControllerComponentNotificationBus::Event(
                 GetEntityId(), &FirstPersonControllerComponentNotifications::OnGroundSoonHit, soonFellVelocity);
         }
@@ -3754,7 +3750,7 @@ namespace FirstPersonController
 
         bool initialJump = false;
 
-        // Used in First Person Extras and NetworkFPC
+        // Used in NetworkFPC
         m_onFirstJump = false;
 
         // Flag for when coyote time without gravity applied is active
