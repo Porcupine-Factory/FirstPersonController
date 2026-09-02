@@ -431,6 +431,8 @@ namespace FirstPersonController
         void SetCrouchScriptLocked(const bool crouchScriptLocked) override;
         float GetCrouchScale() const override;
         void SetCrouchScale(const float crouchScale) override;
+        float GetCrouchAccelScale() const override;
+        void SetCrouchAccelScale(const float crouchAccelScale) override;
         float GetCrouchDistance() const override;
         void SetCrouchDistance(const float crouchDistance) override;
         bool GetCrouchingDownMove() const override;
@@ -957,6 +959,7 @@ namespace FirstPersonController
         float m_rightScale = 1.f;
         float m_sprintAccelScale = 1.5f;
         float m_crouchScale = 0.5f;
+        float m_crouchAccelScale = 0.5f;
         bool m_forwardBackCancelOut = false;
         // This sphere cast determines how far above the charcter's head that an obstruction is detected
         // for allowing them to uncrouch

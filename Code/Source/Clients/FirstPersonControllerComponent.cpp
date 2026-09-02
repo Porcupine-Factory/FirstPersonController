@@ -99,6 +99,7 @@ namespace FirstPersonController
                 // Crouching group
                 ->Field("Stand Collision Group", &FirstPersonControllerComponent::m_standCollisionGroupId)
                 ->Field("Crouch Movement Speed Scale", &FirstPersonControllerComponent::m_crouchScale)
+                ->Field("Crouch Acceleration Scale", &FirstPersonControllerComponent::m_crouchAccelScale)
                 ->Field("Crouch Distance", &FirstPersonControllerComponent::m_crouchDistance)
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetLengthUnit())
@@ -434,6 +435,12 @@ namespace FirstPersonController
                         "Crouch Movement Speed Scale",
                         "Determines how much slower the character will move when crouched. The product of this number and the top walk "
                         "speed is the top crouch walk speed.")
+                    ->DataElement(
+                        nullptr,
+                        &FirstPersonControllerComponent::m_crouchAccelScale,
+                        "Crouch Acceleration Scale",
+                        "Determines how quickly the character will reach the desired velocity when crouching down and when fully crouched. "
+                        "It is suggested to use a number less than or equal to 1.0 for this.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_crouchDistance,
@@ -1111,6 +1118,8 @@ namespace FirstPersonController
                 ->Event("Set Crouch Script Locked", &FirstPersonControllerComponentRequests::SetCrouchScriptLocked)
                 ->Event("Get Crouch Scale", &FirstPersonControllerComponentRequests::GetCrouchScale)
                 ->Event("Set Crouch Scale", &FirstPersonControllerComponentRequests::SetCrouchScale)
+                ->Event("Get Crouch Acceleration Scale", &FirstPersonControllerComponentRequests::GetCrouchAccelScale)
+                ->Event("Set Crouch Acceleration Scale", &FirstPersonControllerComponentRequests::SetCrouchAccelScale)
                 ->Event("Get Crouch Distance", &FirstPersonControllerComponentRequests::GetCrouchDistance)
                 ->Event("Set Crouch Distance", &FirstPersonControllerComponentRequests::SetCrouchDistance)
                 ->Event("Get Crouching Down Move", &FirstPersonControllerComponentRequests::GetCrouchingDownMove)
@@ -2125,6 +2134,8 @@ namespace FirstPersonController
             lerpDeltaTime = deltaTime * m_sprintAccelAdjust;
 
         lerpDeltaTime *= m_grounded ? 1.f : m_jumpAccelFactor;
+
+        lerpDeltaTime *= m_crouching ? m_crouchAccelScale : 1.f;
 
         m_lerpTime += lerpDeltaTime;
 
@@ -6296,6 +6307,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetCrouchScale(const float crouchScale)
     {
         m_crouchScale = crouchScale;
+    }
+    float FirstPersonControllerComponent::GetCrouchAccelScale() const
+    {
+        return m_crouchAccelScale;
+    }
+    void FirstPersonControllerComponent::SetCrouchAccelScale(const float crouchAccelScale)
+    {
+        m_crouchAccelScale = crouchAccelScale;
     }
     float FirstPersonControllerComponent::GetCrouchDistance() const
     {

@@ -362,6 +362,8 @@ namespace FirstPersonController
         virtual void SetCrouchScriptLocked(const bool) = 0;
         virtual float GetCrouchScale() const = 0;
         virtual void SetCrouchScale(const float) = 0;
+        virtual float GetCrouchAccelScale() const = 0;
+        virtual void SetCrouchAccelScale(const float) = 0;
         virtual float GetCrouchDistance() const = 0;
         virtual void SetCrouchDistance(const float) = 0;
         virtual bool GetCrouchingDownMove() const = 0;
