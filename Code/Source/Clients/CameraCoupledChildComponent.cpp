@@ -185,7 +185,7 @@ namespace FirstPersonController
 
         // Calculate the child entity's new translation, based on whether the character is crouching
         AZ::Vector3 newChildTranslation = AZ::Vector3::CreateZero();
-        if (m_firstPersonControllerObject->m_crouching)
+        if (m_firstPersonControllerObject->m_crouched)
             newChildTranslation = cameraTranslation + (m_firstPersonControllerObject->m_crouchDistance - childZOffset) * zPositiveDirection;
         else if (m_firstPersonControllerObject->m_crouchingDownMove || m_firstPersonControllerObject->m_standingUpMove)
             newChildTranslation =
