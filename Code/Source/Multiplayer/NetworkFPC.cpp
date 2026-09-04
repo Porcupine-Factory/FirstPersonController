@@ -538,7 +538,7 @@ namespace FirstPersonController
             m_init = false;
             SetTopWalkSpeed(m_firstPersonControllerObject->m_speed);
             SetSprintMaxTime(m_firstPersonControllerObject->m_sprintMaxTime);
-            SetSprintCooldownTime(m_firstPersonControllerObject->m_sprintTotalCooldownTime);
+            SetSprintTotalCooldownTime(m_firstPersonControllerObject->m_sprintTotalCooldownTime);
             SetJumpInitialVelocity(m_firstPersonControllerObject->m_jumpInitialVelocity);
         }
 

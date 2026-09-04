@@ -4188,7 +4188,7 @@ namespace FirstPersonController
             m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
             m_sprintRegenRate = m_networkFPCControllerObject->GetSprintRegenRate();
             m_sprintMaxTime = m_networkFPCControllerObject->GetSprintMaxTime();
-            m_sprintTotalCooldownTime = m_networkFPCControllerObject->GetSprintCooldownTime();
+            m_sprintTotalCooldownTime = m_networkFPCControllerObject->GetSprintTotalCooldownTime();
             m_sprintCooldownTimer = m_networkFPCControllerObject->GetSprintCooldownTimer();
             m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
             m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
@@ -4210,7 +4210,7 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetStaminaPercentage(m_staminaPercentage);
             m_networkFPCControllerObject->SetSprintRegenRate(m_sprintRegenRate);
             m_networkFPCControllerObject->SetSprintMaxTime(m_sprintMaxTime);
-            m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
+            m_networkFPCControllerObject->SetSprintTotalCooldownTime(m_sprintTotalCooldownTime);
             m_networkFPCControllerObject->SetSprintCooldownTimer(m_sprintCooldownTimer);
             m_networkFPCControllerObject->SetJumpInitialVelocity(m_jumpInitialVelocity);
             m_networkFPCControllerObject->SetIsCrouchingDownMove(m_crouchingDownMove);
@@ -6182,7 +6182,7 @@ namespace FirstPersonController
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            m_networkFPCControllerObject->SetSprintCooldownTime(m_sprintTotalCooldownTime);
+            m_networkFPCControllerObject->SetSprintTotalCooldownTime(m_sprintTotalCooldownTime);
 #endif
     }
     float FirstPersonControllerComponent::GetSprintCooldownTimer() const

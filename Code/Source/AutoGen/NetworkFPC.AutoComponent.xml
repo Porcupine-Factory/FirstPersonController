@@ -134,7 +134,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The maximum consecutive sprinting time before beginning Sprint Cooldown. The underlying quantity of Stamina is set by this number."/>
-    <NetworkProperty Type="float" Name="SprintCooldownTime"
+    <NetworkProperty Type="float" Name="SprintTotalCooldownTime"
                      Init="1.f" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
