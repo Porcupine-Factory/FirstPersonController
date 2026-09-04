@@ -1223,7 +1223,6 @@ namespace FirstPersonController
                 ->Event("Get NetworkFPC Host Time Ms", &FirstPersonControllerComponentRequests::GetNetworkFPCHostTimeMs)
                 ->Event("Get Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::GetLocallyEnableNetworkFPC)
                 ->Event("Set Locally Enable NetworkFPC", &FirstPersonControllerComponentRequests::SetLocallyEnableNetworkFPC)
-                ->Event("Get Is Networking Active", &FirstPersonControllerComponentRequests::GetIsNetworkingActive)
                 ->Event("Ignore Inputs", &FirstPersonControllerComponentRequests::IgnoreInputs)
                 ->Event("Not Autonomous So Disconnect", &FirstPersonControllerComponentRequests::NotAutonomousSoDisconnect);
 
@@ -1255,6 +1254,8 @@ namespace FirstPersonController
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
                 ->Method("Get Host EntityId", &GetHostEntityId)
+                ->Method("Get Is Networking Active", &GetIsNetworkingActive)
+                ->Method("Get Is In Editor", &GetIsInEditor)
                 ->RequestBus("FirstPersonControllerComponentRequestBus");
         }
     }
@@ -6898,13 +6899,24 @@ namespace FirstPersonController
         NetworkFPCControllerRequestBus::Event(GetEntityId(), &NetworkFPCControllerRequestBus::Events::SetEnabled, m_networkFPCEnabled);
 #endif
     }
-    bool FirstPersonControllerComponent::GetIsNetworkingActive() const
+    bool FirstPersonControllerComponent::GetIsNetworkingActive()
     {
 #ifdef NETWORKFPC
         return Multiplayer::NetEntityId() != Multiplayer::InvalidNetEntityId;
 #else
         return false;
 #endif
+    }
+    bool FirstPersonControllerComponent::GetIsInEditor()
+    {
+        AZ::ApplicationTypeQuery applicationType;
+        if (auto componentApplicationRequests = AZ::Interface<AZ::ComponentApplicationRequests>::Get();
+            componentApplicationRequests != nullptr)
+        {
+            componentApplicationRequests->QueryApplicationType(applicationType);
+        }
+
+        return applicationType.IsEditor();
     }
     void FirstPersonControllerComponent::IgnoreInputs(const bool ignoreInputs)
     {

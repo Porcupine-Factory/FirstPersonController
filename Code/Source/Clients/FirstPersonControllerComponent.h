@@ -555,6 +555,8 @@ namespace FirstPersonController
         static AZStd::vector<AZStd::string> GetBotNetEntityIdStrings();
         static AZ::EntityId GetAutonomousClientEntityId();
         static AZ::EntityId GetHostEntityId();
+        static bool GetIsNetworkingActive();
+        static bool GetIsInEditor();
         bool GetNetworkFPCAllowAllMovementInputs() const override;
         void SetNetworkFPCAllowAllMovementInputs(const bool allowAllMovementInputs) override;
         bool GetNetworkFPCAllowRotationInputs() const override;
@@ -562,7 +564,6 @@ namespace FirstPersonController
         AZ::TimeMs GetNetworkFPCHostTimeMs() const override;
         bool GetLocallyEnableNetworkFPC() const override;
         void SetLocallyEnableNetworkFPC(const bool networkFPCEnabled) override;
-        bool GetIsNetworkingActive() const override;
         void IgnoreInputs(const bool ignoreInputs) override;
         void IsAutonomousSoConnect() override;
         void NotAutonomousSoDisconnect() override;
