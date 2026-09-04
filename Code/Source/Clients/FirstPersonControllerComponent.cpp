@@ -3913,7 +3913,10 @@ namespace FirstPersonController
         }
 
         if (m_headHit && m_applyVelocityZ > 0.f && m_headHitSetsApogee)
-            m_applyVelocityZ = m_nextLikelyApplyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
+        {
+            m_applyVelocityZ = m_applyVelocityZCurrentDelta = 0.f;
+            m_nextLikelyApplyVelocityZ = m_gravity * deltaTime;
+        }
 
         // Account for the case where the PhysX Character Gameplay component's gravity is used instead
         if (m_gravity == 0.f && m_grounded)
