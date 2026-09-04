@@ -197,6 +197,9 @@ namespace FirstPersonController
         // Jump Uses Stamina
         float m_jumpStaminaEquivalentSprintTime = 1.9f;
 
+        // Used to initialize some member variables on the first ProcessInput() call, capturing any done OnGraphStart
+        bool m_init = true;
+
         // Exhausted jumping
         float m_jumpExhaustionFactor = 0.4f;
         float m_jumpDefaultHoldDistance = 0.8f;
@@ -224,6 +227,7 @@ namespace FirstPersonController
         bool m_sprintingObstructedCheck[16] = {};
         AZ::u8 m_sprintingObstructedIndex = 0;
         float m_sprintFoVTimeAccumulator = 0.f;
+        static constexpr float MinSprintFoVLerpTime = 0.0001f;
         float m_sprintFoVLerpTime = 0.5f;
         float m_sprintFoV = 90.f;
         float m_sprintFoVDelta = 2.5f;

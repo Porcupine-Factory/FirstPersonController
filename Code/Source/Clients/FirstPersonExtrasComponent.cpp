@@ -50,7 +50,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
                 ->Field("Sprint FoV Lerp Time", &FirstPersonExtrasComponent::m_sprintFoVLerpTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                ->Attribute(AZ::Edit::Attributes::Min, 0.0166f)
+                ->Attribute(AZ::Edit::Attributes::Min, MinSprintFoVLerpTime)
 
                 // Headbob group
                 ->Field("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
@@ -1288,6 +1288,16 @@ namespace FirstPersonController
     // Frame tick == 0, physics fixed timestep == 1, network tick == 2
     void FirstPersonExtrasComponent::ProcessInput(const float deltaTime, const AZ::u8 tickTimestepNetwork)
     {
+        // Iniitalize the default jump inital velocity and hold distance values.
+        // this is done once in the main ProcessInput() loop to ensure it captures any initialization done OnGraphStart.
+        // Activate() and OnEntityActivated() are too early.
+        if (m_init)
+        {
+            m_init = false;
+            m_jumpDefaultInitialVelocity = m_firstPersonControllerObject->m_jumpInitialVelocity;
+            m_jumpDefaultHoldDistance = m_firstPersonControllerObject->m_jumpHoldDistance;
+        }
+
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
 
@@ -1593,8 +1603,8 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float sprintFoVLerpTime)
     {
-        if (sprintFoVLerpTime < 0.0166f)
-            m_sprintFoVLerpTime = 0.0166f;
+        if (sprintFoVLerpTime < MinSprintFoVLerpTime)
+            m_sprintFoVLerpTime = MinSprintFoVLerpTime;
         else
             m_sprintFoVLerpTime = sprintFoVLerpTime;
     }
