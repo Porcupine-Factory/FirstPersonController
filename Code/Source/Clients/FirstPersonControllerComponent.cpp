@@ -6163,7 +6163,14 @@ namespace FirstPersonController
             return false;
 
         float topWalkSpeedInDirection = m_speed *
-            CreateEllipseScaledVector(m_correctedVelocityXY.GetNormalized(), m_forwardScale, m_backScale, m_leftScale, m_rightScale)
+            CreateEllipseScaledVector(
+                AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_currentHeading)
+                                .TransformVector(AZ::Vector3(m_correctedVelocityXY.GetNormalized()))
+                                .GetNormalized()),
+                m_forwardScale,
+                m_backScale,
+                m_leftScale,
+                m_rightScale)
                 .GetLength();
         if (m_movingUpInclineSlowed)
         {

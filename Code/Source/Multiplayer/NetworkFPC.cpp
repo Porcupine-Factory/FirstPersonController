@@ -507,13 +507,6 @@ namespace FirstPersonController
             playerInput->m_jump = m_jumpValue;
         }
 
-        playerInput->m_desiredVelocity = GetDesiredVelocity();
-        playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
-        playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
-        playerInput->m_overrideTransformForTick = GetOverrideTransformForTick();
-        playerInput->m_overrideRotationForTick = GetOverrideRotationForTick();
-        playerInput->m_overrideTransform = GetOverrideTransform();
-
         m_yawValue = 0.f;
         m_pitchValue = 0.f;
 
@@ -595,16 +588,16 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_sprintAccelValue = 0.f;
         }
 
-        if (playerInput->m_overrideTransformForTick || playerInput->m_overrideRotationForTick)
+        if (GetOverrideTransformForTick() || GetOverrideRotationForTick())
         {
-            if (playerInput->m_overrideTransformForTick)
+            if (GetOverrideTransformForTick())
             {
-                GetEntity()->GetTransform()->SetWorldTM(playerInput->m_overrideTransform);
+                GetEntity()->GetTransform()->SetWorldTM(GetOverrideTransform());
                 SetOverrideTransformForTick(false);
             }
             else
             {
-                GetEntity()->GetTransform()->SetWorldRotationQuaternion(playerInput->m_overrideTransform.GetRotation());
+                GetEntity()->GetTransform()->SetWorldRotationQuaternion(GetOverrideTransform().GetRotation());
                 SetOverrideRotationForTick(false);
             }
 #if AZ_TRAIT_SERVER
@@ -612,8 +605,8 @@ namespace FirstPersonController
             Multiplayer::NetworkTransformComponentController* netTransform = GetNetworkTransformComponentController();
             netTransform->SetResetCount(netTransform->GetResetCount() + 1);
 #endif
-            m_firstPersonControllerObject->m_currentHeading = playerInput->m_overrideTransform.GetEulerRadians().GetZ();
-            m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
+            m_firstPersonControllerObject->m_currentHeading = GetOverrideTransform().GetEulerRadians().GetZ();
+            m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - GetLookRotationDelta().GetZ();
             m_firstPersonControllerObject->m_networkFPCRotationSliceAccumulator = 0.f;
         }
 
@@ -624,14 +617,13 @@ namespace FirstPersonController
             GetEntityId());
 
         const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
-            m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
+            m_firstPersonControllerObject->m_currentHeading + GetLookRotationDelta().GetZ() + GetYawDeltaOvershoot());
         GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");
 
-        const AZ::Vector3 newTranslation =
-            GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, deltaTime);
+        const AZ::Vector3 newTranslation = GetNetworkCharacterComponentController()->TryMoveWithVelocity(GetDesiredVelocity(), deltaTime);
         SetCurrentTransform(
             AZ::Transform::CreateFromQuaternionAndTranslation(GetEntity()->GetTransform()->GetWorldRotationQuaternion(), newTranslation));
 

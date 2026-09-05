@@ -923,7 +923,9 @@ namespace FirstPersonController
         float topWalkSpeedInDirection = m_firstPersonControllerObject->m_speed *
             m_firstPersonControllerObject
                 ->CreateEllipseScaledVector(
-                    m_firstPersonControllerObject->m_applyVelocityXY.GetNormalized(),
+                    AZ::Vector2(AZ::Quaternion::CreateRotationZ(-m_firstPersonControllerObject->m_currentHeading)
+                                    .TransformVector(AZ::Vector3(m_firstPersonControllerObject->m_applyVelocityXY.GetNormalized()))
+                                    .GetNormalized()),
                     m_firstPersonControllerObject->m_forwardScale,
                     m_firstPersonControllerObject->m_backScale,
                     m_firstPersonControllerObject->m_leftScale,
