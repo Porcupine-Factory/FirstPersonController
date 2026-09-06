@@ -3651,8 +3651,8 @@ namespace FirstPersonController
         // and the jump time needs to computed accordingly
         else
         {
-            AZ_Warning("First Person Controller Component", false, "Jump Hold Distance is higher than the max apogee of the jump.")
-                m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity * m_jumpHeldGravityFactor));
+            AZ_Warning("First Person Controller Component", false, "Jump Hold Distance is higher than the max apogee of the jump.");
+            m_jumpMaxHoldTime = abs(m_jumpInitialVelocity / (m_gravity * m_jumpHeldGravityFactor));
         }
     }
 
