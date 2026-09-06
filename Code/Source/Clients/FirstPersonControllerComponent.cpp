@@ -5181,8 +5181,6 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonControllerComponent::GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2)
     {
         AZ::Vector3 angle = GetVectorAnglesBetweenVectorsRadians(v1, v2);
-        if (angle.IsZero())
-            return angle;
         angle.SetX(AZ::RadToDeg(angle.GetX()));
         angle.SetY(AZ::RadToDeg(angle.GetY()));
         angle.SetZ(AZ::RadToDeg(angle.GetZ()));
