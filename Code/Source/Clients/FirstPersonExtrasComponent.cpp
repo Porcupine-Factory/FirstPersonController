@@ -901,7 +901,11 @@ namespace FirstPersonController
 
     bool FirstPersonExtrasComponent::GetSprinting()
     {
-        float currentSpeed = m_firstPersonControllerObject->m_applyVelocityXY.GetLength();
+        float currentSpeed =
+            (m_firstPersonControllerObject->m_applyVelocityXY + AZ::Vector2(m_firstPersonControllerObject->m_addVelocityWorld) +
+             AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_firstPersonControllerObject->m_currentHeading)
+                             .TransformVector(m_firstPersonControllerObject->m_addVelocityHeading)))
+                .GetLength();
 
         // Check to see if sprinting is obstructed for several ticks in a row
         m_sprintingObstructedCheck[m_sprintingObstructedIndex] =
