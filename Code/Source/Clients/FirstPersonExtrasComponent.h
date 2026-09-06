@@ -239,7 +239,7 @@ namespace FirstPersonController
         bool m_headbobEnabled = true;
         bool m_isWalking = false;
         bool m_cameraChildOfCharacter = true;
-        bool m_needsHeadbobFallback = false;
+        bool m_needsCameraFallback = false;
         bool m_headbobStartingDirection = true;
         float m_headbobMaxFrequency = 1.23f;
         float m_headbobNormalizedVerticalShape = 0.f;

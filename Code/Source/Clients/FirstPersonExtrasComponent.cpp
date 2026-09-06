@@ -509,37 +509,31 @@ namespace FirstPersonController
         if (m_jumpStaminaEquivalentSprintTime > m_firstPersonControllerObject->m_sprintMaxTime)
             m_jumpStaminaEquivalentSprintTime = m_firstPersonControllerObject->m_sprintMaxTime;
 
-        // Headbob activation
-        if (m_headbobEnabled)
+        // Initialize the camera entityId and pointer
+        if (!m_cameraEntityId.IsValid())
         {
-            // Setup Headbob entity
-            if (!m_cameraEntityId.IsValid())
+            m_cameraEntityPtr = GetActiveCamera();
+            if (m_cameraEntityPtr == nullptr)
             {
-                m_cameraEntityPtr = GetActiveCamera();
-                if (m_cameraEntityPtr == nullptr)
-                {
-                    m_needsHeadbobFallback = true;
-                    Camera::CameraNotificationBus::Handler::BusConnect();
-                }
-                else
-                    m_cameraChildOfCharacter = m_cameraEntityPtr->GetTransform()->GetParentId() == GetEntityId();
+                m_needsCameraFallback = true;
+                Camera::CameraNotificationBus::Handler::BusConnect();
             }
             else
-            {
-                AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
-            }
+                m_cameraChildOfCharacter = m_cameraEntityPtr->GetTransform()->GetParentId() == GetEntityId();
+        }
+        else
+            AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
 
-            // Initialize original translation and offsets if pointer is set
-            if (m_cameraEntityPtr)
-            {
-                m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
-                m_prevHeadbobOffset = AZ::Vector3::CreateZero();
-                m_prevHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
-                // Clear the smoothing state too, so a bob left over from a previous camera cannot bleed onto
-                // this one over the first smoothing time constant
-                m_smoothedHeadbobOffset = AZ::Vector3::CreateZero();
-                m_smoothedHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
-            }
+        // Initialize original translation and offsets if pointer is set
+        if (m_headbobEnabled && m_cameraEntityPtr)
+        {
+            m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
+            m_prevHeadbobOffset = AZ::Vector3::CreateZero();
+            m_prevHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
+            // Clear the smoothing state too, so a bob left over from a previous camera cannot bleed onto
+            // this one over the first smoothing time constant
+            m_smoothedHeadbobOffset = AZ::Vector3::CreateZero();
+            m_smoothedHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
         }
     }
 
@@ -553,14 +547,13 @@ namespace FirstPersonController
         FirstPersonControllerComponentNotificationBus::Handler::BusDisconnect();
         AZ::TickBus::Handler::BusDisconnect();
 
+        if (m_needsCameraFallback)
+            Camera::CameraNotificationBus::Handler::BusDisconnect();
+
         // Headbob deactivation
         if (m_headbobEnabled)
-        {
-            if (m_needsHeadbobFallback)
-                Camera::CameraNotificationBus::Handler::BusDisconnect();
-
             AZ::EntityBus::Handler::BusDisconnect();
-        }
+
         m_cameraEntityPtr = nullptr;
     }
 
@@ -596,22 +589,25 @@ namespace FirstPersonController
 
     void FirstPersonExtrasComponent::OnActiveViewChanged(const AZ::EntityId& activeEntityId)
     {
-        if (m_needsHeadbobFallback)
+        if (m_needsCameraFallback)
         {
             m_cameraEntityPtr = GetEntityPtr(activeEntityId);
             if (m_cameraEntityPtr != nullptr)
             {
                 m_cameraEntityId = activeEntityId;
                 Camera::CameraNotificationBus::Handler::BusDisconnect();
-                m_needsHeadbobFallback = false;
+                m_needsCameraFallback = false;
 
-                m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
-                m_prevHeadbobOffset = AZ::Vector3::CreateZero();
-                m_prevHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
-                // Clear the smoothing state too, so a bob left over from a previous camera cannot bleed onto
-                // this one over the first smoothing time constant
-                m_smoothedHeadbobOffset = AZ::Vector3::CreateZero();
-                m_smoothedHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
+                if (m_headbobEnabled)
+                {
+                    m_originalCameraTranslation = m_cameraEntityPtr->GetTransform()->GetLocalTranslation();
+                    m_prevHeadbobOffset = AZ::Vector3::CreateZero();
+                    m_prevHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
+                    // Clear the smoothing state too, so a bob left over from a previous camera cannot bleed onto
+                    // this one over the first smoothing time constant
+                    m_smoothedHeadbobOffset = AZ::Vector3::CreateZero();
+                    m_smoothedHeadbobRotationOffset = AZ::Quaternion::CreateIdentity();
+                }
             }
         }
     }
