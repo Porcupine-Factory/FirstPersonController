@@ -231,6 +231,11 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkInput Type="float"         Name="Left"                     Init="0.f"/>
     <NetworkInput Type="float"         Name="Right"                    Init="0.f"/>
     <NetworkInput Type="float"         Name="Yaw"                      Init="0.f"/>
+    <NetworkInput Type="float"         Name="YawDelta"                 Init="0.f"/>
+    <NetworkInput Type="float"         Name="YawDeltaOvershoot"        Init="0.f"/>
+    <NetworkInput Type="AZ::Transform" Name="OverrideTransform"        Init="AZ::Transform::CreateIdentity()"/>
+    <NetworkInput Type="bool"          Name="OverrideTransformForTick" Init="false"/>
+    <NetworkInput Type="bool"          Name="OverrideRotationForTick"  Init="false"/>
     <NetworkInput Type="float"         Name="Pitch"                    Init="0.f"/>
     <NetworkInput Type="float"         Name="Sprint"                   Init="0.f"/>
     <NetworkInput Type="float"         Name="Crouch"                   Init="0.f"/>
