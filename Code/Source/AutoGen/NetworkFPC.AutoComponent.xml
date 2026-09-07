@@ -92,12 +92,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The observed transform."/>
-    <NetworkProperty Type="bool" Name="OverrideTransformForTick"
+    <NetworkProperty Type="bool" Name="OverrideTranslationForTick"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
-                     Description="Whether the transform will be set by OverrideTransform for one network tick."/>
+                     Description="Whether the translation will be set by OverrideTransform for one network tick."/>
     <NetworkProperty Type="bool" Name="OverrideRotationForTick"
                      Init="false" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
@@ -233,9 +233,6 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkInput Type="float"         Name="Yaw"                      Init="0.f"/>
     <NetworkInput Type="float"         Name="YawDelta"                 Init="0.f"/>
     <NetworkInput Type="float"         Name="YawDeltaOvershoot"        Init="0.f"/>
-    <NetworkInput Type="AZ::Transform" Name="OverrideTransform"        Init="AZ::Transform::CreateIdentity()"/>
-    <NetworkInput Type="bool"          Name="OverrideTransformForTick" Init="false"/>
-    <NetworkInput Type="bool"          Name="OverrideRotationForTick"  Init="false"/>
     <NetworkInput Type="float"         Name="Pitch"                    Init="0.f"/>
     <NetworkInput Type="float"         Name="Sprint"                   Init="0.f"/>
     <NetworkInput Type="float"         Name="Crouch"                   Init="0.f"/>
