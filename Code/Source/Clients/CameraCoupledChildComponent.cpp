@@ -207,7 +207,7 @@ namespace FirstPersonController
             networkFPCEnabled, &FirstPersonControllerComponentRequestBus::Events::GetLocallyEnableNetworkFPC);
         if (networkFPCEnabled && m_firstPersonControllerObject == nullptr)
             ObtainFirstPersonControllerObject();
-        if (!m_enable || m_firstPersonControllerObject == nullptr || !m_firstPersonControllerObject->m_cameraSmoothFollow ||
+        if (!m_enable || m_firstPersonControllerObject == nullptr || !m_firstPersonControllerObject->m_cameraInterpolation ||
             (networkFPCEnabled && !m_firstPersonControllerObject->m_isAutonomousClient && !m_firstPersonControllerObject->m_isHost))
             return;
 

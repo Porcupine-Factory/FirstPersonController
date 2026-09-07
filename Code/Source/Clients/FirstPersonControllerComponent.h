@@ -103,8 +103,8 @@ namespace FirstPersonController
         bool GetMakeCameraChildOfCharacter() const override;
         void SetMakeCameraChildOfCharacter(const bool makeCameraChildOfCharacter) override;
         bool IsCameraChildOfCharacter() override;
-        bool GetCameraSmoothFollow() const override;
-        void SetCameraSmoothFollow(const bool cameraSmoothFollow) override;
+        bool GetCameraInterpolation() const override;
+        void SetCameraInterpolation(const bool cameraInterpolation) override;
         bool GetNetworkFPCKeepCameraAtCharacter() const override;
         void SetNetworkFPCKeepCameraAtCharacter(const bool networkFPCKeepCameraAtCharacter) override;
         void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) override;
@@ -636,7 +636,7 @@ namespace FirstPersonController
         AZ::Entity* GetEntityPtr(const AZ::EntityId& entityId) const;
 
         // These getter methods are not exposed to the request bus, they're used for the visibility attribute in the editor
-        bool GetCameraNotSmoothFollow() const;
+        bool GetCameraNotInterpolating() const;
         bool GetEnableImpulsesAndNotDecelUsesFriction() const;
         bool GetCoyoteTimeGreaterThanZero() const;
         bool GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() const;
@@ -652,7 +652,7 @@ namespace FirstPersonController
         AzPhysics::SceneEvents::OnSceneSimulationFinishHandler m_sceneSimulationFinishHandler;
         AzPhysics::SceneHandle m_attachedSceneHandle = AzPhysics::InvalidSceneHandle;
         bool m_addVelocityForTimestepVsTick = true;
-        bool m_cameraSmoothFollow = true;
+        bool m_cameraInterpolation = true;
         bool m_cameraTranslationOverwritten = false;
         bool m_cameraLocalZOverwritten = false;
         bool m_cameraRotationOverwritten = false;
@@ -904,7 +904,7 @@ namespace FirstPersonController
         bool m_isNetBot = false;
 #endif
         bool m_networkFPCCameraAligned = false;
-        // To have the camera not follow the character with multiplayer, m_cameraSmoothFollow will have to be set false as well
+        // To have the camera not follow the character with multiplayer, m_cameraInterpolation will have to be set false as well
         bool m_networkFPCKeepCameraAtCharacter = true;
         float m_networkFPCRotationSliceAccumulator = 0.f;
         float m_networkFPCYawOvershootAngle = 0.f;

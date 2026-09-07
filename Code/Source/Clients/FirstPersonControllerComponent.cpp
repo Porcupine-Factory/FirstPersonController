@@ -49,7 +49,7 @@ namespace FirstPersonController
                 ->Field("Jump Key", &FirstPersonControllerComponent::m_strJump)
 
                 // Camera group
-                ->Field("Camera Smooth Follow", &FirstPersonControllerComponent::m_cameraSmoothFollow)
+                ->Field("Camera Interpolation", &FirstPersonControllerComponent::m_cameraInterpolation)
                 ->Field("Camera Entity", &FirstPersonControllerComponent::m_cameraEntityId)
                 ->Attribute(AZ::Edit::Attributes::ChangeNotify, &FirstPersonControllerComponent::SetCameraEntity)
                 ->Field("Yaw Sensitivity", &FirstPersonControllerComponent::m_yawSensitivity)
@@ -262,8 +262,8 @@ namespace FirstPersonController
                     ->Attribute(AutoExpand, false)
                     ->DataElement(
                         nullptr,
-                        &FirstPersonControllerComponent::m_cameraSmoothFollow,
-                        "Camera Smooth Follow",
+                        &FirstPersonControllerComponent::m_cameraInterpolation,
+                        "Camera Interpolation",
                         "If enabled, the camera follows the character using linear interpolation on the frame tick; otherwise, the camera "
                         "follows its parent transform.")
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
@@ -734,8 +734,8 @@ namespace FirstPersonController
                 ->Event("Get Make Camera Child Of Character", &FirstPersonControllerComponentRequests::GetMakeCameraChildOfCharacter)
                 ->Event("Set Make Camera Child Of Character", &FirstPersonControllerComponentRequests::SetMakeCameraChildOfCharacter)
                 ->Event("Get Is Camera Child Of Character", &FirstPersonControllerComponentRequests::IsCameraChildOfCharacter)
-                ->Event("Get Camera Smooth Follow", &FirstPersonControllerComponentRequests::GetCameraSmoothFollow)
-                ->Event("Set Camera Smooth Follow", &FirstPersonControllerComponentRequests::SetCameraSmoothFollow)
+                ->Event("Get Camera Interpolation", &FirstPersonControllerComponentRequests::GetCameraInterpolation)
+                ->Event("Set Camera Interpolation", &FirstPersonControllerComponentRequests::SetCameraInterpolation)
                 ->Event(
                     "Get NetworkFPC Keep Camera At Character", &FirstPersonControllerComponentRequests::GetNetworkFPCKeepCameraAtCharacter)
                 ->Event(
@@ -1321,9 +1321,9 @@ namespace FirstPersonController
             AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
         }
 
-        // Debug log to verify m_cameraSmoothFollow value at activation
-        // AZ_Printf("First Person Controller Component", "Activate: m_cameraSmoothFollow=%s",
-        //     m_cameraSmoothFollow ? "true" : "false");
+        // Debug log to verify m_cameraInterpolation value at activation
+        // AZ_Printf("First Person Controller Component", "Activate: m_cameraInterpolation=%s",
+        //     m_cameraInterpolation ? "true" : "false");
 
         AZ::TickBus::Handler::BusConnect();
 #ifdef NETWORKFPC
@@ -1485,7 +1485,7 @@ namespace FirstPersonController
                 componentApplicationRequests->QueryApplicationType(applicationType);
             }
 
-            // If not running in the editor and the timestep is less than or equal to 1/(refresh rate) then disable camera smoothing
+            // If not running in the editor and the timestep is less than or equal to 1/(refresh rate) then disable camera interpolation
             if (!applicationType.IsEditor() && !GetIsNetworkingActive())
             {
                 AzFramework::NativeWindowHandle windowHandle = nullptr;
@@ -1498,9 +1498,9 @@ namespace FirstPersonController
 
                     const AzPhysics::SystemConfiguration* config = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration();
 
-                    // Disable camera smooth follow if the physics timestep is less than or equal to the refresh time
+                    // Disable camera interpolation if the physics timestep is less than or equal to the refresh time
                     if (config->m_fixedTimestep <= 1.f / static_cast<float>(refreshRate))
-                        m_cameraSmoothFollow = false;
+                        m_cameraInterpolation = false;
                 }
             }
         }
@@ -1853,15 +1853,15 @@ namespace FirstPersonController
         if (!m_activeCameraEntity || (m_networkFPCEnabled && m_isServer))
             return;
 
-        // Set target translation for smooth follow
+        // Set target translation for interpolation
         AZ::Vector3 characterWorldTranslation;
         AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
         m_currentCharacterEyeTranslation =
             characterWorldTranslation + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
         m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation;
 
-        // Set initial world translation for smooth following
-        if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
+        // Set initial world translation for interpolation
+        if (m_addVelocityForTimestepVsTick && m_cameraInterpolation)
         {
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
             m_cameraTranslationOverwritten = true;
@@ -1873,14 +1873,14 @@ namespace FirstPersonController
         if (m_isServer || m_isNetBot)
             return;
 
-        const bool networkFPCCamerSmoothFollowDisabled = !m_cameraSmoothFollow;
-        if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled && m_networkFPCKeepCameraAtCharacter)
+        const bool networkFPCCameraInterpolationDisabled = !m_cameraInterpolation;
+        if (m_networkFPCEnabled && networkFPCCameraInterpolationDisabled && m_networkFPCKeepCameraAtCharacter)
         {
-            m_cameraSmoothFollow = !m_cameraSmoothFollow;
+            m_cameraInterpolation = !m_cameraInterpolation;
             CaptureCharacterEyeTranslation();
         }
 
-        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraSmoothFollow)
+        if (!m_activeCameraEntity || !m_addVelocityForTimestepVsTick || !m_cameraInterpolation)
             return;
 
         // Update time accumulator
@@ -1890,11 +1890,11 @@ namespace FirstPersonController
         float alpha;
         if (!m_networkFPCEnabled)
             alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevTimestep, 1.f);
-        else if (m_networkFPCEnabled && networkFPCCamerSmoothFollowDisabled && m_networkFPCKeepCameraAtCharacter)
+        else if (m_networkFPCEnabled && networkFPCCameraInterpolationDisabled && m_networkFPCKeepCameraAtCharacter)
         {
             // Skip the interpolation when it's disabled with NetworkFPC
             alpha = 1.f;
-            m_cameraSmoothFollow = !m_cameraSmoothFollow;
+            m_cameraInterpolation = !m_cameraInterpolation;
         }
         else
             alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevNetworkFPCDeltaTime, 1.f);
@@ -1926,7 +1926,7 @@ namespace FirstPersonController
         if (m_isServer || m_isNetBot)
             return;
         // Set the translation of the camera to where the character is on each physics timestep
-        if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow && m_activeCameraEntity)
+        if (m_addVelocityForTimestepVsTick && m_cameraInterpolation && m_activeCameraEntity)
         {
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetWorldTranslation, m_currentCharacterEyeTranslation);
             m_cameraTranslationOverwritten = true;
@@ -1935,7 +1935,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::CaptureCharacterEyeTranslation()
     {
-        if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
+        if (m_addVelocityForTimestepVsTick && m_cameraInterpolation)
         {
             // Capture character's translation after each physics simulation step. This ensures camera lerp uses
             // the most recent post-simulation transform.
@@ -2050,7 +2050,7 @@ namespace FirstPersonController
                     m_cameraRotationTransform->GetLocalRotation().GetZ()));
                 m_cameraYaw = m_cameraRotationTransform->GetLocalRotation().GetZ();
             }
-            else if (m_addVelocityForTimestepVsTick && m_cameraSmoothFollow)
+            else if (m_addVelocityForTimestepVsTick && m_cameraInterpolation)
             {
                 // Follow the character's rotation and apply a delta to the pitch
                 m_cameraYaw += newLookRotationDelta.GetZ();
@@ -4265,7 +4265,7 @@ namespace FirstPersonController
         // Only interpolate the camera to the character on frame ticks
         if (tickTimestepNetwork == 0)
         {
-            // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraSmoothFollow is false
+            // Linearly interpolate the camera towards the character each tick. This does not apply when m_cameraInterpolation is false
             // or when the physics timestep is less than or equal to the refresh time (1 / (refresh rate)).
             LerpCameraToCharacter(deltaTime);
         }
@@ -4433,15 +4433,15 @@ namespace FirstPersonController
         if (m_makeCameraChildOfCharacter && !IsCameraChildOfCharacter())
             AZ::TransformBus::Event(m_cameraEntityId, &AZ::TransformBus::Events::SetParent, GetEntityId());
     }
-    bool FirstPersonControllerComponent::GetCameraSmoothFollow() const
+    bool FirstPersonControllerComponent::GetCameraInterpolation() const
     {
-        return m_cameraSmoothFollow;
+        return m_cameraInterpolation;
     }
-    void FirstPersonControllerComponent::SetCameraSmoothFollow(const bool cameraSmoothFollow)
+    void FirstPersonControllerComponent::SetCameraInterpolation(const bool cameraInterpolation)
     {
-        if (m_cameraSmoothFollow != cameraSmoothFollow)
+        if (m_cameraInterpolation != cameraInterpolation)
         {
-            m_cameraSmoothFollow = cameraSmoothFollow;
+            m_cameraInterpolation = cameraInterpolation;
 
             if (m_activeCameraEntity)
             {
@@ -4449,10 +4449,10 @@ namespace FirstPersonController
             }
         }
     }
-    // GetCameraNotSmoothFollow() is not exposed to the request bus, it's used for the visibility attribute in the editor
-    bool FirstPersonControllerComponent::GetCameraNotSmoothFollow() const
+    // GetCameraNotInterpolating() is not exposed to the request bus, it's used for the visibility attribute in the editor
+    bool FirstPersonControllerComponent::GetCameraNotInterpolating() const
     {
-        return !m_cameraSmoothFollow;
+        return !m_cameraInterpolation;
     }
     bool FirstPersonControllerComponent::GetNetworkFPCKeepCameraAtCharacter() const
     {
