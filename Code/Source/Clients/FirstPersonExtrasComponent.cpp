@@ -1127,8 +1127,8 @@ namespace FirstPersonController
         }
 
         // Vary the speed and size slightly over this many walk cycles so no two steps are exactly alike
-        static constexpr float stepVariationCycles = 8.f;
-        const float stepWander = 1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / stepVariationCycles);
+        static constexpr float StepVariationCycles = 8.f;
+        const float stepWander = 1.f + m_headbobRealism * m_headbobStepVariationOverTime * sinf(m_headbobPhase / StepVariationCycles);
         effectiveHorizontalAmplitude *= stepWander;
         effectiveVerticalAmplitude *= stepWander;
 
@@ -1145,7 +1145,7 @@ namespace FirstPersonController
             m_headbobPhase = 0.f;
         // Wrap on a whole number of variation cycles, which both the waveforms and the variation
         // repeat on, so nothing changes value as it wraps
-        m_headbobPhase = fmodf(m_headbobPhase, stepVariationCycles * AZ::Constants::TwoPi);
+        m_headbobPhase = fmodf(m_headbobPhase, StepVariationCycles * AZ::Constants::TwoPi);
 
         // Compute the offsets using a Lemniscate of Gerono (figure-8 pattern for natural sway and
         // bounce), shaped by the measured harmonics when Realism is non-zero
