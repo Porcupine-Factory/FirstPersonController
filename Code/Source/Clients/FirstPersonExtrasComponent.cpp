@@ -1083,6 +1083,7 @@ namespace FirstPersonController
             : m_firstPersonControllerObject->m_correctedVelocityXY.GetLength();
         const float walkSpeed = m_firstPersonControllerObject->m_speed;
         const float sprintScaleForward = m_firstPersonControllerObject->m_sprintScaleForward;
+        const float sprintEffectiveValue = m_firstPersonControllerObject->m_sprintEffectiveValue;
 
         // Scale by the ratio of the current speed to the top sprint speed so accel and decel stay continuous
         const float topSprintSpeed = walkSpeed * sprintScaleForward;
@@ -1093,18 +1094,18 @@ namespace FirstPersonController
         const float effectiveRadialFrequency = AZ::Constants::TwoPi * m_headbobMaxFrequency * currentSpeedToTopSprintSpeedRatio;
         // Replace the uniform speed scaling with the per-axis sprint scales, reaching the maximums at the
         // top sprint speed so neither end depends on how Sprint Forward Scale is configured
-        float horizontalSpeedScale = currentSpeedToTopSprintSpeedRatio;
-        float verticalSpeedScale = currentSpeedToTopSprintSpeedRatio;
-        float rotationSpeedScale = currentSpeedToTopSprintSpeedRatio;
-        if (sprintScaleForward > 1.f)
+        float horizontalSpeedScale = currentSpeedToTopSprintSpeedRatio * sprintScaleForward;
+        float verticalSpeedScale = currentSpeedToTopSprintSpeedRatio * sprintScaleForward;
+        float rotationSpeedScale = currentSpeedToTopSprintSpeedRatio * sprintScaleForward;
+        if (sprintScaleForward > 1.f && sprintEffectiveValue != 0.f)
         {
             const float sprintBlend =
                 AZ::GetClamp((currentSpeedToTopSprintSpeedRatio * sprintScaleForward - 1.f) / (sprintScaleForward - 1.f), 0.f, 1.f);
             // Ramp to the walking value and then to one, so the scale never overshoots either end
             const float walkFraction = AZStd::min(currentSpeedToTopSprintSpeedRatio * sprintScaleForward, 1.f);
-            const float horizontalTarget = AZ::Lerp(walkFraction / AZ::GetMax(m_headbobHorizontalSprintScale, 0.01f), 1.f, sprintBlend);
-            const float verticalTarget = AZ::Lerp(walkFraction / AZ::GetMax(m_headbobVerticalSprintScale, 0.01f), 1.f, sprintBlend);
-            const float rotationTarget = AZ::Lerp(walkFraction / AZ::GetMax(m_headbobRotationSprintScale, 0.01f), 1.f, sprintBlend);
+            const float horizontalTarget = AZ::Lerp(walkFraction, m_headbobHorizontalSprintScale, sprintBlend);
+            const float verticalTarget = AZ::Lerp(walkFraction, m_headbobVerticalSprintScale, sprintBlend);
+            const float rotationTarget = AZ::Lerp(walkFraction, m_headbobRotationSprintScale, sprintBlend);
             horizontalSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, horizontalTarget, m_headbobRealism);
             verticalSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, verticalTarget, m_headbobRealism);
             rotationSpeedScale = AZ::Lerp(currentSpeedToTopSprintSpeedRatio, rotationTarget, m_headbobRealism);
@@ -1117,7 +1118,8 @@ namespace FirstPersonController
         // is not mistaken for crouching
         const float crouchDistance = m_firstPersonControllerObject->m_crouchDistance;
         const float crouchScale = m_firstPersonControllerObject->m_crouchScale;
-        if (crouchDistance > 0.f && crouchScale > 0.f)
+        const float crouching = m_firstPersonControllerObject->m_crouching;
+        if (crouchDistance > 0.f && crouchScale > 0.f && crouching)
         {
             const float crouchBlend =
                 AZ::GetClamp(-1.f * m_firstPersonControllerObject->m_cameraLocalZTravelDistance / crouchDistance, 0.f, 1.f);
