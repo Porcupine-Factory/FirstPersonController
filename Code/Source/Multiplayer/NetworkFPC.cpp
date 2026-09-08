@@ -524,8 +524,7 @@ namespace FirstPersonController
         //  2) On the client: we were reset and we are replaying old inputs after being corrected
         // In both cases we don't want to process these inputs
         const NetworkFPCNetworkInput* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
-        if (m_disabled ||
-            input.FindComponentInput<NetworkFPCNetworkInput>()->m_resetCount != GetNetworkTransformComponentController()->GetResetCount())
+        if (m_disabled || playerInput->m_resetCount != GetNetworkTransformComponentController()->GetResetCount())
             return;
 
         // Initialize various network properties to the initial values in the First Person Controller component
