@@ -238,6 +238,7 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkInput Type="float"         Name="Crouch"                   Init="0.f"/>
     <NetworkInput Type="float"         Name="Jump"                     Init="0.f"/>
     <NetworkInput Type="uint8_t"       Name="ResetCount"               Init="0" />
+    <NetworkInput Type="AZ::Vector3"   Name="DesiredVelocity"          Init="AZ::Vector3::CreateZero()"/>
 
     <ArchetypeProperty Type="float" Name="EyeHeight" Init="1.6f" ExposeToEditor="true" Suffix="m" Description="The camera's Z offset with the respect to the parent character entity with the First Person Controller component."/>
     <ArchetypeProperty Type="AZStd::string" Name="WalkSpeedParamName" Init="&quot;WalkSpeed&quot;" ExposeToEditor="true" Description="Anim graph walk speed parameter name."/>

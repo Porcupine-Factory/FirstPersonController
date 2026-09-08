@@ -507,6 +507,7 @@ namespace FirstPersonController
             playerInput->m_jump = m_jumpValue;
         }
 
+        playerInput->m_desiredVelocity = GetDesiredVelocity();
         playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
         playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
 
@@ -643,7 +644,8 @@ namespace FirstPersonController
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");
 
-        const AZ::Vector3 newTranslation = GetNetworkCharacterComponentController()->TryMoveWithVelocity(GetDesiredVelocity(), deltaTime);
+        const AZ::Vector3 newTranslation =
+            GetNetworkCharacterComponentController()->TryMoveWithVelocity(playerInput->m_desiredVelocity, deltaTime);
         SetCurrentTransform(
             AZ::Transform::CreateFromQuaternionAndTranslation(GetEntity()->GetTransform()->GetWorldRotationQuaternion(), newTranslation));
 
