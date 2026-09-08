@@ -599,18 +599,23 @@ namespace FirstPersonController
             if (overrideTranslationForTick && overrideRotationForTick)
             {
                 GetEntity()->GetTransform()->SetWorldTM(overrideTransform);
-                SetOverrideTranslationForTick(false);
-                SetOverrideRotationForTick(false);
+                if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
+                {
+                    SetOverrideTranslationForTick(false);
+                    SetOverrideRotationForTick(false);
+                }
             }
             else if (overrideTranslationForTick)
             {
                 GetEntity()->GetTransform()->SetWorldTranslation(overrideTransform.GetTranslation());
-                SetOverrideTranslationForTick(false);
+                if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
+                    SetOverrideTranslationForTick(false);
             }
             else
             {
                 GetEntity()->GetTransform()->SetWorldRotationQuaternion(overrideTransform.GetRotation());
-                SetOverrideRotationForTick(false);
+                if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
+                    SetOverrideRotationForTick(false);
             }
 #if AZ_TRAIT_SERVER
             // Increment resetCount to prevent transform interpolation
