@@ -624,6 +624,7 @@ namespace FirstPersonController
             if (overrideRotationForTick)
             {
                 m_firstPersonControllerObject->m_currentHeading = overrideTransform.GetEulerRadians().GetZ();
+                m_firstPersonControllerObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
                 m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
                 m_firstPersonControllerObject->m_networkFPCRotationSliceAccumulator = 0.f;
             }
