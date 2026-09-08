@@ -2444,9 +2444,8 @@ namespace FirstPersonController
 
         // The sprint value should never be 0, it shouldn't be applied if you're trying to moving backwards,
         // and it shouldn't be applied if you're crouching (depending on various settings)
-        if ((!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) ||
-            (!m_applyVelocityXY.GetY() && !m_applyVelocityXY.GetX()) || (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue) ||
-            (inputTargetVelocityXY.IsZero()) ||
+        if ((!m_sprintWhileCrouched && !m_crouchSprintCausesStanding && !m_standing) || m_applyVelocityXY.IsZero() ||
+            (m_forwardValue == -m_backValue && -m_leftValue == m_rightValue) || (inputTargetVelocityXY.IsZero()) ||
             (m_sprintInputEngaged && !m_sprintBackwards &&
              ((!m_forwardValue && !m_leftValue && !m_rightValue) || (!m_forwardValue && -m_leftValue == m_rightValue) ||
               (inputTargetVelocityXY.GetY() < 0.f))))
