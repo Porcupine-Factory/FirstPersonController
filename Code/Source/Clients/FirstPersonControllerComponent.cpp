@@ -1941,6 +1941,10 @@ namespace FirstPersonController
             // the most recent post-simulation transform.
             m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation;
             AZ::TransformBus::EventResult(m_currentCharacterEyeTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
+            const AZ::Vector3 characterUpDirection =
+                GetEntity()->GetTransform()->GetWorldRotationQuaternion().TransformVector(AZ::Vector3::CreateAxisZ());
+            if (!IsCameraChildOfCharacter() && !characterUpDirection.IsClose(m_sphereCastsAxisDirectionPose))
+                SetSphereCastsAxisDirectionPose(characterUpDirection);
             m_currentCharacterEyeTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
             m_physicsTimeAccumulator = 0.f;
         }
@@ -2057,7 +2061,10 @@ namespace FirstPersonController
 
                 const float characterPitch = characterTransform->GetLocalRotation().GetX();
                 const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
-                const float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(m_sphereCastsAxisDirectionPose);
+                float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(
+                    AZ::Vector3(0.f, m_sphereCastsAxisDirectionPose.GetY(), m_sphereCastsAxisDirectionPose.GetZ()));
+                if (m_sphereCastsAxisDirectionPose.GetY() < 0.f)
+                    angleFromZ *= -1.f;
                 m_prevCharacterPitch = characterPitch;
                 m_cameraPitch =
                     AZ::GetClamp(m_cameraPitch + pitchDelta, m_cameraPitchMinAngle - angleFromZ, m_cameraPitchMaxAngle - angleFromZ);
@@ -2068,9 +2075,26 @@ namespace FirstPersonController
                 m_cameraRoll += rollDelta;
 
                 const AZ::Quaternion yawRotation = AZ::Quaternion::CreateFromAxisAngle(m_sphereCastsAxisDirectionPose, m_cameraYaw);
-                const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
-                const AZ::Quaternion rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
-
+                AZ::Quaternion pitchRotation;
+                AZ::Quaternion rollRotation;
+                if (m_sphereCastsAxisDirectionPose == AZ::Vector3::CreateAxisZ() || m_sphereCastsAxisDirectionPose.GetZ() < 0.f)
+                {
+                    pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
+                    rollRotation = AZ::Quaternion::CreateRotationY(m_cameraRoll);
+                }
+                else
+                {
+                    // Strip out the yaw and use the character's local X and Y axes for the camera's pitch and roll
+                    const AZ::Quaternion characterRotation = GetEntity()->GetTransform()->GetWorldRotationQuaternion();
+                    const AZ::Vector3 forward = characterRotation.TransformVector(AZ::Vector3::CreateAxisX());
+                    const float yawAngle = atan2(forward.GetY(), forward.GetX());
+                    const AZ::Quaternion characterRotationWithoutYaw =
+                        characterRotation * AZ::Quaternion::CreateRotationZ(yawAngle).GetConjugate();
+                    pitchRotation = AZ::Quaternion::CreateFromAxisAngle(
+                        characterRotationWithoutYaw.TransformVector(AZ::Vector3::CreateAxisX()), m_cameraPitch);
+                    rollRotation = AZ::Quaternion::CreateFromAxisAngle(
+                        characterRotationWithoutYaw.TransformVector(AZ::Vector3::CreateAxisY()), m_cameraRoll);
+                }
 #ifdef NETWORKFPC
                 if (GetIsNetworkingActive() && !m_isNetBot && !m_isServer)
 #endif
@@ -3375,7 +3399,7 @@ namespace FirstPersonController
         if (m_sphereCastsAxisDirectionPose != AZ::Vector3::CreateAxisZ())
         {
             sphereCastDirection = -m_sphereCastsAxisDirectionPose;
-            if (m_sphereCastsAxisDirectionPose.GetZ() > 0.f)
+            if (m_sphereCastsAxisDirectionPose.GetZ() >= 0.f)
                 sphereCastPose.SetTranslation(
                     GetEntity()->GetTransform()->GetWorldTM().GetTranslation() +
                     AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), m_sphereCastsAxisDirectionPose)
