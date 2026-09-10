@@ -598,7 +598,19 @@ namespace FirstPersonController
             const AZ::Transform overrideTransform = GetOverrideTransform();
             if (overrideTranslationForTick && overrideRotationForTick)
             {
-                GetEntity()->GetTransform()->SetWorldTM(overrideTransform);
+                AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
+                if (GetApplyOverridePitchAndRollToCharacter())
+                    characterTransform->SetWorldTM(overrideTransform);
+                else
+                {
+                    characterTransform->GetWorldRotation();
+                    const AZ::Vector3 newCharacterRotation = AZ::Vector3(
+                        characterTransform->GetWorldRotation().GetX(),
+                        characterTransform->GetWorldRotation().GetY(),
+                        overrideTransform.GetEulerRadians().GetZ());
+                    characterTransform->SetWorldRotation(newCharacterRotation);
+                    characterTransform->SetWorldTranslation(overrideTransform.GetTranslation());
+                }
                 if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
                 {
                     SetOverrideTranslationForTick(false);
@@ -611,9 +623,21 @@ namespace FirstPersonController
                 if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
                     SetOverrideTranslationForTick(false);
             }
+            // overrideRotationForTick
             else
             {
-                GetEntity()->GetTransform()->SetWorldRotationQuaternion(overrideTransform.GetRotation());
+                AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
+                if (GetApplyOverridePitchAndRollToCharacter())
+                    characterTransform->SetWorldRotationQuaternion(overrideTransform.GetRotation());
+                else
+                {
+                    characterTransform->GetWorldRotation();
+                    const AZ::Vector3 newCharacterRotation = AZ::Vector3(
+                        characterTransform->GetWorldRotation().GetX(),
+                        characterTransform->GetWorldRotation().GetY(),
+                        overrideTransform.GetEulerRadians().GetZ());
+                    characterTransform->SetWorldRotation(newCharacterRotation);
+                }
                 if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
                     SetOverrideRotationForTick(false);
             }
@@ -625,8 +649,12 @@ namespace FirstPersonController
             if (overrideRotationForTick)
             {
                 m_firstPersonControllerObject->m_currentHeading = overrideTransform.GetEulerRadians().GetZ();
-                m_firstPersonControllerObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
                 m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
+                if (!GetApplyOverridePitchAndRollToCharacter())
+                {
+                    m_firstPersonControllerObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
+                    m_firstPersonControllerObject->m_cameraRoll = overrideTransform.GetEulerRadians().GetY();
+                }
                 m_firstPersonControllerObject->m_networkFPCRotationSliceAccumulator = 0.f;
             }
         }
@@ -637,9 +665,7 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_isServer,
             GetEntityId());
 
-        const AZ::Quaternion characterRotationQuaternion = AZ::Quaternion::CreateRotationZ(
-            m_firstPersonControllerObject->m_currentHeading + playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
-        GetEntity()->GetTransform()->SetWorldRotationQuaternion(characterRotationQuaternion);
+        GetEntity()->GetTransform()->RotateAroundLocalZ(playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");

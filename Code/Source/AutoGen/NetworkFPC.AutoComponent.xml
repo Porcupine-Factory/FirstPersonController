@@ -104,6 +104,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="Whether the rotation will be set by OverrideTransform for one network tick."/>
+    <NetworkProperty Type="bool" Name="ApplyOverridePitchAndRollToCharacter"
+                     Init="false" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="Whether the override pitch and roll rotation applies to the character and not just the camera."/>
     <NetworkProperty Type="AZ::Transform" Name="OverrideTransform"
                      Init="AZ::Transform::CreateIdentity()" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="false"
