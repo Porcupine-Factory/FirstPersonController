@@ -32,6 +32,7 @@ namespace FirstPersonController
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                 ->Field("Jump Exhaustion Factor", &FirstPersonExtrasComponent::m_jumpExhaustionFactor)
                 ->Attribute(AZ::Edit::Attributes::Min, 0.f)
+                ->Attribute(AZ::Edit::Attributes::Max, 1.f)
 
                 // Jump Head Tilt group
                 ->Field("Jump Head Tilt", &FirstPersonExtrasComponent::m_jumpHeadTiltEnabled)
@@ -1455,20 +1456,29 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::OnStaminaCapped()
     {
-        if (m_jumpExhaustionFactor > 0.f)
+        if (m_jumpExhaustionFactor < 1.f)
         {
             m_firstPersonControllerObject->SetJumpHoldDistance(m_jumpDefaultHoldDistance);
             m_firstPersonControllerObject->SetJumpInitialVelocity(m_jumpDefaultInitialVelocity);
+#ifdef NETWORKFPC
+            if (m_firstPersonControllerObject->m_networkFPCControllerObject != nullptr)
+                m_firstPersonControllerObject->m_networkFPCControllerObject->SetJumpInitialVelocity(m_jumpDefaultInitialVelocity);
+#endif
         }
     }
     void FirstPersonExtrasComponent::OnStaminaReachedZero()
     {
-        if (m_jumpExhaustionFactor > 0.f)
+        if (m_jumpExhaustionFactor < 1.f)
         {
             m_jumpDefaultInitialVelocity = m_firstPersonControllerObject->m_jumpInitialVelocity;
             m_jumpDefaultHoldDistance = m_firstPersonControllerObject->m_jumpHoldDistance;
             m_firstPersonControllerObject->SetJumpHoldDistance(m_jumpExhaustionFactor * m_jumpDefaultHoldDistance);
             m_firstPersonControllerObject->SetJumpInitialVelocity(m_jumpExhaustionFactor * m_jumpDefaultInitialVelocity);
+#ifdef NETWORKFPC
+            if (m_firstPersonControllerObject->m_networkFPCControllerObject != nullptr)
+                m_firstPersonControllerObject->m_networkFPCControllerObject->SetJumpInitialVelocity(
+                    m_jumpExhaustionFactor * m_jumpDefaultInitialVelocity);
+#endif
         }
     }
     void FirstPersonExtrasComponent::OnSprintStarted()
@@ -1513,10 +1523,7 @@ namespace FirstPersonController
     }
     void FirstPersonExtrasComponent::SetJumpExhaustionFactor(const float jumpExhaustionFactor)
     {
-        if (jumpExhaustionFactor < 0.f)
-            m_jumpExhaustionFactor = 0.f;
-        else
-            m_jumpExhaustionFactor = jumpExhaustionFactor;
+        m_jumpExhaustionFactor = AZ::GetClamp(jumpExhaustionFactor, 0.f, 1.f);
     }
     float FirstPersonExtrasComponent::GetJumpDefaultHoldDistance() const
     {
