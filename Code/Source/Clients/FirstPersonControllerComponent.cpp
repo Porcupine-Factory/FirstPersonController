@@ -1252,8 +1252,7 @@ namespace FirstPersonController
                 ->Method("Get Scene Query Hit Shape Pointer", &GetSceneQueryHitShapePtr)
                 ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
-                ->Method("Get Autonomous Client EntityId", &GetAutonomousClientEntityId)
-                ->Method("Get Host EntityId", &GetHostEntityId)
+                ->Method("Get Autonomous Client Or Host EntityId", &GetAutonomousClientOrHostEntityId)
                 ->Method("Get Is Networking Active", &GetIsNetworkingActive)
                 ->Method("Get Is In Editor", &GetIsInEditor)
                 ->RequestBus("FirstPersonControllerComponentRequestBus");
@@ -6839,7 +6838,7 @@ namespace FirstPersonController
     {
         return m_botStringNetEntityIds;
     }
-    AZ::EntityId FirstPersonControllerComponent::GetAutonomousClientEntityId()
+    AZ::EntityId FirstPersonControllerComponent::GetAutonomousClientOrHostEntityId()
     {
         AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
         FirstPersonControllerComponentRequestBus::BroadcastResult(
@@ -6849,28 +6848,14 @@ namespace FirstPersonController
             bool isAutonomousClient = false;
             FirstPersonControllerComponentRequestBus::EventResult(
                 isAutonomousClient, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsAutonomousClient);
+            if (!isAutonomousClient)
+                FirstPersonControllerComponentRequestBus::EventResult(
+                    isAutonomousClient, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsHost);
             // If the autnomous client was found then return its EntityId
             if (isAutonomousClient)
                 return characterEntityId;
         }
         // If no autonomous client entity was found then return an invalid EntityId
-        return AZ::EntityId(AZ::EntityId::InvalidEntityId);
-    }
-    AZ::EntityId FirstPersonControllerComponent::GetHostEntityId()
-    {
-        AZ::EBusAggregateResults<AZ::EntityId> characterEntityIds;
-        FirstPersonControllerComponentRequestBus::BroadcastResult(
-            characterEntityIds, &FirstPersonControllerComponentRequestBus::Events::GetCharacterEntityId);
-        for (const AZ::EntityId characterEntityId : characterEntityIds.values)
-        {
-            bool isHost = false;
-            FirstPersonControllerComponentRequestBus::EventResult(
-                isHost, characterEntityId, &FirstPersonControllerComponentRequestBus::Events::GetIsHost);
-            // If the host was found then return its EntityId
-            if (isHost)
-                return characterEntityId;
-        }
-        // If no host entity was found then return an invalid EntityId
         return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const

@@ -553,8 +553,7 @@ namespace FirstPersonController
         static AZStd::vector<AZStd::string> GetBotStringNetEntityIdsOnServer();
         static AZStd::vector<AZStd::string> GetPlayerNetEntityIdStrings();
         static AZStd::vector<AZStd::string> GetBotNetEntityIdStrings();
-        static AZ::EntityId GetAutonomousClientEntityId();
-        static AZ::EntityId GetHostEntityId();
+        static AZ::EntityId GetAutonomousClientOrHostEntityId();
         static bool GetIsNetworkingActive();
         static bool GetIsInEditor();
         bool GetNetworkFPCAllowAllMovementInputs() const override;
