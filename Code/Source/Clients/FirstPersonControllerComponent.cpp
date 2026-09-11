@@ -1250,6 +1250,7 @@ namespace FirstPersonController
                 ->Method("Get Scene Query Hit Static Friction", &GetSceneQueryHitStaticFriction)
                 ->Method("Get Scene Query Hit Restitution", &GetSceneQueryHitRestitution)
                 ->Method("Get Scene Query Hit Shape Pointer", &GetSceneQueryHitShapePtr)
+                ->Method("Get Player EntityIds On Server", &GetPlayerEntityIdsOnServer)
                 ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client Or Host EntityId", &GetAutonomousClientOrHostEntityId)
