@@ -892,6 +892,7 @@ namespace FirstPersonController
         AZStd::vector<AzPhysics::SceneQueryHit> m_characterHits;
 
         // Networking related variables (Note: m_isNetBot is true by default because it is set to false by NetworkFPC when autonomous)
+        // Only one of these are expected to be true at a time, so when m_isHost is true m_isServer and m_isAutonomousClient are false
         bool m_networkFPCEnabled = false;
         bool m_isServer = false;
         bool m_isHost = false;
