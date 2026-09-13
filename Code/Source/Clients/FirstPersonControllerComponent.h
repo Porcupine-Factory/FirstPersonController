@@ -703,6 +703,7 @@ namespace FirstPersonController
 
         // Sprint application variables
         float m_sprintEffectiveValue = 0.f;
+        float m_sprintPrevEffectiveValue = 0.f;
         float m_sprintAccelValue = 1.f;
         float m_sprintPrevValue = 0.f;
         float m_sprintVelocityAdjust = 0.f;

@@ -3164,7 +3164,8 @@ namespace FirstPersonController
         if ((m_instantVelocityRotation ? (m_inputTargetVelocityXY != inputTargetVelocityXY)
                                        : (m_inputTargetVelocityXY != inputTargetVelocityXYWorld)) ||
             (!m_velocityXYIgnoresObstacles && m_velocityFromImpulse.IsZero() && m_linearImpulse.IsZero() && m_velocityXYObstructed) ||
-            (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())))
+            (AZ::GetSign(m_prevVelocityXCrossYDirection.GetZ()) != AZ::GetSign(m_velocityXCrossYDirection.GetZ())) ||
+            (m_sprintPrevEffectiveValue != m_sprintEffectiveValue) || (!m_velocityFromImpulse.IsZero()))
         {
             if (m_instantVelocityRotation)
             {
@@ -3189,6 +3190,9 @@ namespace FirstPersonController
 
                 m_prevApplyVelocityXY = m_applyVelocityXY;
             }
+
+            // Capture the current sprint effective value to compare against next time
+            m_sprintPrevEffectiveValue = m_sprintEffectiveValue;
 
             // Once the character's movement gets flipped on Z, m_prevApplyVelocityXY needs to be flipped,
             // so long as it hasn't occured around the world's X axis
