@@ -136,9 +136,9 @@ namespace FirstPersonController
         NetworkFPCRequestBus::Handler::BusDisconnect();
 #endif
         AZ::TickBus::Handler::BusDisconnect();
+        CameraCoupledChildRequestBus::Handler::BusDisconnect();
         FirstPersonControllerRequestBus::Handler::BusDisconnect();
         FirstPersonExtrasRequestBus::Handler::BusDisconnect();
-        CameraCoupledChildRequestBus::Handler::BusDisconnect();
     }
 
     void FirstPersonControllerSystemComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
