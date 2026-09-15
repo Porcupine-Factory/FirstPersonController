@@ -1521,6 +1521,7 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::GetProvidedServices(AZ::ComponentDescriptor::DependencyArrayType& provided)
     {
         provided.push_back(AZ_CRC_CE("FirstPersonControllerService"));
+        provided.push_back(AZ_CRC_CE("FirstPersonControllerComponent"));
     }
 
     void FirstPersonControllerComponent::GetIncompatibleServices(AZ::ComponentDescriptor::DependencyArrayType& incompatible)
