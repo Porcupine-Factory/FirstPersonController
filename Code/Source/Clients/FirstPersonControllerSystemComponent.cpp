@@ -86,6 +86,7 @@ namespace FirstPersonController
     void FirstPersonControllerSystemComponent::GetRequiredServices([[maybe_unused]] AZ::ComponentDescriptor::DependencyArrayType& required)
     {
 #ifdef NETWORKFPC
+        required.push_back(AZ_CRC_CE("NetworkingService"));
         required.push_back(AZ_CRC_CE("MultiplayerService"));
 #endif
     }
