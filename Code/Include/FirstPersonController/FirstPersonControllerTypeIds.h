@@ -7,8 +7,8 @@
 namespace FirstPersonController
 {
     // System Component TypeIds
-    inline constexpr const char* FirstPersonControllerSystemComponentTypeId = "{722F28F9-359E-4FA7-B6A2-0FEA0485C8D3}";
-    inline constexpr const char* FirstPersonControllerEditorSystemComponentTypeId = "{DEA3CCF3-DBBF-486F-A03A-C3B56A6684AC}";
+    inline constexpr const char* FirstPersonControllerSystemComponentTypeId = "{B22F28F9-359E-4FA7-B6A2-0FEA0485C8D3}";
+    inline constexpr const char* FirstPersonControllerEditorSystemComponentTypeId = "{C0A3CCF3-DBBF-486F-A03A-C3B56A6684AC}";
 
     // Module derived classes TypeIds
     inline constexpr const char* FirstPersonControllerModuleInterfaceTypeId = "{0C3E7E89-9134-4F85-9357-7839BE198342}";
