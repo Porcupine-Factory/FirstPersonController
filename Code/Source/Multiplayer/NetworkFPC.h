@@ -69,7 +69,7 @@ namespace FirstPersonController
         void OnAnimGraphInstanceCreated(EMotionFX::AnimGraphInstance* animGraphInstance) override;
         //! @}
 
-        // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
+        // FirstPersonControllerComponent object
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
 
         // Network animation members
