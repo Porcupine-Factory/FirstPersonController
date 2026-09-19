@@ -138,8 +138,8 @@ namespace FirstPersonController
 #endif
         AZ::TickBus::Handler::BusDisconnect();
         CameraCoupledChildRequestBus::Handler::BusDisconnect();
-        FirstPersonControllerRequestBus::Handler::BusDisconnect();
         FirstPersonExtrasRequestBus::Handler::BusDisconnect();
+        FirstPersonControllerRequestBus::Handler::BusDisconnect();
     }
 
     void FirstPersonControllerSystemComponent::OnTick([[maybe_unused]] float deltaTime, [[maybe_unused]] AZ::ScriptTimePoint time)
