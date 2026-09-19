@@ -3325,12 +3325,24 @@ namespace FirstPersonController
         {
             m_velocityXYObstructed = true;
 
-            if (m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
-                m_correctedVelocityXY = AZ::Vector2(m_physicsReportedVelocity);
+            if (m_velocityXCrossYDirection.IsClose(AZ::Vector3::CreateAxisZ()))
+            {
+                AZ::Vector3 addVelocityHeading = m_addVelocityHeading;
+                if (!addVelocityHeading.IsZero())
+                    addVelocityHeading = AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(m_addVelocityHeading);
+                if (m_networkFPCEnabled && m_applyVelocityXY.IsZero() && m_addVelocityWorld.IsZero() && addVelocityHeading.IsZero())
+                    m_correctedVelocityXY = m_applyVelocityXY + AZ::Vector2(m_addVelocityWorld) + AZ::Vector2(addVelocityHeading);
+                else
+                    m_correctedVelocityXY = AZ::Vector2(m_physicsReportedVelocity);
+            }
             else
+            {
                 m_correctedVelocityXY = AZ::Vector2(
                     m_physicsReportedVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisX(), m_velocityXCrossYDirection)),
                     m_physicsReportedVelocity.Dot(TiltVectorXCrossY(AZ::Vector2::CreateAxisY(), m_velocityXCrossYDirection)));
+                if (m_networkFPCEnabled && m_applyVelocityXY.IsZero())
+                    m_correctedVelocityXY = m_applyVelocityXY;
+            }
 
             if (m_velocityZPosDirection == AZ::Vector3::CreateAxisZ())
                 m_correctedVelocityZ = m_physicsReportedVelocity.GetZ();
@@ -3359,7 +3371,7 @@ namespace FirstPersonController
         }
         else
         {
-            if (m_velocityXCrossYDirection == AZ::Vector3::CreateAxisZ())
+            if (m_velocityXCrossYDirection.IsClose(AZ::Vector3::CreateAxisZ()))
             {
                 // Create a temporary addVelocityHeading variable since it will be manipulated (rotated),
                 // m_addVelocityHeading isn't manipulated since users of its getter likely expect it to be unaltered
