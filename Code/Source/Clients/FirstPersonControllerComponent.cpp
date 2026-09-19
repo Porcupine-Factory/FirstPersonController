@@ -1559,7 +1559,15 @@ namespace FirstPersonController
         if (inputId == nullptr)
             return;
 
-        if (*inputId == m_sprintEventId)
+        if (*inputId == m_rotateYawEventId)
+        {
+            m_yawValue += value;
+        }
+        else if (*inputId == m_rotatePitchEventId)
+        {
+            m_pitchValue += value;
+        }
+        else if (*inputId == m_sprintEventId)
         {
             m_sprintValue = value;
             if (m_sprintInAir || m_grounded || m_coyoteTimeNoGravityActive)
@@ -1620,11 +1628,11 @@ namespace FirstPersonController
 
         if (*inputId == m_rotateYawEventId)
         {
-            m_yawValue = value;
+            m_yawValue += value;
         }
         else if (*inputId == m_rotatePitchEventId)
         {
-            m_pitchValue = value;
+            m_pitchValue += value;
         }
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if (*inputId == m_sprintEventId)
@@ -1967,6 +1975,9 @@ namespace FirstPersonController
             m_cameraRotationAnglesDelta.SetX(-1.f * m_pitchValue * m_pitchSensitivity);
         else
             m_rotatingPitchViaScriptGamepad = false;
+
+        // Set the yaw and pitch value back to zero since their aggregated value has been used
+        m_yawValue = m_pitchValue = 0.f;
 
         const AZ::Quaternion targetLookRotationDelta = AZ::Quaternion::CreateFromEulerRadiansXYZ(m_cameraRotationAnglesDelta);
 
