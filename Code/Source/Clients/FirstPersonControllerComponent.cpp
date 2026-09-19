@@ -1208,10 +1208,6 @@ namespace FirstPersonController
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
                 ->Event("Get Other Player EntityIds", &FirstPersonControllerComponentRequests::GetOtherPlayerEntityIds)
                 ->Event("Get Net Bot EntityIds", &FirstPersonControllerComponentRequests::GetNetBotEntityIds)
-#ifdef NETWORKFPC
-                ->Event("Get NetEntityId String By EntityId", &FirstPersonControllerComponentRequests::GetStringNetEntityIdById)
-                ->Event("Get EntityId By NetEntityId String", &FirstPersonControllerComponentRequests::GetEntityIdByStringNetId)
-#endif
                 ->Event(
                     "Get NetworkFPC Allow All Movement Inputs",
                     &FirstPersonControllerComponentRequests::GetNetworkFPCAllowAllMovementInputs)
@@ -1256,6 +1252,12 @@ namespace FirstPersonController
                 ->Method("Get Autonomous Client Or Host EntityId", &GetAutonomousClientOrHostEntityId)
                 ->Method("Get Is Networking Active", &GetIsNetworkingActive)
                 ->Method("Get Is In Editor", &GetIsInEditor)
+#ifdef NETWORKFPC
+                ->Method("Get NetEntityId String By EntityId", &GetStringNetEntityIdById)
+                ->Method("Get NetEntityId By EntityId", &GetNetEntityIdById)
+                ->Method("Get EntityId By NetEntityId", &GetEntityIdByNetId)
+                ->Method("Get EntityId By NetEntityId String", &GetEntityIdByStringNetId)
+#endif
                 ->RequestBus("FirstPersonControllerComponentRequestBus");
         }
     }
@@ -6705,20 +6707,20 @@ namespace FirstPersonController
         m_isNetBot = isNetBot;
     }
 #ifdef NETWORKFPC
-    AZStd::string FirstPersonControllerComponent::GetStringNetEntityIdById(const AZ::EntityId& entityId) const
+    AZStd::string FirstPersonControllerComponent::GetStringNetEntityIdById(const AZ::EntityId& entityId)
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::NetEntityId netEntityId = networkEntityManager->GetNetEntityIdById(entityId);
         const AZStd::string netEntityIdStr = AZStd::to_string(netEntityId);
         return netEntityIdStr;
     }
-    Multiplayer::NetEntityId FirstPersonControllerComponent::GetNetEntityIdById(const AZ::EntityId& entityId) const
+    Multiplayer::NetEntityId FirstPersonControllerComponent::GetNetEntityIdById(const AZ::EntityId& entityId)
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::NetEntityId netEntityId = networkEntityManager->GetNetEntityIdById(entityId);
         return netEntityId;
     }
-    AZ::EntityId FirstPersonControllerComponent::GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId) const
+    AZ::EntityId FirstPersonControllerComponent::GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId)
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::ConstNetworkEntityHandle entity = networkEntityManager->GetEntity(netEntityId);
@@ -6727,7 +6729,7 @@ namespace FirstPersonController
         else
             return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
-    AZ::EntityId FirstPersonControllerComponent::GetEntityIdByStringNetId(const AZStd::string& strNetEntityId) const
+    AZ::EntityId FirstPersonControllerComponent::GetEntityIdByStringNetId(const AZStd::string& strNetEntityId)
     {
         const Multiplayer::INetworkEntityManager* networkEntityManager = Multiplayer::GetMultiplayer()->GetNetworkEntityManager();
         const Multiplayer::ConstNetworkEntityHandle entity =

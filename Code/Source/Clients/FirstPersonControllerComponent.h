@@ -518,10 +518,10 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> GetOtherPlayerEntityIds() const override;
         AZStd::vector<AZ::EntityId> GetNetBotEntityIds() const override;
 #ifdef NETWORKFPC
-        AZStd::string GetStringNetEntityIdById(const AZ::EntityId& entityId) const override;
-        Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId& entityId) const override;
-        AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId) const override;
-        AZ::EntityId GetEntityIdByStringNetId(const AZStd::string& intNetEntityId) const override;
+        static AZStd::string GetStringNetEntityIdById(const AZ::EntityId& entityId);
+        static Multiplayer::NetEntityId GetNetEntityIdById(const AZ::EntityId& entityId);
+        static AZ::EntityId GetEntityIdByNetId(const Multiplayer::NetEntityId& netEntityId);
+        static AZ::EntityId GetEntityIdByStringNetId(const AZStd::string& intNetEntityId);
 #endif
         static AZ::Vector2 CreateEllipseScaledVector(
             const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale);
