@@ -2550,7 +2550,10 @@ namespace FirstPersonController
 
             // Cause the character to stand if trying to sprint while crouched and the setting is enabled
             if (m_crouchSprintCausesStanding && m_crouching && m_grounded)
+            {
                 m_crouching = false;
+                m_crouched = false;
+            }
 
             // Figure out which of the scaled sprint velocity directions is the greatest
             float greatestSprintScale = 1.f;
