@@ -38,9 +38,6 @@ namespace FirstPersonController
         virtual void SetCameraInterpolation(const bool) = 0;
         virtual bool GetNetworkFPCKeepCameraAtCharacter() const = 0;
         virtual void SetNetworkFPCKeepCameraAtCharacter(const bool) = 0;
-        virtual void SetParentChangeDoNotUpdate(const AZ::EntityId&) = 0;
-        virtual void SetParentChangeUpdate(const AZ::EntityId&) = 0;
-        virtual AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId&) const = 0;
         virtual float GetEyeHeight() const = 0;
         virtual void SetEyeHeight(const float) = 0;
         virtual float GetCameraLocalZTravelDistance() const = 0;

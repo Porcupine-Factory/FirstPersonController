@@ -107,9 +107,6 @@ namespace FirstPersonController
         void SetCameraInterpolation(const bool cameraInterpolation) override;
         bool GetNetworkFPCKeepCameraAtCharacter() const override;
         void SetNetworkFPCKeepCameraAtCharacter(const bool networkFPCKeepCameraAtCharacter) override;
-        void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId) override;
-        void SetParentChangeUpdate(const AZ::EntityId& entityId) override;
-        AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId) const override;
         float GetEyeHeight() const override;
         void SetEyeHeight(const float eyeHeight) override;
         float GetCameraLocalZTravelDistance() const override;
@@ -526,6 +523,9 @@ namespace FirstPersonController
         static AZ::Vector2 CreateEllipseScaledVector(
             const AZ::Vector2& unscaledVector, float forwardScale, float backScale, float leftScale, float rightScale);
         static AZ::Vector3 TiltVectorXCrossY(const AZ::Vector2& vXY, const AZ::Vector3& newXCrossYDirection);
+        static void SetParentChangeDoNotUpdate(const AZ::EntityId& entityId);
+        static void SetParentChangeUpdate(const AZ::EntityId& entityId);
+        static AZ::OnParentChangedBehavior GetParentChangeBehavior(const AZ::EntityId& entityId);
         static AZ::Vector3 GetVectorAnglesBetweenVectorsRadians(const AZ::Vector3& v1, const AZ::Vector3& v2);
         static AZ::Vector3 GetVectorAnglesBetweenVectorsDegrees(const AZ::Vector3& v1, const AZ::Vector3& v2);
         static float SlerpHeadings(const float a, const float b, const float t);

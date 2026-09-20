@@ -740,9 +740,6 @@ namespace FirstPersonController
                     "Get NetworkFPC Keep Camera At Character", &FirstPersonControllerComponentRequests::GetNetworkFPCKeepCameraAtCharacter)
                 ->Event(
                     "Set NetworkFPC Keep Camera At Character", &FirstPersonControllerComponentRequests::SetNetworkFPCKeepCameraAtCharacter)
-                ->Event("Set Do Not Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeDoNotUpdate)
-                ->Event("Set Update On Parent Changed Behavior", &FirstPersonControllerComponentRequests::SetParentChangeUpdate)
-                ->Event("Get On Parent Changed Behavior", &FirstPersonControllerComponentRequests::GetParentChangeBehavior)
                 ->Event("Get Eye Height", &FirstPersonControllerComponentRequests::GetEyeHeight)
                 ->Event("Set Eye Height", &FirstPersonControllerComponentRequests::SetEyeHeight)
                 ->Event("Get Camera Local Z Travel Distance", &FirstPersonControllerComponentRequests::GetCameraLocalZTravelDistance)
@@ -1225,6 +1222,9 @@ namespace FirstPersonController
             bc->Class<FirstPersonControllerComponent>("First Person Controller")
                 ->Method("Create Ellipse Scaled Vector2", &CreateEllipseScaledVector)
                 ->Method("Tilt Vector2 Using XcrossY Direction", &TiltVectorXCrossY)
+                ->Method("Set Do Not Update On Parent Changed Behavior", &SetParentChangeDoNotUpdate)
+                ->Method("Set Update On Parent Changed Behavior", &SetParentChangeUpdate)
+                ->Method("Get On Parent Changed Behavior", &GetParentChangeBehavior)
                 ->Method("Get Vector Angles Between Vectors Radians", &GetVectorAnglesBetweenVectorsRadians)
                 ->Method("Get Vector Angles Between Vectors Degrees", &GetVectorAnglesBetweenVectorsDegrees)
                 ->Method("Slerp Headings", &SlerpHeadings)
@@ -1322,10 +1322,6 @@ namespace FirstPersonController
         {
             AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
         }
-
-        // Debug log to verify m_cameraInterpolation value at activation
-        // AZ_Printf("First Person Controller Component", "Activate: m_cameraInterpolation=%s",
-        //     m_cameraInterpolation ? "true" : "false");
 
         AZ::TickBus::Handler::BusConnect();
 #ifdef NETWORKFPC
@@ -2562,8 +2558,15 @@ namespace FirstPersonController
             // Cause the character to stand if trying to sprint while crouched and the setting is enabled
             if (m_crouchSprintCausesStanding && m_crouching && m_grounded)
             {
+                m_standUpPidController.Reset();
+                m_currentCrouchVelocity = 0.f;
+                m_standingUpMove = true;
+                m_crouchingDownMove = false;
                 m_crouching = false;
                 m_crouched = false;
+                if (AZ::IsClose(m_cameraLocalZTravelDistance, -m_crouchDistance, 0.01f))
+                    FirstPersonControllerComponentNotificationBus::Event(
+                        GetEntityId(), &FirstPersonControllerComponentNotifications::OnStartedStanding);
             }
 
             // Figure out which of the scaled sprint velocity directions is the greatest
@@ -2812,8 +2815,6 @@ namespace FirstPersonController
             !m_crouchPriorityWhenSprintPressed && m_sprintInputEngaged && m_grounded && m_crouching &&
             m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
             m_crouching = false;
-
-        // AZ_Printf("First Person Controller Component", "m_crouching = %s", m_crouching ? "true" : "false");
 
         // Determine if starting or switching to crouch down movement. Initiates when crouching is active, not already moving down,
         // and currently standing or near standing position
@@ -3616,7 +3617,6 @@ namespace FirstPersonController
             m_groundClose = m_scriptGroundClose;
             m_scriptSetGroundCloseTick = false;
         }
-        // AZ_Printf("First Person Controller Component", "m_groundClose = %s", m_groundClose ? "true" : "false");
 
         // Logic for handling ground close detection for Coyote Time application (e.g. moving down from a shallow to a steeper inclined
         // surface)
@@ -3658,8 +3658,6 @@ namespace FirstPersonController
             m_groundCloseCoyoteTimeHits.clear();
             AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
             m_groundCloseCoyoteTime = hits ? true : false;
-
-            // AZ_Printf("First Person Controller Component", "m_groundCloseCoyoteTime = %s", m_groundCloseCoyoteTime ? "true" : "false");
         }
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
@@ -4526,20 +4524,14 @@ namespace FirstPersonController
             AZ::Entity* entity = nullptr;
             AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationBus::Events::FindEntity, entityId);
             if (entity)
-            {
                 AZ::TransformBus::Event(
                     entityId, &AZ::TransformBus::Events::SetOnParentChangedBehavior, AZ::OnParentChangedBehavior::DoNotUpdate);
-                // AZ_Printf("First Person Controller Component", "Entity %s set to OnParentChangedBehavior::DoNotUpdate.",
-                //     entity->GetName().empty() ? entityId.ToString().c_str() : entity->GetName().c_str());
-            }
             else
-            {
                 AZ_Warning(
                     "First Person Controller Component",
                     false,
                     "Entity ID %s is invalid for SetParentChangeDoNotUpdate.",
                     entityId.ToString().c_str());
-            }
         }
     }
     void FirstPersonControllerComponent::SetParentChangeUpdate(const AZ::EntityId& entityId)
@@ -4549,23 +4541,17 @@ namespace FirstPersonController
             AZ::Entity* entity = nullptr;
             AZ::ComponentApplicationBus::BroadcastResult(entity, &AZ::ComponentApplicationBus::Events::FindEntity, entityId);
             if (entity)
-            {
                 AZ::TransformBus::Event(
                     entityId, &AZ::TransformBus::Events::SetOnParentChangedBehavior, AZ::OnParentChangedBehavior::Update);
-                // AZ_Printf("First Person Controller Component", "Entity %s reset to OnParentChangedBehavior::Update.",
-                //     entity->GetName().empty() ? entityId.ToString().c_str() : entity->GetName().c_str());
-            }
             else
-            {
                 AZ_Warning(
                     "First Person Controller Component",
                     false,
                     "Entity ID %s is invalid for SetParentChangeUpdate.",
                     entityId.ToString().c_str());
-            }
         }
     }
-    AZ::OnParentChangedBehavior FirstPersonControllerComponent::GetParentChangeBehavior(const AZ::EntityId& entityId) const
+    AZ::OnParentChangedBehavior FirstPersonControllerComponent::GetParentChangeBehavior(const AZ::EntityId& entityId)
     {
         if (entityId.IsValid())
         {
