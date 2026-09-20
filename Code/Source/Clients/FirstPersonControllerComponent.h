@@ -939,7 +939,9 @@ namespace FirstPersonController
 
         // Used when a script wants to update the camera angle via the Request Bus or a gamepad
         bool m_rotatingPitchViaScriptGamepad = false;
+        bool m_updateCameraPitchConsidersInput = true;
         bool m_rotatingYawViaScriptGamepad = false;
+        bool m_updateCharacterAndCameraYawConsidersInput = true;
 
         // Acceleration lerp movement
         float m_accel = 30.f;

@@ -1968,13 +1968,21 @@ namespace FirstPersonController
         if (!m_rotatingYawViaScriptGamepad)
             m_cameraRotationAnglesDelta.SetZ(-1.f * m_yawValue * m_yawSensitivity);
         else
+        {
             m_rotatingYawViaScriptGamepad = false;
+            if (m_updateCharacterAndCameraYawConsidersInput)
+                m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() - m_yawValue * m_yawSensitivity);
+        }
 
         // Multiply by -1 since moving the mouse up produces a negative value from the input bus
         if (!m_rotatingPitchViaScriptGamepad)
             m_cameraRotationAnglesDelta.SetX(-1.f * m_pitchValue * m_pitchSensitivity);
         else
+        {
             m_rotatingPitchViaScriptGamepad = false;
+            if (m_updateCameraPitchConsidersInput)
+                m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() - m_pitchValue * m_pitchSensitivity);
+        }
 
         // Set the yaw and pitch value back to zero since their aggregated value has been used
         m_yawValue = m_pitchValue = 0.f;
@@ -6658,19 +6666,14 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::UpdateCharacterAndCameraYaw(
         const float characterAndCameraYawAngle, const bool updateCharacterAndCameraYawConsidersInput)
     {
-        if (updateCharacterAndCameraYawConsidersInput)
-            m_cameraRotationAnglesDelta.SetZ(
-                m_cameraRotationAnglesDelta.GetZ() + characterAndCameraYawAngle - m_yawValue * m_yawSensitivity);
-        else
-            m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() + characterAndCameraYawAngle);
+        m_updateCharacterAndCameraYawConsidersInput = updateCharacterAndCameraYawConsidersInput;
+        m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() + characterAndCameraYawAngle);
         m_rotatingYawViaScriptGamepad = true;
     }
     void FirstPersonControllerComponent::UpdateCameraPitch(const float cameraPitchAngle, const bool updateCameraPitchConsidersInput)
     {
-        if (updateCameraPitchConsidersInput)
-            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngle - m_pitchValue * m_pitchSensitivity);
-        else
-            m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngle);
+        m_updateCameraPitchConsidersInput = updateCameraPitchConsidersInput;
+        m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngle);
         m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const
