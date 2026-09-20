@@ -217,10 +217,10 @@ namespace FirstPersonController
         float m_completeHeadLandVelocity = 8.1f;
         float m_currentHeadPitchAngle = 0.f;
         float m_deltaAngle = 0.f;
-        float m_headAngleJump = 1.6f;
-        float m_headAngleLand = 1.f;
-        float m_deltaAngleFactorJump = 12.f;
-        float m_deltaAngleFactorLand = 10.f;
+        float m_headAngleJump = 1.2f;
+        float m_headAngleLand = 1.4f;
+        float m_deltaAngleFactorJump = 10.f;
+        float m_deltaAngleFactorLand = 11.f;
 
         // Sprint FoV
         bool m_sprintFoVEnabled = true;
