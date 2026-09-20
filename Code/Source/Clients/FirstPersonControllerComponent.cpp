@@ -1558,10 +1558,12 @@ namespace FirstPersonController
         if (*inputId == m_rotateYawEventId)
         {
             m_yawValue += value;
+            return;
         }
         else if (*inputId == m_rotatePitchEventId)
         {
             m_pitchValue += value;
+            return;
         }
         else if (*inputId == m_sprintEventId)
         {
@@ -1625,10 +1627,12 @@ namespace FirstPersonController
         if (*inputId == m_rotateYawEventId)
         {
             m_yawValue += value;
+            return;
         }
         else if (*inputId == m_rotatePitchEventId)
         {
             m_pitchValue += value;
+            return;
         }
         // Repeatedly update the sprint value since we are setting it to 1 under certain movement conditions
         else if (*inputId == m_sprintEventId)
