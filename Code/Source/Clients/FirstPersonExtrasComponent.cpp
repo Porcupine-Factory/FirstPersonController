@@ -45,13 +45,13 @@ namespace FirstPersonController
                 ->Field("Complete Head Angle Land Velocity", &FirstPersonExtrasComponent::m_completeHeadLandVelocity)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " " + Physics::NameConstants::GetSpeedUnit())
 
-                // Sprint FoV Group
-                ->Field("Sprint FoV", &FirstPersonExtrasComponent::m_sprintFoVEnabled)
-                ->Field("FoV Increase When Sprinting", &FirstPersonExtrasComponent::m_sprintFoVDelta)
+                // Sprint FOV Group
+                ->Field("Sprint FOV", &FirstPersonExtrasComponent::m_sprintFOVEnabled)
+                ->Field("FOV Increase When Sprinting", &FirstPersonExtrasComponent::m_sprintFOVDelta)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " deg")
-                ->Field("Sprint FoV Lerp Time", &FirstPersonExtrasComponent::m_sprintFoVLerpTime)
+                ->Field("Sprint FOV Lerp Time", &FirstPersonExtrasComponent::m_sprintFOVLerpTime)
                 ->Attribute(AZ::Edit::Attributes::Suffix, " s")
-                ->Attribute(AZ::Edit::Attributes::Min, MinSprintFoVLerpTime)
+                ->Attribute(AZ::Edit::Attributes::Min, MinSprintFOVLerpTime)
 
                 // Headbob group
                 ->Field("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
@@ -157,21 +157,21 @@ namespace FirstPersonController
                     ->Attribute(AZ::Edit::Attributes::Min, 0.f)
                     ->Attribute(Visibility, &FirstPersonExtrasComponent::GetJumpHeadTiltEnabled)
 
-                    // Sprint FoV group
-                    ->GroupElementToggle("Sprint FoV", &FirstPersonExtrasComponent::m_sprintFoVEnabled)
+                    // Sprint FOV group
+                    ->GroupElementToggle("Sprint FOV", &FirstPersonExtrasComponent::m_sprintFOVEnabled)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
                     ->Attribute(AZ::Edit::Attributes::ChangeNotify, AZ::Edit::PropertyRefreshLevels::AttributesAndValues)
                     ->DataElement(
                         nullptr,
-                        &FirstPersonExtrasComponent::m_sprintFoVDelta,
-                        "FoV Increase When Sprinting",
+                        &FirstPersonExtrasComponent::m_sprintFOVDelta,
+                        "FOV Increase When Sprinting",
                         "The increase in the camera's field of view while sprinting.")
                     ->DataElement(
                         nullptr,
-                        &FirstPersonExtrasComponent::m_sprintFoVLerpTime,
-                        "Sprint FoV Lerp Time",
+                        &FirstPersonExtrasComponent::m_sprintFOVLerpTime,
+                        "Sprint FOV Lerp Time",
                         "The time it takes to get to the maximum field of view when sprinting, and the time it takes to get back.")
-                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetSprintFoVEnabled)
+                    ->Attribute(Visibility, &FirstPersonExtrasComponent::GetSprintFOVEnabled)
 
                     ->GroupElementToggle("Headbob", &FirstPersonExtrasComponent::m_headbobEnabled)
                     ->Attribute(AZ::Edit::Attributes::AutoExpand, false)
@@ -410,14 +410,14 @@ namespace FirstPersonController
                 ->Event("Set Delta Angle Factor Land", &FirstPersonExtrasComponentRequests::SetDeltaAngleFactorLand)
                 ->Event("Get Complete Head Land Velocity", &FirstPersonExtrasComponentRequests::GetCompleteHeadLandVelocity)
                 ->Event("Set Complete Head Land Velocity", &FirstPersonExtrasComponentRequests::SetCompleteHeadLandVelocity)
-                ->Event("Get Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::GetSprintFoVEnabled)
-                ->Event("Set Sprint FoV Enabled", &FirstPersonExtrasComponentRequests::SetSprintFoVEnabled)
-                ->Event("Get Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::GetSprintFoVLerpTime)
-                ->Event("Set Sprint FoV Lerp Time", &FirstPersonExtrasComponentRequests::SetSprintFoVLerpTime)
-                ->Event("Get Sprinting FoV", &FirstPersonExtrasComponentRequests::GetSprintingFoV)
-                ->Event("Set Sprinting FoV", &FirstPersonExtrasComponentRequests::SetSprintingFoV)
-                ->Event("Get Walking FoV", &FirstPersonExtrasComponentRequests::GetWalkingFoV)
-                ->Event("Set Walking FoV", &FirstPersonExtrasComponentRequests::SetWalkingFoV)
+                ->Event("Get Sprint FOV Enabled", &FirstPersonExtrasComponentRequests::GetSprintFOVEnabled)
+                ->Event("Set Sprint FOV Enabled", &FirstPersonExtrasComponentRequests::SetSprintFOVEnabled)
+                ->Event("Get Sprint FOV Lerp Time", &FirstPersonExtrasComponentRequests::GetSprintFOVLerpTime)
+                ->Event("Set Sprint FOV Lerp Time", &FirstPersonExtrasComponentRequests::SetSprintFOVLerpTime)
+                ->Event("Get Sprinting FOV", &FirstPersonExtrasComponentRequests::GetSprintingFOV)
+                ->Event("Set Sprinting FOV", &FirstPersonExtrasComponentRequests::SetSprintingFOV)
+                ->Event("Get Walking FOV", &FirstPersonExtrasComponentRequests::GetWalkingFOV)
+                ->Event("Set Walking FOV", &FirstPersonExtrasComponentRequests::SetWalkingFOV)
                 ->Event("Get Headbob Enabled", &FirstPersonExtrasComponentRequests::GetHeadbobEnabled)
                 ->Event("Set Headbob Enabled", &FirstPersonExtrasComponentRequests::SetHeadbobEnabled)
                 ->Event("Get Headbob Starting Direction", &FirstPersonExtrasComponentRequests::GetHeadbobStartingDirection)
@@ -583,9 +583,9 @@ namespace FirstPersonController
                 m_cameraEntityId = AZ::EntityId();
             }
         }
-        // Whenever a camera is added, use its FoV as the walking FoV value
-        Camera::CameraRequestBus::EventResult(m_walkFoV, m_cameraEntityId, &Camera::CameraComponentRequests::GetFovDegrees);
-        m_sprintFoV = m_walkFoV + m_sprintFoVDelta;
+        // Whenever a camera is added, use its FOV as the walking FOV value
+        Camera::CameraRequestBus::EventResult(m_walkFOV, m_cameraEntityId, &Camera::CameraComponentRequests::GetFovDegrees);
+        m_sprintFOV = m_walkFOV + m_sprintFOVDelta;
     }
 
     void FirstPersonExtrasComponent::OnActiveViewChanged(const AZ::EntityId& activeEntityId)
@@ -850,9 +850,9 @@ namespace FirstPersonController
             m_prevJumpValue = *m_jumpValue;
     }
 
-    void FirstPersonExtrasComponent::PerformSprintFoV(const float deltaTime)
+    void FirstPersonExtrasComponent::PerformSprintFOV(const float deltaTime)
     {
-        if (!m_sprintFoVEnabled)
+        if (!m_sprintFOVEnabled)
             return;
 
         const float currentSpeed = m_firstPersonControllerObject->m_movingUpInclineSlowed
@@ -871,29 +871,29 @@ namespace FirstPersonController
             });
         const bool groundedRecently = !notRecentlyGrounded;
 
-        // Scale the FoV based on the current speed, assuming forward is the fastest direction
+        // Scale the FOV based on the current speed, assuming forward is the fastest direction
         if (m_firstPersonControllerObject != nullptr &&
             (m_firstPersonControllerObject->m_sprintInAir || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
              groundedRecently) &&
             GetSprinting() &&
             (currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) >=
-                m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
+                m_sprintFOVTimeAccumulator / m_sprintFOVLerpTime)
         {
-            m_sprintFoVTimeAccumulator += deltaTime;
+            m_sprintFOVTimeAccumulator += deltaTime;
             if ((currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) <
-                m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime)
-                m_sprintFoVTimeAccumulator =
-                    (currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) * m_sprintFoVLerpTime;
+                m_sprintFOVTimeAccumulator / m_sprintFOVLerpTime)
+                m_sprintFOVTimeAccumulator =
+                    (currentSpeed - walkSpeed) / (sprintScaleForward * forwardScale * walkSpeed - walkSpeed) * m_sprintFOVLerpTime;
         }
         else
         {
-            m_sprintFoVTimeAccumulator -= deltaTime;
-            if (m_sprintFoVTimeAccumulator < 0.f)
-                m_sprintFoVTimeAccumulator = 0.f;
+            m_sprintFOVTimeAccumulator -= deltaTime;
+            if (m_sprintFOVTimeAccumulator < 0.f)
+                m_sprintFOVTimeAccumulator = 0.f;
         }
-        // Lerp the FoV and apply it
-        const float newCameraFoV = AZ::Lerp(m_walkFoV, m_sprintFoV, m_sprintFoVTimeAccumulator / m_sprintFoVLerpTime);
-        Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraComponentRequests::SetFovDegrees, newCameraFoV);
+        // Lerp the FOV and apply it
+        const float newCameraFOV = AZ::Lerp(m_walkFOV, m_sprintFOV, m_sprintFOVTimeAccumulator / m_sprintFOVLerpTime);
+        Camera::CameraRequestBus::Event(m_cameraEntityId, &Camera::CameraComponentRequests::SetFovDegrees, newCameraFOV);
     }
 
     bool FirstPersonExtrasComponent::GetSprinting()
@@ -1304,7 +1304,7 @@ namespace FirstPersonController
         // Queue up jumps
         QueueJump(deltaTime, tickTimestepNetwork);
 
-        PerformSprintFoV(deltaTime);
+        PerformSprintFOV(deltaTime);
 
         if (tickTimestepNetwork == 0)
         {
@@ -1598,41 +1598,41 @@ namespace FirstPersonController
         else
             m_completeHeadLandVelocity = completeHeadLandVelocity;
     }
-    bool FirstPersonExtrasComponent::GetSprintFoVEnabled() const
+    bool FirstPersonExtrasComponent::GetSprintFOVEnabled() const
     {
-        return m_sprintFoVEnabled;
+        return m_sprintFOVEnabled;
     }
-    void FirstPersonExtrasComponent::SetSprintFoVEnabled(const bool sprintFoVEnabled)
+    void FirstPersonExtrasComponent::SetSprintFOVEnabled(const bool sprintFOVEnabled)
     {
-        m_sprintFoVEnabled = sprintFoVEnabled;
+        m_sprintFOVEnabled = sprintFOVEnabled;
     }
-    float FirstPersonExtrasComponent::GetSprintFoVLerpTime() const
+    float FirstPersonExtrasComponent::GetSprintFOVLerpTime() const
     {
-        return m_sprintFoVLerpTime;
+        return m_sprintFOVLerpTime;
     }
-    void FirstPersonExtrasComponent::SetSprintFoVLerpTime(const float sprintFoVLerpTime)
+    void FirstPersonExtrasComponent::SetSprintFOVLerpTime(const float sprintFOVLerpTime)
     {
-        if (sprintFoVLerpTime < MinSprintFoVLerpTime)
-            m_sprintFoVLerpTime = MinSprintFoVLerpTime;
+        if (sprintFOVLerpTime < MinSprintFOVLerpTime)
+            m_sprintFOVLerpTime = MinSprintFOVLerpTime;
         else
-            m_sprintFoVLerpTime = sprintFoVLerpTime;
+            m_sprintFOVLerpTime = sprintFOVLerpTime;
     }
-    float FirstPersonExtrasComponent::GetSprintingFoV() const
+    float FirstPersonExtrasComponent::GetSprintingFOV() const
     {
-        return m_sprintFoV;
+        return m_sprintFOV;
     }
-    void FirstPersonExtrasComponent::SetSprintingFoV(const float sprintFoV)
+    void FirstPersonExtrasComponent::SetSprintingFOV(const float sprintFOV)
     {
-        m_sprintFoV = sprintFoV;
-        m_sprintFoVDelta = m_sprintFoV - m_walkFoV;
+        m_sprintFOV = sprintFOV;
+        m_sprintFOVDelta = m_sprintFOV - m_walkFOV;
     }
-    float FirstPersonExtrasComponent::GetWalkingFoV() const
+    float FirstPersonExtrasComponent::GetWalkingFOV() const
     {
-        return m_walkFoV;
+        return m_walkFOV;
     }
-    void FirstPersonExtrasComponent::SetWalkingFoV(const float walkFoV)
+    void FirstPersonExtrasComponent::SetWalkingFOV(const float walkFOV)
     {
-        m_walkFoV = walkFoV;
+        m_walkFOV = walkFOV;
     }
     bool FirstPersonExtrasComponent::GetHeadbobEnabled() const
     {

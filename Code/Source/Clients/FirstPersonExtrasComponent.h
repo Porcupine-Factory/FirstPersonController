@@ -85,14 +85,14 @@ namespace FirstPersonController
         void SetDeltaAngleFactorLand(const float deltaAngleFactorLand) override;
         float GetCompleteHeadLandVelocity() const override;
         void SetCompleteHeadLandVelocity(const float completeHeadLandVelocity) override;
-        bool GetSprintFoVEnabled() const override;
-        void SetSprintFoVEnabled(const bool sprintFoVEnabled) override;
-        float GetSprintFoVLerpTime() const override;
-        void SetSprintFoVLerpTime(const float sprintFoVLerpTime) override;
-        float GetSprintingFoV() const override;
-        void SetSprintingFoV(const float sprintFoV) override;
-        float GetWalkingFoV() const override;
-        void SetWalkingFoV(const float walkFoV) override;
+        bool GetSprintFOVEnabled() const override;
+        void SetSprintFOVEnabled(const bool sprintFOVEnabled) override;
+        float GetSprintFOVLerpTime() const override;
+        void SetSprintFOVLerpTime(const float sprintFOVLerpTime) override;
+        float GetSprintingFOV() const override;
+        void SetSprintingFOV(const float sprintFOV) override;
+        float GetWalkingFOV() const override;
+        void SetWalkingFOV(const float walkFOV) override;
         bool GetHeadbobEnabled() const override;
         void SetHeadbobEnabled(const bool headbobEnabled) override;
         bool GetHeadbobStartingDirection() const override;
@@ -170,7 +170,7 @@ namespace FirstPersonController
         void ProcessInput(const float deltaTime, const AZ::u8 tickTimestepNetwork);
 
         // Change the camera field of view when sprinting
-        void PerformSprintFoV(const float deltaTime);
+        void PerformSprintFOV(const float deltaTime);
         bool GetSprinting();
 
         // Jump Head Tilt
@@ -222,16 +222,16 @@ namespace FirstPersonController
         float m_deltaAngleFactorJump = 10.f;
         float m_deltaAngleFactorLand = 11.f;
 
-        // Sprint FoV
-        bool m_sprintFoVEnabled = true;
+        // Sprint FOV
+        bool m_sprintFOVEnabled = true;
         bool m_sprintingObstructedCheck[16] = {};
         AZ::u8 m_sprintingObstructedIndex = 0;
-        float m_sprintFoVTimeAccumulator = 0.f;
-        static constexpr float MinSprintFoVLerpTime = 0.0001f;
-        float m_sprintFoVLerpTime = 0.5f;
-        float m_sprintFoV = 90.f;
-        float m_sprintFoVDelta = 2.5f;
-        float m_walkFoV = 80.f;
+        float m_sprintFOVTimeAccumulator = 0.f;
+        static constexpr float MinSprintFOVLerpTime = 0.0001f;
+        float m_sprintFOVLerpTime = 0.5f;
+        float m_sprintFOV = 90.f;
+        float m_sprintFOVDelta = 2.5f;
+        float m_walkFOV = 80.f;
 
         // Headbob
         void UpdateHeadbob(const float deltaTime);
