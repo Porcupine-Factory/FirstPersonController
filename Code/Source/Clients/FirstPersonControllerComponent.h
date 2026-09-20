@@ -771,9 +771,9 @@ namespace FirstPersonController
         PidController<float>::DerivativeCalculationMode m_crouchDownDerivativeMode = PidController<float>::Velocity;
 
         // Stand Up PID Parameters
-        float m_standUpProportionalGain = 200.f;
+        float m_standUpProportionalGain = 400.f;
         float m_standUpIntegralGain = 0.f;
-        float m_standUpDerivativeGain = 18.f;
+        float m_standUpDerivativeGain = 24.f;
         float m_standUpIntegralWindupLimit = 100.f;
         float m_standUpDerivativeFilterAlpha = 0.8f;
         PidController<float> m_standUpPidController;
