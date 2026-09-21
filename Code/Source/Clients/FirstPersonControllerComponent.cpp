@@ -2045,15 +2045,23 @@ namespace FirstPersonController
 
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
             if (tickTimestepNetwork == 2)
+            {
+                if (!m_performedRotationOnTick)
+                    m_cumulativeLookRotationDelta += m_networkFPCControllerObject->GetLookRotationDelta();
+                else
+                    m_cumulativeLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta();
+                m_performedRotationOnTick = false;
                 return;
+            }
         }
         else if (m_networkFPCControllerObject != nullptr)
         {
-            // Retrieve the look rotation delta from NetworkFPC, only apply it when there's a new value
+            // Perform the camera rotation by slicing the change that has been accumulated to the character's heading
+            m_performedRotationOnTick = true;
             const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
             m_networkFPCRotationSliceAccumulator += 1.f / slice;
 #ifdef NETWORKFPC
-            newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta() / slice;
+            newLookRotationDelta = m_cumulativeLookRotationDelta / slice;
             // Compensate the character's yaw from the camera overshooting due to network jitter
             if (m_networkFPCRotationSliceAccumulator > 1.f)
                 m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + newLookRotationDelta.GetZ()) - m_currentHeading);
