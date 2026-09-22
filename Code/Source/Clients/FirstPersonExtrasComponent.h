@@ -201,7 +201,7 @@ namespace FirstPersonController
         bool m_init = true;
 
         // Exhausted jumping
-        float m_jumpExhaustionFactor = 0.4f;
+        float m_jumpExhaustionFactor = 0.5f;
         float m_jumpDefaultHoldDistance = 0.8f;
         float m_jumpDefaultInitialVelocity = 6.f;
 
@@ -214,7 +214,7 @@ namespace FirstPersonController
         bool m_tiltLanded = false;
         bool m_moveHeadDown = true;
         float m_totalHeadAngle = 0.f;
-        float m_completeHeadLandVelocity = 8.1f;
+        float m_completeHeadLandVelocity = 0.9f;
         float m_currentHeadPitchAngle = 0.f;
         float m_deltaAngle = 0.f;
         float m_headAngleJump = 1.2f;
