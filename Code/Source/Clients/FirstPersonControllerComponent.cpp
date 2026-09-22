@@ -2886,7 +2886,7 @@ namespace FirstPersonController
 
             // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
             // and camera distance calculation for framerate/timestep-independence.
-            for (int i = 0; i < numSubsteps; ++i)
+            for (AZ::u32 substep = 0; substep < numSubsteps; ++substep)
             {
                 // Current PID error along Z: Difference between target and current Z travel
                 const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
@@ -3069,7 +3069,7 @@ namespace FirstPersonController
 
                 // Substep loop divides deltaTime into smaller substeps for the PID computation, velocity update,
                 // and camera distance calculation for framerate/timestep-independence.
-                for (int i = 0; i < numSubsteps; ++i)
+                for (AZ::u32 substep = 0; substep < numSubsteps; ++substep)
                 {
                     // Current PID error along Z: Difference between target and current Z travel
                     const float currentZError = TargetLocalZOffset - m_cameraLocalZTravelDistance;
