@@ -21,7 +21,7 @@ namespace FirstPersonController
     AZ_CVAR(
         float,
         cl_VelocityTolerance,
-        2.f,
+        1.2f,
         nullptr,
         AZ::ConsoleFunctorFlags::Null,
         "The tolerance used for XY obstruction checks, set this to a large number to avoid false-positive checks");

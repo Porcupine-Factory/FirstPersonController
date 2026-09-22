@@ -1993,9 +1993,9 @@ namespace FirstPersonController
         m_cameraRotationAnglesDelta.SetX(0.f);
 
         if (m_rotationDamp * 0.01f <= 1.f)
-            m_newLookRotationDelta = m_newLookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp * 0.01f);
+            m_lookRotationDelta = m_lookRotationDelta.Slerp(targetLookRotationDelta, m_rotationDamp * 0.01f);
         else
-            m_newLookRotationDelta = targetLookRotationDelta;
+            m_lookRotationDelta = targetLookRotationDelta;
     }
 
     void FirstPersonControllerComponent::UpdateRotation(const float deltaTime, const AZ::u8 tickTimestepNetwork)
@@ -2004,7 +2004,7 @@ namespace FirstPersonController
             return;
 
         SmoothRotation();
-        AZ::Vector3 newLookRotationDelta = m_newLookRotationDelta.GetEulerRadians();
+        AZ::Vector3 lookRotationDelta = m_lookRotationDelta.GetEulerRadians();
 
         // Get the character's transform
         AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
@@ -2023,7 +2023,7 @@ namespace FirstPersonController
 
             // Apply the yaw to the character
             if (!m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick)
-                characterTransform->RotateAroundLocalZ(newLookRotationDelta.GetZ());
+                characterTransform->RotateAroundLocalZ(lookRotationDelta.GetZ());
             else if (m_scriptSetCurrentHeadingTick)
                 characterTransform->SetLocalRotation(AZ::Vector3(
                     characterTransform->GetLocalRotation().GetX(), characterTransform->GetLocalRotation().GetY(), m_currentHeading));
@@ -2038,7 +2038,6 @@ namespace FirstPersonController
                     m_networkFPCCameraAligned = true;
                 }
 #ifdef NETWORKFPC
-                m_networkFPCControllerObject->SetLookRotationDelta(newLookRotationDelta);
                 m_networkFPCControllerObject->SetYawDeltaOvershoot(0.f);
 #endif
             }
@@ -2046,10 +2045,10 @@ namespace FirstPersonController
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
             if (tickTimestepNetwork == 2)
             {
-                if (!m_performedRotationOnTick)
-                    m_cumulativeLookRotationDelta += m_networkFPCControllerObject->GetLookRotationDelta();
+                if (m_performedRotationOnTick)
+                    m_cumulativeLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
                 else
-                    m_cumulativeLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta();
+                    m_cumulativeLookRotationDelta += m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
                 m_performedRotationOnTick = false;
                 return;
             }
@@ -2061,10 +2060,10 @@ namespace FirstPersonController
             const float slice = AZ::GetMax(m_prevNetworkFPCDeltaTime / deltaTime, 1.f);
             m_networkFPCRotationSliceAccumulator += 1.f / slice;
 #ifdef NETWORKFPC
-            newLookRotationDelta = m_cumulativeLookRotationDelta / slice;
+            lookRotationDelta = m_cumulativeLookRotationDelta / slice;
             // Compensate the character's yaw from the camera overshooting due to network jitter
             if (m_networkFPCRotationSliceAccumulator > 1.f)
-                m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + newLookRotationDelta.GetZ()) - m_currentHeading);
+                m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + lookRotationDelta.GetZ()) - m_currentHeading);
 #endif
         }
 
@@ -2077,7 +2076,7 @@ namespace FirstPersonController
                 // Apply pitch to camera's local rotation, yaw follows the parent character entity
                 m_cameraRotationTransform->SetLocalRotation(AZ::Vector3(
                     AZ::GetClamp(
-                        m_cameraRotationTransform->GetLocalRotation().GetX() + newLookRotationDelta.GetX(),
+                        m_cameraRotationTransform->GetLocalRotation().GetX() + lookRotationDelta.GetX(),
                         m_cameraPitchMinAngle,
                         m_cameraPitchMaxAngle),
                     m_cameraRotationTransform->GetLocalRotation().GetY(),
@@ -2087,10 +2086,10 @@ namespace FirstPersonController
             else if (m_addVelocityForTimestepVsTick && m_cameraInterpolation)
             {
                 // Follow the character's rotation and apply a delta to the pitch
-                m_cameraYaw += newLookRotationDelta.GetZ();
+                m_cameraYaw += lookRotationDelta.GetZ();
 
                 const float characterPitch = characterTransform->GetLocalRotation().GetX();
-                const float pitchDelta = newLookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
+                const float pitchDelta = lookRotationDelta.GetX() + (characterPitch - m_prevCharacterPitch);
                 float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(
                     AZ::Vector3(0.f, m_sphereCastsAxisDirectionPose.GetY(), m_sphereCastsAxisDirectionPose.GetZ()));
                 if (m_sphereCastsAxisDirectionPose.GetY() < 0.f)
@@ -2136,9 +2135,9 @@ namespace FirstPersonController
             else
             {
                 // Update yaw and pitch for camera's local rotation
-                m_cameraYaw += newLookRotationDelta.GetZ();
+                m_cameraYaw += lookRotationDelta.GetZ();
                 const AZ::Quaternion yawRotation = AZ::Quaternion::CreateRotationZ(m_cameraYaw);
-                m_cameraPitch = AZ::GetClamp(m_cameraPitch + newLookRotationDelta.GetX(), m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
+                m_cameraPitch = AZ::GetClamp(m_cameraPitch + lookRotationDelta.GetX(), m_cameraPitchMinAngle, m_cameraPitchMaxAngle);
                 const AZ::Quaternion pitchRotation = AZ::Quaternion::CreateRotationX(m_cameraPitch);
 
 #ifdef NETWORKFPC
@@ -4269,7 +4268,7 @@ namespace FirstPersonController
             m_sprintTotalCooldownTime = m_networkFPCControllerObject->GetSprintTotalCooldownTime();
             m_sprintCooldownTimer = m_networkFPCControllerObject->GetSprintCooldownTimer();
             m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
-            m_newLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDeltaQuat();
+            m_lookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_correctedVelocityXY = m_networkFPCControllerObject->GetCorrectedVelocityXY();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
@@ -4297,7 +4296,7 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetIsJumpStarting(m_onFirstJump || m_onFinalJump);
             m_networkFPCControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
-            m_networkFPCControllerObject->SetLookRotationDeltaQuat(m_newLookRotationDelta);
+            m_networkFPCControllerObject->SetLookRotationDelta(m_lookRotationDelta);
             m_networkFPCControllerObject->SetVelocityFromImpulse(m_velocityFromImpulse);
             m_networkFPCControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
             m_networkFPCControllerObject->SetApplyVelocityXY(m_applyVelocityXY);
