@@ -1389,10 +1389,6 @@ namespace FirstPersonController
         // This number can be altered using the RequestBus
         m_sprintPauseTime = (m_sprintTotalCooldownTime > m_sprintMaxTime) ? 0.f : 0.1f * m_sprintTotalCooldownTime;
 
-        // AZ_Printf("First Person Controller Component", "m_capsuleHeight = %.10f", m_capsuleHeight);
-        // AZ_Printf("First Person Controller Component", "m_capsuleRadius = %.10f", m_capsuleRadius);
-        // AZ_Printf("First Person Controller Component", "m_maxGroundedAngleDegrees = %.10f", m_maxGroundedAngleDegrees);
-
         FirstPersonControllerComponentNotificationBus::Broadcast(
             &FirstPersonControllerComponentNotificationBus::Events::OnFPCActivated, GetEntityId());
 
@@ -1590,7 +1586,6 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 return;
-                // print the local user ID and the action name CRC
                 // AZ_Printf("Pressed", it_event.first->ToString().c_str());
             }
         }
@@ -1615,7 +1610,6 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 return;
-                // print the local user ID and the action name CRC
                 // AZ_Printf("Released", it_event.first->ToString().c_str());
             }
         }
@@ -1814,8 +1808,7 @@ namespace FirstPersonController
         m_activeCameraEntity = GetEntityPtr(m_cameraEntityId);
         if (m_activeCameraEntity)
         {
-            // Calculate initial eye height based on the difference between the
-            // camera and character entities' translations, projected along the pose axis.
+            // Calculate initial eye height based on the difference between the camera and character.
             if (m_networkFPCObject == nullptr)
             {
                 AZ::Vector3 characterWorldTranslation;
@@ -1951,8 +1944,7 @@ namespace FirstPersonController
     {
         if (m_addVelocityForTimestepVsTick && m_cameraInterpolation)
         {
-            // Capture character's translation after each physics simulation step. This ensures camera lerp uses
-            // the most recent post-simulation transform.
+            // Capture character's translation after each physics simulation step.
             m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation;
             AZ::TransformBus::EventResult(m_currentCharacterEyeTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
             const AZ::Vector3 characterUpDirection =
@@ -2416,7 +2408,7 @@ namespace FirstPersonController
                 m_targetVelocity *= m_movingUpInclineFactor;
                 m_nextLikelyTargetVelocity *= m_movingUpInclineFactor;
             }
-            // else here would be explicitly moving down an incline
+            // Putting else here would be explicitly moving down an incline
         }
         else if (!m_instantVelocityRotation)
         {
@@ -2840,8 +2832,7 @@ namespace FirstPersonController
             m_cameraLocalZTravelDistance > -1.f * m_crouchDistance)
             m_crouching = false;
 
-        // Determine if starting or switching to crouch down movement. Initiates when crouching is active, not already moving down,
-        // and currently standing or near standing position
+        // Determine if starting or switching to crouch down movement.
         const bool isStartingCrouchDown = m_crouching && !m_crouchingDownMove &&
             (m_standing || AZ::IsClose(m_cameraLocalZTravelDistance, 0.f, 0.01f) ||
              m_cameraLocalZTravelDistance > -m_crouchDistance + 0.01f);
@@ -2891,15 +2882,10 @@ namespace FirstPersonController
             // and camera distance calculation for framerate/timestep-independence.
             for (AZ::u32 substep = 0; substep < numSubsteps; ++substep)
             {
-                // Current PID error along Z: Difference between target and current Z travel
                 const float currentZError = targetLocalZOffset - m_cameraLocalZTravelDistance;
-                // Get acceleration from PID controller based on error, time step, and current position
                 const float zAcceleration = m_crouchDownPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
-                // Update velocity with acceleration over time
                 m_currentCrouchVelocity += zAcceleration * subDeltaTime;
-                // Compute delta travel for this substep
                 const float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
-                // Apply delta to local Z travel distance
                 m_cameraLocalZTravelDistance += cameraTravelDelta;
             }
 
@@ -2931,15 +2917,10 @@ namespace FirstPersonController
                 // Complete settle if duration met. Reset velocity, end movement, set crouched state, and notify
                 if (m_crouchDownSettleTimer >= CrouchSettleDuration)
                 {
-                    // Snap camera to target position
                     m_cameraLocalZTravelDistance = targetLocalZOffset;
-                    // Zero velocity after settle
                     m_currentCrouchVelocity = 0.f;
-                    // End crouch down phase
                     m_crouchingDownMove = false;
-                    // Mark as fully crouched
                     m_crouched = true;
-                    // Reset timer for next use
                     m_crouchDownSettleTimer = 0.f;
                     FirstPersonControllerComponentNotificationBus::Event(
                         GetEntityId(), &FirstPersonControllerComponentNotifications::OnCrouched);
@@ -2951,8 +2932,7 @@ namespace FirstPersonController
                 m_crouchDownSettleTimer = 0.f;
             }
         }
-        // Determine if starting or switching to stand up movement. Initiates when not crouching, not already standing up,
-        // and currently crouched or near crouched position
+        // Determine if starting or switching to stand up movement.
         const bool isStartingStandUp = !m_crouching && !m_standingUpMove &&
             (m_crouched || AZ::IsClose(m_cameraLocalZTravelDistance, -m_crouchDistance, 0.01f) ||
              fabs(m_cameraLocalZTravelDistance) > 0.01f);
@@ -3073,15 +3053,10 @@ namespace FirstPersonController
                 // and camera distance calculation for framerate/timestep-independence.
                 for (AZ::u32 substep = 0; substep < numSubsteps; ++substep)
                 {
-                    // Current PID error along Z: Difference between target and current Z travel
                     const float currentZError = TargetLocalZOffset - m_cameraLocalZTravelDistance;
-                    // Get acceleration from PID controller based on error, time step, and current position
                     const float zAcceleration = m_standUpPidController.Output(currentZError, subDeltaTime, m_cameraLocalZTravelDistance);
-                    // Update velocity with acceleration over time
                     m_currentCrouchVelocity += zAcceleration * subDeltaTime;
-                    // Compute delta travel for this substep
                     const float cameraTravelDelta = m_currentCrouchVelocity * subDeltaTime;
-                    // Apply delta to local Z travel distance
                     m_cameraLocalZTravelDistance += cameraTravelDelta;
                 }
 
@@ -3271,18 +3246,35 @@ namespace FirstPersonController
         if (m_applyVelocityXY != inputTargetVelocityXYWorld)
         {
             if (m_instantVelocityRotation)
-            {
                 m_applyVelocityXY = AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
                                                     .TransformVector(AZ::Vector3(LerpVelocityXY(inputTargetVelocityXY, deltaTime))));
+            else
+                m_applyVelocityXY = LerpVelocityXY(inputTargetVelocityXYWorld, deltaTime);
+            // Capture the state of the member variables that get modified in LerpVelocityXY(...)
+            const auto backup = AZStd::make_tuple(
+                m_totalLerpTime,
+                m_lerpTime,
+                m_opposingDecelFactorApplied,
+                m_accelerating,
+                m_decelerationFactorApplied,
+                m_decelerationFactor,
+                m_sprintAccumulatedAccel);
+            // Compute the next likely apply velocity XY
+            if (m_instantVelocityRotation)
                 m_nextLikelyApplyVelocityXY =
                     AZ::Vector2(AZ::Quaternion::CreateRotationZ(m_currentHeading)
                                     .TransformVector(AZ::Vector3(LerpVelocityXY(inputTargetVelocityXY, deltaTime))));
-            }
             else
-            {
-                m_applyVelocityXY = LerpVelocityXY(inputTargetVelocityXYWorld, deltaTime);
                 m_nextLikelyApplyVelocityXY = LerpVelocityXY(inputTargetVelocityXYWorld, deltaTime);
-            }
+            // Retrieve the values of the member variables from before
+            AZStd::tie(
+                m_totalLerpTime,
+                m_lerpTime,
+                m_opposingDecelFactorApplied,
+                m_accelerating,
+                m_decelerationFactorApplied,
+                m_decelerationFactor,
+                m_sprintAccumulatedAccel) = backup;
         }
         else
         {
@@ -3309,10 +3301,6 @@ namespace FirstPersonController
         // static AZ::Vector2 prevVelocity = m_applyVelocityXY;
         // AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocityXY)/deltaTime);
         // prevVelocity = m_applyVelocityXY;
-        // AZ::Vector3 pos = GetEntity()->GetTransform()->GetWorldTM().GetTranslation();
-        // AZ_Printf("First Person Controller Component", "X Translation = %.10f", pos.GetX());
-        // AZ_Printf("First Person Controller Component", "Y Translation = %.10f", pos.GetY());
-        // AZ_Printf("First Person Controller Component", "Z Translation = %.10f", pos.GetZ());
         // AZ_Printf("First Person Controller Component","");
     }
 
@@ -3637,8 +3625,7 @@ namespace FirstPersonController
             m_scriptSetGroundCloseTick = false;
         }
 
-        // Logic for handling ground close detection for Coyote Time application (e.g. moving down from a shallow to a steeper inclined
-        // surface)
+        // Logic for handling ground close detection for Coyote Time application (e.g. moving down from a shallow to a steeper incline)
         if (m_coyoteTime > 0.f)
         {
             // When the radius percentage increase is set to less than or equal to -100% then use a raycast instead
@@ -4516,7 +4503,6 @@ namespace FirstPersonController
         if (m_cameraInterpolation != cameraInterpolation)
         {
             m_cameraInterpolation = cameraInterpolation;
-
             if (m_activeCameraEntity)
             {
                 InitializeCameraTranslation();
@@ -5862,8 +5848,7 @@ namespace FirstPersonController
     {
         return m_coyoteTimeTracksLastNormal;
     }
-    // GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() is not exposed to the request bus, it's used for the visibility attribute in the
-    // editor
+    // GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() is not exposed to the request bus, it's used for visibility in the editor
     bool FirstPersonControllerComponent::GetCoyoteTimeGreaterThanZeroAndNoGravityDuring() const
     {
         return !m_applyGravityDuringCoyoteTime && GetCoyoteTimeGreaterThanZero();
@@ -6386,13 +6371,7 @@ namespace FirstPersonController
     }
     void FirstPersonControllerComponent::SetCrouchDistance(const float crouchDistance)
     {
-        // Calculate the maximum allowable crouch distance based on the capsule dimensions.
-        // The crouch distance cannot exceed the capsule height minus twice the radius to ensure
-        // the capsule remains valid (height must be at least 2 * radius).
         const float maxCrouchDistance = m_capsuleHeight - 2.f * m_capsuleRadius;
-
-        // Issue a warning if the provided distance was adjusted to fit within capsule limits.
-        // This helps users understand why their input was modified and avoid unexpected behavior.
         if (crouchDistance > maxCrouchDistance)
         {
             AZ_Warning(
@@ -6405,9 +6384,6 @@ namespace FirstPersonController
                 m_capsuleRadius,
                 maxCrouchDistance);
         }
-
-        // Set the crouch distance, clamping it to the maximum allowable value if necessary.
-        // This prevents invalid collider states where the crouched height would be too small.
         m_crouchDistance = AZ::GetMin(crouchDistance, maxCrouchDistance);
     }
     bool FirstPersonControllerComponent::GetCrouchingDownMove() const
