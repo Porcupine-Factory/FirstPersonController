@@ -2048,10 +2048,12 @@ namespace FirstPersonController
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
             if (tickTimestepNetwork == 2)
             {
+#ifdef NETWORKFPC
                 if (m_performedRotationOnTick)
                     m_cumulativeLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
                 else
                     m_cumulativeLookRotationDelta += m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
+#endif
                 m_performedRotationOnTick = false;
                 return;
             }
@@ -2869,12 +2871,10 @@ namespace FirstPersonController
             // Ceiling used to round up the ratio (deltaTime / ReferenceSubDeltaTime).
             const AZ::u32 numSubsteps = aznumeric_cast<AZ::u32>(std::ceil(deltaTime / ReferenceSubDeltaTime));
             // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
-            // across the calculated numSubSteps. This ensures the total simulated time across all
-            // substeps exactly equals deltaTime.
+            // across the calculated numSubSteps.
             const float subDeltaTime = deltaTime / numSubsteps;
 
-            // Define position tolerance. Set to 2% of the total crouch distance to determine when the position is "close enough" to the
-            // target.
+            // Define position tolerance. Set to 2% of the total crouch distance to determine when the position is "close enough".
             // This prevents minor floating-point errors or small oscillations from delaying state transitions.
             const float crouchPositionTolerance = 0.02f * fabs(m_crouchDistance);
             // Define velocity tolerance. A small threshold (0.1 m/s) to check if velocity has sufficiently damped near zero,
@@ -2980,8 +2980,7 @@ namespace FirstPersonController
             // Ceiling used to round up the ratio (deltaTime / ReferenceSubDeltaTime).
             const AZ::u32 numSubsteps = aznumeric_cast<AZ::u32>(std::ceil(deltaTime / ReferenceSubDeltaTime));
             // Calculate actual sub-delta time for each substep by dividing the full deltaTime evenly
-            // across the calculated numSubSteps. This ensures the total simulated time across all
-            // substeps exactly equals deltaTime.
+            // across the calculated numSubSteps.
             const float subDeltaTime = deltaTime / numSubsteps;
 
             // Define tolerances similar to crouch down for consistency
