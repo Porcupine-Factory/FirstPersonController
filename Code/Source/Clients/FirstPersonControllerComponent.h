@@ -549,9 +549,9 @@ namespace FirstPersonController
         static Physics::Shape* GetSceneQueryHitShapePtr(const AzPhysics::SceneQueryHit& hit);
         static AZStd::vector<AZ::EntityId> GetPlayerEntityIdsOnServer();
         static AZStd::vector<AZStd::string> GetPlayerStringNetEntityIdsOnServer();
+        static AZStd::vector<AZStd::string> GetPlayerNetEntityIdStrings();
         static AZStd::vector<AZ::EntityId> GetNetBotEntityIdsOnServer();
         static AZStd::vector<AZStd::string> GetBotStringNetEntityIdsOnServer();
-        static AZStd::vector<AZStd::string> GetPlayerNetEntityIdStrings();
         static AZStd::vector<AZStd::string> GetBotNetEntityIdStrings();
         static AZ::EntityId GetAutonomousClientOrHostEntityId();
         static bool GetIsNetworkingActive();

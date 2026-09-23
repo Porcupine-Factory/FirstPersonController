@@ -1247,7 +1247,10 @@ namespace FirstPersonController
                 ->Method("Get Scene Query Hit Restitution", &GetSceneQueryHitRestitution)
                 ->Method("Get Scene Query Hit Shape Pointer", &GetSceneQueryHitShapePtr)
                 ->Method("Get Player EntityIds On Server", &GetPlayerEntityIdsOnServer)
+                ->Method("Get Player String NetEntityIds On Server", &GetPlayerStringNetEntityIdsOnServer)
                 ->Method("Get Player NetEntityId Strings", &GetPlayerNetEntityIdStrings)
+                ->Method("Get Bot EntityIds On Server", &GetNetBotEntityIdsOnServer)
+                ->Method("Get Bot String NetEntityIds On Server", &GetBotStringNetEntityIdsOnServer)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client Or Host EntityId", &GetAutonomousClientOrHostEntityId)
                 ->Method("Get Is Networking Active", &GetIsNetworkingActive)
@@ -1402,7 +1405,7 @@ namespace FirstPersonController
             m_networkFPCControllerObject->SetPlayerStringNetEntityIds(m_playerStringNetEntityIds);
 #endif
         }
-        else if (m_isNetBot)
+        else if (m_isNetBot && (m_isServer || m_isHost))
         {
             GetBotStringNetEntityIdsOnServer();
         }
@@ -1422,7 +1425,7 @@ namespace FirstPersonController
             GetPlayerStringNetEntityIdsOnServer();
             GetBotStringNetEntityIdsOnServer();
         }
-        else if (m_isNetBot)
+        else if (m_isNetBot && (m_isServer || m_isHost))
         {
             GetBotStringNetEntityIdsOnServer();
         }
@@ -3541,9 +3544,7 @@ namespace FirstPersonController
             if (abs(hit.m_normal.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) > m_maxGroundedAngleDegrees)
             {
                 steepNormals.push_back(hit);
-                // AZ_Printf("First Person Controller Component", "Steep Angle EntityId = %s", hit.m_entityId.ToString().c_str());
                 // AZ_Printf("First Person Controller Component", "Steep Angle = %.10f",
-                // hit.m_normal.AngleSafeDeg(AZ::Vector3::CreateAxisZ()));
                 return true;
             }
 
