@@ -190,6 +190,8 @@ namespace FirstPersonController
         void SetGravity(const float gravity) override;
         AZ::Vector3 GetTargetVelocityWorld() const override;
         AZ::Vector3 GetTargetVelocityHeading() const override;
+        AZ::Vector3 GetNextLikelyTranslation() const override;
+        AZ::Vector3 GetNextNextLikelyTranslation() const override;
         AZ::Vector3 GetNextLikelyTargetVelocityWorld() const override;
         AZ::Vector3 GetNextLikelyTargetVelocityHeading() const override;
         float GetVelocityCloseTolerance() const override;
@@ -643,6 +645,9 @@ namespace FirstPersonController
         // Stores the previous frame tick deltaTime, previous physics timestep, and previous NetworkFPC tick deltaTime
         float m_prevTimestep = 1.f / 60.f;
         float m_prevNetworkFPCDeltaTime = 0.033f;
+
+        // Ideal frame time, determined based on the monitor's refresh rate in OnEntityActivated()
+        float m_frameTime = 1.f / 60.f;
 
         // Provides the functionality when AddVelocityForPhysicsTimestep is used
         void OnSceneSimulationStart(float physicsTimestep);

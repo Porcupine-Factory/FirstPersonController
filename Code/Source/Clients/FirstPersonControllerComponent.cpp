@@ -828,6 +828,8 @@ namespace FirstPersonController
                 ->Event("Set Gravity", &FirstPersonControllerComponentRequests::SetGravity)
                 ->Event("Get Target Velocity Using World", &FirstPersonControllerComponentRequests::GetTargetVelocityWorld)
                 ->Event("Get Target Velocity Using Character Heading", &FirstPersonControllerComponentRequests::GetTargetVelocityHeading)
+                ->Event("Get Next Likely Translation", &FirstPersonControllerComponentRequests::GetNextLikelyTranslation)
+                ->Event("Get Next Next Likely Translation", &FirstPersonControllerComponentRequests::GetNextNextLikelyTranslation)
                 ->Event(
                     "Get Next Likely Target Velocity Using World",
                     &FirstPersonControllerComponentRequests::GetNextLikelyTargetVelocityWorld)
@@ -1496,6 +1498,7 @@ namespace FirstPersonController
                     const AzPhysics::SystemConfiguration* config = AZ::Interface<AzPhysics::SystemInterface>::Get()->GetConfiguration();
 
                     // Disable camera interpolation if the physics timestep is less than or equal to the refresh time
+                    m_frameTime = 1.f / static_cast<float>(refreshRate);
                     if (config->m_fixedTimestep <= 1.f / static_cast<float>(refreshRate))
                         m_cameraInterpolation = false;
                 }
@@ -5146,6 +5149,18 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonControllerComponent::GetTargetVelocityHeading() const
     {
         return AZ::Quaternion::CreateRotationZ(-m_currentHeading).TransformVector(m_targetVelocity);
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetNextLikelyTranslation() const
+    {
+        const float deltaTime = m_physicsTimestepScaleFactor *
+            (m_networkFPCEnabled ? m_prevNetworkFPCDeltaTime : (m_addVelocityForTimestepVsTick ? m_prevTimestep : m_frameTime));
+        return GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_targetVelocity * deltaTime;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetNextNextLikelyTranslation() const
+    {
+        const float deltaTime = m_physicsTimestepScaleFactor *
+            (m_networkFPCEnabled ? m_prevNetworkFPCDeltaTime : (m_addVelocityForTimestepVsTick ? m_prevTimestep : m_frameTime));
+        return GetNextLikelyTranslation() + m_nextLikelyTargetVelocity * deltaTime;
     }
     AZ::Vector3 FirstPersonControllerComponent::GetNextLikelyTargetVelocityWorld() const
     {
