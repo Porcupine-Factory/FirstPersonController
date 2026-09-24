@@ -879,7 +879,9 @@ namespace FirstPersonController
         AZ::Vector3 m_linearImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector3 m_velocityFromImpulse = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_nextLikelyVelocityFromImpulse = AZ::Vector3::CreateZero();
         AZ::Vector2 m_applyVelocityXYFromImpulse = AZ::Vector2::CreateZero();
+        AZ::Vector2 m_nextLikelyApplyVelocityXYFromImpulse = AZ::Vector2::CreateZero();
         float m_impulseConstantDecel = 10.f;
         float m_impulsePrevConstantDecel = 10.f;
         float m_impulseLinearDamp = 4.f;

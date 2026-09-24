@@ -4073,6 +4073,7 @@ namespace FirstPersonController
         {
             // This follows a first-order homogeneous linear recurrence relation, similar to Stokes' Law
             m_velocityFromImpulse *= (1 - m_impulseLinearDamp * deltaTime);
+            m_nextLikelyVelocityFromImpulse = m_velocityFromImpulse * (1 - m_impulseLinearDamp * deltaTime);
             if (m_impulseConstantDecel != 0.f)
             {
                 m_initVelocityFromImpulse = m_velocityFromImpulse;
@@ -4084,7 +4085,9 @@ namespace FirstPersonController
 
         // Apply the velocity from the impulse
         m_applyVelocityXYFromImpulse = AZ::Vector2(m_velocityFromImpulse);
+        m_nextLikelyApplyVelocityXYFromImpulse = AZ::Vector2(m_nextLikelyVelocityFromImpulse);
         m_applyVelocityZ += m_velocityFromImpulse.GetZ();
+        m_nextLikelyApplyVelocityZ += m_nextLikelyVelocityFromImpulse.GetZ();
 
         // Accumulate the deltaTime
         m_impulseLerpTime += deltaTime;
@@ -4096,12 +4099,17 @@ namespace FirstPersonController
             m_impulseLerpTime = m_impulseTotalLerpTime;
             m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
             m_velocityFromImpulse = AZ::Vector3::CreateZero();
+            m_nextLikelyVelocityFromImpulse = AZ::Vector3::CreateZero();
             m_linearImpulse = AZ::Vector3::CreateZero();
             return;
         }
         // Set the applied velocity based on the time that was calculated for it to reach zero
         else if (m_impulseConstantDecel != 0.f)
+        {
             m_velocityFromImpulse = m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), m_impulseLerpTime / m_impulseTotalLerpTime);
+            m_nextLikelyVelocityFromImpulse =
+                m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), (m_impulseLerpTime + deltaTime) / m_impulseTotalLerpTime);
+        }
 
         // Debug print statements to observe the acceleration and timing
         // static AZ::Vector3 prevVelocity = m_velocityFromImpulse;
@@ -4137,15 +4145,13 @@ namespace FirstPersonController
         capsulePose.SetTranslation(
             GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
-        AzPhysics::ShapeCastRequest request = !m_applyVelocityXY.IsZero() || m_applyVelocityZ != 0.f || !m_physicsReportedVelocity.IsZero()
+        AzPhysics::ShapeCastRequest request = !m_targetVelocity.IsZero() || !m_physicsReportedVelocity.IsZero()
             ? AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
                   m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
                   m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
                   capsulePose,
-                  AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_physicsReportedVelocity,
-                  ((AZ::Vector3(m_applyVelocityXY.GetX(), m_applyVelocityXY.GetY(), m_applyVelocityZ) + m_physicsReportedVelocity) *
-                   deltaTime)
-                          .GetLength() +
+                  m_nextLikelyTargetVelocity + m_physicsReportedVelocity,
+                  ((m_nextLikelyTargetVelocity + m_physicsReportedVelocity) / 2.f * deltaTime).GetLength() +
                       m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
                   m_characterHitBy,
                   m_characterHitCollisionGroup,
@@ -4397,15 +4403,12 @@ namespace FirstPersonController
 
             // Start computing the next likely target velocity
             m_nextLikelyTargetVelocity = TiltVectorXCrossY(
-                (m_nextLikelyApplyVelocityXY + m_applyVelocityXYFromImpulse + AZ::Vector2(m_addVelocityWorld) +
+                (m_nextLikelyApplyVelocityXY + m_nextLikelyApplyVelocityXYFromImpulse + AZ::Vector2(m_addVelocityWorld) +
                  AZ::Vector2(addVelocityHeading)),
                 m_velocityXCrossYDirection);
 
             // Calculate the walking up incline factor
             ApplyMovingUpInclineXYSpeedFactor();
-
-            // Detect any shapecast hits on the character
-            ProcessCharacterHits(deltaTime);
 
             // Change the +Z direction based on m_velocityZPosDirection
             m_targetVelocity += (m_applyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
@@ -4413,6 +4416,9 @@ namespace FirstPersonController
             // Add the next likely Z velocity onto the next likely target velocity
             m_nextLikelyTargetVelocity +=
                 (m_nextLikelyApplyVelocityZ + m_addVelocityWorld.GetZ() + m_addVelocityHeading.GetZ()) * m_velocityZPosDirection;
+
+            // Detect any shapecast hits on the character
+            ProcessCharacterHits(deltaTime);
 
             // Add velocity on either the network tick, the physics timstep, or the frame tick
             if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
