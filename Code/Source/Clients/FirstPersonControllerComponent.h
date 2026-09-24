@@ -972,7 +972,7 @@ namespace FirstPersonController
         float m_sprintAccelScale = 1.5f;
         float m_crouchScale = 0.5f;
         float m_crouchAccelScale = 0.5f;
-        bool m_forwardBackCancelOut = false;
+        bool m_forwardBackCancelOut = true;
         // This sphere cast determines how far above the charcter's head that an obstruction is detected
         // for allowing them to uncrouch
         float m_uncrouchHeadSphereCastOffset = 0.1f;
