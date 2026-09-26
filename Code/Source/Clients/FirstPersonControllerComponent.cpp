@@ -2243,13 +2243,19 @@ namespace FirstPersonController
                 m_opposingDecelFactorApplied = false;
             }
 
-            // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
-            m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
+            // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate, account for overshoot
+            float deltaTimeRatio = 1.f;
+            const float lerpIncrement = lerpDeltaTime * m_decelerationFactor;
+            if (m_totalLerpTime > 0.f && lastLerpTime + lerpIncrement > m_totalLerpTime)
+                deltaTimeRatio = lerpIncrement > 0.f ? (m_totalLerpTime - lastLerpTime) / lerpIncrement : 1.f;
 
-            if (m_lerpTime >= m_totalLerpTime)
+            m_lerpTime = lastLerpTime + lerpIncrement;
+
+            if (m_lerpTime > m_totalLerpTime)
                 m_lerpTime = m_totalLerpTime;
 
-            AZ::Vector2 newVelocityXYDecel = m_prevApplyVelocityXY.Lerp(inputTargetVelocityXY, m_lerpTime / m_totalLerpTime);
+            const AZ::Vector2 newVelocityXYDecel =
+                m_prevApplyVelocityXY.Lerp(inputTargetVelocityXY, m_lerpTime / m_totalLerpTime) * deltaTimeRatio;
             if (newVelocityXYDecel.GetLength() < m_applyVelocityXY.GetLength())
                 newVelocityXY = newVelocityXYDecel;
         }
@@ -3286,25 +3292,10 @@ namespace FirstPersonController
             m_opposingDecelFactorApplied = false;
         }
 
-        // Debug print statements to observe the velocity, acceleration, and translation
-        // AZ_Printf("First Person Controller Component", "m_currentHeading = %.10f", m_currentHeading);
-        // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetLength() = %.10f", m_applyVelocityXY.GetLength());
-        // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetX() = %.10f", m_applyVelocityXY.GetX());
-        // AZ_Printf("First Person Controller Component", "m_applyVelocityXY.GetY() = %.10f", m_applyVelocityXY.GetY());
-        // AZ_Printf("First Person Controller Component", "m_sprintAccumulatedAccel = %.10f", m_sprintAccumulatedAccel);
-        // AZ_Printf("First Person Controller Component", "m_sprintInputEngaged = %s", m_sprintInputEngaged ? "true" : "false");
-        // AZ_Printf("First Person Controller Component", "m_sprintAccelValue = %.10f", m_sprintAccelValue);
-        // AZ_Printf("First Person Controller Component", "m_sprintAccelAdjust = %.10f", m_sprintAccelAdjust);
-        // AZ_Printf("First Person Controller Component", "m_decelerationFactor = %.10f", m_decelerationFactor);
-        // AZ_Printf("First Person Controller Component", "m_sprintVelocityAdjust = %.10f", m_sprintVelocityAdjust);
-        // AZ_Printf("First Person Controller Component", "m_sprintHeldDuration = %.10f", m_sprintHeldDuration);
-        // AZ_Printf("First Person Controller Component", "m_sprintPause = %.10f", m_sprintPause);
-        // AZ_Printf("First Person Controller Component", "m_sprintPauseTime = %.10f", m_sprintPauseTime);
-        // AZ_Printf("First Person Controller Component", "m_sprintCooldownTimer = %.10f", m_sprintCooldownTimer);
+        // Debug print statement to observe the acceleration
         // static AZ::Vector2 prevVelocity = m_applyVelocityXY;
         // AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_applyVelocityXY)/deltaTime);
         // prevVelocity = m_applyVelocityXY;
-        // AZ_Printf("First Person Controller Component","");
     }
 
     // Update m_velocityXCrossYDirection based on the sum of the normal vectors beneath the character
@@ -4063,7 +4054,7 @@ namespace FirstPersonController
         if (!impulseVelocity.IsZero() || m_impulsePrevConstantDecel != m_impulseConstantDecel)
         {
             m_initVelocityFromImpulse = m_velocityFromImpulse;
-            m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseConstantDecel;
+            m_impulseTotalLerpTime = AZ::Vector2(m_initVelocityFromImpulse).GetLength() / m_impulseConstantDecel;
             m_impulseLerpTime = 0.f;
             m_impulsePrevConstantDecel = m_impulseConstantDecel;
         }
@@ -4073,53 +4064,68 @@ namespace FirstPersonController
         {
             // This follows a first-order homogeneous linear recurrence relation, similar to Stokes' Law
             m_velocityFromImpulse *= (1 - m_impulseLinearDamp * deltaTime);
-            m_nextLikelyVelocityFromImpulse = m_velocityFromImpulse * (1 - m_impulseLinearDamp * deltaTime);
             if (m_impulseConstantDecel != 0.f)
             {
                 m_initVelocityFromImpulse = m_velocityFromImpulse;
-                m_impulseTotalLerpTime = m_initVelocityFromImpulse.GetLength() / m_impulseConstantDecel;
+                m_impulseTotalLerpTime = AZ::Vector2(m_initVelocityFromImpulse).GetLength() / m_impulseConstantDecel;
                 m_impulseLerpTime = 0.f;
                 m_impulsePrevConstantDecel = m_impulseConstantDecel;
             }
         }
 
+        // Predict the next velocity by simulating the rest of this frame and the top of the next frame
+        m_nextLikelyVelocityFromImpulse = m_velocityFromImpulse;
+        if (m_impulseConstantDecel != 0.f && m_impulseTotalLerpTime > 0.f)
+        {
+            const float nextLerpTime = AZ::GetMin((m_impulseLerpTime + deltaTime), m_impulseTotalLerpTime);
+            m_nextLikelyVelocityFromImpulse =
+                m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), nextLerpTime / m_impulseTotalLerpTime);
+        }
+        if (m_impulseLinearDamp != 0.f)
+            m_nextLikelyVelocityFromImpulse *= (1 - m_impulseLinearDamp * deltaTime);
+
+        // Calculate the time scale to prevent distance overshoot when the impulse ends mid-frame
+        float deltaTimeRatio = 1.0f;
+        if (m_impulseConstantDecel != 0.f && m_impulseTotalLerpTime > 0.f && (m_impulseLerpTime + deltaTime) > m_impulseTotalLerpTime)
+            deltaTimeRatio = (m_impulseTotalLerpTime - m_impulseLerpTime) / deltaTime;
+
+        // Predict next frame's time scale to prevent nextLikelyVelocity overshoot prediction errors
+        float nextTimeScale = 1.0f;
+        if (m_impulseConstantDecel != 0.f)
+        {
+            const float nextTotalLerpTime = m_impulseLinearDamp != 0.f
+                ? AZ::Vector2(m_nextLikelyVelocityFromImpulse).GetLength() / m_impulseConstantDecel
+                : m_impulseTotalLerpTime;
+            const float nextLerpTime = m_impulseLinearDamp != 0.f ? 0.f : (m_impulseLerpTime + deltaTime);
+            if (nextTotalLerpTime > 0.f && (nextLerpTime + deltaTime) > nextTotalLerpTime)
+                nextTimeScale = deltaTime > 0.f ? (nextTotalLerpTime - nextLerpTime) / deltaTime : 0.f;
+        }
+
         // Apply the velocity from the impulse
-        m_applyVelocityXYFromImpulse = AZ::Vector2(m_velocityFromImpulse);
-        m_nextLikelyApplyVelocityXYFromImpulse = AZ::Vector2(m_nextLikelyVelocityFromImpulse);
-        m_applyVelocityZ += m_velocityFromImpulse.GetZ();
-        m_nextLikelyApplyVelocityZ += m_nextLikelyVelocityFromImpulse.GetZ();
+        m_applyVelocityXYFromImpulse = AZ::Vector2(m_velocityFromImpulse) * deltaTimeRatio;
+        m_nextLikelyApplyVelocityXYFromImpulse = AZ::Vector2(m_nextLikelyVelocityFromImpulse) * nextTimeScale;
+        m_applyVelocityZ += m_velocityFromImpulse.GetZ() * deltaTimeRatio;
+        m_nextLikelyApplyVelocityZ += m_nextLikelyVelocityFromImpulse.GetZ() * nextTimeScale;
 
         // Accumulate the deltaTime
         m_impulseLerpTime += deltaTime;
 
-        // Decelerate at a constant rate
         // If the total lerp time is zero or the lerp time has reached the total lerp time then do not continue adding velocity
         if (m_impulseConstantDecel != 0.f && (m_impulseTotalLerpTime == 0.f || m_impulseLerpTime >= m_impulseTotalLerpTime))
         {
             m_impulseLerpTime = m_impulseTotalLerpTime;
             m_initVelocityFromImpulse = AZ::Vector3::CreateZero();
             m_velocityFromImpulse = AZ::Vector3::CreateZero();
-            m_nextLikelyVelocityFromImpulse = AZ::Vector3::CreateZero();
             m_linearImpulse = AZ::Vector3::CreateZero();
             return;
         }
         // Set the applied velocity based on the time that was calculated for it to reach zero
         else if (m_impulseConstantDecel != 0.f)
-        {
             m_velocityFromImpulse = m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), m_impulseLerpTime / m_impulseTotalLerpTime);
-            m_nextLikelyVelocityFromImpulse =
-                m_initVelocityFromImpulse.Lerp(AZ::Vector3::CreateZero(), (m_impulseLerpTime + deltaTime) / m_impulseTotalLerpTime);
-        }
-
-        // Debug print statements to observe the acceleration and timing
-        // static AZ::Vector3 prevVelocity = m_velocityFromImpulse;
-        // AZ_Printf("First Person Controller Component", "dv/dt = %.10f", prevVelocity.GetDistance(m_velocityFromImpulse)/deltaTime);
-        // prevVelocity = m_velocityFromImpulse;
-        // AZ_Printf("First Person Controller Component", "m_impulseTotalLerpTime = %.10f", m_impulseTotalLerpTime);
-        // AZ_Printf("First Person Controller Component", "m_impulseLerpTime = %.10f", m_impulseLerpTime);
 
         // Set the Z component of the velocity from the impulse to zero after it's applied
         m_velocityFromImpulse.SetZ(0.f);
+        m_nextLikelyVelocityFromImpulse.SetZ(0.f);
 
         // Zero the impulse vector since it's been applied for this update
         m_linearImpulse = AZ::Vector3::CreateZero();
@@ -4210,12 +4216,10 @@ namespace FirstPersonController
     AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2& vXY, const AZ::Vector3& newXCrossYDirection)
     {
         const AZ::Vector3 untilted = AZ::Vector3(vXY);
-
         if (newXCrossYDirection.IsZero() || newXCrossYDirection.IsClose(AZ::Vector3::CreateAxisZ()))
             return untilted;
 
         const AZ::Vector3 normal = newXCrossYDirection.GetNormalizedSafe();
-
         const AZ::Quaternion tilt = AZ::Quaternion::CreateShortestArc(AZ::Vector3::CreateAxisZ(), normal);
 
         return tilt.TransformVector(untilted);
