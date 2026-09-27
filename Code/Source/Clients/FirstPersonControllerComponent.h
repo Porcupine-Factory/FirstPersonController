@@ -607,6 +607,7 @@ namespace FirstPersonController
 
         // Child EntityIds
         bool m_obtainedChildIds = false;
+        bool m_cameraNotAChildSoReacquiredOnce = false;
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick

@@ -1324,9 +1324,7 @@ namespace FirstPersonController
         FirstPersonControllerComponentRequestBus::Handler::BusConnect(GetEntityId());
 
         if (m_cameraEntityId.IsValid())
-        {
             AZ::EntityBus::Handler::BusConnect(m_cameraEntityId);
-        }
 
         AZ::TickBus::Handler::BusConnect();
 #ifdef NETWORKFPC
@@ -1404,9 +1402,7 @@ namespace FirstPersonController
 #endif
         }
         else if (m_isNetBot && (m_isServer || m_isHost))
-        {
             GetBotStringNetEntityIdsOnServer();
-        }
     }
 
     void FirstPersonControllerComponent::Deactivate()
@@ -1424,9 +1420,8 @@ namespace FirstPersonController
             GetBotStringNetEntityIdsOnServer();
         }
         else if (m_isNetBot && (m_isServer || m_isHost))
-        {
             GetBotStringNetEntityIdsOnServer();
-        }
+
         Camera::CameraNotificationBus::Handler::BusDisconnect();
         AZ::EntityBus::Handler::BusDisconnect();
 
@@ -1927,6 +1922,13 @@ namespace FirstPersonController
         for (const AZ::EntityId& childId : m_children)
             if (childId == m_cameraEntityId)
                 return true;
+
+        if (!m_cameraNotAChildSoReacquiredOnce)
+        {
+            m_obtainedChildIds = false;
+            m_cameraNotAChildSoReacquiredOnce = true;
+            IsCameraChildOfCharacter();
+        }
 
         return false;
     }
@@ -2483,13 +2485,9 @@ namespace FirstPersonController
         if (!m_sprintEnableToggle)
             m_sprintInputEngaged = m_sprintEffectiveValue != 0.f ? true : false;
         else if (m_sprintEnableToggle && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue && !m_sprintAutoToggleQueued)
-        {
             m_sprintInputEngaged = true;
-        }
         else if (m_sprintEnableToggle && m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
-        {
             m_sprintInputEngaged = false;
-        }
         else if (m_sprintAutoToggleQueued && !m_sprintInputEngaged && !m_sprintPrevValue && m_sprintEffectiveValue)
             m_sprintAutoToggleQueued = false;
 
@@ -3076,9 +3074,8 @@ namespace FirstPersonController
                 // Early standing for speed
                 const float postZError = TargetLocalZOffset - m_cameraLocalZTravelDistance;
                 if (!m_standing && fabs(postZError) < earlyStandThreshold)
-                {
                     m_standing = true;
-                }
+
                 // Settle check. If within tolerance, accumulate time
                 if (fabs(postZError) < crouchPositionTolerance && fabs(m_currentCrouchVelocity) < CrouchVelocityTolerance)
                 {
@@ -4509,9 +4506,7 @@ namespace FirstPersonController
         {
             m_cameraInterpolation = cameraInterpolation;
             if (m_activeCameraEntity)
-            {
                 InitializeCameraTranslation();
-            }
         }
     }
     // GetCameraNotInterpolating() is not exposed to the request bus, it's used for the visibility attribute in the editor
