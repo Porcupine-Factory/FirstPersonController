@@ -2245,14 +2245,16 @@ namespace FirstPersonController
                 m_opposingDecelFactorApplied = false;
             }
 
-            // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate, account for overshoot
+            // Use the deceleration factor to get the lerp time closer to the total lerp time at a faster rate
             m_lerpTime = lastLerpTime + lerpDeltaTime * m_decelerationFactor;
 
             if (m_lerpTime >= m_totalLerpTime)
                 m_lerpTime = m_totalLerpTime;
 
+            // Compensate for possible translation overshoot when the target velocity is zero
             float deltaTimeRatio = 1.0f;
-            if (m_lerpTime != m_totalLerpTime && (m_lerpTime + lerpDeltaTime * m_decelerationFactor) > m_totalLerpTime)
+            if (m_lerpTime != m_totalLerpTime && inputTargetVelocityXY.IsZero() &&
+                (m_lerpTime + lerpDeltaTime * m_decelerationFactor) > m_totalLerpTime)
                 deltaTimeRatio = (lerpDeltaTime - ((m_lerpTime + lerpDeltaTime * m_decelerationFactor) - m_totalLerpTime)) / lerpDeltaTime;
 
             AZ::Vector2 newVelocityXYDecel =
