@@ -2409,9 +2409,10 @@ namespace FirstPersonController
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
                 const float currentSpeedTowardsIncline = currentVelocityXYTowardsIncline.GetLength();
                 const float maxSpeedTowardsIncline = maxVelocityXYTowardsIncline.GetLength();
-                m_movingUpInclineFactor = AZStd::min(
-                    (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
-                    (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
+                if (currentSpeedTowardsIncline != 0.f && maxSpeedTowardsIncline != 0.f)
+                    m_movingUpInclineFactor = AZStd::min(
+                        (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
+                        (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
 
                 m_targetVelocity *= m_movingUpInclineFactor;
                 m_nextLikelyTargetVelocity *= m_movingUpInclineFactor;
@@ -2454,9 +2455,10 @@ namespace FirstPersonController
                 // Use the steepness and ratio of the velocity towards the incline and the max velocity towards the incline as the factor
                 const float currentSpeedTowardsIncline = currentVelocityXYTowardsIncline.GetLength();
                 const float maxSpeedTowardsIncline = maxVelocityXYTowardsIncline.GetLength();
-                m_movingUpInclineFactor = AZStd::min(
-                    (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
-                    (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
+                if (currentSpeedTowardsIncline != 0.f && maxSpeedTowardsIncline != 0.f)
+                    m_movingUpInclineFactor = AZStd::min(
+                        (1.f - steepness * currentSpeedTowardsIncline / maxSpeedTowardsIncline),
+                        (1.f - steepness) * maxSpeedTowardsIncline / currentSpeedTowardsIncline);
 
                 if (!(m_airTime < m_coyoteTime && !m_ungroundedDueToJump))
                 {
