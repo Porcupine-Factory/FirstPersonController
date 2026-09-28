@@ -530,16 +530,6 @@ namespace FirstPersonController
         if (m_disabled || playerInput->m_resetCount != GetNetworkTransformComponentController()->GetResetCount())
             return;
 
-        // Initialize various network properties to the initial values in the First Person Controller component
-        if (m_init)
-        {
-            m_init = false;
-            SetTopWalkSpeed(m_firstPersonControllerObject->m_speed);
-            SetSprintMaxTime(m_firstPersonControllerObject->m_sprintMaxTime);
-            SetSprintTotalCooldownTime(m_firstPersonControllerObject->m_sprintTotalCooldownTime);
-            SetJumpInitialVelocity(m_firstPersonControllerObject->m_jumpInitialVelocity);
-        }
-
         // Disconnect from various buses when the NetworkFPCController is not autonomous, and only do this once
         if (m_autonomousNotDetermined)
         {
@@ -567,6 +557,16 @@ namespace FirstPersonController
                 m_disabled = true;
 
             m_autonomousNotDetermined = false;
+        }
+
+        // Initialize various network properties to the initial values in the First Person Controller component
+        if (m_init && (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost))
+        {
+            m_init = false;
+            SetTopWalkSpeed(m_firstPersonControllerObject->m_speed);
+            SetSprintMaxTime(m_firstPersonControllerObject->m_sprintMaxTime);
+            SetSprintTotalCooldownTime(m_firstPersonControllerObject->m_sprintTotalCooldownTime);
+            SetJumpInitialVelocity(m_firstPersonControllerObject->m_jumpInitialVelocity);
         }
 
         // Assign the First Person Controller's inputs from the network inputs
