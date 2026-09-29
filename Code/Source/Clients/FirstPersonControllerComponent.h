@@ -302,6 +302,8 @@ namespace FirstPersonController
         void SetGroundedExtraOffsetMultiplayerDynamic(const float groundedExtraOffsetMultiplayerDynamic) override;
         float GetGroundCloseOffset() const override;
         void SetGroundCloseOffset(const float groundCloseSphereCastOffset) override;
+        float GetGroundCloseCoyoteTimeOffset() const override;
+        void SetGroundCloseCoyoteTimeOffset(const float groundCloseCoyoteTimeOffset) override;
         float GetJumpHoldDistance() const override;
         void SetJumpHoldDistance(const float jumpHoldDistance) override;
         float GetJumpHeadSphereCastOffset() const override;
@@ -339,6 +341,8 @@ namespace FirstPersonController
         AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const override;
         float GetGroundSphereCastsRadiusPercentageIncrease() const override;
         void SetGroundSphereCastsRadiusPercentageIncrease(const float groundSphereCastsRadiusPercentageIncrease) override;
+        float GetGroundCloseCoyoteTimeRadiusPercentageIncrease() const override;
+        void SetGroundCloseCoyoteTimeRadiusPercentageIncrease(const float groundCloseCoyoteTimeRadiusPercentageIncrease) override;
         float GetMaxGroundedAngleDegrees() const override;
         void SetMaxGroundedAngleDegrees(const float maxGroundedAngleDegrees) override;
         float GetTopWalkSpeed() const override;
@@ -829,11 +833,16 @@ namespace FirstPersonController
         float m_groundedExtraOffsetMultiplayerDynamic = 0.8f;
         // The ground close sphere cast offset determines how far below the character's feet the ground is considered to be close
         float m_groundCloseSphereCastOffset = 0.5f;
+        // The ground close coyote time offset determines how far below the character's feet the ground is considered to be close for Coyote
+        // Time application
+        float m_groundCloseCoyoteTimeOffset = 0.4f;
         // The sphere cast jump hold offset is used to determine initial (ascending) distance of the of the jump
         // where the m_jumpHeldGravityFactor is applied to the gravity
         float m_jumpHoldDistance = 0.8f;
         // The value of 41.5% was determined to work well based on testing
         float m_groundSphereCastsRadiusPercentageIncrease = 41.5;
+        // If this is set to -100 then a raycast will be used instead of a spherecast
+        float m_groundCloseCoyoteTimeRadiusPercentageIncrease = 20.f;
         float m_jumpHeldGravityFactor = 0.1f;
         // The m_jumpMaxHoldTime is computed inside UpdateJumpMaxHoldTime()
         float m_jumpMaxHoldTime = m_jumpHoldDistance /

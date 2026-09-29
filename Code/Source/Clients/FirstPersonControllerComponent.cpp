@@ -967,6 +967,8 @@ namespace FirstPersonController
                     &FirstPersonControllerComponentRequests::SetGroundedExtraOffsetMultiplayerDynamic)
                 ->Event("Get Ground Close Offset", &FirstPersonControllerComponentRequests::GetGroundCloseOffset)
                 ->Event("Set Ground Close Offset", &FirstPersonControllerComponentRequests::SetGroundCloseOffset)
+                ->Event("Get Ground Close Coyote Time Offset", &FirstPersonControllerComponentRequests::GetGroundCloseCoyoteTimeOffset)
+                ->Event("Set Ground Close Coyote Time Offset", &FirstPersonControllerComponentRequests::SetGroundCloseCoyoteTimeOffset)
                 ->Event("Get Jump Hold Distance", &FirstPersonControllerComponentRequests::GetJumpHoldDistance)
                 ->Event("Set Jump Hold Distance", &FirstPersonControllerComponentRequests::SetJumpHoldDistance)
                 ->Event("Get Jump Head Hit Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
@@ -1012,6 +1014,12 @@ namespace FirstPersonController
                 ->Event(
                     "Set Ground Sphere Casts Radius Percentage Increase",
                     &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
+                ->Event(
+                    "Get Ground Close Coyote Time Radius Percentage Increase",
+                    &FirstPersonControllerComponentRequests::GetGroundCloseCoyoteTimeRadiusPercentageIncrease)
+                ->Event(
+                    "Set Ground Close Coyote Time Radius Percentage Increase",
+                    &FirstPersonControllerComponentRequests::SetGroundCloseCoyoteTimeRadiusPercentageIncrease)
                 ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -3602,12 +3610,42 @@ namespace FirstPersonController
         // Logic for handling ground close detection for Coyote Time application (e.g. moving down from a shallow to a steeper incline)
         if (m_coyoteTime > 0.f)
         {
+            // When the radius percentage increase is set to less than or equal to -100% then use a raycast instead
+            static constexpr float NoRadiusUseRacast = -100.f;
+            if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > NoRadiusUseRacast)
+            {
+                request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                    m_capsuleRadius * (1.f + m_groundCloseCoyoteTimeRadiusPercentageIncrease / 100.f),
+                    sphereCastPose,
+                    sphereCastDirection,
+                    m_groundCloseCoyoteTimeOffset,
+                    AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                    m_groundedCollisionGroup,
+                    selfChildEntityCheck);
+            }
+            else
+            {
+                AzPhysics::RayCastRequest rayRequest;
+                rayRequest.m_start = sphereCastPose.GetTranslation();
+                rayRequest.m_direction = sphereCastDirection;
+                rayRequest.m_distance = m_groundCloseCoyoteTimeOffset;
+                rayRequest.m_queryType = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;
+                rayRequest.m_collisionGroup = m_groundedCollisionGroup;
+                rayRequest.m_reportMultipleHits = true;
+                rayRequest.m_filterCallback = selfChildEntityCheck;
+                hits = sceneInterface->QueryScene(sceneHandle, &rayRequest);
+            }
+
+            request.m_reportMultipleHits = true;
+
             // Filter the ground close coyote time hits
             groundedGroundCloseOrGroundCloseCoyoteTime = coyoteTimeGroundClose;
+
+            hits = sceneInterface->QueryScene(sceneHandle, &request);
+
             m_groundCloseCoyoteTimeHits.clear();
-            AzPhysics::SceneQueryHits groundCloseCoyoteTimeHits = hits;
-            AZStd::erase_if(groundCloseCoyoteTimeHits.m_hits, slopeEntityCheck);
-            m_groundCloseCoyoteTime = groundCloseCoyoteTimeHits ? true : false;
+            AZStd::erase_if(hits.m_hits, slopeEntityCheck);
+            m_groundCloseCoyoteTime = hits ? true : false;
         }
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
@@ -5687,6 +5725,14 @@ namespace FirstPersonController
     {
         m_groundCloseSphereCastOffset = groundCloseSphereCastOffset;
     }
+    float FirstPersonControllerComponent::GetGroundCloseCoyoteTimeOffset() const
+    {
+        return m_groundCloseCoyoteTimeOffset;
+    }
+    void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeOffset(const float groundCloseCoyoteTimeOffset)
+    {
+        m_groundCloseCoyoteTimeOffset = groundCloseCoyoteTimeOffset;
+    }
     float FirstPersonControllerComponent::GetJumpHoldDistance() const
     {
         return m_jumpHoldDistance;
@@ -5875,6 +5921,15 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGroundSphereCastsRadiusPercentageIncrease(const float groundSphereCastsRadiusPercentageIncrease)
     {
         m_groundSphereCastsRadiusPercentageIncrease = groundSphereCastsRadiusPercentageIncrease;
+    }
+    float FirstPersonControllerComponent::GetGroundCloseCoyoteTimeRadiusPercentageIncrease() const
+    {
+        return m_groundCloseCoyoteTimeRadiusPercentageIncrease;
+    }
+    void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeRadiusPercentageIncrease(
+        const float groundCloseCoyoteTimeRadiusPercentageIncrease)
+    {
+        m_groundCloseCoyoteTimeRadiusPercentageIncrease = groundCloseCoyoteTimeRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {
