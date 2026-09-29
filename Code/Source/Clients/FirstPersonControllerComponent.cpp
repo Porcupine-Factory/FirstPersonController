@@ -967,8 +967,6 @@ namespace FirstPersonController
                     &FirstPersonControllerComponentRequests::SetGroundedExtraOffsetMultiplayerDynamic)
                 ->Event("Get Ground Close Offset", &FirstPersonControllerComponentRequests::GetGroundCloseOffset)
                 ->Event("Set Ground Close Offset", &FirstPersonControllerComponentRequests::SetGroundCloseOffset)
-                ->Event("Get Ground Close Coyote Time Offset", &FirstPersonControllerComponentRequests::GetGroundCloseCoyoteTimeOffset)
-                ->Event("Set Ground Close Coyote Time Offset", &FirstPersonControllerComponentRequests::SetGroundCloseCoyoteTimeOffset)
                 ->Event("Get Jump Hold Distance", &FirstPersonControllerComponentRequests::GetJumpHoldDistance)
                 ->Event("Set Jump Hold Distance", &FirstPersonControllerComponentRequests::SetJumpHoldDistance)
                 ->Event("Get Jump Head Hit Sphere Cast Offset", &FirstPersonControllerComponentRequests::GetJumpHeadSphereCastOffset)
@@ -1014,12 +1012,6 @@ namespace FirstPersonController
                 ->Event(
                     "Set Ground Sphere Casts Radius Percentage Increase",
                     &FirstPersonControllerComponentRequests::SetGroundSphereCastsRadiusPercentageIncrease)
-                ->Event(
-                    "Get Ground Close Coyote Time Radius Percentage Increase",
-                    &FirstPersonControllerComponentRequests::GetGroundCloseCoyoteTimeRadiusPercentageIncrease)
-                ->Event(
-                    "Set Ground Close Coyote Time Radius Percentage Increase",
-                    &FirstPersonControllerComponentRequests::SetGroundCloseCoyoteTimeRadiusPercentageIncrease)
                 ->Event("Get Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::GetMaxGroundedAngleDegrees)
                 ->Event("Set Max Grounded Angle Degrees", &FirstPersonControllerComponentRequests::SetMaxGroundedAngleDegrees)
                 ->Event("Get Top Walk Speed", &FirstPersonControllerComponentRequests::GetTopWalkSpeed)
@@ -3001,33 +2993,31 @@ namespace FirstPersonController
                 m_uncrouchHeadSphereCastOffset,
                 AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
                 m_standCollisionGroup,
-                nullptr);
+                [this](const AzPhysics::SimulatedBody* body, [[maybe_unused]] const Physics::Shape* shape)
+                {
+                    const AZ::EntityId bodyId = body->GetEntityId();
+                    if (bodyId == GetEntityId())
+                        return AzPhysics::SceneQuery::QueryHitType::None;
+                    if (!m_obtainedChildIds)
+                    {
+                        ReacquireChildEntityIds();
+                        m_obtainedChildIds = true;
+                    }
+                    for (AZ::EntityId id : m_children)
+                        if (bodyId == id)
+                            return AzPhysics::SceneQuery::QueryHitType::None;
+                    if (m_standIgnoreDynamicRigidBodies)
+                    {
+                        AzPhysics::RigidBody* bodyHit = nullptr;
+                        Physics::RigidBodyRequestBus::EventResult(bodyHit, bodyId, &Physics::RigidBodyRequests::GetRigidBody);
+                        if (bodyHit != nullptr && !bodyHit->IsKinematic())
+                            return AzPhysics::SceneQuery::QueryHitType::None;
+                    }
+                    return AzPhysics::SceneQuery::QueryHitType::Touch;
+                });
             request.m_reportMultipleHits = true;
             AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
             AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
-            auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
-            {
-                if (hit.m_entityId == GetEntityId())
-                    return true;
-                if (!m_obtainedChildIds)
-                {
-                    ReacquireChildEntityIds();
-                    m_obtainedChildIds = true;
-                }
-                for (AZ::EntityId id : m_children)
-                    if (hit.m_entityId == id)
-                        return true;
-                if (m_standIgnoreDynamicRigidBodies)
-                {
-                    AzPhysics::RigidBody* bodyHit = nullptr;
-                    Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId, &Physics::RigidBodyRequests::GetRigidBody);
-                    if (bodyHit != nullptr && !bodyHit->IsKinematic())
-                        return true;
-                }
-                return false;
-            };
-
-            AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
 
             m_standPreventedEntityIds.clear();
             if (hits)
@@ -3441,53 +3431,14 @@ namespace FirstPersonController
                             -AZ::Vector3::CreateAxisZ((1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f) * m_capsuleRadius)));
         }
 
-        AzPhysics::ShapeCastRequest request;
-        if (!m_networkFPCEnabled)
-        {
-            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
-                sphereCastPose,
-                sphereCastDirection,
-                m_groundedSphereCastOffset,
-                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                m_groundedCollisionGroup,
-                nullptr);
-        }
-        else
-        {
-            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
-                sphereCastPose,
-                sphereCastDirection,
-                m_groundedSphereCastOffset + m_groundedExtraOffsetMultiplayerDynamic,
-                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                m_groundedCollisionGroup,
-                nullptr);
-        }
-
-        request.m_reportMultipleHits = true;
-
-        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
-        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
-
         AZStd::vector<AzPhysics::SceneQueryHit> steepNormals;
 
-        // Enumerator for filtering the various scene query hit vectors
-        enum groundSphereCasts : AZ::u8
+        // Disregard intersections with the character's collider and its child entities
+        auto selfChildEntityCheck = [this](const AzPhysics::SimulatedBody* body, [[maybe_unused]] const Physics::Shape* shape)
         {
-            grounded = 0,
-            groundClose = 1,
-            coyoteTimeGroundClose = 2,
-        };
-
-        groundSphereCasts groundedGroundCloseOrGroundCloseCoyoteTime = grounded;
-
-        // Disregard intersections with the character's collider, its child entities,
-        // and if the slope angle of the thing that's intersecting is greater than the max grounded angle
-        auto selfChildSlopeEntityCheck = [this, &steepNormals, &groundedGroundCloseOrGroundCloseCoyoteTime](AzPhysics::SceneQueryHit& hit)
-        {
-            if (hit.m_entityId == GetEntityId())
-                return true;
+            const AZ::EntityId bodyId = body->GetEntityId();
+            if (bodyId == GetEntityId())
+                return AzPhysics::SceneQuery::QueryHitType::None;
 
             // Obtain the child IDs if we don't already have them
             if (!m_obtainedChildIds)
@@ -3498,9 +3449,30 @@ namespace FirstPersonController
 
             for (AZ::EntityId id : m_children)
             {
-                if (hit.m_entityId == id)
-                    return true;
+                if (bodyId == id)
+                    return AzPhysics::SceneQuery::QueryHitType::None;
             }
+            return AzPhysics::SceneQuery::QueryHitType::Touch;
+        };
+
+        // Enumerator for packing the scene query hit vectors
+        enum groundSphereCasts : AZ::u8
+        {
+            grounded = 0,
+            groundClose = 1,
+            coyoteTimeGroundClose = 2,
+        };
+
+        groundSphereCasts groundedGroundCloseOrGroundCloseCoyoteTime = grounded;
+
+        // Another filter to detect the distance and to see if it's a steep slope
+        auto slopeEntityCheck = [this, &steepNormals, &groundedGroundCloseOrGroundCloseCoyoteTime](AzPhysics::SceneQueryHit& hit)
+        {
+            // Filter out hits that are further than the grounded sphere cast offset for the regular grounded check
+            if (groundedGroundCloseOrGroundCloseCoyoteTime == grounded &&
+                ((m_networkFPCEnabled && hit.m_distance > m_groundedSphereCastOffset + m_groundedExtraOffsetMultiplayerDynamic) ||
+                 (!m_networkFPCEnabled && hit.m_distance > m_groundedSphereCastOffset)))
+                return true;
 
             if (m_networkFPCEnabled && groundedGroundCloseOrGroundCloseCoyoteTime == grounded &&
                 hit.m_distance > m_groundedSphereCastOffset)
@@ -3530,13 +3502,43 @@ namespace FirstPersonController
             return false;
         };
 
+        AzPhysics::ShapeCastRequest request;
+        if (!m_networkFPCEnabled)
+        {
+            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
+                sphereCastPose,
+                sphereCastDirection,
+                m_groundCloseSphereCastOffset,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                m_groundedCollisionGroup,
+                selfChildEntityCheck);
+        }
+        else
+        {
+            request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
+                m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
+                sphereCastPose,
+                sphereCastDirection,
+                m_groundCloseSphereCastOffset + m_groundedExtraOffsetMultiplayerDynamic,
+                AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
+                m_groundedCollisionGroup,
+                selfChildEntityCheck);
+        }
+
+        request.m_reportMultipleHits = true;
+
+        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
         m_groundHits.clear();
-        AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
-        m_grounded = hits ? true : false;
+        AzPhysics::SceneQueryHits groundedHits = hits;
+        AZStd::erase_if(groundedHits.m_hits, slopeEntityCheck);
+        m_grounded = groundedHits ? true : false;
 
         m_groundHitEntityIds.clear();
         if (m_grounded)
-            for (AzPhysics::SceneQueryHit hit : hits.m_hits)
+            for (AzPhysics::SceneQueryHit hit : groundedHits.m_hits)
                 m_groundHitEntityIds.push_back(hit.m_entityId);
 
         bool normalsSumNotSteep = false;
@@ -3584,25 +3586,12 @@ namespace FirstPersonController
         else
             m_airTime += deltaTime;
 
-        request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-            m_capsuleRadius * (1.f + m_groundSphereCastsRadiusPercentageIncrease / 100.f),
-            sphereCastPose,
-            sphereCastDirection,
-            m_groundCloseSphereCastOffset,
-            AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-            m_groundedCollisionGroup,
-            nullptr);
-
-        request.m_reportMultipleHits = true;
-
         // Filter the ground close hits
         groundedGroundCloseOrGroundCloseCoyoteTime = groundClose;
-
-        hits = sceneInterface->QueryScene(sceneHandle, &request);
-
         m_groundCloseHits.clear();
-        AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
-        m_groundClose = hits ? true : false;
+        AzPhysics::SceneQueryHits groundCloseHits = hits;
+        AZStd::erase_if(groundCloseHits.m_hits, slopeEntityCheck);
+        m_groundClose = groundCloseHits ? true : false;
 
         if (m_scriptSetGroundCloseTick)
         {
@@ -3613,42 +3602,12 @@ namespace FirstPersonController
         // Logic for handling ground close detection for Coyote Time application (e.g. moving down from a shallow to a steeper incline)
         if (m_coyoteTime > 0.f)
         {
-            // When the radius percentage increase is set to less than or equal to -100% then use a raycast instead
-            static constexpr float NoRadiusUseRacast = -100.f;
-            if (m_groundCloseCoyoteTimeRadiusPercentageIncrease > NoRadiusUseRacast)
-            {
-                request = AzPhysics::ShapeCastRequestHelpers::CreateSphereCastRequest(
-                    m_capsuleRadius * (1.f + m_groundCloseCoyoteTimeRadiusPercentageIncrease / 100.f),
-                    sphereCastPose,
-                    sphereCastDirection,
-                    m_groundCloseCoyoteTimeOffset,
-                    AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
-                    m_groundedCollisionGroup,
-                    nullptr);
-            }
-            else
-            {
-                AzPhysics::RayCastRequest rayRequest;
-                rayRequest.m_start = sphereCastPose.GetTranslation();
-                rayRequest.m_direction = sphereCastDirection;
-                rayRequest.m_distance = m_groundCloseCoyoteTimeOffset;
-                rayRequest.m_queryType = AzPhysics::SceneQuery::QueryType::StaticAndDynamic;
-                rayRequest.m_collisionGroup = m_groundedCollisionGroup;
-                rayRequest.m_reportMultipleHits = true;
-                rayRequest.m_filterCallback = nullptr;
-                hits = sceneInterface->QueryScene(sceneHandle, &rayRequest);
-            }
-
-            request.m_reportMultipleHits = true;
-
             // Filter the ground close coyote time hits
             groundedGroundCloseOrGroundCloseCoyoteTime = coyoteTimeGroundClose;
-
-            hits = sceneInterface->QueryScene(sceneHandle, &request);
-
             m_groundCloseCoyoteTimeHits.clear();
-            AZStd::erase_if(hits.m_hits, selfChildSlopeEntityCheck);
-            m_groundCloseCoyoteTime = hits ? true : false;
+            AzPhysics::SceneQueryHits groundCloseCoyoteTimeHits = hits;
+            AZStd::erase_if(groundCloseCoyoteTimeHits.m_hits, slopeEntityCheck);
+            m_groundCloseCoyoteTime = groundCloseCoyoteTimeHits ? true : false;
         }
 
         // Trigger an event notification if the player hits the ground, is about to hit the ground,
@@ -3740,48 +3699,44 @@ namespace FirstPersonController
             m_jumpHeadSphereCastOffset,
             AzPhysics::SceneQuery::QueryType::StaticAndDynamic,
             m_headCollisionGroup,
-            nullptr);
+            [this](const AzPhysics::SimulatedBody* body, [[maybe_unused]] const Physics::Shape* shape)
+            {
+                const AZ::EntityId bodyId = body->GetEntityId();
+                if (bodyId == GetEntityId())
+                    return AzPhysics::SceneQuery::QueryHitType::None;
+
+                // Obtain the child IDs if we don't already have them
+                if (!m_obtainedChildIds)
+                {
+                    ReacquireChildEntityIds();
+                    m_obtainedChildIds = true;
+                }
+
+                for (AZ::EntityId id : m_children)
+                {
+                    if (bodyId == id)
+                        return AzPhysics::SceneQuery::QueryHitType::None;
+                }
+
+                if (m_jumpHeadIgnoreDynamicRigidBodies)
+                {
+                    // Check to see if the entity hit is dynamic
+                    AzPhysics::RigidBody* bodyHit = NULL;
+                    Physics::RigidBodyRequestBus::EventResult(bodyHit, bodyId, &Physics::RigidBodyRequests::GetRigidBody);
+
+                    // Static Rigid Bodies are not connected to the RigidBodyRequestBus and therefore
+                    // do not have a handler for it
+                    if (bodyHit != NULL && !bodyHit->IsKinematic())
+                        return AzPhysics::SceneQuery::QueryHitType::None;
+                }
+
+                return AzPhysics::SceneQuery::QueryHitType::Touch;
+            });
 
         request.m_reportMultipleHits = true;
 
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
-
-        // Disregard intersections with the character's collider and its child entities
-        auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
-        {
-            if (hit.m_entityId == GetEntityId())
-                return true;
-
-            // Obtain the child IDs if we don't already have them
-            if (!m_obtainedChildIds)
-            {
-                ReacquireChildEntityIds();
-                m_obtainedChildIds = true;
-            }
-
-            for (AZ::EntityId id : m_children)
-            {
-                if (hit.m_entityId == id)
-                    return true;
-            }
-
-            if (m_jumpHeadIgnoreDynamicRigidBodies)
-            {
-                // Check to see if the entity hit is dynamic
-                AzPhysics::RigidBody* bodyHit = NULL;
-                Physics::RigidBodyRequestBus::EventResult(bodyHit, hit.m_entityId, &Physics::RigidBodyRequests::GetRigidBody);
-
-                // Static Rigid Bodies are not connected to the RigidBodyRequestBus and therefore
-                // do not have a handler for it
-                if (bodyHit != NULL && !bodyHit->IsKinematic())
-                    return true;
-            }
-
-            return false;
-        };
-
-        AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
 
         m_headHit = hits ? true : false;
 
@@ -4142,37 +4097,12 @@ namespace FirstPersonController
         capsulePose.SetTranslation(
             GetEntity()->GetTransform()->GetWorldTM().GetTranslation() + m_sphereCastsAxisDirectionPose * (m_capsuleCurrentHeight / 2.f));
 
-        AzPhysics::ShapeCastRequest request = !m_targetVelocity.IsZero() || !m_physicsReportedVelocity.IsZero()
-            ? AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-                  m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
-                  m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
-                  capsulePose,
-                  m_nextLikelyTargetVelocity + m_physicsReportedVelocity,
-                  ((m_nextLikelyTargetVelocity + m_physicsReportedVelocity) / 2.f * deltaTime).GetLength() +
-                      m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
-                  m_characterHitBy,
-                  m_characterHitCollisionGroup,
-                  nullptr)
-            : AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
-                  m_capsuleRadius * (1.f + m_hitRadiusPercentageIncreaseWhileIdle / 100.f),
-                  m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
-                  capsulePose,
-                  AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()),
-                  0.001f,
-                  m_characterHitBy,
-                  m_characterHitCollisionGroup,
-                  nullptr);
-
-        request.m_reportMultipleHits = true;
-
-        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
-        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
-
         // Disregard intersections with the character's collider and its child entities
-        auto selfChildEntityCheck = [this](AzPhysics::SceneQueryHit& hit)
+        auto selfChildEntityCheck = [this](const AzPhysics::SimulatedBody* body, [[maybe_unused]] const Physics::Shape* shape)
         {
-            if (hit.m_entityId == GetEntityId())
-                return true;
+            const AZ::EntityId bodyId = body->GetEntityId();
+            if (bodyId == GetEntityId())
+                return AzPhysics::SceneQuery::QueryHitType::None;
 
             // Obtain the child IDs if we don't already have them
             if (!m_obtainedChildIds)
@@ -4183,14 +4113,39 @@ namespace FirstPersonController
 
             for (AZ::EntityId id : m_children)
             {
-                if (hit.m_entityId == id)
-                    return true;
+                if (bodyId == id)
+                    return AzPhysics::SceneQuery::QueryHitType::None;
             }
 
-            return false;
+            return AzPhysics::SceneQuery::QueryHitType::Touch;
         };
 
-        AZStd::erase_if(hits.m_hits, selfChildEntityCheck);
+        AzPhysics::ShapeCastRequest request = !m_targetVelocity.IsZero() || !m_physicsReportedVelocity.IsZero()
+            ? AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+                  m_capsuleRadius * (1.f + m_hitRadiusPercentageIncrease / 100.f),
+                  m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
+                  capsulePose,
+                  m_nextLikelyTargetVelocity + m_physicsReportedVelocity,
+                  ((m_nextLikelyTargetVelocity + m_physicsReportedVelocity) / 2.f * deltaTime).GetLength() +
+                      m_capsuleRadius * m_hitExtraProjectionPercentage / 100.f,
+                  m_characterHitBy,
+                  m_characterHitCollisionGroup,
+                  selfChildEntityCheck)
+            : AzPhysics::ShapeCastRequestHelpers::CreateCapsuleCastRequest(
+                  m_capsuleRadius * (1.f + m_hitRadiusPercentageIncreaseWhileIdle / 100.f),
+                  m_capsuleCurrentHeight * (1.f + m_hitHeightPercentageIncrease / 100.f),
+                  capsulePose,
+                  AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3::CreateAxisY()),
+                  0.001f,
+                  m_characterHitBy,
+                  m_characterHitCollisionGroup,
+                  selfChildEntityCheck);
+
+        request.m_reportMultipleHits = true;
+
+        AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
+        AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
+
         m_characterHitEntityIds.clear();
         for (AzPhysics::SceneQueryHit hit : hits.m_hits)
             m_characterHitEntityIds.push_back(hit.m_entityId);
@@ -4202,8 +4157,8 @@ namespace FirstPersonController
                 GetEntityId(), &FirstPersonControllerComponentNotifications::OnCharacterShapecastHitSomething, m_characterHits);
     }
 
-    // TiltVectorXCrossY will rotate any vector2 such that the cross product of its components becomes aligned
-    // with the vector 3 that's provided. This is intentionally done without any rotation about the Z axis.
+    // TiltVectorXCrossY will rotate any Vector2 such that the cross product of its components becomes aligned
+    // with the Vector3 that's provided. This is intentionally done without any rotation about the Z axis.
     AZ::Vector3 FirstPersonControllerComponent::TiltVectorXCrossY(const AZ::Vector2& vXY, const AZ::Vector3& newXCrossYDirection)
     {
         const AZ::Vector3 untilted = AZ::Vector3(vXY);
@@ -5732,14 +5687,6 @@ namespace FirstPersonController
     {
         m_groundCloseSphereCastOffset = groundCloseSphereCastOffset;
     }
-    float FirstPersonControllerComponent::GetGroundCloseCoyoteTimeOffset() const
-    {
-        return m_groundCloseCoyoteTimeOffset;
-    }
-    void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeOffset(const float groundCloseCoyoteTimeOffset)
-    {
-        m_groundCloseCoyoteTimeOffset = groundCloseCoyoteTimeOffset;
-    }
     float FirstPersonControllerComponent::GetJumpHoldDistance() const
     {
         return m_jumpHoldDistance;
@@ -5928,15 +5875,6 @@ namespace FirstPersonController
     void FirstPersonControllerComponent::SetGroundSphereCastsRadiusPercentageIncrease(const float groundSphereCastsRadiusPercentageIncrease)
     {
         m_groundSphereCastsRadiusPercentageIncrease = groundSphereCastsRadiusPercentageIncrease;
-    }
-    float FirstPersonControllerComponent::GetGroundCloseCoyoteTimeRadiusPercentageIncrease() const
-    {
-        return m_groundCloseCoyoteTimeRadiusPercentageIncrease;
-    }
-    void FirstPersonControllerComponent::SetGroundCloseCoyoteTimeRadiusPercentageIncrease(
-        const float groundCloseCoyoteTimeRadiusPercentageIncrease)
-    {
-        m_groundCloseCoyoteTimeRadiusPercentageIncrease = groundCloseCoyoteTimeRadiusPercentageIncrease;
     }
     float FirstPersonControllerComponent::GetMaxGroundedAngleDegrees() const
     {

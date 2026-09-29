@@ -233,8 +233,6 @@ namespace FirstPersonController
         virtual void SetGroundedExtraOffsetMultiplayerDynamic(const float) = 0;
         virtual float GetGroundCloseOffset() const = 0;
         virtual void SetGroundCloseOffset(const float) = 0;
-        virtual float GetGroundCloseCoyoteTimeOffset() const = 0;
-        virtual void SetGroundCloseCoyoteTimeOffset(const float) = 0;
         virtual float GetJumpHoldDistance() const = 0;
         virtual void SetJumpHoldDistance(const float) = 0;
         virtual float GetJumpHeadSphereCastOffset() const = 0;
@@ -272,8 +270,6 @@ namespace FirstPersonController
         virtual AZStd::vector<AZ::EntityId> GetStandPreventedEntityIds() const = 0;
         virtual float GetGroundSphereCastsRadiusPercentageIncrease() const = 0;
         virtual void SetGroundSphereCastsRadiusPercentageIncrease(const float) = 0;
-        virtual float GetGroundCloseCoyoteTimeRadiusPercentageIncrease() const = 0;
-        virtual void SetGroundCloseCoyoteTimeRadiusPercentageIncrease(const float) = 0;
         virtual float GetMaxGroundedAngleDegrees() const = 0;
         virtual void SetMaxGroundedAngleDegrees(const float) = 0;
         virtual float GetTopWalkSpeed() const = 0;
