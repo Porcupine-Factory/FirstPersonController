@@ -13,6 +13,7 @@
 #include <AzCore/Component/Component.h>
 #include <AzCore/Component/EntityBus.h>
 #include <AzCore/Component/TickBus.h>
+#include <AzCore/Component/TransformBus.h>
 #include <AzCore/Math/Quaternion.h>
 #include <AzCore/Math/Vector3.h>
 #include <AzCore/std/containers/map.h>
@@ -45,6 +46,7 @@ namespace FirstPersonController
         , public FirstPersonControllerComponentRequestBus::Handler
         , public AZ::EntityBus::Handler
         , public Camera::CameraNotificationBus::Handler
+        , public AZ::TransformNotificationBus::Handler
     {
         friend class FirstPersonExtrasComponent;
         friend class CameraCoupledChildComponent;
@@ -58,15 +60,19 @@ namespace FirstPersonController
 
         static void Reflect(AZ::ReflectContext* rc);
 
-        // AZ::Component interface implementation
+        // AZ::Component interface
         void Activate() override;
         void Deactivate() override;
 
         // AZ::EntityBus interface
         void OnEntityActivated(const AZ::EntityId& entityId) override;
 
-        // Physics::CharacterNotificationBus override
+        // Physics::CharacterNotificationBus interface
         void OnCharacterActivated(const AZ::EntityId& entityId) override;
+
+        // AZ::TransformNotificationBus interface
+        void OnChildAdded(AZ::EntityId childId) override;
+        void OnChildRemoved(AZ::EntityId childId) override;
 
         static void GetRequiredServices(AZ::ComponentDescriptor::DependencyArrayType& required);
         static void GetDependentServices(AZ::ComponentDescriptor::DependencyArrayType& dependent);
@@ -111,7 +117,6 @@ namespace FirstPersonController
         void SetEyeHeight(const float eyeHeight) override;
         float GetCameraLocalZTravelDistance() const override;
         AZ::TransformInterface* GetCameraRotationTransform() const override;
-        void ReacquireChildEntityIds() override;
         AZStd::vector<AZ::EntityId> GetChildEntityIds() const override;
         void ReacquireCapsuleDimensions() override;
         void ReacquireMaxSlopeAngle() override;
@@ -607,7 +612,6 @@ namespace FirstPersonController
 
         // Child EntityIds
         bool m_obtainedChildIds = false;
-        bool m_cameraNotAChildSoReacquiredOnce = false;
         AZStd::vector<AZ::EntityId> m_children;
 
         // Called on each tick
@@ -856,7 +860,7 @@ namespace FirstPersonController
         float m_coyoteTime = 0.f;
         bool m_coyoteTimeNoGravityActive = false;
         bool m_coyoteTimeTracksLastNormal = true;
-        bool m_ungroundedDueToJump = false;
+        bool m_ungroundedDueToJump = true;
         bool m_jumpCoyoteGravityPending = false;
         bool m_applyGravityDuringCoyoteTime = false;
         bool m_jumpHeadIgnoreDynamicRigidBodies = true;

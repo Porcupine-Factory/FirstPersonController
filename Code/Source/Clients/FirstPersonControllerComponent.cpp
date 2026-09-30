@@ -744,7 +744,6 @@ namespace FirstPersonController
                 ->Event("Set Eye Height", &FirstPersonControllerComponentRequests::SetEyeHeight)
                 ->Event("Get Camera Local Z Travel Distance", &FirstPersonControllerComponentRequests::GetCameraLocalZTravelDistance)
                 ->Event("Get Camera Rotation Transform", &FirstPersonControllerComponentRequests::GetCameraRotationTransform)
-                ->Event("Reacquire Child EntityIds", &FirstPersonControllerComponentRequests::ReacquireChildEntityIds)
                 ->Event("Get Child EntityIds", &FirstPersonControllerComponentRequests::GetChildEntityIds)
                 ->Event("Reacquire Capsule Dimensions", &FirstPersonControllerComponentRequests::ReacquireCapsuleDimensions)
                 ->Event("Reacquire Max Slope Angle", &FirstPersonControllerComponentRequests::ReacquireMaxSlopeAngle)
@@ -1355,6 +1354,9 @@ namespace FirstPersonController
     {
         Physics::CharacterNotificationBus::Handler::BusDisconnect();
 
+        // Get all of the children
+        AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
+
         // Obtain the PhysX Character Controller's capsule height and radius
         // and use those dimensions for the ground detection shapecast capsule
         PhysX::CharacterControllerRequestBus::EventResult(
@@ -1403,6 +1405,16 @@ namespace FirstPersonController
         }
         else if (m_isNetBot && (m_isServer || m_isHost))
             GetBotStringNetEntityIdsOnServer();
+    }
+
+    void FirstPersonControllerComponent::OnChildAdded(AZ::EntityId childId)
+    {
+        m_children.push_back(childId);
+    }
+
+    void FirstPersonControllerComponent::OnChildRemoved(AZ::EntityId childId)
+    {
+        AZStd::erase(m_children, childId);
     }
 
     void FirstPersonControllerComponent::Deactivate()
@@ -1915,20 +1927,13 @@ namespace FirstPersonController
     {
         if (!m_obtainedChildIds)
         {
-            ReacquireChildEntityIds();
+            AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
             m_obtainedChildIds = true;
         }
 
         for (const AZ::EntityId& childId : m_children)
             if (childId == m_cameraEntityId)
                 return true;
-
-        if (!m_cameraNotAChildSoReacquiredOnce)
-        {
-            m_obtainedChildIds = false;
-            m_cameraNotAChildSoReacquiredOnce = true;
-            IsCameraChildOfCharacter();
-        }
 
         return false;
     }
@@ -3006,11 +3011,6 @@ namespace FirstPersonController
                     const AZ::EntityId bodyId = body->GetEntityId();
                     if (bodyId == GetEntityId())
                         return AzPhysics::SceneQuery::QueryHitType::None;
-                    if (!m_obtainedChildIds)
-                    {
-                        ReacquireChildEntityIds();
-                        m_obtainedChildIds = true;
-                    }
                     for (AZ::EntityId id : m_children)
                         if (bodyId == id)
                             return AzPhysics::SceneQuery::QueryHitType::None;
@@ -3448,13 +3448,6 @@ namespace FirstPersonController
             if (bodyId == GetEntityId())
                 return AzPhysics::SceneQuery::QueryHitType::None;
 
-            // Obtain the child IDs if we don't already have them
-            if (!m_obtainedChildIds)
-            {
-                ReacquireChildEntityIds();
-                m_obtainedChildIds = true;
-            }
-
             for (AZ::EntityId id : m_children)
             {
                 if (bodyId == id)
@@ -3471,7 +3464,7 @@ namespace FirstPersonController
             coyoteTimeGroundClose = 2,
         };
 
-        groundSphereCasts groundedGroundCloseOrGroundCloseCoyoteTime = grounded;
+        groundSphereCasts groundedGroundCloseOrGroundCloseCoyoteTime = groundClose;
 
         // Another filter to detect the distance and to see if it's a steep slope
         auto slopeEntityCheck = [this, &steepNormals, &groundedGroundCloseOrGroundCloseCoyoteTime](AzPhysics::SceneQueryHit& hit)
@@ -3493,7 +3486,9 @@ namespace FirstPersonController
                     return true;
             }
 
-            if (abs(hit.m_normal.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) > m_maxGroundedAngleDegrees)
+            // Append to the steep normals vector, to be checked if their sum is enough to be be considered a valid ground
+            if (groundedGroundCloseOrGroundCloseCoyoteTime == grounded &&
+                abs(hit.m_normal.AngleSafeDeg(m_sphereCastsAxisDirectionPose)) > m_maxGroundedAngleDegrees)
             {
                 steepNormals.push_back(hit);
                 // AZ_Printf("First Person Controller Component", "Steep Angle = %.10f",
@@ -3535,18 +3530,29 @@ namespace FirstPersonController
         }
 
         request.m_reportMultipleHits = true;
-
         AzPhysics::SceneHandle sceneHandle = sceneInterface->GetSceneHandle(AzPhysics::DefaultPhysicsSceneName);
         AzPhysics::SceneQueryHits hits = sceneInterface->QueryScene(sceneHandle, &request);
 
+        // Filter the ground close hits
+        m_groundCloseHits.clear();
+        AZStd::erase_if(hits.m_hits, slopeEntityCheck);
+        m_groundClose = hits ? true : false;
+
+        if (m_scriptSetGroundCloseTick)
+        {
+            m_groundClose = m_scriptGroundClose;
+            m_scriptSetGroundCloseTick = false;
+        }
+
+        // Filter the ground hits
+        groundedGroundCloseOrGroundCloseCoyoteTime = grounded;
         m_groundHits.clear();
-        AzPhysics::SceneQueryHits groundedHits = hits;
-        AZStd::erase_if(groundedHits.m_hits, slopeEntityCheck);
-        m_grounded = groundedHits ? true : false;
+        AZStd::erase_if(hits.m_hits, slopeEntityCheck);
+        m_grounded = hits ? true : false;
 
         m_groundHitEntityIds.clear();
         if (m_grounded)
-            for (AzPhysics::SceneQueryHit hit : groundedHits.m_hits)
+            for (AzPhysics::SceneQueryHit hit : m_groundHits)
                 m_groundHitEntityIds.push_back(hit.m_entityId);
 
         bool normalsSumNotSteep = false;
@@ -3594,19 +3600,6 @@ namespace FirstPersonController
         else
             m_airTime += deltaTime;
 
-        // Filter the ground close hits
-        groundedGroundCloseOrGroundCloseCoyoteTime = groundClose;
-        m_groundCloseHits.clear();
-        AzPhysics::SceneQueryHits groundCloseHits = hits;
-        AZStd::erase_if(groundCloseHits.m_hits, slopeEntityCheck);
-        m_groundClose = groundCloseHits ? true : false;
-
-        if (m_scriptSetGroundCloseTick)
-        {
-            m_groundClose = m_scriptGroundClose;
-            m_scriptSetGroundCloseTick = false;
-        }
-
         // Logic for handling ground close detection for Coyote Time application (e.g. moving down from a shallow to a steeper incline)
         if (m_coyoteTime > 0.f)
         {
@@ -3637,12 +3630,10 @@ namespace FirstPersonController
             }
 
             request.m_reportMultipleHits = true;
+            hits = sceneInterface->QueryScene(sceneHandle, &request);
 
             // Filter the ground close coyote time hits
             groundedGroundCloseOrGroundCloseCoyoteTime = coyoteTimeGroundClose;
-
-            hits = sceneInterface->QueryScene(sceneHandle, &request);
-
             m_groundCloseCoyoteTimeHits.clear();
             AZStd::erase_if(hits.m_hits, slopeEntityCheck);
             m_groundCloseCoyoteTime = hits ? true : false;
@@ -3742,13 +3733,6 @@ namespace FirstPersonController
                 const AZ::EntityId bodyId = body->GetEntityId();
                 if (bodyId == GetEntityId())
                     return AzPhysics::SceneQuery::QueryHitType::None;
-
-                // Obtain the child IDs if we don't already have them
-                if (!m_obtainedChildIds)
-                {
-                    ReacquireChildEntityIds();
-                    m_obtainedChildIds = true;
-                }
 
                 for (AZ::EntityId id : m_children)
                 {
@@ -4142,13 +4126,6 @@ namespace FirstPersonController
             if (bodyId == GetEntityId())
                 return AzPhysics::SceneQuery::QueryHitType::None;
 
-            // Obtain the child IDs if we don't already have them
-            if (!m_obtainedChildIds)
-            {
-                ReacquireChildEntityIds();
-                m_obtainedChildIds = true;
-            }
-
             for (AZ::EntityId id : m_children)
             {
                 if (bodyId == id)
@@ -4455,7 +4432,6 @@ namespace FirstPersonController
             AZ::EntityBus::Handler::BusDisconnect();
             m_cameraEntityId = cameraEntityId;
             m_activeCameraEntity = nullptr;
-            m_obtainedChildIds = false;
 
             if (m_cameraEntityId.IsValid())
             {
@@ -4581,10 +4557,6 @@ namespace FirstPersonController
     AZ::TransformInterface* FirstPersonControllerComponent::GetCameraRotationTransform() const
     {
         return m_cameraRotationTransform;
-    }
-    void FirstPersonControllerComponent::ReacquireChildEntityIds()
-    {
-        AZ::TransformBus::EventResult(m_children, GetEntityId(), &AZ::TransformBus::Events::GetChildren);
     }
     AZStd::vector<AZ::EntityId> FirstPersonControllerComponent::GetChildEntityIds() const
     {
