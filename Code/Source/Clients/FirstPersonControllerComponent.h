@@ -669,7 +669,7 @@ namespace FirstPersonController
 
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
-        float m_physicsTimeAccumulator = 0.f;
+        float m_cameraInterpolationTimeAccumulator = 0.f;
         AZ::Vector3 m_prevCharacterEyeTranslation = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentCharacterEyeTranslation = AZ::Vector3::CreateZero();
 

@@ -1901,12 +1901,12 @@ namespace FirstPersonController
             return;
 
         // Update time accumulator
-        m_physicsTimeAccumulator += deltaTime;
+        m_cameraInterpolationTimeAccumulator += deltaTime;
 
         // Calculate interpolation factor
         float alpha;
         if (!m_networkFPCEnabled)
-            alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevTimestep, 1.f);
+            alpha = AZ::GetMin(m_cameraInterpolationTimeAccumulator / m_prevTimestep, 1.f);
         else if (m_networkFPCEnabled && networkFPCCameraInterpolationDisabled && m_networkFPCKeepCameraAtCharacter)
         {
             // Skip the interpolation when it's disabled with NetworkFPC
@@ -1914,7 +1914,7 @@ namespace FirstPersonController
             m_cameraInterpolation = !m_cameraInterpolation;
         }
         else
-            alpha = AZ::GetMin(m_physicsTimeAccumulator / m_prevNetworkFPCDeltaTime, 1.f);
+            alpha = AZ::GetMin(m_cameraInterpolationTimeAccumulator / m_prevNetworkFPCDeltaTime, 1.f);
 
         // Interpolate translation
         const AZ::Vector3 interpolatedCameraTranslation = m_prevCharacterEyeTranslation.Lerp(m_currentCharacterEyeTranslation, alpha);
@@ -1962,7 +1962,7 @@ namespace FirstPersonController
             if (!IsCameraChildOfCharacter() && !characterUpDirection.IsClose(m_sphereCastsAxisDirectionPose))
                 SetSphereCastsAxisDirectionPose(characterUpDirection);
             m_currentCharacterEyeTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
-            m_physicsTimeAccumulator = 0.f;
+            m_cameraInterpolationTimeAccumulator = 0.f;
         }
     }
 
