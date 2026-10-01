@@ -165,13 +165,6 @@ namespace FirstPersonController
         // Input event assignment and notification bus connection
         void AssignConnectInputEvents();
 
-        // NetworkFPCControllerNotificationBus
-        void OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId);
-        void OnNetworkTickFinish(const float deltaTime, const bool server, const AZ::EntityId& entityId);
-        void OnAutonomousClientActivated(const AZ::EntityId& entityId);
-        void OnHostActivated(const AZ::EntityId& entityId);
-        void OnNonAutonomousClientActivated(const AZ::EntityId& entityId);
-
         // Connect and disconnect events
         void OnConnectionAcquired();
         void OnEndpointDisconnected();
