@@ -101,6 +101,7 @@ namespace FirstPersonController
             m_fallParamId = InvalidParamIndex;
             m_landParamId = InvalidParamIndex;
             m_groundedParamId = InvalidParamIndex;
+            m_lookUpDownParamId = InvalidParamIndex;
         }
     }
 
@@ -177,6 +178,8 @@ namespace FirstPersonController
                 m_landParamId = m_animationGraph->FindParameterIndex(GetLandParamName().c_str());
             if (m_groundedParamId == InvalidParamIndex)
                 m_groundedParamId = m_animationGraph->FindParameterIndex(GetGroundedParamName().c_str());
+            if (m_lookUpDownParamId == InvalidParamIndex)
+                m_lookUpDownParamId = m_animationGraph->FindParameterIndex(GetLookUpDownParamName().c_str());
 
             m_paramIdsSet = true;
             for (size_t* paramId : m_paramIds)
@@ -196,6 +199,7 @@ namespace FirstPersonController
             m_animationGraph->SetParameterBool(m_fallParamId, GetIsFalling());
             m_animationGraph->SetParameterBool(m_landParamId, GetIsLanding());
             m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
+            m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetCurrentPitch());
         }
         else
         {
@@ -217,6 +221,8 @@ namespace FirstPersonController
                 m_animationGraph->SetParameterBool(m_landParamId, GetIsLanding());
             if (m_groundedParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
+            if (m_lookUpDownParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetCurrentPitch());
         }
 
         m_networkRequests->UpdateActorExternal(deltaTime);

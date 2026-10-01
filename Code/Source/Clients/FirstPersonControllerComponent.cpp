@@ -4284,6 +4284,7 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCBotAnimationControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
+            m_networkFPCBotAnimationControllerObject->SetCurrentPitch(m_currentPitch);
         }
 #endif
     }
@@ -6632,10 +6633,10 @@ namespace FirstPersonController
         m_cameraRotationAnglesDelta.SetZ(m_cameraRotationAnglesDelta.GetZ() + characterAndCameraYawAngle);
         m_rotatingYawViaScriptGamepad = true;
     }
-    void FirstPersonControllerComponent::UpdateCameraPitch(const float cameraPitchAngle, const bool updateCameraPitchConsidersInput)
+    void FirstPersonControllerComponent::UpdateCameraPitch(const float cameraPitchAngleDelta, const bool updateCameraPitchConsidersInput)
     {
         m_updateCameraPitchConsidersInput = updateCameraPitchConsidersInput;
-        m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngle);
+        m_cameraRotationAnglesDelta.SetX(m_cameraRotationAnglesDelta.GetX() + cameraPitchAngleDelta);
         m_rotatingPitchViaScriptGamepad = true;
     }
     float FirstPersonControllerComponent::GetHeading() const

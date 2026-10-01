@@ -93,11 +93,12 @@ namespace FirstPersonController
         size_t m_fallParamId = InvalidParamIndex;
         size_t m_landParamId = InvalidParamIndex;
         size_t m_groundedParamId = InvalidParamIndex;
+        size_t m_lookUpDownParamId = InvalidParamIndex;
 
         // NOTE: Make sure to add any new param Ids to this param Ids array
-        size_t* m_paramIds[9] = { &m_walkSpeedParamId, &m_sprintParamId,        &m_crouchToStandParamId,
-                                  &m_crouchParamId,    &m_standToCrouchParamId, &m_jumpStartParamId,
-                                  &m_fallParamId,      &m_landParamId,          &m_groundedParamId };
+        size_t* m_paramIds[10] = { &m_walkSpeedParamId,     &m_sprintParamId,    &m_crouchToStandParamId, &m_crouchParamId,
+                                   &m_standToCrouchParamId, &m_jumpStartParamId, &m_fallParamId,          &m_landParamId,
+                                   &m_groundedParamId,      &m_lookUpDownParamId };
     };
 
     class NetworkFPCBotAnimationController
