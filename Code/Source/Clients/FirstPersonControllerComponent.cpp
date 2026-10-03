@@ -2167,9 +2167,6 @@ namespace FirstPersonController
             m_currentHeading = characterTransform->GetWorldRotation().GetZ();
         else
             m_scriptSetCurrentHeadingTick = false;
-
-        if (m_activeCameraEntity)
-            m_currentPitch = m_activeCameraEntity->GetTransform()->GetWorldRotation().GetX();
     }
 
     // Here input target velocity is with respect to the character's frame of reference when m_instantVelocityRotation == true
@@ -4284,7 +4281,7 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
             m_networkFPCBotAnimationControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
-            m_networkFPCBotAnimationControllerObject->SetCurrentPitch(m_currentPitch);
+            m_networkFPCBotAnimationControllerObject->SetCurrentPitch(m_cameraPitch);
         }
 #endif
     }
@@ -6650,7 +6647,7 @@ namespace FirstPersonController
     }
     float FirstPersonControllerComponent::GetPitch() const
     {
-        return m_currentPitch;
+        return m_cameraPitch;
     }
     float FirstPersonControllerComponent::GetYaw() const
     {

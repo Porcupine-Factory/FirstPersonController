@@ -87,7 +87,7 @@ namespace FirstPersonController
         void SetupAnimationConnections(const AZ::EntityId& targetId);
 
         // Calculated camera pitch angle
-        float m_currentPitch = 0.f;
+        float m_cameraPitch = 0.f;
 
         bool m_paramIdsSet = false;
         size_t m_walkSpeedParamId = InvalidParamIndex;

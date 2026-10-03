@@ -936,7 +936,6 @@ namespace FirstPersonController
         bool m_enableCameraCharacterRotation = true;
         float m_currentHeading = 0.f;
         bool m_scriptSetCurrentHeadingTick = false;
-        float m_currentPitch = 0.f;
         float m_prevCharacterPitch = 0.f;
         float m_prevCharacterRoll = 0.f;
         float m_cameraPitch = 0.f;

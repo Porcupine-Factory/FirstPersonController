@@ -222,13 +222,13 @@ namespace FirstPersonController
             m_animationGraph->SetParameterBool(m_landParamId, GetIsLanding());
             m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
             if (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost)
-                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_currentPitch);
+                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_cameraPitch);
             else
             {
                 if (GetOverrideRotationForTick())
-                    m_currentPitch = GetOverrideTransform().GetEulerRadians().GetX();
-                m_currentPitch += GetLookRotationDelta().GetX();
-                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_currentPitch);
+                    m_cameraPitch = GetOverrideTransform().GetEulerRadians().GetX();
+                m_cameraPitch += GetLookRotationDelta().GetX();
+                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_cameraPitch);
             }
         }
         else
@@ -254,13 +254,13 @@ namespace FirstPersonController
             if (m_lookUpDownParamId != InvalidParamIndex)
             {
                 if (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost)
-                    m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_currentPitch);
+                    m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_cameraPitch);
                 else
                 {
                     if (GetOverrideRotationForTick())
-                        m_currentPitch = GetOverrideTransform().GetEulerRadians().GetX();
-                    m_currentPitch += GetLookRotationDelta().GetX();
-                    m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_currentPitch);
+                        m_cameraPitch = GetOverrideTransform().GetEulerRadians().GetX();
+                    m_cameraPitch += GetLookRotationDelta().GetX();
+                    m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_cameraPitch);
                 }
             }
         }
