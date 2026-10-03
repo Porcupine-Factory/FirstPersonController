@@ -225,6 +225,8 @@ namespace FirstPersonController
                 m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_currentPitch);
             else
             {
+                if (GetOverrideRotationForTick())
+                    m_currentPitch = GetOverrideTransform().GetEulerRadians().GetX();
                 m_currentPitch += GetLookRotationDelta().GetX();
                 m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_currentPitch);
             }
@@ -255,6 +257,8 @@ namespace FirstPersonController
                     m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_currentPitch);
                 else
                 {
+                    if (GetOverrideRotationForTick())
+                        m_currentPitch = GetOverrideTransform().GetEulerRadians().GetX();
                     m_currentPitch += GetLookRotationDelta().GetX();
                     m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_currentPitch);
                 }
