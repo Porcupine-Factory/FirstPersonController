@@ -829,10 +829,6 @@ namespace FirstPersonController
     {
         return !m_disabled;
     }
-    bool NetworkFPCController::GetIsNetEntityRoleAuthority() const
-    {
-        return IsNetEntityRoleAuthority();
-    }
     void NetworkFPCController::SetEnabled(const bool enabled)
     {
         m_disabled = !enabled;
@@ -853,5 +849,9 @@ namespace FirstPersonController
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->AssignConnectInputEvents();
         }
+    }
+    bool NetworkFPCController::GetIsNetEntityRoleAuthority() const
+    {
+        return IsNetEntityRoleAuthority();
     }
 } // namespace FirstPersonController
