@@ -2089,6 +2089,7 @@ namespace FirstPersonController
                     m_cameraRotationTransform->GetLocalRotation().GetY(),
                     m_cameraRotationTransform->GetLocalRotation().GetZ()));
                 m_cameraYaw = m_cameraRotationTransform->GetLocalRotation().GetZ();
+                m_cameraPitch = m_cameraRotationTransform->GetLocalRotation().GetX();
             }
             else if (m_addVelocityForTimestepVsTick && m_cameraInterpolation)
             {
