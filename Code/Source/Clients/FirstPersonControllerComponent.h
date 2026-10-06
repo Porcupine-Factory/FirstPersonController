@@ -943,6 +943,7 @@ namespace FirstPersonController
         float m_cameraYaw = 0.f;
         AZ::Quaternion m_lookRotationDelta = AZ::Quaternion::CreateZero();
         AZ::Vector3 m_cumulativeLookRotationDelta = AZ::Vector3::CreateZero();
+        AZ::Vector3 m_residualLookRotationDelta = AZ::Vector3::CreateZero();
         bool m_performedRotationOnTick = false;
         float m_rotationDamp = 60.f;
         float m_cameraPitchMaxAngle = AZ::Constants::HalfPi;

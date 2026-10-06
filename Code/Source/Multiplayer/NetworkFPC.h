@@ -40,6 +40,8 @@ namespace FirstPersonController
         , public EMotionFX::Integration::ActorComponentNotificationBus::Handler
         , public EMotionFX::Integration::AnimGraphComponentNotificationBus::Handler
     {
+        friend class NetworkFPCController;
+
     public:
         AZ_MULTIPLAYER_COMPONENT(FirstPersonController::NetworkFPC, s_networkFPCConcreteUuid, FirstPersonController::NetworkFPCBase);
 
@@ -203,6 +205,7 @@ namespace FirstPersonController
         // FirstPersonControllerComponent and FirstPersonExtrasComponent objects
         FirstPersonControllerComponent* m_firstPersonControllerObject = nullptr;
         FirstPersonExtrasComponent* m_firstPersonExtrasObject = nullptr;
+        NetworkFPC* m_networkFPCObject = nullptr;
 
         // Used in determining if the character was recently grounded
         bool m_groundedRecently = true;

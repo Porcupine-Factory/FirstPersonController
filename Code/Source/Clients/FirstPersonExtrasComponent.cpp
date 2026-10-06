@@ -1237,7 +1237,6 @@ namespace FirstPersonController
         // in CrouchManager, and whether it replaced the rotation
         const bool cameraTranslationOverwritten = m_firstPersonControllerObject->m_cameraTranslationOverwritten;
         const bool cameraLocalZOverwritten = cameraTranslationOverwritten || m_firstPersonControllerObject->m_cameraLocalZOverwritten;
-        const bool cameraRotationOverwritten = m_firstPersonControllerObject->m_cameraRotationOverwritten;
         m_firstPersonControllerObject->m_cameraTranslationOverwritten = false;
         m_firstPersonControllerObject->m_cameraLocalZOverwritten = false;
         m_firstPersonControllerObject->m_cameraRotationOverwritten = false;
@@ -1261,7 +1260,7 @@ namespace FirstPersonController
 
         // Recover the clean local rotation the same way. The pitch-delta branch leaves the previous
         // sway in place and does not set the flag
-        const AZ::Quaternion cleanLocalRotation = cameraRotationOverwritten
+        const AZ::Quaternion cleanLocalRotation = m_firstPersonControllerObject->m_cameraRotationOverwritten
             ? currentLocalRotation
             : (currentLocalRotation * m_prevHeadbobRotationOffset.GetInverseFull()).GetNormalized();
         headbobEntityTransform->SetLocalRotationQuaternion((cleanLocalRotation * m_smoothedHeadbobRotationOffset).GetNormalized());

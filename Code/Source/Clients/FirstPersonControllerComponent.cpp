@@ -2044,6 +2044,7 @@ namespace FirstPersonController
                 }
 #ifdef NETWORKFPC
                 m_networkFPCControllerObject->SetYawDeltaOvershoot(0.f);
+                m_networkFPCControllerObject->SetPitchDeltaOvershoot(0.f);
 #endif
             }
 
@@ -2052,10 +2053,12 @@ namespace FirstPersonController
             {
 #ifdef NETWORKFPC
                 if (m_performedRotationOnTick)
-                    m_cumulativeLookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
+                    m_cumulativeLookRotationDelta =
+                        m_residualLookRotationDelta + m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
                 else
                     m_cumulativeLookRotationDelta += m_networkFPCControllerObject->GetLookRotationDelta().GetEulerRadians();
 #endif
+                m_residualLookRotationDelta = m_cumulativeLookRotationDelta;
                 m_performedRotationOnTick = false;
                 return;
             }
@@ -2068,9 +2071,16 @@ namespace FirstPersonController
             m_networkFPCRotationSliceAccumulator += 1.f / slice;
 #ifdef NETWORKFPC
             lookRotationDelta = m_cumulativeLookRotationDelta / slice;
-            // Compensate the character's yaw from the camera overshooting due to network jitter
+            // Account for the camera rotation undershooting
+            m_residualLookRotationDelta -= lookRotationDelta;
+            // Compensate the character's yaw from the camera overshooting due to timing jitter
             if (m_networkFPCRotationSliceAccumulator > 1.f)
+            {
                 m_networkFPCControllerObject->SetYawDeltaOvershoot((m_cameraYaw + lookRotationDelta.GetZ()) - m_currentHeading);
+                m_networkFPCControllerObject->SetPitchDeltaOvershoot(
+                    m_cumulativeLookRotationDelta.GetX() * (m_networkFPCRotationSliceAccumulator - 1.f));
+                m_residualLookRotationDelta = AZ::Vector3::CreateZero();
+            }
 #endif
         }
 

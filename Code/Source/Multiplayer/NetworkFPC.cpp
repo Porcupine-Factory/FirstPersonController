@@ -224,12 +224,7 @@ namespace FirstPersonController
             if (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost)
                 m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_cameraPitch);
             else
-            {
-                if (GetOverrideRotationForTick())
-                    m_cameraPitch = GetOverrideTransform().GetEulerRadians().GetX();
-                m_cameraPitch += GetLookRotationDelta().GetX();
                 m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_cameraPitch);
-            }
         }
         else
         {
@@ -256,12 +251,7 @@ namespace FirstPersonController
                 if (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost)
                     m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_cameraPitch);
                 else
-                {
-                    if (GetOverrideRotationForTick())
-                        m_cameraPitch = GetOverrideTransform().GetEulerRadians().GetX();
-                    m_cameraPitch += GetLookRotationDelta().GetX();
                     m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_cameraPitch);
-                }
             }
         }
 
@@ -428,6 +418,7 @@ namespace FirstPersonController
         const AZ::Entity* entity = GetParent().GetEntity();
         m_firstPersonControllerObject = entity->FindComponent<FirstPersonControllerComponent>();
         m_firstPersonExtrasObject = entity->FindComponent<FirstPersonExtrasComponent>();
+        m_networkFPCObject = entity->FindComponent<NetworkFPC>();
         m_firstPersonControllerObject->m_networkFPCEnabled = GetEnableNetworkFPC();
         if (m_firstPersonExtrasObject != nullptr)
             m_firstPersonExtrasObject->m_networkFPCEnabled = GetEnableNetworkFPC();
@@ -534,8 +525,10 @@ namespace FirstPersonController
         }
 
         playerInput->m_desiredVelocity = GetDesiredVelocity();
-        playerInput->m_yawDelta = GetLookRotationDelta().GetZ();
+        playerInput->m_yawDelta = GetLookRotationDelta().GetEulerRadians().GetZ();
         playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
+        playerInput->m_pitchDelta = GetLookRotationDelta().GetEulerRadians().GetX();
+        playerInput->m_pitchDeltaOvershoot = GetPitchDeltaOvershoot();
 
         m_yawValue = 0.f;
         m_pitchValue = 0.f;
@@ -691,7 +684,20 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_isServer,
             GetEntityId());
 
+        // Set the yaw / heading
         GetEntity()->GetTransform()->RotateAroundLocalZ(playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
+
+        // Set the camera pitch
+        float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(AZ::Vector3(
+            0.f,
+            m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetY(),
+            m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetZ()));
+        if (m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetY() < 0.f)
+            angleFromZ *= -1.f;
+        m_networkFPCObject->m_cameraPitch = AZ::GetClamp(
+            m_networkFPCObject->m_cameraPitch + playerInput->m_pitchDelta + playerInput->m_pitchDeltaOvershoot,
+            m_firstPersonControllerObject->m_cameraPitchMinAngle - angleFromZ,
+            m_firstPersonControllerObject->m_cameraPitchMaxAngle - angleFromZ);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");
