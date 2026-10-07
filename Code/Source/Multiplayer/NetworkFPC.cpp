@@ -221,10 +221,7 @@ namespace FirstPersonController
             m_animationGraph->SetParameterBool(m_fallParamId, GetIsFalling());
             m_animationGraph->SetParameterBool(m_landParamId, GetIsLanding());
             m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
-            if (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost)
-                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_cameraPitch);
-            else
-                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_cameraPitch);
+            m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetHeadPitch());
         }
         else
         {
@@ -247,12 +244,7 @@ namespace FirstPersonController
             if (m_groundedParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
             if (m_lookUpDownParamId != InvalidParamIndex)
-            {
-                if (m_firstPersonControllerObject->m_isAutonomousClient || m_firstPersonControllerObject->m_isHost)
-                    m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_firstPersonControllerObject->m_cameraPitch);
-                else
-                    m_animationGraph->SetParameterFloat(m_lookUpDownParamId, m_cameraPitch);
-            }
+                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetHeadPitch());
         }
 
         m_networkRequests->UpdateActorExternal(deltaTime);
@@ -642,7 +634,7 @@ namespace FirstPersonController
                 if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
                     SetOverrideTranslationForTick(false);
             }
-            // overrideRotationForTick
+            // overrideRotationForTick && !overrideTranslationForTick
             else
             {
                 AZ::TransformInterface* characterTransform = GetEntity()->GetTransform();
@@ -671,6 +663,7 @@ namespace FirstPersonController
                 m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
                 if (!GetApplyOverridePitchAndRollToCharacter())
                 {
+                    m_networkFPCObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
                     m_firstPersonControllerObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
                     m_firstPersonControllerObject->m_cameraRoll = overrideTransform.GetEulerRadians().GetY();
                 }
