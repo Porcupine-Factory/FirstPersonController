@@ -698,7 +698,8 @@ namespace FirstPersonController
             m_networkFPCObject->m_cameraPitch + playerInput->m_pitchDelta + playerInput->m_pitchDeltaOvershoot,
             m_firstPersonControllerObject->m_cameraPitchMinAngle - angleFromZ,
             m_firstPersonControllerObject->m_cameraPitchMaxAngle - angleFromZ);
-        SetHeadPitch(m_networkFPCObject->m_cameraPitch);
+        if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
+            SetHeadPitch(m_networkFPCObject->m_cameraPitch);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");
