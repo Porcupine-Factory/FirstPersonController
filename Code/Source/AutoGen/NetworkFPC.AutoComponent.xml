@@ -268,6 +268,6 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <ArchetypeProperty Type="AZStd::string" Name="LookUpDownParamName" Init="&quot;LookUpDown&quot;" ExposeToEditor="true" Description="Anim graph look up down parameter name."/>
 
     <RemoteProcedure Name="ObtainParentNetEntityId" InvokeFrom="Autonomous" HandleOn="Authority" IsPublic="true" IsReliable="true" GenerateEventBindings="true" Description="Takes a NetEntityId as a string and constructs another string that is the provided NetEntityId and its parent's NetEntityId separated by a comma and stores the result in ChildParentStringNetEntityId">
-        <Param Type="AZStd::string" Name="name"/>
+        <Param Type="AZStd::string" Name="strNetEntityId"/>
     </RemoteProcedure>
 </Component>
