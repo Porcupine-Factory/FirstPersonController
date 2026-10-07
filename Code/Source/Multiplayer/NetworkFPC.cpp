@@ -698,6 +698,7 @@ namespace FirstPersonController
             m_networkFPCObject->m_cameraPitch + playerInput->m_pitchDelta + playerInput->m_pitchDeltaOvershoot,
             m_firstPersonControllerObject->m_cameraPitchMinAngle - angleFromZ,
             m_firstPersonControllerObject->m_cameraPitchMaxAngle - angleFromZ);
+        SetHeadPitch(m_networkFPCObject->m_cameraPitch);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");
@@ -799,7 +800,7 @@ namespace FirstPersonController
         }
     }
 
-    // Request Bus getter and setter methods for use in scripts
+    // Request Bus getter and setter methods
     void NetworkFPCController::TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float deltaTime)
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);

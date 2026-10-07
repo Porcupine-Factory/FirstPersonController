@@ -45,6 +45,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
                      IsPublic="true" Container="Object" ExposeToEditor="false"
                      ExposeToScript="true" GenerateEventBindings="true"
                      Description="The quaternion change in the character and camera rotation."/>
+    <NetworkProperty Type="float" Name="HeadPitch"
+                     Init="0.f" ReplicateFrom="Authority"
+                     ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
+                     IsPublic="true" Container="Object" ExposeToEditor="false"
+                     ExposeToScript="true" GenerateEventBindings="true"
+                     Description="The head pitch."/>
     <NetworkProperty Type="float" Name="YawDeltaOvershoot"
                      Init="0.f" ReplicateFrom="Authority"
                      ReplicateTo="Client" IsRewindable="true" IsPredictable="true"
