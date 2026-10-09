@@ -26,6 +26,12 @@ namespace FirstPersonController
         virtual bool GetEnabled() const = 0;
         virtual void SetEnabled(const bool) = 0;
         virtual bool GetIsNetEntityRoleAuthority() const = 0;
+        virtual float GetActionInputValue() const = 0;
+        virtual float GetAttackInputValue() const = 0;
+        virtual float GetBlockInputValue() const = 0;
+        virtual float GetReloadInputValue() const = 0;
+        virtual float GetNextWeaponInputValue() const = 0;
+        virtual float GetPrevWeaponInputValue() const = 0;
     };
 
     using NetworkFPCControllerRequestBus = AZ::EBus<NetworkFPCControllerRequests>;
@@ -33,11 +39,23 @@ namespace FirstPersonController
     class NetworkFPCControllerNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnNetworkTickStart(const float, const bool, const AZ::EntityId&) = 0;
-        virtual void OnNetworkTickFinish(const float, const bool, const AZ::EntityId&) = 0;
-        virtual void OnAutonomousClientActivated(const AZ::EntityId&) = 0;
-        virtual void OnHostActivated(const AZ::EntityId&) = 0;
-        virtual void OnNonAutonomousClientActivated(const AZ::EntityId&) = 0;
+        virtual void OnNetworkTickStart(const float, const bool, const AZ::EntityId&) {};
+        virtual void OnNetworkTickFinish(const float, const bool, const AZ::EntityId&) {};
+        virtual void OnAutonomousClientActivated(const AZ::EntityId&) {};
+        virtual void OnHostActivated(const AZ::EntityId&) {};
+        virtual void OnNonAutonomousClientActivated(const AZ::EntityId&) {};
+        virtual void OnActionPressed(const float) {};
+        virtual void OnActionReleased(const float) {};
+        virtual void OnAttackPressed(const float) {};
+        virtual void OnAttackReleased(const float) {};
+        virtual void OnBlockPressed(const float) {};
+        virtual void OnBlockReleased(const float) {};
+        virtual void OnReloadPressed(const float) {};
+        virtual void OnReloadReleased(const float) {};
+        virtual void OnNextWeaponPressed(const float) {};
+        virtual void OnNextWeaponReleased(const float) {};
+        virtual void OnPrevWeaponPressed(const float) {};
+        virtual void OnPrevWeaponReleased(const float) {};
     };
 
     using NetworkFPCControllerNotificationBus = AZ::EBus<NetworkFPCControllerNotifications>;
@@ -55,7 +73,19 @@ namespace FirstPersonController
             OnNetworkTickFinish,
             OnAutonomousClientActivated,
             OnHostActivated,
-            OnNonAutonomousClientActivated);
+            OnNonAutonomousClientActivated,
+            OnActionPressed,
+            OnActionReleased,
+            OnAttackPressed,
+            OnAttackReleased,
+            OnBlockPressed,
+            OnBlockReleased,
+            OnReloadPressed,
+            OnReloadReleased,
+            OnNextWeaponPressed,
+            OnNextWeaponReleased,
+            OnPrevWeaponPressed,
+            OnPrevWeaponReleased);
 
         void OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId) override
         {
@@ -76,6 +106,54 @@ namespace FirstPersonController
         void OnNonAutonomousClientActivated(const AZ::EntityId& entityId) override
         {
             Call(FN_OnNonAutonomousClientActivated, entityId);
+        }
+        void OnActionPressed(const float actionValue) override
+        {
+            Call(FN_OnActionPressed, actionValue);
+        }
+        void OnActionReleased(const float actionValue) override
+        {
+            Call(FN_OnActionReleased, actionValue);
+        }
+        void OnAttackPressed(const float attackValue) override
+        {
+            Call(FN_OnAttackPressed, attackValue);
+        }
+        void OnAttackReleased(const float attackValue) override
+        {
+            Call(FN_OnAttackReleased, attackValue);
+        }
+        void OnBlockPressed(const float blockValue) override
+        {
+            Call(FN_OnBlockPressed, blockValue);
+        }
+        void OnBlockReleased(const float blockValue) override
+        {
+            Call(FN_OnBlockReleased, blockValue);
+        }
+        void OnReloadPressed(const float reloadValue) override
+        {
+            Call(FN_OnReloadPressed, reloadValue);
+        }
+        void OnReloadReleased(const float reloadValue) override
+        {
+            Call(FN_OnReloadReleased, reloadValue);
+        }
+        void OnNextWeaponPressed(const float nextWeaponValue) override
+        {
+            Call(FN_OnNextWeaponPressed, nextWeaponValue);
+        }
+        void OnNextWeaponReleased(const float nextWeaponValue) override
+        {
+            Call(FN_OnNextWeaponReleased, nextWeaponValue);
+        }
+        void OnPrevWeaponPressed(const float prevWeaponValue) override
+        {
+            Call(FN_OnPrevWeaponPressed, prevWeaponValue);
+        }
+        void OnPrevWeaponReleased(const float prevWeaponValue) override
+        {
+            Call(FN_OnPrevWeaponReleased, prevWeaponValue);
         }
     };
 } // namespace FirstPersonController

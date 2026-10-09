@@ -249,6 +249,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <NetworkInput Type="float"         Name="Sprint"                   Init="0.f"/>
     <NetworkInput Type="float"         Name="Crouch"                   Init="0.f"/>
     <NetworkInput Type="float"         Name="Jump"                     Init="0.f"/>
+    <NetworkInput Type="float"         Name="Action"                   Init="0.f"/>
+    <NetworkInput Type="float"         Name="Attack"                   Init="0.f"/>
+    <NetworkInput Type="float"         Name="Block"                    Init="0.f"/>
+    <NetworkInput Type="float"         Name="Reload"                   Init="0.f"/>
+    <NetworkInput Type="float"         Name="NextWeapon"               Init="0.f"/>
+    <NetworkInput Type="float"         Name="PrevWeapon"               Init="0.f"/>
     <NetworkInput Type="uint8_t"       Name="ResetCount"               Init="0" />
     <NetworkInput Type="AZ::Vector3"   Name="DesiredVelocity"          Init="AZ::Vector3::CreateZero()"/>
 

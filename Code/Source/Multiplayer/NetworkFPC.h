@@ -151,6 +151,12 @@ namespace FirstPersonController
         bool GetEnabled() const override;
         void SetEnabled(const bool enabled) override;
         bool GetIsNetEntityRoleAuthority() const override;
+        float GetActionInputValue() const override;
+        float GetAttackInputValue() const override;
+        float GetBlockInputValue() const override;
+        float GetReloadInputValue() const override;
+        float GetNextWeaponInputValue() const override;
+        float GetPrevWeaponInputValue() const override;
 
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;
@@ -220,6 +226,18 @@ namespace FirstPersonController
         float m_sprintValue = 0.f;
         float m_crouchValue = 0.f;
         float m_jumpValue = 0.f;
+        float m_actionValue = 0.f;
+        float m_prevActionValue = 0.f;
+        float m_attackValue = 0.f;
+        float m_prevAttackValue = 0.f;
+        float m_blockValue = 0.f;
+        float m_prevBlockValue = 0.f;
+        float m_reloadValue = 0.f;
+        float m_prevReloadValue = 0.f;
+        float m_nextWeaponValue = 0.f;
+        float m_prevNextWeaponValue = 0.f;
+        float m_prevWeaponValue = 0.f;
+        float m_prevPrevWeaponValue = 0.f;
 
         // Event IDs and action names
         StartingPointInput::InputEventNotificationId m_moveForwardEventId;
@@ -240,16 +258,41 @@ namespace FirstPersonController
         AZStd::string m_strCrouch = "Crouch";
         StartingPointInput::InputEventNotificationId m_jumpEventId;
         AZStd::string m_strJump = "Jump";
+        StartingPointInput::InputEventNotificationId m_actionEventId;
+        AZStd::string m_strAction = "Action";
+        StartingPointInput::InputEventNotificationId m_attackEventId;
+        AZStd::string m_strAttack = "Attack";
+        StartingPointInput::InputEventNotificationId m_blockEventId;
+        AZStd::string m_strBlock = "Block";
+        StartingPointInput::InputEventNotificationId m_reloadEventId;
+        AZStd::string m_strReload = "Reload";
+        StartingPointInput::InputEventNotificationId m_nextWeaponEventId;
+        AZStd::string m_strNextWeapon = "NextWeapon";
+        StartingPointInput::InputEventNotificationId m_prevWeaponEventId;
+        AZStd::string m_strPrevWeapon = "PrevWeapon";
 
         // Array of action names
-        AZStd::string* m_inputNames[9] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight, &m_strYaw,
-                                           &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump };
+        AZStd::string* m_inputNames[15] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight,      &m_strYaw,
+                                            &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump,       &m_strAction,
+                                            &m_strAttack,  &m_strBlock,  &m_strReload, &m_strNextWeapon, &m_strPrevWeapon };
 
         // Map of event IDs and event value multipliers
         AZStd::map<StartingPointInput::InputEventNotificationId*, float*> m_controlMap = {
-            { &m_moveForwardEventId, &m_forwardValue }, { &m_moveBackEventId, &m_backValue }, { &m_moveLeftEventId, &m_leftValue },
-            { &m_moveRightEventId, &m_rightValue },     { &m_rotateYawEventId, &m_yawValue }, { &m_rotatePitchEventId, &m_pitchValue },
-            { &m_sprintEventId, &m_sprintValue },       { &m_crouchEventId, &m_crouchValue }, { &m_jumpEventId, &m_jumpValue }
+            { &m_moveForwardEventId, &m_forwardValue },
+            { &m_moveBackEventId, &m_backValue },
+            { &m_moveLeftEventId, &m_leftValue },
+            { &m_moveRightEventId, &m_rightValue },
+            { &m_rotateYawEventId, &m_yawValue },
+            { &m_rotatePitchEventId, &m_pitchValue },
+            { &m_sprintEventId, &m_sprintValue },
+            { &m_crouchEventId, &m_crouchValue },
+            { &m_jumpEventId, &m_jumpValue },
+            { &m_actionEventId, &m_actionValue },
+            { &m_attackEventId, &m_attackValue },
+            { &m_blockEventId, &m_blockValue },
+            { &m_reloadEventId, &m_reloadValue },
+            { &m_nextWeaponEventId, &m_nextWeaponValue },
+            { &m_prevWeaponEventId, &m_prevWeaponValue },
         };
     };
 } // namespace FirstPersonController

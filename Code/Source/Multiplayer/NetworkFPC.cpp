@@ -42,6 +42,27 @@ namespace FirstPersonController
         if (serializeContext)
             serializeContext->Class<NetworkFPC, NetworkFPCBase>()->Version(1);
 
+        if (auto bc = azrtti_cast<AZ::BehaviorContext*>(context))
+        {
+            bc->EBus<NetworkFPCControllerNotificationBus>("NetworkFPCControllerNotificationBus")
+                ->Handler<NetworkFPCControllerNotificationHandler>();
+
+            bc->EBus<NetworkFPCControllerRequestBus>("NetworkFPCControllerRequestBus")
+                ->Attribute(AZ::Script::Attributes::Scope, AZ::Script::Attributes::ScopeFlags::Common)
+                ->Attribute(AZ::Script::Attributes::Module, "controller")
+                ->Attribute(AZ::Script::Attributes::Category, "NetworkFPC")
+                ->Event("TryAddVelocityForNetworkTick", &NetworkFPCControllerRequests::GetHostTimeMs)
+                ->Event("Get Host Time Ms", &NetworkFPCControllerRequests::GetHostTimeMs)
+                ->Event("Get NetworkFPC Enabled", &NetworkFPCControllerRequests::GetEnabled)
+                ->Event("Set NetworkFPC Enabled", &NetworkFPCControllerRequests::SetEnabled)
+                ->Event("Get Action Input Value", &NetworkFPCControllerRequests::GetActionInputValue)
+                ->Event("Get Attack Input Value", &NetworkFPCControllerRequests::GetAttackInputValue)
+                ->Event("Get Block Input Value", &NetworkFPCControllerRequests::GetBlockInputValue)
+                ->Event("Get Reload Input Value", &NetworkFPCControllerRequests::GetReloadInputValue)
+                ->Event("Get Next Weapon Input Value", &NetworkFPCControllerRequests::GetNextWeaponInputValue)
+                ->Event("Get Previous Weapon Input Value", &NetworkFPCControllerRequests::GetPrevWeaponInputValue);
+        }
+
         NetworkFPCBase::Reflect(context);
     }
 
@@ -302,7 +323,7 @@ namespace FirstPersonController
             const AZ::u8 size = sizeof(m_inputNames) / sizeof(AZStd::string*);
 
             for (AZ::u8 i = 0; i < size; ++i)
-                m_inputNames[i] = m_firstPersonControllerObject->m_inputNames[i];
+                m_inputNames[i] = m_inputNames[i];
 
             for (auto& it_event : m_controlMap)
             {
@@ -514,6 +535,12 @@ namespace FirstPersonController
             playerInput->m_sprint = m_sprintValue;
             playerInput->m_crouch = m_crouchValue;
             playerInput->m_jump = m_jumpValue;
+            playerInput->m_action = m_actionValue;
+            playerInput->m_attack = m_attackValue;
+            playerInput->m_block = m_blockValue;
+            playerInput->m_reload = m_reloadValue;
+            playerInput->m_nextWeapon = m_nextWeaponValue;
+            playerInput->m_prevWeapon = m_prevWeaponValue;
         }
 
         playerInput->m_desiredVelocity = GetDesiredVelocity();
@@ -576,6 +603,7 @@ namespace FirstPersonController
             SetSprintMaxTime(m_firstPersonControllerObject->m_sprintMaxTime);
             SetSprintTotalCooldownTime(m_firstPersonControllerObject->m_sprintTotalCooldownTime);
             SetJumpInitialVelocity(m_firstPersonControllerObject->m_jumpInitialVelocity);
+            m_firstPersonControllerObject->m_eyeHeight = GetEyeHeight();
         }
 
         // Assign the First Person Controller's inputs from the network inputs
@@ -588,6 +616,52 @@ namespace FirstPersonController
         m_firstPersonControllerObject->m_sprintValue = playerInput->m_sprint;
         m_firstPersonControllerObject->m_crouchValue = playerInput->m_crouch;
         m_firstPersonControllerObject->m_jumpValue = playerInput->m_jump;
+
+        // Compare the previous and current action, attack, block, and reload values to trigger pressed and released notification events.
+        // These are done here instead of inside OnPressed(...) and OnReleased(...) so the notification events can be used on the server.
+        if (m_prevActionValue == 0.f && playerInput->m_action != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnActionPressed, playerInput->m_action);
+        else if (m_prevActionValue != 0.f && playerInput->m_action == 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnActionReleased, playerInput->m_action);
+        if (m_prevAttackValue == 0.f && playerInput->m_attack != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnAttackPressed, playerInput->m_attack);
+        else if (m_prevAttackValue != 0.f && playerInput->m_attack == 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnAttackReleased, playerInput->m_attack);
+        if (m_prevBlockValue == 0.f && playerInput->m_block != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnBlockPressed, playerInput->m_block);
+        else if (m_prevBlockValue != 0.f && playerInput->m_block == 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnBlockReleased, playerInput->m_block);
+        if (m_prevReloadValue == 0.f && playerInput->m_reload != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnReloadPressed, playerInput->m_reload);
+        else if (m_prevReloadValue != 0.f && playerInput->m_reload == 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnReloadReleased, playerInput->m_reload);
+        if (m_prevNextWeaponValue == 0.f && playerInput->m_nextWeapon != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponPressed, playerInput->m_nextWeapon);
+        else if (m_prevNextWeaponValue != 0.f && playerInput->m_nextWeapon == 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponReleased, playerInput->m_nextWeapon);
+        if (m_prevPrevWeaponValue == 0.f && playerInput->m_prevWeapon != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponPressed, playerInput->m_prevWeapon);
+        else if (m_prevPrevWeaponValue != 0.f && playerInput->m_prevWeapon == 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponReleased, playerInput->m_prevWeapon);
+
+        m_prevActionValue = playerInput->m_action;
+        m_prevAttackValue = playerInput->m_attack;
+        m_prevBlockValue = playerInput->m_block;
+        m_prevReloadValue = playerInput->m_reload;
+        m_prevNextWeaponValue = playerInput->m_nextWeapon;
+        m_prevPrevWeaponValue = playerInput->m_prevWeapon;
 
         if (playerInput->m_sprint != 0.f &&
             (m_firstPersonControllerObject->m_grounded || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
@@ -848,5 +922,29 @@ namespace FirstPersonController
     bool NetworkFPCController::GetIsNetEntityRoleAuthority() const
     {
         return IsNetEntityRoleAuthority();
+    }
+    float NetworkFPCController::GetActionInputValue() const
+    {
+        return m_actionValue;
+    }
+    float NetworkFPCController::GetAttackInputValue() const
+    {
+        return m_attackValue;
+    }
+    float NetworkFPCController::GetBlockInputValue() const
+    {
+        return m_blockValue;
+    }
+    float NetworkFPCController::GetReloadInputValue() const
+    {
+        return m_reloadValue;
+    }
+    float NetworkFPCController::GetNextWeaponInputValue() const
+    {
+        return m_nextWeaponValue;
+    }
+    float NetworkFPCController::GetPrevWeaponInputValue() const
+    {
+        return m_prevWeaponValue;
     }
 } // namespace FirstPersonController
