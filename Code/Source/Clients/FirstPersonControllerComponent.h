@@ -565,7 +565,7 @@ namespace FirstPersonController
         static bool GetIsNetworkingActive();
         static bool GetIsInEditor();
         bool GetNetworkFPCAllowActionInputs() const override;
-        void SetNetworkFPCAllowActionInputs(const bool allowMovementInputs) override;
+        void SetNetworkFPCAllowActionInputs(const bool allowActionInputs) override;
         bool GetNetworkFPCAllowRotationInputs() const override;
         void SetNetworkFPCAllowRotationInputs(const bool allowRotationInputs) override;
         AZ::TimeMs GetNetworkFPCHostTimeMs() const override;
@@ -1000,7 +1000,7 @@ namespace FirstPersonController
         float m_crouchValue = 0.f;
         float m_jumpValue = 0.f;
 
-        // Event IDs and action names
+        // Event IDs and input names
         StartingPointInput::InputEventNotificationId m_moveForwardEventId;
         AZStd::string m_strForward = "Forward";
         StartingPointInput::InputEventNotificationId m_moveBackEventId;
@@ -1020,7 +1020,7 @@ namespace FirstPersonController
         StartingPointInput::InputEventNotificationId m_jumpEventId;
         AZStd::string m_strJump = "Jump";
 
-        // Array of action names
+        // Array of input names
         AZStd::string* m_inputNames[9] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight, &m_strYaw,
                                            &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump };
 

@@ -6867,16 +6867,16 @@ namespace FirstPersonController
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            return m_networkFPCControllerObject->m_allowMovementInputs;
+            return m_networkFPCControllerObject->m_allowActionInputs;
         else
 #endif
             return true;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCAllowActionInputs([[maybe_unused]] const bool allowMovementInputs)
+    void FirstPersonControllerComponent::SetNetworkFPCAllowActionInputs([[maybe_unused]] const bool allowActionInputs)
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            m_networkFPCControllerObject->m_allowMovementInputs = allowMovementInputs;
+            m_networkFPCControllerObject->m_allowActionInputs = allowActionInputs;
 #endif
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowRotationInputs() const

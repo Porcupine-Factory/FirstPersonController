@@ -144,14 +144,14 @@ namespace FirstPersonController
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float deltaTime) override;
         bool GetAllowActionInputs() const override;
-        void SetAllowActionInputs(const bool allowMovementInputs) override;
+        void SetAllowActionInputs(const bool allowActionInputs) override;
         bool GetAllowRotationInputs() const override;
         void SetAllowRotationInputs(const bool allowRotationInputs) override;
         AZ::TimeMs GetHostTimeMs() const override;
         bool GetEnabled() const override;
         void SetEnabled(const bool enabled) override;
         bool GetIsNetEntityRoleAuthority() const override;
-        float GetActionInputValue() const override;
+        float GetInteractInputValue() const override;
         float GetAttackInputValue() const override;
         float GetBlockInputValue() const override;
         float GetReloadInputValue() const override;
@@ -199,8 +199,8 @@ namespace FirstPersonController
         void OnBotStringNetEntityIdsChanged(const AZStd::vector<AZStd::string>& botStringNetEntityIds);
         bool m_disabled = false;
 
-        // Used to allow or prevent all player character inputs from going to the server (e.g. in menus)
-        bool m_allowMovementInputs = true;
+        // Used to allow or prevent action inputs from going to the server (e.g. in menus)
+        bool m_allowActionInputs = true;
 
         // Used to allow or prevent the rotation inputs from being applied to the character (e.g. in menus)
         bool m_allowRotationInputs = true;
@@ -226,8 +226,8 @@ namespace FirstPersonController
         float m_sprintValue = 0.f;
         float m_crouchValue = 0.f;
         float m_jumpValue = 0.f;
-        float m_actionValue = 0.f;
-        float m_prevActionValue = 0.f;
+        float m_interactValue = 0.f;
+        float m_prevInteractValue = 0.f;
         float m_attackValue = 0.f;
         float m_prevAttackValue = 0.f;
         float m_blockValue = 0.f;
@@ -239,7 +239,7 @@ namespace FirstPersonController
         float m_prevWeaponValue = 0.f;
         float m_prevPrevWeaponValue = 0.f;
 
-        // Event IDs and action names
+        // Event IDs and input names
         StartingPointInput::InputEventNotificationId m_moveForwardEventId;
         AZStd::string m_strForward = "Forward";
         StartingPointInput::InputEventNotificationId m_moveBackEventId;
@@ -258,8 +258,8 @@ namespace FirstPersonController
         AZStd::string m_strCrouch = "Crouch";
         StartingPointInput::InputEventNotificationId m_jumpEventId;
         AZStd::string m_strJump = "Jump";
-        StartingPointInput::InputEventNotificationId m_actionEventId;
-        AZStd::string m_strAction = "Action";
+        StartingPointInput::InputEventNotificationId m_interactEventId;
+        AZStd::string m_strInteract = "Interact";
         StartingPointInput::InputEventNotificationId m_attackEventId;
         AZStd::string m_strAttack = "Attack";
         StartingPointInput::InputEventNotificationId m_blockEventId;
@@ -271,9 +271,9 @@ namespace FirstPersonController
         StartingPointInput::InputEventNotificationId m_prevWeaponEventId;
         AZStd::string m_strPrevWeapon = "PrevWeapon";
 
-        // Array of action names
+        // Array of input names
         AZStd::string* m_inputNames[15] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight,      &m_strYaw,
-                                            &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump,       &m_strAction,
+                                            &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump,       &m_strInteract,
                                             &m_strAttack,  &m_strBlock,  &m_strReload, &m_strNextWeapon, &m_strPrevWeapon };
 
         // Map of event IDs and event value multipliers
@@ -287,7 +287,7 @@ namespace FirstPersonController
             { &m_sprintEventId, &m_sprintValue },
             { &m_crouchEventId, &m_crouchValue },
             { &m_jumpEventId, &m_jumpValue },
-            { &m_actionEventId, &m_actionValue },
+            { &m_interactEventId, &m_interactValue },
             { &m_attackEventId, &m_attackValue },
             { &m_blockEventId, &m_blockValue },
             { &m_reloadEventId, &m_reloadValue },

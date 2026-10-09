@@ -55,7 +55,7 @@ namespace FirstPersonController
                 ->Event("Get Host Time Ms", &NetworkFPCControllerRequests::GetHostTimeMs)
                 ->Event("Get NetworkFPC Enabled", &NetworkFPCControllerRequests::GetEnabled)
                 ->Event("Set NetworkFPC Enabled", &NetworkFPCControllerRequests::SetEnabled)
-                ->Event("Get Action Input Value", &NetworkFPCControllerRequests::GetActionInputValue)
+                ->Event("Get Interact Input Value", &NetworkFPCControllerRequests::GetInteractInputValue)
                 ->Event("Get Attack Input Value", &NetworkFPCControllerRequests::GetAttackInputValue)
                 ->Event("Get Block Input Value", &NetworkFPCControllerRequests::GetBlockInputValue)
                 ->Event("Get Reload Input Value", &NetworkFPCControllerRequests::GetReloadInputValue)
@@ -357,7 +357,7 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 return;
-                // print the local user ID and the action name CRC
+                // print the local user ID and the input name CRC
                 // AZ_Printf("Network FPC Component", "Pressed: %s", it_event.first->ToString().c_str());
             }
         }
@@ -375,7 +375,7 @@ namespace FirstPersonController
             {
                 *(it_event.second) = value;
                 return;
-                // print the local user ID and the action name CRC
+                // print the local user ID and the input name CRC
                 // AZ_Printf("Network FPC Component", "Released: %s", it_event.first->ToString().c_str());
             }
         }
@@ -526,7 +526,7 @@ namespace FirstPersonController
             playerInput->m_pitch = m_pitchValue;
             playerInput->m_yaw = m_yawValue;
         }
-        if (m_allowMovementInputs)
+        if (m_allowActionInputs)
         {
             playerInput->m_forward = m_forwardValue;
             playerInput->m_back = m_backValue;
@@ -535,7 +535,7 @@ namespace FirstPersonController
             playerInput->m_sprint = m_sprintValue;
             playerInput->m_crouch = m_crouchValue;
             playerInput->m_jump = m_jumpValue;
-            playerInput->m_action = m_actionValue;
+            playerInput->m_interact = m_interactValue;
             playerInput->m_attack = m_attackValue;
             playerInput->m_block = m_blockValue;
             playerInput->m_reload = m_reloadValue;
@@ -607,61 +607,94 @@ namespace FirstPersonController
         }
 
         // Assign the First Person Controller's inputs from the network inputs
-        m_firstPersonControllerObject->m_forwardValue = playerInput->m_forward;
-        m_firstPersonControllerObject->m_backValue = playerInput->m_back;
-        m_firstPersonControllerObject->m_leftValue = playerInput->m_left;
-        m_firstPersonControllerObject->m_rightValue = playerInput->m_right;
-        m_firstPersonControllerObject->m_yawValue = playerInput->m_yaw;
-        m_firstPersonControllerObject->m_pitchValue = playerInput->m_pitch;
-        m_firstPersonControllerObject->m_sprintValue = playerInput->m_sprint;
-        m_firstPersonControllerObject->m_crouchValue = playerInput->m_crouch;
-        m_firstPersonControllerObject->m_jumpValue = playerInput->m_jump;
+        if (m_allowActionInputs)
+        {
+            m_firstPersonControllerObject->m_forwardValue = playerInput->m_forward;
+            m_firstPersonControllerObject->m_backValue = playerInput->m_back;
+            m_firstPersonControllerObject->m_leftValue = playerInput->m_left;
+            m_firstPersonControllerObject->m_rightValue = playerInput->m_right;
+            m_firstPersonControllerObject->m_sprintValue = playerInput->m_sprint;
+            m_firstPersonControllerObject->m_crouchValue = playerInput->m_crouch;
+            m_firstPersonControllerObject->m_jumpValue = playerInput->m_jump;
+        }
+        else
+        {
+            m_firstPersonControllerObject->m_forwardValue = 0.f;
+            m_firstPersonControllerObject->m_backValue = 0.f;
+            m_firstPersonControllerObject->m_leftValue = 0.f;
+            m_firstPersonControllerObject->m_rightValue = 0.f;
+            m_firstPersonControllerObject->m_sprintValue = 0.f;
+            m_firstPersonControllerObject->m_crouchValue = 0.f;
+            m_firstPersonControllerObject->m_jumpValue = 0.f;
+        }
+        if (m_allowRotationInputs)
+        {
+            m_firstPersonControllerObject->m_yawValue = playerInput->m_yaw;
+            m_firstPersonControllerObject->m_pitchValue = playerInput->m_pitch;
+        }
+        else
+        {
+            m_firstPersonControllerObject->m_yawValue = 0.f;
+            m_firstPersonControllerObject->m_pitchValue = 0.f;
+        }
 
-        // Compare the previous and current action, attack, block, and reload values to trigger pressed and released notification events.
+        // Compare the previous and current interact, attack, block, and reload values to trigger pressed and released notification events.
         // These are done here instead of inside OnPressed(...) and OnReleased(...) so the notification events can be used on the server.
-        if (m_prevActionValue == 0.f && playerInput->m_action != 0.f)
+        if (m_prevInteractValue == 0.f && playerInput->m_interact != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
-                GetEntityId(), &NetworkFPCControllerNotifications::OnActionPressed, playerInput->m_action);
-        else if (m_prevActionValue != 0.f && playerInput->m_action == 0.f)
+                GetEntityId(), &NetworkFPCControllerNotifications::OnInteractPressed, playerInput->m_interact);
+        else if ((m_prevInteractValue != 0.f && playerInput->m_interact == 0.f) || (m_prevInteractValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
-                GetEntityId(), &NetworkFPCControllerNotifications::OnActionReleased, playerInput->m_action);
-        if (m_prevAttackValue == 0.f && playerInput->m_attack != 0.f)
+                GetEntityId(), &NetworkFPCControllerNotifications::OnInteractReleased, playerInput->m_interact);
+        if (m_prevAttackValue == 0.f && playerInput->m_attack != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnAttackPressed, playerInput->m_attack);
-        else if (m_prevAttackValue != 0.f && playerInput->m_attack == 0.f)
+        else if ((m_prevAttackValue != 0.f && playerInput->m_attack == 0.f) || (m_prevAttackValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnAttackReleased, playerInput->m_attack);
-        if (m_prevBlockValue == 0.f && playerInput->m_block != 0.f)
+        if (m_prevBlockValue == 0.f && playerInput->m_block != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnBlockPressed, playerInput->m_block);
-        else if (m_prevBlockValue != 0.f && playerInput->m_block == 0.f)
+        else if ((m_prevBlockValue != 0.f && playerInput->m_block == 0.f) || (m_prevBlockValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnBlockReleased, playerInput->m_block);
-        if (m_prevReloadValue == 0.f && playerInput->m_reload != 0.f)
+        if (m_prevReloadValue == 0.f && playerInput->m_reload != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnReloadPressed, playerInput->m_reload);
-        else if (m_prevReloadValue != 0.f && playerInput->m_reload == 0.f)
+        else if ((m_prevReloadValue != 0.f && playerInput->m_reload == 0.f) || (m_prevReloadValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnReloadReleased, playerInput->m_reload);
-        if (m_prevNextWeaponValue == 0.f && playerInput->m_nextWeapon != 0.f)
+        if (m_prevNextWeaponValue == 0.f && playerInput->m_nextWeapon != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponPressed, playerInput->m_nextWeapon);
-        else if (m_prevNextWeaponValue != 0.f && playerInput->m_nextWeapon == 0.f)
+        else if ((m_prevNextWeaponValue != 0.f && playerInput->m_nextWeapon == 0.f) || (m_prevNextWeaponValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponReleased, playerInput->m_nextWeapon);
-        if (m_prevPrevWeaponValue == 0.f && playerInput->m_prevWeapon != 0.f)
+        if (m_prevPrevWeaponValue == 0.f && playerInput->m_prevWeapon != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponPressed, playerInput->m_prevWeapon);
-        else if (m_prevPrevWeaponValue != 0.f && playerInput->m_prevWeapon == 0.f)
+        else if ((m_prevPrevWeaponValue != 0.f && playerInput->m_prevWeapon == 0.f) || (m_prevPrevWeaponValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponReleased, playerInput->m_prevWeapon);
 
-        m_prevActionValue = playerInput->m_action;
-        m_prevAttackValue = playerInput->m_attack;
-        m_prevBlockValue = playerInput->m_block;
-        m_prevReloadValue = playerInput->m_reload;
-        m_prevNextWeaponValue = playerInput->m_nextWeapon;
-        m_prevPrevWeaponValue = playerInput->m_prevWeapon;
+        if (m_allowActionInputs)
+        {
+            m_prevInteractValue = playerInput->m_interact;
+            m_prevAttackValue = playerInput->m_attack;
+            m_prevBlockValue = playerInput->m_block;
+            m_prevReloadValue = playerInput->m_reload;
+            m_prevNextWeaponValue = playerInput->m_nextWeapon;
+            m_prevPrevWeaponValue = playerInput->m_prevWeapon;
+        }
+        else
+        {
+            m_prevInteractValue = 0.f;
+            m_prevAttackValue = 0.f;
+            m_prevBlockValue = 0.f;
+            m_prevReloadValue = 0.f;
+            m_prevNextWeaponValue = 0.f;
+            m_prevPrevWeaponValue = 0.f;
+        }
 
         if (playerInput->m_sprint != 0.f &&
             (m_firstPersonControllerObject->m_grounded || m_firstPersonControllerObject->m_coyoteTimeNoGravityActive ||
@@ -875,11 +908,11 @@ namespace FirstPersonController
     }
     bool NetworkFPCController::GetAllowActionInputs() const
     {
-        return m_allowMovementInputs;
+        return m_allowActionInputs;
     }
-    void NetworkFPCController::SetAllowActionInputs(const bool allowMovementInputs)
+    void NetworkFPCController::SetAllowActionInputs(const bool allowActionInputs)
     {
-        m_allowMovementInputs = allowMovementInputs;
+        m_allowActionInputs = allowActionInputs;
     }
     bool NetworkFPCController::GetAllowRotationInputs() const
     {
@@ -923,9 +956,9 @@ namespace FirstPersonController
     {
         return IsNetEntityRoleAuthority();
     }
-    float NetworkFPCController::GetActionInputValue() const
+    float NetworkFPCController::GetInteractInputValue() const
     {
-        return m_actionValue;
+        return m_interactValue;
     }
     float NetworkFPCController::GetAttackInputValue() const
     {

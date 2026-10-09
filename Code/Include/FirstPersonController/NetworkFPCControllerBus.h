@@ -26,7 +26,7 @@ namespace FirstPersonController
         virtual bool GetEnabled() const = 0;
         virtual void SetEnabled(const bool) = 0;
         virtual bool GetIsNetEntityRoleAuthority() const = 0;
-        virtual float GetActionInputValue() const = 0;
+        virtual float GetInteractInputValue() const = 0;
         virtual float GetAttackInputValue() const = 0;
         virtual float GetBlockInputValue() const = 0;
         virtual float GetReloadInputValue() const = 0;
@@ -44,8 +44,8 @@ namespace FirstPersonController
         virtual void OnAutonomousClientActivated(const AZ::EntityId&) {};
         virtual void OnHostActivated(const AZ::EntityId&) {};
         virtual void OnNonAutonomousClientActivated(const AZ::EntityId&) {};
-        virtual void OnActionPressed(const float) {};
-        virtual void OnActionReleased(const float) {};
+        virtual void OnInteractPressed(const float) {};
+        virtual void OnInteractReleased(const float) {};
         virtual void OnAttackPressed(const float) {};
         virtual void OnAttackReleased(const float) {};
         virtual void OnBlockPressed(const float) {};
@@ -74,8 +74,8 @@ namespace FirstPersonController
             OnAutonomousClientActivated,
             OnHostActivated,
             OnNonAutonomousClientActivated,
-            OnActionPressed,
-            OnActionReleased,
+            OnInteractPressed,
+            OnInteractReleased,
             OnAttackPressed,
             OnAttackReleased,
             OnBlockPressed,
@@ -107,13 +107,13 @@ namespace FirstPersonController
         {
             Call(FN_OnNonAutonomousClientActivated, entityId);
         }
-        void OnActionPressed(const float actionValue) override
+        void OnInteractPressed(const float interactValue) override
         {
-            Call(FN_OnActionPressed, actionValue);
+            Call(FN_OnInteractPressed, interactValue);
         }
-        void OnActionReleased(const float actionValue) override
+        void OnInteractReleased(const float interactValue) override
         {
-            Call(FN_OnActionReleased, actionValue);
+            Call(FN_OnInteractReleased, interactValue);
         }
         void OnAttackPressed(const float attackValue) override
         {
