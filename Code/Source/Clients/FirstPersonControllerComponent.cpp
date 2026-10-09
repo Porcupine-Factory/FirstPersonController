@@ -1196,6 +1196,7 @@ namespace FirstPersonController
                 ->Event("Set Character Heading For Tick", &FirstPersonControllerComponentRequests::SetHeadingForTick)
                 ->Event("Get Camera Pitch", &FirstPersonControllerComponentRequests::GetPitch)
                 ->Event("Get Camera Yaw", &FirstPersonControllerComponentRequests::GetYaw)
+                ->Event("Get Look Direction", &FirstPersonControllerComponentRequests::GetLookDirection)
                 ->Event("Get Is Autonomous Client", &FirstPersonControllerComponentRequests::GetIsAutonomousClient)
                 ->Event("Set Is Autonomous Client", &FirstPersonControllerComponentRequests::SetIsAutonomousClient)
                 ->Event("Get Is Server", &FirstPersonControllerComponentRequests::GetIsServer)
@@ -6663,6 +6664,16 @@ namespace FirstPersonController
     float FirstPersonControllerComponent::GetYaw() const
     {
         return m_cameraYaw;
+    }
+    AZ::Vector3 FirstPersonControllerComponent::GetLookDirection() const
+    {
+        const AZ::Vector3 characterRight = GetEntity()->GetTransform()->GetWorldTM().GetBasisX();
+        AZ::Quaternion rotation = AZ::Quaternion::CreateFromAxisAngle(characterRight, m_cameraPitch - AZ::Constants::HalfPi);
+#ifdef NETWORKFPC
+        if (m_networkFPCEnabled)
+            rotation = AZ::Quaternion::CreateFromAxisAngle(characterRight, m_networkFPCObject->GetHeadPitch() - AZ::Constants::HalfPi);
+#endif
+        return AZ::Transform::CreateFromQuaternion(rotation).TransformVector(m_sphereCastsAxisDirectionPose);
     }
     bool FirstPersonControllerComponent::GetIsAutonomousClient() const
     {

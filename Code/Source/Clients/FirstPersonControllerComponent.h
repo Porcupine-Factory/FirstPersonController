@@ -511,6 +511,7 @@ namespace FirstPersonController
         void SetHeadingForTick(const float currentHeading) override;
         float GetPitch() const override;
         float GetYaw() const override;
+        AZ::Vector3 GetLookDirection() const override;
         bool GetIsAutonomousClient() const override;
         void SetIsAutonomousClient(const bool isAutonomousClient) override;
         bool GetIsServer() const override;

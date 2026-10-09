@@ -435,6 +435,7 @@ namespace FirstPersonController
         virtual void SetHeadingForTick(const float) = 0;
         virtual float GetPitch() const = 0;
         virtual float GetYaw() const = 0;
+        virtual AZ::Vector3 GetLookDirection() const = 0;
         virtual bool GetIsAutonomousClient() const = 0;
         virtual void SetIsAutonomousClient(const bool) = 0;
         virtual bool GetIsServer() const = 0;
