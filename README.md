@@ -1,4 +1,4 @@
-# FirstPersonController
+# First Person Controller
 O3DE First Person Controller Gem licensed under the [MPL 2.0](/LICENSE.txt).
 
 ## Installation Instructions
