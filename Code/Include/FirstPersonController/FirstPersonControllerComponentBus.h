@@ -446,8 +446,8 @@ namespace FirstPersonController
         virtual void SetIsNetBot(const bool) = 0;
         virtual AZStd::vector<AZ::EntityId> GetOtherPlayerEntityIds() const = 0;
         virtual AZStd::vector<AZ::EntityId> GetNetBotEntityIds() const = 0;
-        virtual bool GetNetworkFPCAllowAllMovementInputs() const = 0;
-        virtual void SetNetworkFPCAllowAllMovementInputs(const bool) = 0;
+        virtual bool GetNetworkFPCAllowActionInputs() const = 0;
+        virtual void SetNetworkFPCAllowActionInputs(const bool) = 0;
         virtual bool GetNetworkFPCAllowRotationInputs() const = 0;
         virtual void SetNetworkFPCAllowRotationInputs(const bool) = 0;
         virtual AZ::TimeMs GetNetworkFPCHostTimeMs() const = 0;

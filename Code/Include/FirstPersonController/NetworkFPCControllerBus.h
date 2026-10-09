@@ -18,8 +18,8 @@ namespace FirstPersonController
         ~NetworkFPCControllerRequests() override = default;
 
         virtual void TryAddVelocityForNetworkTick(const AZ::Vector3&, const float) = 0;
-        virtual bool GetAllowAllMovementInputs() const = 0;
-        virtual void SetAllowAllMovementInputs(const bool) = 0;
+        virtual bool GetAllowActionInputs() const = 0;
+        virtual void SetAllowActionInputs(const bool) = 0;
         virtual bool GetAllowRotationInputs() const = 0;
         virtual void SetAllowRotationInputs(const bool) = 0;
         virtual AZ::TimeMs GetHostTimeMs() const = 0;

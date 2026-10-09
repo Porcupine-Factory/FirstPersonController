@@ -143,8 +143,8 @@ namespace FirstPersonController
 
         // NetworkFPCControllerRequestBus
         void TryAddVelocityForNetworkTick(const AZ::Vector3& tryVelocity, const float deltaTime) override;
-        bool GetAllowAllMovementInputs() const override;
-        void SetAllowAllMovementInputs(const bool allowAllMovementInputs) override;
+        bool GetAllowActionInputs() const override;
+        void SetAllowActionInputs(const bool allowMovementInputs) override;
         bool GetAllowRotationInputs() const override;
         void SetAllowRotationInputs(const bool allowRotationInputs) override;
         AZ::TimeMs GetHostTimeMs() const override;
@@ -200,7 +200,7 @@ namespace FirstPersonController
         bool m_disabled = false;
 
         // Used to allow or prevent all player character inputs from going to the server (e.g. in menus)
-        bool m_allowAllMovementInputs = true;
+        bool m_allowMovementInputs = true;
 
         // Used to allow or prevent the rotation inputs from being applied to the character (e.g. in menus)
         bool m_allowRotationInputs = true;

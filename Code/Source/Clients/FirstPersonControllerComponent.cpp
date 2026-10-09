@@ -1207,12 +1207,8 @@ namespace FirstPersonController
                 ->Event("Set Is Net Bot", &FirstPersonControllerComponentRequests::SetIsNetBot)
                 ->Event("Get Other Player EntityIds", &FirstPersonControllerComponentRequests::GetOtherPlayerEntityIds)
                 ->Event("Get Net Bot EntityIds", &FirstPersonControllerComponentRequests::GetNetBotEntityIds)
-                ->Event(
-                    "Get NetworkFPC Allow All Movement Inputs",
-                    &FirstPersonControllerComponentRequests::GetNetworkFPCAllowAllMovementInputs)
-                ->Event(
-                    "Set NetworkFPC Allow All Movement Inputs",
-                    &FirstPersonControllerComponentRequests::SetNetworkFPCAllowAllMovementInputs)
+                ->Event("Get NetworkFPC Allow Action Inputs", &FirstPersonControllerComponentRequests::GetNetworkFPCAllowActionInputs)
+                ->Event("Set NetworkFPC Allow Action Inputs", &FirstPersonControllerComponentRequests::SetNetworkFPCAllowActionInputs)
                 ->Event("Get NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::GetNetworkFPCAllowRotationInputs)
                 ->Event("Set NetworkFPC Allow Rotation Inputs", &FirstPersonControllerComponentRequests::SetNetworkFPCAllowRotationInputs)
                 ->Event("Get NetworkFPC Host Time Ms", &FirstPersonControllerComponentRequests::GetNetworkFPCHostTimeMs)
@@ -6867,20 +6863,20 @@ namespace FirstPersonController
         // If no autonomous client entity was found then return an invalid EntityId
         return AZ::EntityId(AZ::EntityId::InvalidEntityId);
     }
-    bool FirstPersonControllerComponent::GetNetworkFPCAllowAllMovementInputs() const
+    bool FirstPersonControllerComponent::GetNetworkFPCAllowActionInputs() const
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            return m_networkFPCControllerObject->m_allowAllMovementInputs;
+            return m_networkFPCControllerObject->m_allowMovementInputs;
         else
 #endif
             return true;
     }
-    void FirstPersonControllerComponent::SetNetworkFPCAllowAllMovementInputs([[maybe_unused]] const bool allowAllMovementInputs)
+    void FirstPersonControllerComponent::SetNetworkFPCAllowActionInputs([[maybe_unused]] const bool allowMovementInputs)
     {
 #ifdef NETWORKFPC
         if (m_networkFPCControllerObject != nullptr)
-            m_networkFPCControllerObject->m_allowAllMovementInputs = allowAllMovementInputs;
+            m_networkFPCControllerObject->m_allowMovementInputs = allowMovementInputs;
 #endif
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowRotationInputs() const

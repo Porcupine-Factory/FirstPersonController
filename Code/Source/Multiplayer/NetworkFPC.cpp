@@ -521,13 +521,13 @@ namespace FirstPersonController
         NetworkFPCNetworkInput* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
         // Assign input values
-        if (m_allowAllMovementInputs)
+        if (m_allowRotationInputs)
         {
-            if (m_allowRotationInputs)
-            {
-                playerInput->m_pitch = m_pitchValue;
-                playerInput->m_yaw = m_yawValue;
-            }
+            playerInput->m_pitch = m_pitchValue;
+            playerInput->m_yaw = m_yawValue;
+        }
+        if (m_allowMovementInputs)
+        {
             playerInput->m_forward = m_forwardValue;
             playerInput->m_back = m_backValue;
             playerInput->m_left = m_leftValue;
@@ -873,13 +873,13 @@ namespace FirstPersonController
     {
         GetNetworkCharacterComponentController()->TryMoveWithVelocity(tryVelocity, deltaTime);
     }
-    bool NetworkFPCController::GetAllowAllMovementInputs() const
+    bool NetworkFPCController::GetAllowActionInputs() const
     {
-        return m_allowAllMovementInputs;
+        return m_allowMovementInputs;
     }
-    void NetworkFPCController::SetAllowAllMovementInputs(const bool allowAllMovementInputs)
+    void NetworkFPCController::SetAllowActionInputs(const bool allowMovementInputs)
     {
-        m_allowAllMovementInputs = allowAllMovementInputs;
+        m_allowMovementInputs = allowMovementInputs;
     }
     bool NetworkFPCController::GetAllowRotationInputs() const
     {
