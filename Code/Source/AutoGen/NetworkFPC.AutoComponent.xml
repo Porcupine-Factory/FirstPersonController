@@ -269,6 +269,12 @@ You can obtain one at http://mozilla.org/MPL/2.0/.
     <ArchetypeProperty Type="AZStd::string" Name="LandParamName" Init="&quot;Land&quot;" ExposeToEditor="true" Description="Anim graph jump land parameter name."/>
     <ArchetypeProperty Type="AZStd::string" Name="GroundedParamName" Init="&quot;Grounded&quot;" ExposeToEditor="true" Description="Anim graph grounded parameter name."/>
     <ArchetypeProperty Type="AZStd::string" Name="LookUpDownParamName" Init="&quot;LookUpDown&quot;" ExposeToEditor="true" Description="Anim graph look up down parameter name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="InteractInputName" Init="&quot;Interact&quot;" ExposeToEditor="true" Description="Interact input event name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="AttackInputName" Init="&quot;Attack&quot;" ExposeToEditor="true" Description="Attack input event name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="BlockInputName" Init="&quot;Block&quot;" ExposeToEditor="true" Description="Block input event name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="ReloadInputName" Init="&quot;Reload&quot;" ExposeToEditor="true" Description="Reload input event name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="NextWeaponInputName" Init="&quot;NextWeapon&quot;" ExposeToEditor="true" Description="Next Weapon input event name."/>
+    <ArchetypeProperty Type="AZStd::string" Name="PrevWeaponInputName" Init="&quot;PrevWeapon&quot;" ExposeToEditor="true" Description="Previous Weapon input event name."/>
 
     <RemoteProcedure Name="ObtainParentNetEntityId" InvokeFrom="Autonomous" HandleOn="Authority" IsPublic="true" IsReliable="true" GenerateEventBindings="true" Description="Takes a NetEntityId as a string and constructs another string that is the provided NetEntityId and its parent's NetEntityId separated by a comma and stores the result in ChildParentStringNetEntityId">
         <Param Type="AZStd::string" Name="strNetEntityId"/>

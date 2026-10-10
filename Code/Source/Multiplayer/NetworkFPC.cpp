@@ -323,7 +323,7 @@ namespace FirstPersonController
             const AZ::u8 size = sizeof(m_firstPersonControllerObject->m_inputNames) / sizeof(AZStd::string*);
 
             for (AZ::u8 i = 0; i < size; ++i)
-                m_inputNames[i] = m_firstPersonControllerObject->m_inputNames[i];
+                *m_inputNames[i] = *m_firstPersonControllerObject->m_inputNames[i];
 
             for (auto& it_event : m_controlMap)
             {
@@ -451,7 +451,15 @@ namespace FirstPersonController
             m_firstPersonControllerObject->m_isNetBot = false;
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
+
+            m_strInteract = m_networkFPCObject->GetInteractInputName();
+            m_strAttack = m_networkFPCObject->GetAttackInputName();
+            m_strBlock = m_networkFPCObject->GetBlockInputName();
+            m_strReload = m_networkFPCObject->GetReloadInputName();
+            m_strNextWeapon = m_networkFPCObject->GetNextWeaponInputName();
+            m_strPrevWeapon = m_networkFPCObject->GetPrevWeaponInputName();
             AssignConnectInputEvents();
+
             if (IsNetEntityRoleAuthority())
             {
                 m_firstPersonControllerObject->m_isHost = true;
