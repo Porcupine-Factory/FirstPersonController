@@ -666,36 +666,54 @@ namespace FirstPersonController
         else if ((m_prevInteractValue != 0.f && playerInput->m_interact == 0.f) || (m_prevInteractValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnInteractReleased, playerInput->m_interact);
+        else if (playerInput->m_interact != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnInteractHeld, playerInput->m_interact);
         if (m_prevAttackValue == 0.f && playerInput->m_attack != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnAttackPressed, playerInput->m_attack);
         else if ((m_prevAttackValue != 0.f && playerInput->m_attack == 0.f) || (m_prevAttackValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnAttackReleased, playerInput->m_attack);
+        else if (playerInput->m_attack != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnAttackHeld, playerInput->m_attack);
         if (m_prevBlockValue == 0.f && playerInput->m_block != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnBlockPressed, playerInput->m_block);
         else if ((m_prevBlockValue != 0.f && playerInput->m_block == 0.f) || (m_prevBlockValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnBlockReleased, playerInput->m_block);
+        else if (playerInput->m_block != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnBlockHeld, playerInput->m_block);
         if (m_prevReloadValue == 0.f && playerInput->m_reload != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnReloadPressed, playerInput->m_reload);
         else if ((m_prevReloadValue != 0.f && playerInput->m_reload == 0.f) || (m_prevReloadValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnReloadReleased, playerInput->m_reload);
+        else if (playerInput->m_reload != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnReloadHeld, playerInput->m_reload);
         if (m_prevNextWeaponValue == 0.f && playerInput->m_nextWeapon != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponPressed, playerInput->m_nextWeapon);
         else if ((m_prevNextWeaponValue != 0.f && playerInput->m_nextWeapon == 0.f) || (m_prevNextWeaponValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponReleased, playerInput->m_nextWeapon);
+        else if (playerInput->m_nextWeapon != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnNextWeaponHeld, playerInput->m_nextWeapon);
         if (m_prevPrevWeaponValue == 0.f && playerInput->m_prevWeapon != 0.f && m_allowActionInputs)
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponPressed, playerInput->m_prevWeapon);
         else if ((m_prevPrevWeaponValue != 0.f && playerInput->m_prevWeapon == 0.f) || (m_prevPrevWeaponValue != 0 && !m_allowActionInputs))
             NetworkFPCControllerNotificationBus::Event(
                 GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponReleased, playerInput->m_prevWeapon);
+        else if (playerInput->m_prevWeapon != 0.f)
+            NetworkFPCControllerNotificationBus::Event(
+                GetEntityId(), &NetworkFPCControllerNotifications::OnPrevWeaponHeld, playerInput->m_prevWeapon);
 
         if (m_allowActionInputs)
         {

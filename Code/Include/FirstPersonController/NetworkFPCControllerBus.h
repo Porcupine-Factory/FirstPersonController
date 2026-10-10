@@ -58,16 +58,22 @@ namespace FirstPersonController
         virtual void OnNonAutonomousClientActivated(const AZ::EntityId&) {};
         virtual void OnInteractPressed(const float) {};
         virtual void OnInteractReleased(const float) {};
+        virtual void OnInteractHeld(const float) {};
         virtual void OnAttackPressed(const float) {};
         virtual void OnAttackReleased(const float) {};
+        virtual void OnAttackHeld(const float) {};
         virtual void OnBlockPressed(const float) {};
         virtual void OnBlockReleased(const float) {};
+        virtual void OnBlockHeld(const float) {};
         virtual void OnReloadPressed(const float) {};
         virtual void OnReloadReleased(const float) {};
+        virtual void OnReloadHeld(const float) {};
         virtual void OnNextWeaponPressed(const float) {};
         virtual void OnNextWeaponReleased(const float) {};
+        virtual void OnNextWeaponHeld(const float) {};
         virtual void OnPrevWeaponPressed(const float) {};
         virtual void OnPrevWeaponReleased(const float) {};
+        virtual void OnPrevWeaponHeld(const float) {};
     };
 
     using NetworkFPCControllerNotificationBus = AZ::EBus<NetworkFPCControllerNotifications>;
@@ -88,16 +94,22 @@ namespace FirstPersonController
             OnNonAutonomousClientActivated,
             OnInteractPressed,
             OnInteractReleased,
+            OnInteractHeld,
             OnAttackPressed,
             OnAttackReleased,
+            OnAttackHeld,
             OnBlockPressed,
             OnBlockReleased,
+            OnBlockHeld,
             OnReloadPressed,
             OnReloadReleased,
+            OnReloadHeld,
             OnNextWeaponPressed,
             OnNextWeaponReleased,
+            OnNextWeaponHeld,
             OnPrevWeaponPressed,
-            OnPrevWeaponReleased);
+            OnPrevWeaponReleased,
+            OnPrevWeaponHeld);
 
         void OnNetworkTickStart(const float deltaTime, const bool server, const AZ::EntityId& entityId) override
         {
@@ -127,6 +139,10 @@ namespace FirstPersonController
         {
             Call(FN_OnInteractReleased, interactValue);
         }
+        void OnInteractHeld(const float interactValue) override
+        {
+            Call(FN_OnInteractHeld, interactValue);
+        }
         void OnAttackPressed(const float attackValue) override
         {
             Call(FN_OnAttackPressed, attackValue);
@@ -134,6 +150,10 @@ namespace FirstPersonController
         void OnAttackReleased(const float attackValue) override
         {
             Call(FN_OnAttackReleased, attackValue);
+        }
+        void OnAttackHeld(const float attackValue) override
+        {
+            Call(FN_OnAttackHeld, attackValue);
         }
         void OnBlockPressed(const float blockValue) override
         {
@@ -143,6 +163,10 @@ namespace FirstPersonController
         {
             Call(FN_OnBlockReleased, blockValue);
         }
+        void OnBlockHeld(const float blockValue) override
+        {
+            Call(FN_OnBlockHeld, blockValue);
+        }
         void OnReloadPressed(const float reloadValue) override
         {
             Call(FN_OnReloadPressed, reloadValue);
@@ -150,6 +174,10 @@ namespace FirstPersonController
         void OnReloadReleased(const float reloadValue) override
         {
             Call(FN_OnReloadReleased, reloadValue);
+        }
+        void OnReloadHeld(const float reloadValue) override
+        {
+            Call(FN_OnReloadHeld, reloadValue);
         }
         void OnNextWeaponPressed(const float nextWeaponValue) override
         {
@@ -159,6 +187,10 @@ namespace FirstPersonController
         {
             Call(FN_OnNextWeaponReleased, nextWeaponValue);
         }
+        void OnNextWeaponHeld(const float nextWeaponValue) override
+        {
+            Call(FN_OnNextWeaponHeld, nextWeaponValue);
+        }
         void OnPrevWeaponPressed(const float prevWeaponValue) override
         {
             Call(FN_OnPrevWeaponPressed, prevWeaponValue);
@@ -166,6 +198,10 @@ namespace FirstPersonController
         void OnPrevWeaponReleased(const float prevWeaponValue) override
         {
             Call(FN_OnPrevWeaponReleased, prevWeaponValue);
+        }
+        void OnPrevWeaponHeld(const float prevWeaponValue) override
+        {
+            Call(FN_OnPrevWeaponHeld, prevWeaponValue);
         }
     };
 } // namespace FirstPersonController
