@@ -320,10 +320,10 @@ namespace FirstPersonController
         }
         else
         {
-            const AZ::u8 size = sizeof(m_inputNames) / sizeof(AZStd::string*);
+            const AZ::u8 size = sizeof(m_firstPersonControllerObject->m_inputNames) / sizeof(AZStd::string*);
 
             for (AZ::u8 i = 0; i < size; ++i)
-                m_inputNames[i] = m_inputNames[i];
+                m_inputNames[i] = m_firstPersonControllerObject->m_inputNames[i];
 
             for (auto& it_event : m_controlMap)
             {
