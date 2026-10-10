@@ -464,12 +464,12 @@ namespace FirstPersonController
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
 
-            m_strInteract = m_networkFPCObject->GetInteractEventName();
-            m_strAttack = m_networkFPCObject->GetAttackEventName();
-            m_strBlock = m_networkFPCObject->GetBlockEventName();
-            m_strReload = m_networkFPCObject->GetReloadEventName();
-            m_strNextWeapon = m_networkFPCObject->GetNextWeaponEventName();
-            m_strPrevWeapon = m_networkFPCObject->GetPrevWeaponEventName();
+            m_strInteract = m_networkFPCObject->GetInteractKey();
+            m_strAttack = m_networkFPCObject->GetAttackKey();
+            m_strBlock = m_networkFPCObject->GetBlockKey();
+            m_strReload = m_networkFPCObject->GetReloadKey();
+            m_strNextWeapon = m_networkFPCObject->GetNextWeaponKey();
+            m_strPrevWeapon = m_networkFPCObject->GetPrevWeaponKey();
             AssignConnectInputEvents();
 
             if (IsNetEntityRoleAuthority())
