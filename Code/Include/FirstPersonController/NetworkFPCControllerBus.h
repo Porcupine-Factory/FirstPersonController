@@ -32,6 +32,18 @@ namespace FirstPersonController
         virtual float GetReloadInputValue() const = 0;
         virtual float GetNextWeaponInputValue() const = 0;
         virtual float GetPrevWeaponInputValue() const = 0;
+        virtual AZStd::string GetInteractInputName() const = 0;
+        virtual void SetInteractInputName(const AZStd::string&) = 0;
+        virtual AZStd::string GetAttackInputName() const = 0;
+        virtual void SetAttackInputName(const AZStd::string&) = 0;
+        virtual AZStd::string GetBlockInputName() const = 0;
+        virtual void SetBlockInputName(const AZStd::string&) = 0;
+        virtual AZStd::string GetReloadInputName() const = 0;
+        virtual void SetReloadInputName(const AZStd::string&) = 0;
+        virtual AZStd::string GetNextWeaponInputName() const = 0;
+        virtual void SetNextWeaponInputName(const AZStd::string&) = 0;
+        virtual AZStd::string GetPrevWeaponInputName() const = 0;
+        virtual void SetPrevWeaponInputName(const AZStd::string&) = 0;
     };
 
     using NetworkFPCControllerRequestBus = AZ::EBus<NetworkFPCControllerRequests>;
