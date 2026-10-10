@@ -157,18 +157,18 @@ namespace FirstPersonController
         float GetReloadInputValue() const override;
         float GetNextWeaponInputValue() const override;
         float GetPrevWeaponInputValue() const override;
-        AZStd::string GetInteractInputName() const override;
-        void SetInteractInputName(const AZStd::string& strInteract) override;
-        AZStd::string GetAttackInputName() const override;
-        void SetAttackInputName(const AZStd::string& strAttack) override;
-        AZStd::string GetBlockInputName() const override;
-        void SetBlockInputName(const AZStd::string& strBlock) override;
-        AZStd::string GetReloadInputName() const override;
-        void SetReloadInputName(const AZStd::string& strReload) override;
-        AZStd::string GetNextWeaponInputName() const override;
-        void SetNextWeaponInputName(const AZStd::string& strNextWeapon) override;
-        AZStd::string GetPrevWeaponInputName() const override;
-        void SetPrevWeaponInputName(const AZStd::string& strPrevWeapon) override;
+        AZStd::string GetInteractEventName() const override;
+        void SetInteractEventName(const AZStd::string& strInteract) override;
+        AZStd::string GetAttackEventName() const override;
+        void SetAttackEventName(const AZStd::string& strAttack) override;
+        AZStd::string GetBlockEventName() const override;
+        void SetBlockEventName(const AZStd::string& strBlock) override;
+        AZStd::string GetReloadEventName() const override;
+        void SetReloadEventName(const AZStd::string& strReload) override;
+        AZStd::string GetNextWeaponEventName() const override;
+        void SetNextWeaponEventName(const AZStd::string& strNextWeapon) override;
+        AZStd::string GetPrevWeaponEventName() const override;
+        void SetPrevWeaponEventName(const AZStd::string& strPrevWeapon) override;
 
         // AZ::InputEventNotificationBus interface
         void OnPressed(float value) override;

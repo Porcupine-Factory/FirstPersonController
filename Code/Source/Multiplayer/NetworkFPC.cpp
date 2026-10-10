@@ -61,18 +61,18 @@ namespace FirstPersonController
                 ->Event("Get Reload Input Value", &NetworkFPCControllerRequests::GetReloadInputValue)
                 ->Event("Get Next Weapon Input Value", &NetworkFPCControllerRequests::GetNextWeaponInputValue)
                 ->Event("Get Previous Weapon Input Value", &NetworkFPCControllerRequests::GetPrevWeaponInputValue)
-                ->Event("Get Interact Input Name", &NetworkFPCControllerRequests::GetInteractInputName)
-                ->Event("Set Interact Input Name", &NetworkFPCControllerRequests::SetInteractInputName)
-                ->Event("Get Attack Input Name", &NetworkFPCControllerRequests::GetAttackInputName)
-                ->Event("Set Attack Input Name", &NetworkFPCControllerRequests::SetAttackInputName)
-                ->Event("Get Block Input Name", &NetworkFPCControllerRequests::GetBlockInputName)
-                ->Event("Set Block Input Name", &NetworkFPCControllerRequests::SetBlockInputName)
-                ->Event("Get Reload Input Name", &NetworkFPCControllerRequests::GetReloadInputName)
-                ->Event("Set Reload Input Name", &NetworkFPCControllerRequests::SetReloadInputName)
-                ->Event("Get Next Weapon Input Name", &NetworkFPCControllerRequests::GetNextWeaponInputName)
-                ->Event("Set Next Weapon Input Name", &NetworkFPCControllerRequests::SetNextWeaponInputName)
-                ->Event("Get Prev Weapon Input Name", &NetworkFPCControllerRequests::GetPrevWeaponInputName)
-                ->Event("Set Prev Weapon Input Name", &NetworkFPCControllerRequests::SetPrevWeaponInputName);
+                ->Event("Get Interact Event Name", &NetworkFPCControllerRequests::GetInteractEventName)
+                ->Event("Set Interact Event Name", &NetworkFPCControllerRequests::SetInteractEventName)
+                ->Event("Get Attack Event Name", &NetworkFPCControllerRequests::GetAttackEventName)
+                ->Event("Set Attack Event Name", &NetworkFPCControllerRequests::SetAttackEventName)
+                ->Event("Get Block Event Name", &NetworkFPCControllerRequests::GetBlockEventName)
+                ->Event("Set Block Event Name", &NetworkFPCControllerRequests::SetBlockEventName)
+                ->Event("Get Reload Event Name", &NetworkFPCControllerRequests::GetReloadEventName)
+                ->Event("Set Reload Event Name", &NetworkFPCControllerRequests::SetReloadEventName)
+                ->Event("Get Next Weapon Event Name", &NetworkFPCControllerRequests::GetNextWeaponEventName)
+                ->Event("Set Next Weapon Event Name", &NetworkFPCControllerRequests::SetNextWeaponEventName)
+                ->Event("Get Prev Weapon Event Name", &NetworkFPCControllerRequests::GetPrevWeaponEventName)
+                ->Event("Set Prev Weapon Event Name", &NetworkFPCControllerRequests::SetPrevWeaponEventName);
         }
 
         NetworkFPCBase::Reflect(context);
@@ -464,12 +464,12 @@ namespace FirstPersonController
             if (m_firstPersonExtrasObject != nullptr)
                 m_firstPersonExtrasObject->IsAutonomousSoConnect();
 
-            m_strInteract = m_networkFPCObject->GetInteractInputName();
-            m_strAttack = m_networkFPCObject->GetAttackInputName();
-            m_strBlock = m_networkFPCObject->GetBlockInputName();
-            m_strReload = m_networkFPCObject->GetReloadInputName();
-            m_strNextWeapon = m_networkFPCObject->GetNextWeaponInputName();
-            m_strPrevWeapon = m_networkFPCObject->GetPrevWeaponInputName();
+            m_strInteract = m_networkFPCObject->GetInteractEventName();
+            m_strAttack = m_networkFPCObject->GetAttackEventName();
+            m_strBlock = m_networkFPCObject->GetBlockEventName();
+            m_strReload = m_networkFPCObject->GetReloadEventName();
+            m_strNextWeapon = m_networkFPCObject->GetNextWeaponEventName();
+            m_strPrevWeapon = m_networkFPCObject->GetPrevWeaponEventName();
             AssignConnectInputEvents();
 
             if (IsNetEntityRoleAuthority())
@@ -1018,56 +1018,56 @@ namespace FirstPersonController
     {
         return m_prevWeaponValue;
     }
-    AZStd::string NetworkFPCController::GetInteractInputName() const
+    AZStd::string NetworkFPCController::GetInteractEventName() const
     {
         return m_strInteract;
     }
-    void NetworkFPCController::SetInteractInputName(const AZStd::string& strInteract)
+    void NetworkFPCController::SetInteractEventName(const AZStd::string& strInteract)
     {
         m_strInteract = strInteract;
         AssignConnectInputEvents();
     }
-    AZStd::string NetworkFPCController::GetAttackInputName() const
+    AZStd::string NetworkFPCController::GetAttackEventName() const
     {
         return m_strAttack;
     }
-    void NetworkFPCController::SetAttackInputName(const AZStd::string& strAttack)
+    void NetworkFPCController::SetAttackEventName(const AZStd::string& strAttack)
     {
         m_strAttack = strAttack;
         AssignConnectInputEvents();
     }
-    AZStd::string NetworkFPCController::GetBlockInputName() const
+    AZStd::string NetworkFPCController::GetBlockEventName() const
     {
         return m_strBlock;
     }
-    void NetworkFPCController::SetBlockInputName(const AZStd::string& strBlock)
+    void NetworkFPCController::SetBlockEventName(const AZStd::string& strBlock)
     {
         m_strBlock = strBlock;
         AssignConnectInputEvents();
     }
-    AZStd::string NetworkFPCController::GetReloadInputName() const
+    AZStd::string NetworkFPCController::GetReloadEventName() const
     {
         return m_strReload;
     }
-    void NetworkFPCController::SetReloadInputName(const AZStd::string& strReload)
+    void NetworkFPCController::SetReloadEventName(const AZStd::string& strReload)
     {
         m_strReload = strReload;
         AssignConnectInputEvents();
     }
-    AZStd::string NetworkFPCController::GetNextWeaponInputName() const
+    AZStd::string NetworkFPCController::GetNextWeaponEventName() const
     {
         return m_strNextWeapon;
     }
-    void NetworkFPCController::SetNextWeaponInputName(const AZStd::string& strNextWeapon)
+    void NetworkFPCController::SetNextWeaponEventName(const AZStd::string& strNextWeapon)
     {
         m_strNextWeapon = strNextWeapon;
         AssignConnectInputEvents();
     }
-    AZStd::string NetworkFPCController::GetPrevWeaponInputName() const
+    AZStd::string NetworkFPCController::GetPrevWeaponEventName() const
     {
         return m_strPrevWeapon;
     }
-    void NetworkFPCController::SetPrevWeaponInputName(const AZStd::string& strPrevWeapon)
+    void NetworkFPCController::SetPrevWeaponEventName(const AZStd::string& strPrevWeapon)
     {
         m_strPrevWeapon = strPrevWeapon;
         AssignConnectInputEvents();
