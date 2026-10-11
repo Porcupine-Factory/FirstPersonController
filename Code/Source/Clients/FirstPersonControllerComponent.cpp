@@ -2391,15 +2391,15 @@ namespace FirstPersonController
 
         if (m_grounded)
         {
+            // In case the character is moving down an incline, set m_movingUpInclineFactor to 1
+            m_movingUpInclineFactor = 1.f;
+
             // The character is not on an incline, so don't apply an incline factor
             if (m_velocityXCrossYDirection.IsClose(m_velocityZPosDirection))
             {
                 m_groundCloseSumNormals = m_velocityZPosDirection;
                 return;
             }
-
-            // In case the character is moving down an incline, set m_movingUpInclineFactor to 1
-            m_movingUpInclineFactor = 1.f;
 
             if (AZ::Vector3(m_targetVelocity.GetX(), m_targetVelocity.GetY(), 0.f).Angle(m_velocityXCrossYDirection) >
                 AZ::Constants::HalfPi)
@@ -2488,6 +2488,8 @@ namespace FirstPersonController
                 }
             }
         }
+        else
+            m_movingUpInclineFactor = 1.f;
     }
 
     // Here input target velocity is with respect to the character's frame of reference
