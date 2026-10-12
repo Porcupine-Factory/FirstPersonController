@@ -283,6 +283,10 @@ namespace FirstPersonController
         StartingPointInput::InputEventNotificationId m_prevWeaponEventId;
         AZStd::string m_strPrevWeapon = "PrevWeapon";
 
+        // Register key/button presses between network ticks
+        bool m_pressedBeforeNetworkTick[15] = { false };
+        bool m_releasedBeforeNetworkTick[15] = { false };
+
         // Array of input names
         AZStd::string* m_inputNames[15] = { &m_strForward, &m_strBack,   &m_strLeft,   &m_strRight,      &m_strYaw,
                                             &m_strPitch,   &m_strSprint, &m_strCrouch, &m_strJump,       &m_strInteract,

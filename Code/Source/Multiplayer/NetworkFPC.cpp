@@ -363,15 +363,19 @@ namespace FirstPersonController
             return;
         }
 
+        AZ::u32 eventIndex = 0;
         for (auto& it_event : m_controlMap)
         {
             if (*inputId == *(it_event.first))
             {
+                m_pressedBeforeNetworkTick[eventIndex] = true;
+                m_releasedBeforeNetworkTick[eventIndex] = false;
                 *(it_event.second) = value;
                 return;
                 // print the local user ID and the input name CRC
                 // AZ_Printf("Network FPC Component", "Pressed: %s", it_event.first->ToString().c_str());
             }
+            eventIndex++;
         }
     }
 
@@ -381,15 +385,18 @@ namespace FirstPersonController
         if (inputId == nullptr || *inputId == m_rotateYawEventId || *inputId == m_rotatePitchEventId)
             return;
 
+        AZ::u32 eventIndex = 0;
         for (auto& it_event : m_controlMap)
         {
             if (*inputId == *(it_event.first))
             {
+                m_releasedBeforeNetworkTick[eventIndex] = true;
                 *(it_event.second) = value;
                 return;
                 // print the local user ID and the input name CRC
                 // AZ_Printf("Network FPC Component", "Released: %s", it_event.first->ToString().c_str());
             }
+            eventIndex++;
         }
     }
 
@@ -539,6 +546,20 @@ namespace FirstPersonController
             return;
 
         NetworkFPCNetworkInput* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
+
+        AZ::u32 eventIndex = 0;
+        for (auto& it_event : m_controlMap)
+        {
+            if (m_pressedBeforeNetworkTick[eventIndex] && m_releasedBeforeNetworkTick[eventIndex] && *(it_event.second) == 0.f)
+                *(it_event.second) = 1.f;
+            else if (m_pressedBeforeNetworkTick[eventIndex] && m_releasedBeforeNetworkTick[eventIndex] && *(it_event.second) != 0.f)
+            {
+                *(it_event.second) = 0.f;
+                m_pressedBeforeNetworkTick[eventIndex] = false;
+                m_releasedBeforeNetworkTick[eventIndex] = false;
+            }
+            eventIndex++;
+        }
 
         // Assign input values
         if (m_allowRotationInputs)
