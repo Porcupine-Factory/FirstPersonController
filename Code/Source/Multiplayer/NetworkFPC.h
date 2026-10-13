@@ -88,9 +88,6 @@ namespace FirstPersonController
         void DetectAnimationChild();
         void SetupAnimationConnections(const AZ::EntityId& targetId);
 
-        // Calculated camera pitch angle
-        float m_cameraPitch = 0.f;
-
         bool m_paramIdsSet = false;
         size_t m_walkSpeedParamId = InvalidParamIndex;
         size_t m_sprintParamId = InvalidParamIndex;
@@ -216,6 +213,9 @@ namespace FirstPersonController
 
         // Used to allow or prevent the rotation inputs from being applied to the character (e.g. in menus)
         bool m_allowRotationInputs = true;
+
+        // Calculated camera pitch angle
+        float m_cameraPitch = 0.f;
 
         // Signals when the controller is determined to be autonomous or not
         bool m_autonomousNotDetermined = true;

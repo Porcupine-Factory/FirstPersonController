@@ -21,7 +21,7 @@ namespace FirstPersonController
     class NetworkFPCBotAnimationControllerNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnPlaceholder() = 0;
+        virtual void OnPlaceholder() {};
     };
 
     using NetworkFPCBotAnimationControllerNotificationBus = AZ::EBus<NetworkFPCBotAnimationControllerNotifications>;
@@ -37,9 +37,9 @@ namespace FirstPersonController
             AZ::SystemAllocator,
             OnPlaceholder);
 
-        void OnPlaceholder() override
-        {
-            Call(FN_OnPlaceholder);
-        }
+        // void OnPlaceholder() override
+        //{
+        //     Call(FN_OnPlaceholder);
+        // }
     };
 } // namespace FirstPersonController

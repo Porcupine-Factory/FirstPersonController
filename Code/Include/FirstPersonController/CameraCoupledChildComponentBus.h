@@ -28,7 +28,7 @@ namespace FirstPersonController
     class CameraCoupledChildComponentNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnPlaceholder() = 0;
+        virtual void OnPlaceholder() {};
     };
 
     using CameraCoupledChildComponentNotificationBus = AZ::EBus<CameraCoupledChildComponentNotifications>;
@@ -41,9 +41,9 @@ namespace FirstPersonController
         AZ_EBUS_BEHAVIOR_BINDER(
             CameraCoupledChildComponentNotificationHandler, "{766eea87-14cd-4c61-bfbc-a40c92e7554a}", AZ::SystemAllocator, OnPlaceholder);
 
-        void OnPlaceholder() override
-        {
-            Call(FN_OnPlaceholder);
-        }
+        // void OnPlaceholder() override
+        //{
+        //     Call(FN_OnPlaceholder);
+        // }
     };
 } // namespace FirstPersonController

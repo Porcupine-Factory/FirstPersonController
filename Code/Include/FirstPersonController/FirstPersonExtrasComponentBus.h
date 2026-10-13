@@ -104,9 +104,9 @@ namespace FirstPersonController
     class FirstPersonExtrasComponentNotifications : public AZ::ComponentBus
     {
     public:
-        virtual void OnJumpFromQueue() = 0;
-        virtual void OnHeadbobStepTaken() = 0;
-        virtual void OnHeadbobOriginCross() = 0;
+        virtual void OnJumpFromQueue() {};
+        virtual void OnHeadbobStepTaken() {};
+        virtual void OnHeadbobOriginCross() {};
     };
 
     using FirstPersonExtrasComponentNotificationBus = AZ::EBus<FirstPersonExtrasComponentNotifications>;

@@ -2002,7 +2002,7 @@ namespace FirstPersonController
 
     void FirstPersonControllerComponent::UpdateRotation(const float deltaTime, const AZ::u8 tickTimestepNetwork)
     {
-        if (!m_enableCameraCharacterRotation)
+        if (!m_enableCameraCharacterRotation || (m_networkFPCEnabled && m_isServer && tickTimestepNetwork == 0))
             return;
 
         SmoothRotation();
@@ -2020,18 +2020,18 @@ namespace FirstPersonController
         if (!m_networkFPCEnabled || tickTimestepNetwork == 2)
         {
             // Get the current heading
-            if (m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick)
+            if (tickTimestepNetwork == 2 && !m_scriptSetCurrentHeadingTick)
                 m_currentHeading = characterTransform->GetWorldRotation().GetZ();
 
             // Apply the yaw to the character
-            if (!m_networkFPCEnabled && !m_scriptSetCurrentHeadingTick)
+            if (tickTimestepNetwork != 2 && !m_scriptSetCurrentHeadingTick)
                 characterTransform->RotateAroundLocalZ(lookRotationDelta.GetZ());
             else if (m_scriptSetCurrentHeadingTick)
                 characterTransform->SetLocalRotation(AZ::Vector3(
                     characterTransform->GetLocalRotation().GetX(), characterTransform->GetLocalRotation().GetY(), m_currentHeading));
 
             // Retain the look rotation delta in NetworkFPC, to be retrieved on next frame tick
-            if (m_networkFPCEnabled && m_networkFPCControllerObject != nullptr)
+            if (tickTimestepNetwork == 2 && m_networkFPCControllerObject != nullptr)
             {
                 m_networkFPCRotationSliceAccumulator = 0.f;
                 if (!m_networkFPCCameraAligned)
@@ -2046,7 +2046,7 @@ namespace FirstPersonController
             }
 
             // Done applying rotations to the character for multiplayer, camera rotations will be applied on frame ticks
-            if (tickTimestepNetwork == 2)
+            if (tickTimestepNetwork == 2 && !m_isServer)
             {
 #ifdef NETWORKFPC
                 if (m_performedRotationOnTick)
@@ -4218,16 +4218,12 @@ namespace FirstPersonController
                     m_crouchingDownMove = true;
                 else
                     m_standingUpMove = true;
-
-                m_standing = !m_crouching;
             }
             const bool standingUpMove = m_networkFPCControllerObject->GetIsStandingUpMove();
             const bool crouchingDownMove = m_networkFPCControllerObject->GetIsCrouchingDownMove();
-            if (!m_standing && !m_crouching && !standingUpMove && !crouchingDownMove)
-            {
-                m_standing = true;
+            if (!m_standing && !m_crouching && !m_crouched && !standingUpMove && !crouchingDownMove)
                 m_standingUpMove = true;
-            }
+
             m_speed = m_networkFPCControllerObject->GetTopWalkSpeed();
             m_staminaPercentage = m_networkFPCControllerObject->GetStaminaPercentage();
             m_sprintHeldDuration = m_sprintMaxTime - m_sprintMaxTime * m_staminaPercentage / 100.f;
@@ -4237,6 +4233,7 @@ namespace FirstPersonController
             m_sprintCooldownTimer = m_networkFPCControllerObject->GetSprintCooldownTimer();
             m_jumpInitialVelocity = m_networkFPCControllerObject->GetJumpInitialVelocity();
             m_lookRotationDelta = m_networkFPCControllerObject->GetLookRotationDelta();
+            m_cameraPitch = m_networkFPCControllerObject->GetHeadPitch();
             m_velocityFromImpulse = m_networkFPCControllerObject->GetVelocityFromImpulse();
             m_correctedVelocityXY = m_networkFPCControllerObject->GetCorrectedVelocityXY();
             m_applyVelocityXY = m_networkFPCControllerObject->GetApplyVelocityXY();
@@ -4290,8 +4287,8 @@ namespace FirstPersonController
             m_networkFPCBotAnimationControllerObject->SetIsJumpStarting(m_onFirstJump || m_onFinalJump);
             m_networkFPCBotAnimationControllerObject->SetIsFalling(!m_groundClose && (m_applyVelocityZ < 0.f));
             m_networkFPCBotAnimationControllerObject->SetIsLanding(m_groundClose && (m_applyVelocityZ <= 0.f));
+            m_networkFPCBotAnimationControllerObject->SetHeadPitch(m_cameraPitch);
             m_networkFPCBotAnimationControllerObject->SetCorrectedVelocityXY(m_correctedVelocityXY);
-            m_networkFPCBotAnimationControllerObject->SetCurrentPitch(m_cameraPitch);
         }
 #endif
     }

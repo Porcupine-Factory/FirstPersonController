@@ -547,6 +547,7 @@ namespace FirstPersonController
 
         NetworkFPCNetworkInput* playerInput = input.FindComponentInput<NetworkFPCNetworkInput>();
 
+        // Register when inputs are quickly pressed and released between network ticks
         AZ::u32 eventIndex = 0;
         for (auto& it_event : m_controlMap)
         {
@@ -589,6 +590,7 @@ namespace FirstPersonController
         playerInput->m_yawDeltaOvershoot = GetYawDeltaOvershoot();
         playerInput->m_pitchDelta = GetLookRotationDelta().GetEulerRadians().GetX();
         playerInput->m_pitchDeltaOvershoot = GetPitchDeltaOvershoot();
+        playerInput->m_syncPitch = m_firstPersonControllerObject->m_cameraPitch;
 
         m_yawValue = 0.f;
         m_pitchValue = 0.f;
@@ -829,13 +831,31 @@ namespace FirstPersonController
                 m_firstPersonControllerObject->m_cameraYaw = m_firstPersonControllerObject->m_currentHeading - playerInput->m_yawDelta;
                 if (!GetApplyOverridePitchAndRollToCharacter())
                 {
-                    m_networkFPCObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
+                    m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
                     m_firstPersonControllerObject->m_cameraPitch = overrideTransform.GetEulerRadians().GetX();
                     m_firstPersonControllerObject->m_cameraRoll = overrideTransform.GetEulerRadians().GetY();
                 }
                 m_firstPersonControllerObject->m_networkFPCRotationSliceAccumulator = 0.f;
             }
         }
+
+        // Set the head / camera pitch
+        float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(AZ::Vector3(
+            0.f,
+            m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetY(),
+            m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetZ()));
+        if (m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetY() < 0.f)
+            angleFromZ *= -1.f;
+        m_cameraPitch = AZ::GetClamp(
+            m_cameraPitch + playerInput->m_pitchDelta + playerInput->m_pitchDeltaOvershoot,
+            m_firstPersonControllerObject->m_cameraPitchMinAngle - angleFromZ,
+            m_firstPersonControllerObject->m_cameraPitchMaxAngle - angleFromZ);
+        if (m_cameraPitch != playerInput->m_syncPitch)
+            m_cameraPitch = AZ::GetClamp(
+                playerInput->m_syncPitch,
+                m_firstPersonControllerObject->m_cameraPitchMinAngle - angleFromZ,
+                m_firstPersonControllerObject->m_cameraPitchMaxAngle - angleFromZ);
+        SetHeadPitch(m_cameraPitch);
 
         NetworkFPCControllerNotificationBus::Broadcast(
             &NetworkFPCControllerNotificationBus::Events::OnNetworkTickStart,
@@ -845,20 +865,6 @@ namespace FirstPersonController
 
         // Set the yaw / heading
         GetEntity()->GetTransform()->RotateAroundLocalZ(playerInput->m_yawDelta + playerInput->m_yawDeltaOvershoot);
-
-        // Set the camera pitch
-        float angleFromZ = AZ::Vector3::CreateAxisZ().Angle(AZ::Vector3(
-            0.f,
-            m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetY(),
-            m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetZ()));
-        if (m_firstPersonControllerObject->m_sphereCastsAxisDirectionPose.GetY() < 0.f)
-            angleFromZ *= -1.f;
-        m_networkFPCObject->m_cameraPitch = AZ::GetClamp(
-            m_networkFPCObject->m_cameraPitch + playerInput->m_pitchDelta + playerInput->m_pitchDeltaOvershoot,
-            m_firstPersonControllerObject->m_cameraPitchMinAngle - angleFromZ,
-            m_firstPersonControllerObject->m_cameraPitchMaxAngle - angleFromZ);
-        if (m_firstPersonControllerObject->m_isServer || m_firstPersonControllerObject->m_isHost)
-            SetHeadPitch(m_networkFPCObject->m_cameraPitch);
 
         // if (GetNetBindComponent()->IsReprocessingInput())
         //     AZ_Printf("Network FPC Component", "Reprocessing Input");

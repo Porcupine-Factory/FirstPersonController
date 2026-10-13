@@ -199,7 +199,7 @@ namespace FirstPersonController
             m_animationGraph->SetParameterBool(m_fallParamId, GetIsFalling());
             m_animationGraph->SetParameterBool(m_landParamId, GetIsLanding());
             m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
-            m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetCurrentPitch());
+            m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetHeadPitch());
         }
         else
         {
@@ -222,7 +222,7 @@ namespace FirstPersonController
             if (m_groundedParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
             if (m_lookUpDownParamId != InvalidParamIndex)
-                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetCurrentPitch());
+                m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetHeadPitch());
         }
 
         m_networkRequests->UpdateActorExternal(deltaTime);
