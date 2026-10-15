@@ -277,12 +277,12 @@ namespace FirstPersonController
                         nullptr,
                         &FirstPersonControllerComponent::m_yawSensitivity,
                         "Yaw Sensitivity",
-                        "Camera left/right rotation sensitivity.")
+                        "Camera left/right rotation sensitivity. Making this negative will invert the yaw rotation.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_pitchSensitivity,
                         "Pitch Sensitivity",
-                        "Camera up/down rotation sensitivity.")
+                        "Camera up/down rotation sensitivity. Making this negative will invert the pitch rotation.")
                     ->DataElement(
                         nullptr,
                         &FirstPersonControllerComponent::m_rotationDamp,
