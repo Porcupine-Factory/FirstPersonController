@@ -1251,6 +1251,7 @@ namespace FirstPersonController
                 ->Method("Get Bot String NetEntityIds On Server", &GetBotStringNetEntityIdsOnServer)
                 ->Method("Get Bot NetEntityId Strings", &GetBotNetEntityIdStrings)
                 ->Method("Get Autonomous Client Or Host EntityId", &GetAutonomousClientOrHostEntityId)
+                ->Method("Get Is Using Host", &GetIsUsingHost)
                 ->Method("Get Is Networking Active", &GetIsNetworkingActive)
                 ->Method("Get Is In Editor", &GetIsInEditor)
 #ifdef NETWORKFPC
@@ -6861,6 +6862,18 @@ namespace FirstPersonController
         }
         // If no autonomous client entity was found then return an invalid EntityId
         return AZ::EntityId(AZ::EntityId::InvalidEntityId);
+    }
+    bool FirstPersonControllerComponent::GetIsUsingHost()
+    {
+        const AZ::EntityId characterEntityId = GetAutonomousClientOrHostEntityId();
+        if (characterEntityId.IsValid())
+        {
+            bool isHost = false;
+            FirstPersonController::FirstPersonControllerComponentRequestBus::EventResult(
+                isHost, characterEntityId, &FirstPersonController::FirstPersonControllerComponentRequests::GetIsHost);
+            return isHost;
+        }
+        return false;
     }
     bool FirstPersonControllerComponent::GetNetworkFPCAllowActionInputs() const
     {

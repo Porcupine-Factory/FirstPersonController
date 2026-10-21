@@ -564,6 +564,7 @@ namespace FirstPersonController
         static AZ::EntityId GetAutonomousClientOrHostEntityId();
         static bool GetIsNetworkingActive();
         static bool GetIsInEditor();
+        static bool GetIsUsingHost();
         bool GetNetworkFPCAllowActionInputs() const override;
         void SetNetworkFPCAllowActionInputs(const bool allowActionInputs) override;
         bool GetNetworkFPCAllowRotationInputs() const override;
