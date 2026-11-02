@@ -235,6 +235,18 @@ namespace FirstPersonController
                 m_groundedParamId = m_animationGraph->FindParameterIndex(GetGroundedParamName().c_str());
             if (m_lookUpDownParamId == InvalidParamIndex)
                 m_lookUpDownParamId = m_animationGraph->FindParameterIndex(GetLookUpDownParamName().c_str());
+            if (m_interactParamId == InvalidParamIndex)
+                m_interactParamId = m_animationGraph->FindParameterIndex(GetInteractParamName().c_str());
+            if (m_attackParamId == InvalidParamIndex)
+                m_attackParamId = m_animationGraph->FindParameterIndex(GetAttackParamName().c_str());
+            if (m_blockParamId == InvalidParamIndex)
+                m_blockParamId = m_animationGraph->FindParameterIndex(GetBlockParamName().c_str());
+            if (m_reloadParamId == InvalidParamIndex)
+                m_reloadParamId = m_animationGraph->FindParameterIndex(GetReloadParamName().c_str());
+            if (m_nextWeaponParamId == InvalidParamIndex)
+                m_nextWeaponParamId = m_animationGraph->FindParameterIndex(GetNextWeaponParamName().c_str());
+            if (m_prevWeaponParamId == InvalidParamIndex)
+                m_prevWeaponParamId = m_animationGraph->FindParameterIndex(GetPrevWeaponParamName().c_str());
 
             m_paramIdsSet = true;
             for (size_t* paramId : m_paramIds)
@@ -255,6 +267,12 @@ namespace FirstPersonController
             m_animationGraph->SetParameterBool(m_landParamId, GetIsLanding());
             m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
             m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetHeadPitch());
+            m_animationGraph->SetParameterBool(m_interactParamId, GetInteractValue());
+            m_animationGraph->SetParameterBool(m_attackParamId, GetAttackValue());
+            m_animationGraph->SetParameterBool(m_blockParamId, GetBlockValue());
+            m_animationGraph->SetParameterBool(m_reloadParamId, GetReloadValue());
+            m_animationGraph->SetParameterBool(m_nextWeaponParamId, GetNextWeaponValue());
+            m_animationGraph->SetParameterBool(m_prevWeaponParamId, GetPrevWeaponValue());
         }
         else
         {
@@ -278,6 +296,18 @@ namespace FirstPersonController
                 m_animationGraph->SetParameterBool(m_groundedParamId, GetIsGrounded());
             if (m_lookUpDownParamId != InvalidParamIndex)
                 m_animationGraph->SetParameterFloat(m_lookUpDownParamId, GetHeadPitch());
+            if (m_interactParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_interactParamId, GetInteractValue());
+            if (m_attackParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_attackParamId, GetAttackValue());
+            if (m_blockParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_blockParamId, GetBlockValue());
+            if (m_reloadParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_reloadParamId, GetReloadValue());
+            if (m_nextWeaponParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_nextWeaponParamId, GetNextWeaponValue());
+            if (m_prevWeaponParamId != InvalidParamIndex)
+                m_animationGraph->SetParameterBool(m_prevWeaponParamId, GetPrevWeaponValue());
         }
 
         m_networkRequests->UpdateActorExternal(deltaTime);
@@ -746,6 +776,12 @@ namespace FirstPersonController
             m_prevReloadValue = playerInput->m_reload;
             m_prevNextWeaponValue = playerInput->m_nextWeapon;
             m_prevPrevWeaponValue = playerInput->m_prevWeapon;
+            SetInteractValue(m_prevInteractValue != 0.f);
+            SetAttackValue(m_prevAttackValue != 0.f);
+            SetBlockValue(m_prevBlockValue != 0.f);
+            SetReloadValue(m_prevReloadValue != 0.f);
+            SetNextWeaponValue(m_prevNextWeaponValue != 0.f);
+            SetPrevWeaponValue(m_prevPrevWeaponValue != 0.f);
         }
         else
         {
@@ -755,6 +791,12 @@ namespace FirstPersonController
             m_prevReloadValue = 0.f;
             m_prevNextWeaponValue = 0.f;
             m_prevPrevWeaponValue = 0.f;
+            SetInteractValue(false);
+            SetAttackValue(false);
+            SetBlockValue(false);
+            SetReloadValue(false);
+            SetNextWeaponValue(false);
+            SetPrevWeaponValue(false);
         }
 
         if (playerInput->m_sprint != 0.f &&

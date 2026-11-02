@@ -99,11 +99,18 @@ namespace FirstPersonController
         size_t m_landParamId = InvalidParamIndex;
         size_t m_groundedParamId = InvalidParamIndex;
         size_t m_lookUpDownParamId = InvalidParamIndex;
+        size_t m_interactParamId = InvalidParamIndex;
+        size_t m_attackParamId = InvalidParamIndex;
+        size_t m_blockParamId = InvalidParamIndex;
+        size_t m_reloadParamId = InvalidParamIndex;
+        size_t m_nextWeaponParamId = InvalidParamIndex;
+        size_t m_prevWeaponParamId = InvalidParamIndex;
 
         // NOTE: Make sure to add any new param Ids to this param Ids array
-        size_t* m_paramIds[10] = { &m_walkSpeedParamId,     &m_sprintParamId,    &m_crouchToStandParamId, &m_crouchParamId,
-                                   &m_standToCrouchParamId, &m_jumpStartParamId, &m_fallParamId,          &m_landParamId,
-                                   &m_groundedParamId,      &m_lookUpDownParamId };
+        size_t* m_paramIds[16] = { &m_walkSpeedParamId,     &m_sprintParamId,     &m_crouchToStandParamId, &m_crouchParamId,
+                                   &m_standToCrouchParamId, &m_jumpStartParamId,  &m_fallParamId,          &m_landParamId,
+                                   &m_groundedParamId,      &m_lookUpDownParamId, &m_interactParamId,      &m_attackParamId,
+                                   &m_blockParamId,         &m_reloadParamId,     &m_nextWeaponParamId,    &m_prevWeaponParamId };
     };
 
     class NetworkFPCController
