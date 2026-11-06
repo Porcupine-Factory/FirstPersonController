@@ -64,12 +64,14 @@ namespace FirstPersonController
     {
         AZ::TickBus::Handler::BusConnect();
         AZ::EntityBus::Handler::BusConnect(GetEntityId());
+        CameraCoupledChildComponentRequestBus::Handler::BusConnect(GetEntityId());
     }
 
     void CameraCoupledChildComponent::Deactivate()
     {
-        AZ::TickBus::Handler::BusDisconnect();
+        CameraCoupledChildComponentRequestBus::Handler::BusDisconnect();
         AZ::EntityBus::Handler::BusDisconnect();
+        AZ::TickBus::Handler::BusDisconnect();
     }
 
     void CameraCoupledChildComponent::OnEntityActivated([[maybe_unused]] const AZ::EntityId& entityId)

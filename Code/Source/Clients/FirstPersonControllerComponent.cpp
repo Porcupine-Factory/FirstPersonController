@@ -736,6 +736,8 @@ namespace FirstPersonController
                 ->Event("Get Is Camera Child Of Character", &FirstPersonControllerComponentRequests::IsCameraChildOfCharacter)
                 ->Event("Get Camera Interpolation", &FirstPersonControllerComponentRequests::GetCameraInterpolation)
                 ->Event("Set Camera Interpolation", &FirstPersonControllerComponentRequests::SetCameraInterpolation)
+                ->Event("Get Camera Interpolation X Y Offset", &FirstPersonControllerComponentRequests::GetCameraInterpolationXYOffset)
+                ->Event("Set Camera Interpolation X Y Offset", &FirstPersonControllerComponentRequests::SetCameraInterpolationXYOffset)
                 ->Event(
                     "Get NetworkFPC Keep Camera At Character", &FirstPersonControllerComponentRequests::GetNetworkFPCKeepCameraAtCharacter)
                 ->Event(
@@ -1873,6 +1875,8 @@ namespace FirstPersonController
         AZ::TransformBus::EventResult(characterWorldTranslation, GetEntityId(), &AZ::TransformBus::Events::GetWorldTranslation);
         m_currentCharacterEyeTranslation =
             characterWorldTranslation + m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+        m_currentCharacterEyeTranslation +=
+            AZ::Vector3(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(m_cameraInterpolationXYOffset)));
         m_prevCharacterEyeTranslation = m_currentCharacterEyeTranslation;
 
         // Set initial world translation for interpolation
@@ -1960,6 +1964,8 @@ namespace FirstPersonController
             if (!IsCameraChildOfCharacter() && !characterUpDirection.IsClose(m_sphereCastsAxisDirectionPose))
                 SetSphereCastsAxisDirectionPose(characterUpDirection);
             m_currentCharacterEyeTranslation += m_sphereCastsAxisDirectionPose * (m_eyeHeight + m_cameraLocalZTravelDistance);
+            m_currentCharacterEyeTranslation +=
+                AZ::Vector3(AZ::Quaternion::CreateRotationZ(m_currentHeading).TransformVector(AZ::Vector3(m_cameraInterpolationXYOffset)));
             m_cameraInterpolationTimeAccumulator = 0.f;
         }
     }
@@ -4490,6 +4496,14 @@ namespace FirstPersonController
     bool FirstPersonControllerComponent::GetCameraNotInterpolating() const
     {
         return !m_cameraInterpolation;
+    }
+    AZ::Vector2 FirstPersonControllerComponent::GetCameraInterpolationXYOffset() const
+    {
+        return m_cameraInterpolationXYOffset;
+    }
+    void FirstPersonControllerComponent::SetCameraInterpolationXYOffset(const AZ::Vector2 cameraInterpolationXYOffset)
+    {
+        m_cameraInterpolationXYOffset = cameraInterpolationXYOffset;
     }
     bool FirstPersonControllerComponent::GetNetworkFPCKeepCameraAtCharacter() const
     {

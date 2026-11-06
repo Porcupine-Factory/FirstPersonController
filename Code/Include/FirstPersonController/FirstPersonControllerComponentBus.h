@@ -36,6 +36,8 @@ namespace FirstPersonController
         virtual bool IsCameraChildOfCharacter() = 0;
         virtual bool GetCameraInterpolation() const = 0;
         virtual void SetCameraInterpolation(const bool) = 0;
+        virtual AZ::Vector2 GetCameraInterpolationXYOffset() const = 0;
+        virtual void SetCameraInterpolationXYOffset(const AZ::Vector2) = 0;
         virtual bool GetNetworkFPCKeepCameraAtCharacter() const = 0;
         virtual void SetNetworkFPCKeepCameraAtCharacter(const bool) = 0;
         virtual float GetEyeHeight() const = 0;

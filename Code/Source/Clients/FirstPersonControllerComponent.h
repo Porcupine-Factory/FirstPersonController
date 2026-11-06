@@ -111,6 +111,8 @@ namespace FirstPersonController
         bool IsCameraChildOfCharacter() override;
         bool GetCameraInterpolation() const override;
         void SetCameraInterpolation(const bool cameraInterpolation) override;
+        AZ::Vector2 GetCameraInterpolationXYOffset() const override;
+        void SetCameraInterpolationXYOffset(const AZ::Vector2 cameraInterpolationXYOffset) override;
         bool GetNetworkFPCKeepCameraAtCharacter() const override;
         void SetNetworkFPCKeepCameraAtCharacter(const bool networkFPCKeepCameraAtCharacter) override;
         float GetEyeHeight() const override;
@@ -672,6 +674,7 @@ namespace FirstPersonController
         // Camera interpolation variables
         float m_eyeHeight = 1.6f;
         float m_cameraInterpolationTimeAccumulator = 0.f;
+        AZ::Vector2 m_cameraInterpolationXYOffset = AZ::Vector2::CreateZero();
         AZ::Vector3 m_prevCharacterEyeTranslation = AZ::Vector3::CreateZero();
         AZ::Vector3 m_currentCharacterEyeTranslation = AZ::Vector3::CreateZero();
 
